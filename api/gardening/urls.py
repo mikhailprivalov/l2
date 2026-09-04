@@ -25,4 +25,7 @@ urlpatterns = [
     path('create-electricity-reading', views.create_electricity_reading),
     path('update-electricity-reading', views.update_electricity_reading),
     path('delete-electricity-reading', views.delete_electricity_reading),
+    path('create-electricity-meter', views.create_electricity_meter),
+    path('update-electricity-meter', views.update_electricity_meter),
+    path('delete-electricity-meter', views.delete_electricity_meter),
 ]

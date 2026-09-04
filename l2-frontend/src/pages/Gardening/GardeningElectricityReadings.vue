@@ -1,152 +1,215 @@
 <template>
   <div class="electricity">
     <div class="electricity__layout">
-    <div class="electricity__panel">
-      <div class="electricity__header">
-        <span class="electricity__header-title">Показания электроэнергии</span>
-      </div>
+      <div class="electricity__panel">
+        <div class="electricity__header">
+          <span class="electricity__header-title">Показания электроэнергии</span>
+          <button
+            class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+            type="button"
+            title="Добавить счётчик"
+            :disabled="!year || saving"
+            @click="addMeter"
+          >
+            <i class="fa fa-plus" />
+          </button>
+        </div>
 
-      <div
-        v-if="!year"
-        class="electricity__empty"
-      >
-        Выберите год
-      </div>
-      <div
-        v-else
-        class="electricity__body"
-      >
-        <table class="electricity__table">
-          <thead>
-            <tr>
-              <th class="electricity__col-month">Месяц</th>
-              <th>Предыдущий</th>
-              <th>Текущий</th>
-              <th>Потребление</th>
-              <th>Тариф</th>
-              <th>Начислено</th>
-              <th>Приход</th>
-              <th>Остаток</th>
-              <th class="electricity__col-actions" />
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in rows"
-              :key="row.month"
+        <div
+          v-if="!year"
+          class="electricity__empty"
+        >
+          Выберите год
+        </div>
+        <div
+          v-else
+          class="electricity__body"
+        >
+          <div
+            v-if="meters.length > 0"
+            class="electricity__meters-bar"
+          >
+            <div
+              v-for="meter in meters"
+              :key="`bar-${meter.id}`"
+              class="electricity__meter-chip"
             >
-              <td class="electricity__col-month">
-                {{ row.month_label }}
-              </td>
-              <td class="electricity__num electricity__prev">
-                <input
-                  v-if="editingMonth === row.month"
-                  v-model="formPrevious"
-                  class="form-control electricity-field"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  :disabled="saving"
-                >
-                <template v-else>
-                  <span>{{ formatValue(row.previous_reading) }}</span>
-                  <button
-                    v-if="row.id"
-                    class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-                    type="button"
-                    title="Ручная корректировка"
-                    :disabled="savingPrevious"
-                    @click="openPreviousModal(row)"
-                  >
-                    <i class="fa fa-pencil-square-o" />
-                  </button>
-                </template>
-              </td>
-              <td class="electricity__num">
-                <input
-                  v-if="editingMonth === row.month"
-                  v-model="formReading"
-                  class="form-control electricity-field"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  :disabled="saving"
-                >
-                <template v-else>
-                  {{ formatValue(row.current_reading) }}
-                </template>
-              </td>
-              <td class="electricity__num">{{ formatValue(editingMonth === row.month ? editConsumption : row.consumption) }}</td>
-              <td class="electricity__num">{{ formatValue(row.tariff) }}</td>
-              <td class="electricity__num">{{ formatValue(editingMonth === row.month ? editCharge : row.charge) }}</td>
-              <td class="electricity__num">{{ formatValue(row.receipt) }}</td>
-              <td
-                class="electricity__num"
-                :class="remainderClass(row.remainder)"
+              <span class="electricity__meter-title">{{ meter.title }}</span>
+              <button
+                class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                type="button"
+                title="Настроить счётчик"
+                :disabled="isBusy"
+                @click="openMeterModal(meter)"
               >
-                {{ formatRemainder(row.remainder) }}
-              </td>
-              <td class="electricity__col-actions">
-                <template v-if="editingMonth === row.month">
-                  <button
-                    class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-                    type="button"
-                    title="Сохранить"
-                    :disabled="saving || !canSaveEdit"
-                    @click="saveEdit"
-                  >
-                    <i class="fa fa-save" />
-                  </button>
-                  <button
-                    class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-                    type="button"
-                    title="Отмена"
+                <i class="fa fa-pencil" />
+              </button>
+            </div>
+          </div>
+          <table class="electricity__table">
+            <thead>
+              <tr>
+                <th class="electricity__col-month">
+                  Месяц
+                </th>
+                <th
+                  v-if="meters.length > 1"
+                  class="electricity__col-meter"
+                >
+                  Счётчик
+                </th>
+                <th class="electricity__col-previous">
+                  Прошлый
+                </th>
+                <th>Текущий</th>
+                <th>Факт</th>
+                <th>Тариф</th>
+                <th>Начислено</th>
+                <th>Списано</th>
+                <th>Долг</th>
+                <th>Остаток</th>
+                <th>Приход</th>
+                <th class="electricity__col-actions" />
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in tableRows"
+                :key="`${item.meter.id}-${item.row.month}`"
+                :class="{ 'electricity__row--month-start': item.showMonthStart }"
+              >
+                <td class="electricity__col-month">
+                  {{ item.row.month_label }}
+                </td>
+                <td
+                  v-if="meters.length > 1"
+                  class="electricity__col-meter"
+                >
+                  {{ item.meter.title }}
+                </td>
+                <td class="electricity__num electricity__col-previous">
+                  <div class="electricity__prev">
+                    <input
+                      v-if="isEditingRow(item.meter, item.row)"
+                      v-model="formPrevious"
+                      class="form-control electricity-field"
+                      :class="{ 'electricity__manual': item.row.previous_manual }"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      :disabled="saving"
+                    >
+                    <template v-else>
+                      <span :class="{ 'electricity__manual': item.row.previous_manual }">
+                        {{ formatValue(item.row.previous_reading) }}
+                      </span>
+                      <button
+                        v-if="item.row.id"
+                        class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                        type="button"
+                        title="Ручная корректировка"
+                        :disabled="savingPrevious"
+                        @click="openPreviousModal(item.row)"
+                      >
+                        <i class="fa fa-pencil-square-o" />
+                      </button>
+                    </template>
+                  </div>
+                </td>
+                <td class="electricity__num">
+                  <input
+                    v-if="isEditingRow(item.meter, item.row)"
+                    v-model="formReading"
+                    class="form-control electricity-field"
+                    type="number"
+                    min="0"
+                    step="0.01"
                     :disabled="saving"
-                    @click="cancelForm"
                   >
-                    <i class="fa fa-times" />
-                  </button>
-                </template>
-                <template v-else>
-                  <button
-                    class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-                    type="button"
-                    title="Редактировать"
-                    :disabled="isBusy"
-                    @click="startEdit(row)"
-                  >
-                    <i class="fa fa-pencil" />
-                  </button>
-                  <button
-                    v-if="row.id"
-                    class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-                    type="button"
-                    title="Удалить"
-                    :disabled="isBusy"
-                    @click="removeItem(row)"
-                  >
-                    <i class="fa fa-minus" />
-                  </button>
-                </template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                  <template v-else>
+                    {{ formatValue(item.row.current_reading) }}
+                  </template>
+                </td>
+                <td class="electricity__num">
+                  {{ formatValue(isEditingRow(item.meter, item.row) ? editConsumption : item.row.consumption) }}
+                </td>
+                <td
+                  class="electricity__num"
+                  :class="{ 'electricity__tariff--missing': isTariffMissing(item.row.tariff) }"
+                >
+                  {{ formatTariff(item.row.tariff) }}
+                </td>
+                <td class="electricity__num">
+                  {{ formatValue(isEditingRow(item.meter, item.row) ? editCharge : item.row.charge) }}
+                </td>
+                <td class="electricity__num">
+                  {{ formatValue(item.showMoney ? item.row.written_off : null) }}
+                </td>
+                <td
+                  class="electricity__num"
+                  :class="item.showMoney ? debtClass(item.row.debt) : null"
+                >
+                  {{ formatValue(item.showMoney ? item.row.debt : null) }}
+                </td>
+                <td
+                  class="electricity__num"
+                  :class="item.showMoney ? remainderClass(item.row.remainder) : null"
+                >
+                  {{ item.showMoney ? formatRemainder(item.row.remainder) : formatValue(null) }}
+                </td>
+                <td class="electricity__num">
+                  {{ formatValue(item.showMoney ? item.row.receipt : null) }}
+                </td>
+                <td class="electricity__col-actions">
+                  <div class="electricity__actions">
+                    <template v-if="isEditingRow(item.meter, item.row)">
+                      <button
+                        class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                        type="button"
+                        title="Сохранить"
+                        :disabled="saving || !canSaveEdit"
+                        @click="saveEdit(item.meter)"
+                      >
+                        <i class="fa fa-save" />
+                      </button>
+                      <button
+                        class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                        type="button"
+                        title="Отмена"
+                        :disabled="saving"
+                        @click="cancelForm"
+                      >
+                        <i class="fa fa-times" />
+                      </button>
+                    </template>
+                    <template v-else>
+                      <button
+                        class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                        type="button"
+                        title="Редактировать"
+                        :disabled="isBusy"
+                        @click="startEdit(item.meter, item.row)"
+                      >
+                        <i class="fa fa-pencil" />
+                      </button>
+                      <button
+                        v-if="item.row.id"
+                        class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                        type="button"
+                        title="Удалить"
+                        :disabled="isBusy"
+                        @click="removeItem(item.row)"
+                      >
+                        <i class="fa fa-minus" />
+                      </button>
+                    </template>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-    <div
-      v-if="year"
-      class="electricity__notes"
-    >
-      <div class="electricity__notes-head" />
-      <div
-        v-for="row in rows"
-        :key="`note-${row.month}`"
-        class="electricity__note"
-      >
-        <span v-if="row.previous_manual">изменён вручную</span>
-      </div>
-    </div>
     </div>
 
     <MountingPortal
@@ -220,6 +283,83 @@
         </Modal>
       </transition>
     </MountingPortal>
+
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="GardeningElectricityMeterModal"
+      append
+    >
+      <transition name="fade">
+        <Modal
+          v-if="meterModalOpen"
+          show-footer="true"
+          white-bg="true"
+          max-width="480px"
+          width="100%"
+          margin-left-right="auto"
+          @close="closeMeterModal"
+        >
+          <span slot="header">Счётчик</span>
+          <div
+            slot="body"
+            class="modal-body-form"
+          >
+            <div class="form-group">
+              <label>Название</label>
+              <input
+                v-model.trim="meterModalTitle"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Дата начала установки</label>
+              <input
+                v-model="meterModalDateStart"
+                class="form-control"
+                type="date"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Дата окончания</label>
+              <input
+                v-model="meterModalDateEnd"
+                class="form-control"
+                type="date"
+                :disabled="savingMeter"
+              >
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-6" />
+              <div class="col-xs-3">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  :disabled="savingMeter || !meterModalTitle"
+                  @click="saveMeterModal"
+                >
+                  Сохранить
+                </button>
+              </div>
+              <div class="col-xs-3">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  :disabled="savingMeter"
+                  @click="closeMeterModal"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
   </div>
 </template>
 
@@ -247,8 +387,19 @@ interface ElectricityRow {
   consumption: string | null;
   tariff: string | null;
   charge: string | null;
-  receipt: string;
+  written_off: string | null;
+  debt: string | null;
+  receipt: string | null;
   remainder: string | null;
+}
+
+interface ElectricityMeter {
+  id: number;
+  title: string;
+  date_start?: string | null;
+  date_end?: string | null;
+  show_money?: boolean;
+  rows: ElectricityRow[];
 }
 
 const props = defineProps<{
@@ -256,10 +407,14 @@ const props = defineProps<{
   year: number | null;
 }>();
 
+const emit = defineEmits<{(e: 'meters-changed'): void;
+}>();
+
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
-const rows = ref<ElectricityRow[]>([]);
+const meters = ref<ElectricityMeter[]>([]);
+const editingMeterId = ref<number | null>(null);
 const editingMonth = ref<number | null>(null);
 const formReading = ref('');
 const formPrevious = ref('');
@@ -270,10 +425,53 @@ const previousModalRowId = ref<number | null>(null);
 const previousModalMonthLabel = ref('');
 const previousModalValue = ref('');
 const savingPrevious = ref(false);
+const meterModalOpen = ref(false);
+const meterModalId = ref<number | null>(null);
+const meterModalTitle = ref('');
+const meterModalDateStart = ref('');
+const meterModalDateEnd = ref('');
+const savingMeter = ref(false);
 const tariffsByMonth = ref<Record<string, string | null>>({});
 
-const isBusy = computed(() => saving.value || editingMonth.value !== null);
+const isBusy = computed(() => (
+  saving.value || savingMeter.value || editingMonth.value !== null || meterModalOpen.value
+));
 const canSaveEdit = computed(() => formReading.value !== '');
+
+const isEditingRow = (meter: ElectricityMeter, row: ElectricityRow) => (
+  editingMeterId.value === meter.id && editingMonth.value === row.month
+);
+
+interface TableRow {
+  meter: ElectricityMeter;
+  row: ElectricityRow;
+  showMoney: boolean;
+  showMonthStart: boolean;
+}
+
+const tableRows = computed(() => {
+  const result: TableRow[] = [];
+  for (let month = 1; month <= 12; month += 1) {
+    const monthItems: TableRow[] = [];
+    meters.value.forEach((meter) => {
+      const row = meter.rows.find((item) => item.month === month);
+      if (!row) {
+        return;
+      }
+      monthItems.push({
+        meter,
+        row,
+        showMoney: row.remainder !== null && row.remainder !== undefined,
+        showMonthStart: false,
+      });
+    });
+    if (monthItems.length > 0) {
+      monthItems[0].showMonthStart = month > 1 && (monthItems.length > 1 || meters.value.length > 1);
+    }
+    result.push(...monthItems);
+  }
+  return result;
+});
 
 const parseAmount = (value: string | null | undefined) => {
   if (value == null || value === '') {
@@ -319,6 +517,15 @@ const formatValue = (value: string | null | undefined) => {
   return value;
 };
 
+const isTariffMissing = (value: string | null | undefined) => value == null || value === '';
+
+const formatTariff = (value: string | null | undefined) => {
+  if (isTariffMissing(value)) {
+    return '0.00';
+  }
+  return value;
+};
+
 const formatRemainder = (value: string | null) => {
   if (value === null || value === undefined) {
     return '—';
@@ -330,8 +537,7 @@ const formatRemainder = (value: string | null) => {
   if (Math.abs(amount) < 0.005) {
     return '0.00';
   }
-  const sign = amount > 0 ? '+' : '';
-  return `${sign}${amount.toFixed(2)}`;
+  return amount.toFixed(2);
 };
 
 const remainderClass = (value: string | null) => {
@@ -345,21 +551,99 @@ const remainderClass = (value: string | null) => {
   return amount > 0 ? 'electricity__remainder--plus' : 'electricity__remainder--minus';
 };
 
+const debtClass = (value: string | null) => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const amount = Number(String(value).replace(',', '.'));
+  if (!Number.isFinite(amount) || amount <= 0.005) {
+    return null;
+  }
+  return 'electricity__debt';
+};
+
 interface ElectricityResult {
+  meters?: ElectricityMeter[];
   rows?: ElectricityRow[];
   tariffs?: Record<string, string | null>;
 }
 
 const applyResult = (result?: ElectricityResult | null) => {
-  rows.value = Array.isArray(result?.rows) ? result.rows : [];
+  if (Array.isArray(result?.meters) && result.meters.length > 0) {
+    meters.value = result.meters;
+  } else {
+    meters.value = Array.isArray(result?.rows)
+      ? [{
+        id: 0,
+        title: 'Счётчик 1',
+        show_money: true,
+        rows: result.rows,
+      }]
+      : [];
+  }
   tariffsByMonth.value = result?.tariffs && typeof result.tariffs === 'object' ? result.tariffs : {};
 };
 
 const cancelForm = () => {
+  editingMeterId.value = null;
   editingMonth.value = null;
   formReading.value = '';
   formPrevious.value = '';
   originalPrevious.value = null;
+};
+
+const closeMeterModal = () => {
+  if (savingMeter.value) {
+    return;
+  }
+  meterModalOpen.value = false;
+  meterModalId.value = null;
+  meterModalTitle.value = '';
+  meterModalDateStart.value = '';
+  meterModalDateEnd.value = '';
+};
+
+const openMeterModal = (meter: ElectricityMeter) => {
+  if (isBusy.value && !meterModalOpen.value) {
+    return;
+  }
+  cancelForm();
+  meterModalId.value = meter.id;
+  meterModalTitle.value = meter.title;
+  meterModalDateStart.value = meter.date_start || '';
+  meterModalDateEnd.value = meter.date_end || '';
+  meterModalOpen.value = true;
+};
+
+const saveMeterModal = async () => {
+  const title = meterModalTitle.value.trim();
+  if (!title || savingMeter.value || meterModalId.value == null || !props.year) {
+    return;
+  }
+  savingMeter.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { ok, message, result } = await api('gardening/update-electricity-meter', {
+      real_estate_id: props.realEstateId,
+      year: props.year,
+      id: meterModalId.value,
+      title,
+      date_start: meterModalDateStart.value || null,
+      date_end: meterModalDateEnd.value || null,
+    });
+    if (!ok) {
+      root.$emit('msg', 'error', message || 'Не удалось сохранить счётчик');
+      return;
+    }
+    applyResult(result);
+    emit('meters-changed');
+    savingMeter.value = false;
+    closeMeterModal();
+    root.$emit('msg', 'ok', 'Счётчик сохранён');
+  } finally {
+    savingMeter.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
 };
 
 const closePreviousModal = (force?: boolean) => {
@@ -434,7 +718,7 @@ const clearPreviousManual = async () => {
 
 const loadData = async () => {
   if (!props.year || !props.realEstateId) {
-    rows.value = [];
+    meters.value = [];
     tariffsByMonth.value = {};
     return;
   }
@@ -446,7 +730,7 @@ const loadData = async () => {
     });
     if (ok === false) {
       root.$emit('msg', 'error', message || 'Не удалось загрузить показания');
-      rows.value = [];
+      meters.value = [];
       tariffsByMonth.value = {};
       return;
     }
@@ -456,10 +740,11 @@ const loadData = async () => {
   }
 };
 
-const startEdit = (row: ElectricityRow) => {
-  if (editingMonth.value !== null) {
+const startEdit = (meter: ElectricityMeter, row: ElectricityRow) => {
+  if (editingMonth.value !== null || meterModalOpen.value) {
     return;
   }
+  editingMeterId.value = meter.id;
   editingMonth.value = row.month;
   formReading.value = row.current_reading || '';
   formPrevious.value = row.previous_reading || '';
@@ -476,11 +761,11 @@ const previousPayload = () => {
   return undefined;
 };
 
-const saveEdit = async () => {
+const saveEdit = async (meter: ElectricityMeter) => {
   if (!canSaveEdit.value || saving.value || editingMonth.value == null || !props.year) {
     return;
   }
-  const row = rows.value.find((item) => item.month === editingMonth.value);
+  const row = meter.rows.find((item) => item.month === editingMonth.value);
   if (!row) {
     return;
   }
@@ -503,6 +788,7 @@ const saveEdit = async () => {
       const payload: Record<string, unknown> = {
         real_estate_id: props.realEstateId,
         year: props.year,
+        meter_id: meter.id,
         month: row.month,
         reading: formReading.value,
       };
@@ -555,10 +841,34 @@ const removeItem = async (row: ElectricityRow) => {
   }
 };
 
+const addMeter = async () => {
+  if (!props.year || saving.value) {
+    return;
+  }
+  saving.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { ok, message, result } = await api('gardening/create-electricity-meter', {
+      real_estate_id: props.realEstateId,
+      year: props.year,
+    });
+    if (!ok) {
+      root.$emit('msg', 'error', message || 'Не удалось добавить счётчик');
+      return;
+    }
+    applyResult(result);
+    emit('meters-changed');
+  } finally {
+    saving.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
 watch(
   () => [props.realEstateId, props.year],
   () => {
     cancelForm();
+    closeMeterModal();
     closePreviousModal(true);
     loadData();
   },
@@ -572,7 +882,7 @@ watch(
   flex-direction: column;
   width: 100%;
   max-width: 100%;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
   background-color: #f8f7f7;
   border-top: none;
@@ -584,18 +894,18 @@ watch(
   flex-direction: row;
   align-items: stretch;
   min-height: 0;
-  flex: 1;
-  overflow: hidden;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 .electricity__panel {
   display: flex;
   flex-direction: column;
-  width: 65%;
-  max-width: 65%;
+  width: 81.25%;
+  max-width: 81.25%;
   min-height: 0;
-  flex: 0 0 65%;
-  overflow: hidden;
+  flex: 0 0 81.25%;
+  overflow: visible;
 }
 
 .electricity__header {
@@ -646,14 +956,41 @@ watch(
 }
 
 .electricity__body {
-  overflow: auto;
+  overflow: visible;
   min-height: 0;
-  flex: 1;
+  flex: 0 0 auto;
+}
+
+.electricity__meters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 34px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #b1b1b1;
+  background-color: #ececec;
+}
+
+.electricity__meter-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.electricity__meter-title {
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .electricity__table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
 
   th,
@@ -680,19 +1017,34 @@ watch(
 }
 
 .electricity__col-month {
-  width: 15%;
+  width: 12%;
+}
+
+.electricity__col-meter {
+  width: 14%;
+}
+
+.electricity__col-previous {
+  width: 14%;
+  min-width: 128px;
+}
+
+.electricity__row--month-start td {
+  border-top: 2px solid #8a8a8a;
 }
 
 .electricity__num {
   text-align: right !important;
 }
 
-.electricity__prev {
+.electricity__prev,
+.electricity__actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 4px;
-  height: 34px;
+  height: 32px;
+  min-width: 0;
 }
 
 .electricity-field {
@@ -708,27 +1060,8 @@ watch(
   line-height: 32px;
 }
 
-.electricity__notes {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  padding: 0 10px;
-  color: #8a6d3b;
-  font-size: 12px;
-}
-
-.electricity__notes-head {
-  height: 68px;
-  flex-shrink: 0;
-}
-
-.electricity__note {
-  height: 34px;
-  line-height: 34px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.electricity__manual {
+  font-style: italic;
 }
 
 .modal-body-form {
@@ -762,6 +1095,12 @@ watch(
 }
 
 .electricity__remainder--zero {
+  font-weight: bold;
+}
+
+.electricity__debt,
+.electricity__tariff--missing {
+  color: #c62828;
   font-weight: bold;
 }
 </style>

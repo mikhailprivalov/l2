@@ -1,5 +1,8 @@
 <template>
-  <div class="gardening-layout">
+  <div
+    class="gardening-layout"
+    :class="{ 'gardening-layout--page-scroll': showOwnerPanel }"
+  >
     <div class="header-row">
       <div class="header-row__nav">
         <div class="search">
@@ -82,7 +85,10 @@
         </div>
       </div>
     </div>
-    <div class="body-row">
+    <div
+      class="body-row"
+      :class="{ 'body-row--page-scroll': showOwnerPanel }"
+    >
       <div class="side-col side-col--nav">
         <div class="object-list">
           <div
@@ -136,7 +142,12 @@
             class="accounting-main"
           >
             <div class="accounting-main__owner">
-              <GardeningObjectOwner :real-estate-id="selectedId" />
+              <GardeningObjectOwner
+                :real-estate-id="selectedId"
+                :year="selectedYear"
+                :meters-revision="ownerMetersRevision"
+                @meters-changed="electricityRefresh += 1"
+              />
             </div>
             <div class="accounting-main__rest">
               <GardeningBankReceipts
@@ -144,8 +155,10 @@
                 :year="selectedYear"
               />
               <GardeningElectricityReadings
+                :key="`elec-${selectedId}-${selectedYear}-${electricityRefresh}`"
                 :real-estate-id="selectedId"
                 :year="selectedYear"
+                @meters-changed="ownerMetersRevision += 1"
               />
             </div>
           </div>
@@ -261,6 +274,8 @@ const saving = ref(false);
 const yearMin = ref(2000);
 const yearMaxOffset = ref(2);
 const selectedYear = ref<number | null>(currentYear);
+const electricityRefresh = ref(0);
+const ownerMetersRevision = ref(0);
 const settingsMode = ref(false);
 const yearPaymentTypes = ref<YearPaymentTypeOption[]>([]);
 const selectedPaymentTypeId = ref<number | null>(null);
@@ -429,6 +444,30 @@ onMounted(() => {
   background-color: #f8f7f7;
 }
 
+.gardening-layout--page-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  .side-col {
+    min-height: 0;
+  }
+
+  .side-col--nav,
+  .side-col--main {
+    overflow: visible;
+  }
+
+  .main-body {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .object-list {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+}
+
 .header-row {
   display: grid;
   grid-template-columns: 1fr 6.56fr;
@@ -507,6 +546,12 @@ onMounted(() => {
   min-height: 0;
 }
 
+.body-row--page-scroll {
+  flex: 1 0 auto;
+  min-height: min-content;
+  align-items: start;
+}
+
 .side-col {
   display: flex;
   flex-direction: column;
@@ -536,21 +581,19 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   min-height: 0;
 }
 
 .accounting-main__owner {
   flex: 0 0 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .accounting-main__rest {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }

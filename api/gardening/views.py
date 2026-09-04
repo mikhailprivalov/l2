@@ -12,6 +12,7 @@ from django.http import JsonResponse
 from clients.models import Individual, IndividualPhones
 from directory.models import (
     GardeningBankReceipt,
+    GardeningElectricityMeter,
     GardeningElectricityMeterReading,
     GardeningPaymentType,
     GardeningPaymentTypeRate,
@@ -391,6 +392,7 @@ def _serialize_owner(owner: OwnersRealEstate):
             "date_start": owner.date_start.isoformat() if owner.date_start else None,
             "date_end": owner.date_end.isoformat() if owner.date_end else None,
             "phones": [],
+            "comment": owner.comment or "",
         }
     phones = [{"id": phone.pk, "phone": phone.phone or ""} for phone in IndividualPhones.objects.filter(individual=individual).order_by("pk")]
     return {
@@ -403,12 +405,95 @@ def _serialize_owner(owner: OwnersRealEstate):
         "date_start": owner.date_start.isoformat() if owner.date_start else None,
         "date_end": owner.date_end.isoformat() if owner.date_end else None,
         "phones": phones,
+        "comment": owner.comment or "",
     }
 
 
 def _list_owners(real_estate: RealEstate):
     owners = OwnersRealEstate.objects.select_related("individual").filter(real_estate=real_estate, hide=False).order_by("date_start", "pk")
     return [_serialize_owner(owner) for owner in owners]
+
+
+def _list_plot_meters(real_estate: RealEstate):
+    return [_serialize_plot_meter(item) for item in GardeningElectricityMeter.objects.filter(real_estate=real_estate, hide=False).order_by("sort_weight", "pk")]
+
+
+def _serialize_plot_meter(meter: GardeningElectricityMeter):
+    return {
+        "id": meter.pk,
+        "title": meter.title,
+        "date_start": meter.date_start.isoformat() if meter.date_start else None,
+        "date_end": meter.date_end.isoformat() if meter.date_end else None,
+    }
+
+
+def _meter_active_in_month(meter: GardeningElectricityMeter, year, month):
+    month_start = date(int(year), int(month), 1)
+    month_end = date(int(year), int(month), calendar.monthrange(int(year), int(month))[1])
+    if meter.date_start and meter.date_start > month_end:
+        return False
+    if meter.date_end and meter.date_end < month_start:
+        return False
+    return True
+
+
+def _parse_meter_dates(item):
+    if not isinstance(item, dict):
+        return None, None, None
+    date_start, error = _parse_optional_date(item.get("date_start"), "дату начала установки")
+    if error:
+        return None, None, error
+    date_end, error = _parse_optional_date(item.get("date_end"), "дату окончания")
+    if error:
+        return None, None, error
+    if date_start and date_end and date_end < date_start:
+        return None, None, "Дата окончания не может быть раньше даты начала установки"
+    return date_start, date_end, None
+
+
+def _owner_payload(real_estate: RealEstate):
+    _ensure_meters(real_estate)
+    return {
+        "owners": _list_owners(real_estate),
+        "meters": _list_plot_meters(real_estate),
+    }
+
+
+def _sync_plot_meters(real_estate: RealEstate, meters_raw):
+    if not isinstance(meters_raw, list):
+        return None
+    sort_weight = 0
+    for item in meters_raw:
+        pk = None
+        if isinstance(item, dict):
+            title = (item.get("title") or "").strip()
+            pk = item.get("id")
+        else:
+            title = str(item or "").strip()
+        if not title:
+            continue
+        date_start, date_end, error = _parse_meter_dates(item if isinstance(item, dict) else {})
+        if error:
+            return error
+        sort_weight += 1
+        meter = None
+        if pk:
+            meter = GardeningElectricityMeter.objects.filter(pk=pk, real_estate=real_estate, hide=False).first()
+        if meter:
+            meter.title = title
+            meter.date_start = date_start
+            meter.date_end = date_end
+            meter.sort_weight = sort_weight
+            meter.save(update_fields=["title", "date_start", "date_end", "sort_weight"])
+        else:
+            GardeningElectricityMeter.objects.create(
+                real_estate=real_estate,
+                title=title,
+                date_start=date_start,
+                date_end=date_end,
+                sort_weight=sort_weight,
+            )
+    return None
 
 
 def _close_open_owners(real_estate: RealEstate, date_start, exclude_id=None):
@@ -466,7 +551,7 @@ def get_real_estate_owner(request):
     if not real_estate:
         return JsonResponse({"ok": False, "message": "Объект не найден"})
 
-    return JsonResponse({"ok": True, "result": _list_owners(real_estate)})
+    return JsonResponse({"ok": True, "result": _owner_payload(real_estate)})
 
 
 @login_required
@@ -480,6 +565,8 @@ def save_real_estate_owner(request):
     real_estate = RealEstate.objects.filter(pk=real_estate_id, hide=False).first()
     if not real_estate:
         return JsonResponse({"ok": False, "message": "Объект не найден"})
+
+    comment = (body.get("comment") or "").strip()
 
     family = (body.get("family") or "").strip()
     name = (body.get("name") or "").strip()
@@ -501,6 +588,17 @@ def save_real_estate_owner(request):
 
     if not family and not name and not patronymic:
         return JsonResponse({"ok": False, "message": "Укажите ФИО"})
+
+    meters_raw = body.get("meters")
+    if isinstance(meters_raw, list):
+        for item in meters_raw:
+            if not isinstance(item, dict):
+                continue
+            if not (item.get("title") or "").strip():
+                continue
+            _, _, dates_error = _parse_meter_dates(item)
+            if dates_error:
+                return JsonResponse({"ok": False, "message": dates_error})
 
     owner_id = body.get("owner_id")
     owner = None
@@ -527,7 +625,8 @@ def save_real_estate_owner(request):
             owner.individual = individual
         owner.date_start = date_start
         owner.date_end = date_end
-        owner.save(update_fields=["individual", "date_start", "date_end"])
+        owner.comment = comment
+        owner.save(update_fields=["individual", "date_start", "date_end", "comment"])
     else:
         close_error = _close_open_owners(real_estate, date_start)
         if close_error:
@@ -544,11 +643,15 @@ def save_real_estate_owner(request):
             individual=individual,
             date_start=date_start,
             date_end=date_end,
+            comment=comment,
         )
 
     _sync_individual_phones(individual, body.get("phones"))
+    sync_error = _sync_plot_meters(real_estate, body.get("meters"))
+    if sync_error:
+        return JsonResponse({"ok": False, "message": sync_error})
 
-    return JsonResponse({"ok": True, "result": _list_owners(real_estate)})
+    return JsonResponse({"ok": True, "result": _owner_payload(real_estate)})
 
 
 @login_required
@@ -570,7 +673,7 @@ def delete_real_estate_owner(request):
     owner.hide = True
     owner.save(update_fields=["hide"])
 
-    return JsonResponse({"ok": True, "result": _list_owners(real_estate)})
+    return JsonResponse({"ok": True, "result": _owner_payload(real_estate)})
 
 
 def _serialize_bank_receipt(item: GardeningBankReceipt, with_children=False):
@@ -1060,9 +1163,6 @@ def _tariff_for_month(payment_type: GardeningPaymentType, year, month):
     month_end = date(int(year), int(month), last_day)
     found = None
     found_start = None
-    year_found = None
-    year_found_start = None
-    year_start, year_end = _year_bounds(year)
     for rate in payment_type.rates.all():
         if not rate.date_start or not rate.date_end:
             continue
@@ -1070,13 +1170,7 @@ def _tariff_for_month(payment_type: GardeningPaymentType, year, month):
             if found is None or rate.date_start > found_start:
                 found = rate.amount
                 found_start = rate.date_start
-        if rate.date_start <= year_end and rate.date_end >= year_start:
-            if year_found is None or rate.date_start > year_found_start:
-                year_found = rate.amount
-                year_found_start = rate.date_start
-    if found is not None:
-        return found
-    return year_found
+    return found
 
 
 def _receipts_by_month(real_estate_id, payment_type_id):
@@ -1113,85 +1207,170 @@ def _parse_month(raw):
     return month, None
 
 
+def _meters_qs(real_estate: RealEstate):
+    return GardeningElectricityMeter.objects.filter(real_estate=real_estate, hide=False).order_by("sort_weight", "pk")
+
+
+def _ensure_meters(real_estate: RealEstate):
+    meters = list(_meters_qs(real_estate))
+    if meters:
+        return meters
+    return [GardeningElectricityMeter.objects.create(real_estate=real_estate, title="Счётчик 1", sort_weight=0)]
+
+
+def _resolve_meter(real_estate: RealEstate, meter_id):
+    if not meter_id:
+        return None, "Не указан счётчик"
+    meter = _meters_qs(real_estate).filter(pk=meter_id).first()
+    if not meter:
+        return None, "Счётчик не найден"
+    return meter, None
+
+
+def _serialize_electricity_row(curr_row, year, month, calc, plot_calc, show_money):
+    row = {
+        "id": curr_row.pk if curr_row else None,
+        "year": year,
+        "month": month,
+        "month_label": ELECTRICITY_MONTH_LABELS[month],
+        "previous_reading": _format_money(calc["previous_reading"]) if calc["previous_reading"] is not None else None,
+        "previous_manual": bool(calc["previous_manual"]),
+        "current_reading": _format_money(calc["current_reading"]) if calc["current_reading"] is not None else None,
+        "consumption": _format_money(calc["consumption"]) if calc["consumption"] is not None else None,
+        "tariff": _format_money(calc["tariff"]) if calc["tariff"] is not None else None,
+        "charge": _format_money(calc["charge"]) if calc["charge"] is not None else None,
+        "written_off": None,
+        "debt": None,
+        "receipt": None,
+        "remainder": None,
+    }
+    if show_money:
+        row["written_off"] = _format_money(plot_calc["written_off"]) if plot_calc["written_off"] is not None else None
+        row["debt"] = _format_money(plot_calc["debt"]) if plot_calc["debt"] is not None else None
+        row["receipt"] = _format_money(plot_calc["receipt"])
+        row["remainder"] = _format_money(plot_calc["remainder"]) if plot_calc["remainder"] is not None else None
+    return row
+
+
 def _electricity_result(real_estate: RealEstate, year):
     year = int(year)
+    meters = _ensure_meters(real_estate)
     payment_type = _electricity_payment_type()
     payment_type_id = payment_type.pk if payment_type else None
-    readings_qs = GardeningElectricityMeterReading.objects.filter(hide=False, real_estate=real_estate)
-    readings = {(item.year, item.month): item for item in readings_qs}
+    readings_qs = GardeningElectricityMeterReading.objects.filter(hide=False, real_estate=real_estate, meter__hide=False)
+    readings = {(item.meter_id, item.year, item.month): item for item in readings_qs}
     receipts_totals = _receipts_by_month(real_estate.pk, payment_type_id)
     start_years = [year]
     if readings:
-        start_years.append(min(item[0] for item in readings.keys()))
+        start_years.append(min(item[1] for item in readings.keys()))
     if receipts_totals:
         start_years.append(min(item[0] for item in receipts_totals.keys()))
     start_year = min(start_years)
-    month_calc = {}
+    meter_calc = {}
+    plot_calc = {}
     balance = Decimal("0")
     for y in range(start_year, year + 1):
         for month in range(1, 13):
             prev_year, prev_month = (y - 1, 12) if month == 1 else (y, month - 1)
-            prev_row = readings.get((prev_year, prev_month))
-            curr_row = readings.get((y, month))
-            auto_prev = prev_row.reading if prev_row else None
-            manual_prev = curr_row.previous_reading_manual if curr_row else None
-            prev_reading = manual_prev if manual_prev is not None else auto_prev
-            curr_reading = curr_row.reading if curr_row else None
-            previous_manual = curr_row is not None and curr_row.previous_reading_manual is not None
-            consumption = None
-            if prev_reading is not None and curr_reading is not None:
-                consumption = curr_reading - prev_reading
-            tariff = _tariff_for_month(payment_type, y, month) if payment_type else None
-            charge = None
-            if consumption is not None and tariff is not None:
-                charge = consumption * tariff
+            total_charge = Decimal("0")
+            any_charge = False
+            for meter in meters:
+                if not _meter_active_in_month(meter, y, month):
+                    meter_calc[(meter.pk, y, month)] = {
+                        "previous_reading": None,
+                        "previous_manual": False,
+                        "current_reading": None,
+                        "consumption": None,
+                        "tariff": None,
+                        "charge": None,
+                    }
+                    continue
+                prev_row = readings.get((meter.pk, prev_year, prev_month))
+                curr_row = readings.get((meter.pk, y, month))
+                auto_prev = prev_row.reading if prev_row else None
+                manual_prev = curr_row.previous_reading_manual if curr_row else None
+                prev_reading = manual_prev if manual_prev is not None else auto_prev
+                curr_reading = curr_row.reading if curr_row else None
+                previous_manual = curr_row is not None and curr_row.previous_reading_manual is not None
+                consumption = None
+                if prev_reading is not None and curr_reading is not None:
+                    consumption = curr_reading - prev_reading
+                tariff = _tariff_for_month(payment_type, y, month) if payment_type else None
+                charge = None
+                if consumption is not None and tariff is not None:
+                    charge = consumption * tariff
+                    any_charge = True
+                    total_charge += charge
+                meter_calc[(meter.pk, y, month)] = {
+                    "previous_reading": prev_reading,
+                    "previous_manual": previous_manual,
+                    "current_reading": curr_reading,
+                    "consumption": consumption,
+                    "tariff": tariff,
+                    "charge": charge,
+                }
             receipts = receipts_totals.get((y, month), Decimal("0"))
-            overpayment = balance + receipts
-            charge_for_balance = charge if charge is not None else Decimal("0")
-            remainder = overpayment - charge_for_balance
+            available = balance + receipts
+            written_off = None
+            debt = None
+            if any_charge:
+                written_off = min(available, total_charge)
+                if written_off < 0:
+                    written_off = Decimal("0")
+                debt = total_charge - written_off
+                remainder = available - written_off
+            else:
+                remainder = available
             balance = remainder
-            month_calc[(y, month)] = {
-                "previous_reading": prev_reading,
-                "previous_manual": previous_manual,
-                "current_reading": curr_reading,
-                "consumption": consumption,
-                "tariff": tariff,
-                "charge": charge,
+            plot_calc[(y, month)] = {
                 "receipt": receipts,
+                "written_off": written_off,
+                "debt": debt,
                 "remainder": remainder,
             }
 
-    rows = []
+    first_money_by_month = {}
     for month in range(1, 13):
-        curr_row = readings.get((year, month))
-        calc = month_calc[(year, month)]
-        rows.append(
-            {
-                "id": curr_row.pk if curr_row else None,
-                "year": year,
-                "month": month,
-                "month_label": ELECTRICITY_MONTH_LABELS[month],
-                "previous_reading": _format_money(calc["previous_reading"]) if calc["previous_reading"] is not None else None,
-                "previous_manual": bool(calc["previous_manual"]),
-                "current_reading": _format_money(calc["current_reading"]) if calc["current_reading"] is not None else None,
-                "consumption": _format_money(calc["consumption"]) if calc["consumption"] is not None else None,
-                "tariff": _format_money(calc["tariff"]) if calc["tariff"] is not None else None,
-                "charge": _format_money(calc["charge"]) if calc["charge"] is not None else None,
-                "receipt": _format_money(calc["receipt"]),
-                "remainder": _format_money(calc["remainder"]) if calc["remainder"] is not None else None,
-            }
-        )
+        for meter in meters:
+            if _meter_active_in_month(meter, year, month):
+                first_money_by_month[month] = meter.pk
+                break
 
-    december_prev = readings.get((year - 1, 12))
+    meters_payload = []
+    for meter in meters:
+        rows = []
+        for month in range(1, 13):
+            if not _meter_active_in_month(meter, year, month):
+                continue
+            curr_row = readings.get((meter.pk, year, month))
+            show_money = first_money_by_month.get(month) == meter.pk
+            rows.append(
+                _serialize_electricity_row(
+                    curr_row,
+                    year,
+                    month,
+                    meter_calc[(meter.pk, year, month)],
+                    plot_calc[(year, month)],
+                    show_money,
+                )
+            )
+        if not rows:
+            continue
+        payload = _serialize_plot_meter(meter)
+        payload["show_money"] = first_money_by_month.get(1) == meter.pk
+        payload["rows"] = rows
+        meters_payload.append(payload)
+
     tariffs = {}
     for month in range(1, 13):
-        tariff_value = month_calc.get((year, month), {}).get("tariff")
+        tariff_value = meter_calc.get((meters[0].pk, year, month), {}).get("tariff") if meters else None
         tariffs[str(month)] = _format_money(tariff_value) if tariff_value is not None else None
+    first_rows = meters_payload[0]["rows"] if meters_payload else []
     return {
         "payment_type": {"id": payment_type.pk, "title": payment_type.title} if payment_type else None,
-        "previous_year_december": _format_money(december_prev.reading) if december_prev else None,
         "tariffs": tariffs,
-        "rows": rows,
+        "meters": meters_payload,
+        "rows": first_rows,
     }
 
 
@@ -1251,11 +1430,15 @@ def create_electricity_reading(request):
             if error:
                 return JsonResponse({"ok": False, "message": error})
 
-    existing = GardeningElectricityMeterReading.objects.filter(real_estate=real_estate, year=year, month=month, hide=False).first()
+    meter, meter_error = _resolve_meter(real_estate, body.get("meter_id"))
+    if meter_error:
+        return JsonResponse({"ok": False, "message": meter_error})
+
+    existing = GardeningElectricityMeterReading.objects.filter(real_estate=real_estate, meter=meter, year=year, month=month, hide=False).first()
     if existing:
         return JsonResponse({"ok": False, "message": "Показание за этот месяц уже есть"})
 
-    hidden = GardeningElectricityMeterReading.objects.filter(real_estate=real_estate, year=year, month=month, hide=True).first()
+    hidden = GardeningElectricityMeterReading.objects.filter(real_estate=real_estate, meter=meter, year=year, month=month, hide=True).first()
     if hidden:
         hidden.hide = False
         hidden.reading = reading
@@ -1264,6 +1447,7 @@ def create_electricity_reading(request):
     else:
         GardeningElectricityMeterReading.objects.create(
             real_estate=real_estate,
+            meter=meter,
             year=year,
             month=month,
             reading=reading,
@@ -1299,7 +1483,17 @@ def update_electricity_reading(request):
         if error:
             return JsonResponse({"ok": False, "message": error})
         if month != item.month:
-            exists = GardeningElectricityMeterReading.objects.filter(real_estate=item.real_estate, year=item.year, month=month, hide=False).exclude(pk=item.pk).exists()
+            exists = (
+                GardeningElectricityMeterReading.objects.filter(
+                    real_estate=item.real_estate,
+                    meter_id=item.meter_id,
+                    year=item.year,
+                    month=month,
+                    hide=False,
+                )
+                .exclude(pk=item.pk)
+                .exists()
+            )
             if exists:
                 return JsonResponse({"ok": False, "message": "Показание за этот месяц уже есть"})
             item.month = month
@@ -1357,3 +1551,69 @@ def delete_electricity_reading(request):
     item.hide = True
     item.save(update_fields=["hide"])
     return JsonResponse({"ok": True, "result": _electricity_result(real_estate, year)})
+
+
+@login_required
+@group_required("Бухгалтер садоводства")
+def create_electricity_meter(request):
+    body = json.loads(request.body)
+    real_estate, year, error = _resolve_real_estate_year(body=body)
+    if error:
+        return error
+
+    meters = list(_meters_qs(real_estate))
+    title = (body.get("title") or "").strip() or f"Счётчик {len(meters) + 1}"
+    date_start, date_end, dates_error = _parse_meter_dates(body)
+    if dates_error:
+        return JsonResponse({"ok": False, "message": dates_error})
+    sort_weight = (meters[-1].sort_weight if meters else 0) + 1
+    GardeningElectricityMeter.objects.create(
+        real_estate=real_estate,
+        title=title,
+        date_start=date_start,
+        date_end=date_end,
+        sort_weight=sort_weight,
+    )
+    return JsonResponse({"ok": True, "result": _electricity_result(real_estate, year)})
+
+
+@login_required
+@group_required("Бухгалтер садоводства")
+def update_electricity_meter(request):
+    body = json.loads(request.body)
+    real_estate_id = body.get("real_estate_id")
+    if not real_estate_id:
+        return JsonResponse({"ok": False, "message": "Не указан объект"})
+    real_estate = RealEstate.objects.filter(pk=real_estate_id, hide=False).first()
+    if not real_estate:
+        return JsonResponse({"ok": False, "message": "Объект не найден"})
+    year = body.get("year")
+    if year not in (None, ""):
+        try:
+            year = int(year)
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "message": "Некорректный год"})
+    else:
+        year = None
+    meter, meter_error = _resolve_meter(real_estate, body.get("id") or body.get("meter_id"))
+    if meter_error:
+        return JsonResponse({"ok": False, "message": meter_error})
+    title = (body.get("title") or "").strip()
+    if not title:
+        return JsonResponse({"ok": False, "message": "Укажите название счётчика"})
+    date_start, date_end, dates_error = _parse_meter_dates(body)
+    if dates_error:
+        return JsonResponse({"ok": False, "message": dates_error})
+    meter.title = title
+    meter.date_start = date_start
+    meter.date_end = date_end
+    meter.save(update_fields=["title", "date_start", "date_end"])
+    if year:
+        return JsonResponse({"ok": True, "result": _electricity_result(real_estate, year)})
+    return JsonResponse({"ok": True, "result": _owner_payload(real_estate)})
+
+
+@login_required
+@group_required("Бухгалтер садоводства")
+def delete_electricity_meter(request):
+    return JsonResponse({"ok": False, "message": "Счётчик нельзя удалить, укажите дату окончания"})

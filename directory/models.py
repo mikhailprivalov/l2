@@ -2344,6 +2344,7 @@ class OwnersRealEstate(models.Model):
     date_end = models.DateField(help_text="Дата окончания", blank=True, null=True, default=None)
     part_numerator = models.PositiveIntegerField(help_text="Числитель части доли", blank=True, null=True, default=None)
     part_denominator = models.PositiveIntegerField(help_text="Знаменатель части доли", blank=True, null=True, default=None)
+    comment = models.TextField(blank=True, default="", help_text="Комментарий")
 
     @property
     def share_display(self):
@@ -2451,8 +2452,31 @@ class GardeningBankReceipt(models.Model):
         verbose_name_plural = "Садоводство — приходы"
 
 
+class GardeningElectricityMeter(models.Model):
+    real_estate = models.ForeignKey(RealEstate, help_text="Недвижиомть", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="Счётчик 1", help_text="Название счётчика")
+    date_start = models.DateField(help_text="Дата начала установки", blank=True, null=True, default=None)
+    date_end = models.DateField(help_text="Дата окончания", blank=True, null=True, default=None)
+    sort_weight = models.IntegerField(default=0, blank=True, help_text="Порядок")
+    hide = models.BooleanField(default=False, db_index=True)
+
+    def __str__(self):
+        return f"{self.real_estate}:{self.title}"
+
+    class Meta:
+        verbose_name = "Садоводство — счётчик электроэнергии"
+        verbose_name_plural = "Садоводство — счётчики электроэнергии"
+        ordering = ("sort_weight", "pk")
+
+
 class GardeningElectricityMeterReading(models.Model):
     real_estate = models.ForeignKey(RealEstate, help_text="Недвижиомть", on_delete=models.CASCADE)
+    meter = models.ForeignKey(
+        GardeningElectricityMeter,
+        help_text="Счётчик",
+        related_name="readings",
+        on_delete=models.CASCADE,
+    )
     year = models.PositiveIntegerField(help_text="Год показания", db_index=True)
     month = models.PositiveSmallIntegerField(help_text="Месяц показания (1–12)")
     reading = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Показание счётчика")
@@ -2467,7 +2491,7 @@ class GardeningElectricityMeterReading(models.Model):
     hide = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
-        return f"{self.real_estate}:{self.year}-{self.month}={self.reading}"
+        return f"{self.real_estate}:{self.meter_id}:{self.year}-{self.month}={self.reading}"
 
     class Meta:
         verbose_name = "Садоводство — показание счётчика"
@@ -2475,4 +2499,5 @@ class GardeningElectricityMeterReading(models.Model):
         ordering = ("year", "month", "pk")
         indexes = [
             models.Index(fields=["real_estate", "year", "month"], name="directory_g_real_es_elec_idx"),
+            models.Index(fields=["meter", "year", "month"], name="directory_g_meter_elec_idx"),
         ]
