@@ -428,11 +428,11 @@ def _serialize_plot_meter(meter: GardeningElectricityMeter):
 
 
 def _meter_active_in_month(meter: GardeningElectricityMeter, year, month):
-    month_start = date(int(year), int(month), 1)
-    month_end = date(int(year), int(month), calendar.monthrange(int(year), int(month))[1])
-    if meter.date_start and meter.date_start > month_end:
+    year = int(year)
+    month = int(month)
+    if meter.date_start and (meter.date_start.year, meter.date_start.month) > (year, month):
         return False
-    if meter.date_end and meter.date_end < month_start:
+    if meter.date_end and (meter.date_end.year, meter.date_end.month) < (year, month):
         return False
     return True
 

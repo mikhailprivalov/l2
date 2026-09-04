@@ -26,11 +26,11 @@
           class="electricity__body"
         >
           <div
-            v-if="meters.length > 0"
+            v-if="metersInPeriod.length > 0"
             class="electricity__meters-bar"
           >
             <div
-              v-for="meter in meters"
+              v-for="meter in metersInPeriod"
               :key="`bar-${meter.id}`"
               class="electricity__meter-chip"
             >
@@ -53,7 +53,7 @@
                   Месяц
                 </th>
                 <th
-                  v-if="meters.length > 1"
+                  v-if="showMeterColumn"
                   class="electricity__col-meter"
                 >
                   Счётчик
@@ -82,7 +82,7 @@
                   {{ item.row.month_label }}
                 </td>
                 <td
-                  v-if="meters.length > 1"
+                  v-if="showMeterColumn"
                   class="electricity__col-meter"
                 >
                   {{ item.meter.title }}
@@ -449,11 +449,60 @@ interface TableRow {
   showMonthStart: boolean;
 }
 
+const parseYearMonth = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+  const [yearPart, monthPart] = String(value).slice(0, 10).split('-');
+  const yearValue = Number(yearPart);
+  const monthValue = Number(monthPart);
+  if (!Number.isFinite(yearValue) || !Number.isFinite(monthValue) || monthValue < 1 || monthValue > 12) {
+    return null;
+  }
+  return { year: yearValue, month: monthValue };
+};
+
+const meterActiveInMonth = (meter: ElectricityMeter, year: number, month: number) => {
+  const start = parseYearMonth(meter.date_start);
+  const end = parseYearMonth(meter.date_end);
+  if (start && (start.year > year || (start.year === year && start.month > month))) {
+    return false;
+  }
+  if (end && (end.year < year || (end.year === year && end.month < month))) {
+    return false;
+  }
+  return true;
+};
+
+const metersInPeriod = computed(() => {
+  const { year } = props;
+  if (!year) {
+    return [];
+  }
+  return meters.value.filter((meter) => {
+    for (let month = 1; month <= 12; month += 1) {
+      if (meterActiveInMonth(meter, year, month)) {
+        return true;
+      }
+    }
+    return false;
+  });
+});
+
+const showMeterColumn = computed(() => metersInPeriod.value.length > 1);
+
 const tableRows = computed(() => {
   const result: TableRow[] = [];
+  const { year } = props;
+  if (!year) {
+    return result;
+  }
   for (let month = 1; month <= 12; month += 1) {
     const monthItems: TableRow[] = [];
-    meters.value.forEach((meter) => {
+    metersInPeriod.value.forEach((meter) => {
+      if (!meterActiveInMonth(meter, year, month)) {
+        return;
+      }
       const row = meter.rows.find((item) => item.month === month);
       if (!row) {
         return;
@@ -466,7 +515,9 @@ const tableRows = computed(() => {
       });
     });
     if (monthItems.length > 0) {
-      monthItems[0].showMonthStart = month > 1 && (monthItems.length > 1 || meters.value.length > 1);
+      monthItems[0].showMonthStart = month > 1 && (
+        monthItems.length > 1 || metersInPeriod.value.length > 1
+      );
     }
     result.push(...monthItems);
   }
