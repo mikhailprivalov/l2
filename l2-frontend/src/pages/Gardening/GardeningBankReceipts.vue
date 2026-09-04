@@ -750,7 +750,8 @@ watch(
   flex-direction: column;
   width: 50%;
   max-width: 50%;
-  height: 100%;
+  flex: 0 0 auto;
+  height: auto;
   min-height: 0;
   background-color: #f8f7f7;
 }
@@ -816,9 +817,9 @@ watch(
 }
 
 .bank-receipts__list {
-  overflow: auto;
+  overflow: visible;
   min-height: 0;
-  flex: 1;
+  flex: 0 0 auto;
 }
 
 .bank-receipts__add-btn {

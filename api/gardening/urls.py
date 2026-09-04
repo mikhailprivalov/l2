@@ -21,4 +21,8 @@ urlpatterns = [
     path('create-payment-type-rate', views.create_payment_type_rate),
     path('update-payment-type-rate', views.update_payment_type_rate),
     path('delete-payment-type-rate', views.delete_payment_type_rate),
+    path('get-electricity-readings', views.get_electricity_readings),
+    path('create-electricity-reading', views.create_electricity_reading),
+    path('update-electricity-reading', views.update_electricity_reading),
+    path('delete-electricity-reading', views.delete_electricity_reading),
 ]

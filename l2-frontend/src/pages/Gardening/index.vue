@@ -143,6 +143,10 @@
                 :real-estate-id="selectedId"
                 :year="selectedYear"
               />
+              <GardeningElectricityReadings
+                :real-estate-id="selectedId"
+                :year="selectedYear"
+              />
             </div>
           </div>
         </div>
@@ -229,6 +233,7 @@ import GardeningPaymentTypes from '@/pages/Gardening/GardeningPaymentTypes.vue';
 import GardeningYearRates from '@/pages/Gardening/GardeningYearRates.vue';
 import GardeningObjectOwner from '@/pages/Gardening/GardeningObjectOwner.vue';
 import GardeningBankReceipts from '@/pages/Gardening/GardeningBankReceipts.vue';
+import GardeningElectricityReadings from '@/pages/Gardening/GardeningElectricityReadings.vue';
 import GardeningAccountingSummary from '@/pages/Gardening/GardeningAccountingSummary.vue';
 
 interface RealEstateItem {
@@ -544,7 +549,10 @@ onMounted(() => {
 .accounting-main__rest {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .search {

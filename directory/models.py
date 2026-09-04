@@ -2274,7 +2274,6 @@ class ParaclinicInputFieldFileSettings(models.Model):
 
     @staticmethod
     def update_file_field_settings(field: ParaclinicInputField, file_settings: dict):
-
         # Если поменялся тип поля - удаляем настройки
         if field.field_type != 42:
             ParaclinicInputFieldFileSettings.objects.filter(field=field).delete()
@@ -2450,3 +2449,30 @@ class GardeningBankReceipt(models.Model):
     class Meta:
         verbose_name = "Садоводство — приход"
         verbose_name_plural = "Садоводство — приходы"
+
+
+class GardeningElectricityMeterReading(models.Model):
+    real_estate = models.ForeignKey(RealEstate, help_text="Недвижиомть", on_delete=models.CASCADE)
+    year = models.PositiveIntegerField(help_text="Год показания", db_index=True)
+    month = models.PositiveSmallIntegerField(help_text="Месяц показания (1–12)")
+    reading = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Показание счётчика")
+    previous_reading_manual = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        default=None,
+        help_text="Предыдущее показание, введённое вручную",
+    )
+    hide = models.BooleanField(default=False, db_index=True)
+
+    def __str__(self):
+        return f"{self.real_estate}:{self.year}-{self.month}={self.reading}"
+
+    class Meta:
+        verbose_name = "Садоводство — показание счётчика"
+        verbose_name_plural = "Садоводство — показания счётчика"
+        ordering = ("year", "month", "pk")
+        indexes = [
+            models.Index(fields=["real_estate", "year", "month"], name="directory_g_real_es_elec_idx"),
+        ]
