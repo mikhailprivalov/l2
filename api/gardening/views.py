@@ -393,6 +393,7 @@ def _serialize_owner(owner: OwnersRealEstate):
             "date_end": owner.date_end.isoformat() if owner.date_end else None,
             "phones": [],
             "comment": owner.comment or "",
+            "email": owner.email or "",
         }
     phones = [{"id": phone.pk, "phone": phone.phone or ""} for phone in IndividualPhones.objects.filter(individual=individual).order_by("pk")]
     return {
@@ -406,6 +407,7 @@ def _serialize_owner(owner: OwnersRealEstate):
         "date_end": owner.date_end.isoformat() if owner.date_end else None,
         "phones": phones,
         "comment": owner.comment or "",
+        "email": owner.email or "",
     }
 
 
@@ -451,11 +453,31 @@ def _parse_meter_dates(item):
     return date_start, date_end, None
 
 
+def _format_area(value):
+    if value is None:
+        return None
+    return _format_money(value)
+
+
+def _parse_optional_area(raw):
+    if raw is None or raw == "":
+        return None, None
+    try:
+        value = Decimal(str(raw).replace(",", ".").strip())
+    except (InvalidOperation, TypeError, ValueError):
+        return None, "Площадь должна быть числом"
+    if value < 0:
+        return None, "Площадь не может быть отрицательной"
+    return value, None
+
+
 def _owner_payload(real_estate: RealEstate):
     _ensure_meters(real_estate)
     return {
         "owners": _list_owners(real_estate),
         "meters": _list_plot_meters(real_estate),
+        "area": _format_area(real_estate.area),
+        "num_object": real_estate.num_object,
     }
 
 
@@ -567,6 +589,12 @@ def save_real_estate_owner(request):
         return JsonResponse({"ok": False, "message": "Объект не найден"})
 
     comment = (body.get("comment") or "").strip()
+    email = (body.get("email") or "").strip()
+    if len(email) > 255:
+        return JsonResponse({"ok": False, "message": "Email слишком длинный"})
+    area, area_error = _parse_optional_area(body.get("area"))
+    if area_error:
+        return JsonResponse({"ok": False, "message": area_error})
 
     family = (body.get("family") or "").strip()
     name = (body.get("name") or "").strip()
@@ -626,7 +654,8 @@ def save_real_estate_owner(request):
         owner.date_start = date_start
         owner.date_end = date_end
         owner.comment = comment
-        owner.save(update_fields=["individual", "date_start", "date_end", "comment"])
+        owner.email = email
+        owner.save(update_fields=["individual", "date_start", "date_end", "comment", "email"])
     else:
         close_error = _close_open_owners(real_estate, date_start)
         if close_error:
@@ -644,7 +673,11 @@ def save_real_estate_owner(request):
             date_start=date_start,
             date_end=date_end,
             comment=comment,
+            email=email,
         )
+
+    real_estate.area = area
+    real_estate.save(update_fields=["area"])
 
     _sync_individual_phones(individual, body.get("phones"))
     sync_error = _sync_plot_meters(real_estate, body.get("meters"))
@@ -1129,6 +1162,146 @@ def get_accounting_summary(request):
             },
         }
     )
+
+
+def _tariff_for_year_or_none(payment_type: GardeningPaymentType, year):
+    year_start, year_end = _year_bounds(year)
+    for rate in payment_type.rates.all():
+        if not rate.date_start or not rate.date_end:
+            continue
+        if rate.date_start <= year_end and rate.date_end >= year_start:
+            return rate.amount
+    return None
+
+
+def _contribution_tariff(payment_type: GardeningPaymentType, year):
+    if payment_type.period == GardeningPaymentType.PERIOD_MONTH:
+        found = None
+        for month in range(1, 13):
+            tariff = _tariff_for_month(payment_type, year, month)
+            if tariff is None:
+                continue
+            if found is None:
+                found = tariff
+            elif tariff != found:
+                return _tariff_for_year_or_none(payment_type, year)
+        return found
+    return _tariff_for_year_or_none(payment_type, year)
+
+
+def _contribution_coefficient(payment_type: GardeningPaymentType, area):
+    if payment_type.is_by_area:
+        return area
+    return Decimal("1")
+
+
+def _charge_for_contribution(payment_type: GardeningPaymentType, year, area=None):
+    if payment_type.is_by_area and area is None:
+        return None
+
+    def apply_area(rate):
+        if payment_type.is_by_area:
+            return rate * area
+        return rate
+
+    if payment_type.period == GardeningPaymentType.PERIOD_MONTH:
+        total = Decimal("0")
+        any_rate = False
+        for month in range(1, 13):
+            tariff = _tariff_for_month(payment_type, year, month)
+            if tariff is not None:
+                any_rate = True
+                total += apply_area(tariff)
+        return total if any_rate else None
+    tariff = _tariff_for_year_or_none(payment_type, year)
+    if tariff is None:
+        return None
+    return apply_area(tariff)
+
+
+def _receipts_by_year(real_estate_id, payment_type_id):
+    totals = {}
+    qs = GardeningBankReceipt.objects.filter(
+        hide=False,
+        real_estate_id=real_estate_id,
+        payment_type_id=payment_type_id,
+        date__isnull=False,
+    ).only("date", "amount")
+    for item in qs:
+        totals[item.date.year] = totals.get(item.date.year, Decimal("0")) + item.amount
+    return totals
+
+
+def _contribution_start_year(payment_type: GardeningPaymentType, receipts_by_year, year):
+    years = [year]
+    if receipts_by_year:
+        years.append(min(receipts_by_year.keys()))
+    for rate in payment_type.rates.all():
+        if rate.date_start:
+            years.append(rate.date_start.year)
+    return max(min(years), year - 40)
+
+
+def _contribution_row(real_estate: RealEstate, payment_type: GardeningPaymentType, year):
+    receipts_by_year = _receipts_by_year(real_estate.pk, payment_type.pk)
+    start_year = _contribution_start_year(payment_type, receipts_by_year, year)
+    remainder = Decimal("0")
+    charge = None
+    written_off = None
+    debt = None
+    for y in range(start_year, year + 1):
+        year_receipt = receipts_by_year.get(y, Decimal("0"))
+        year_charge = _charge_for_contribution(payment_type, y, real_estate.area)
+        available = remainder + year_receipt
+        if year_charge is not None:
+            written = min(available, year_charge)
+            if written < 0:
+                written = Decimal("0")
+            remainder = available - written
+            written_off = written
+            debt = year_charge - written
+            charge = year_charge
+        else:
+            remainder = available
+            written_off = None
+            debt = None
+            charge = None
+    tariff = _contribution_tariff(payment_type, year)
+    coefficient = _contribution_coefficient(payment_type, real_estate.area)
+    return {
+        "payment_type_id": payment_type.pk,
+        "title": payment_type.title,
+        "tariff": _format_money(tariff) if tariff is not None else None,
+        "coefficient": _format_money(coefficient) if coefficient is not None else None,
+        "charge": _format_money(charge) if charge is not None else None,
+        "written_off": _format_money(written_off) if written_off is not None else None,
+        "debt": _format_money(debt) if debt is not None else None,
+        "remainder": _format_money(remainder),
+    }
+
+
+def _contribution_payment_types(year):
+    result = []
+    for item in _accounting_payment_types(year):
+        if item.not_control:
+            continue
+        result.append(item)
+    return result
+
+
+@login_required
+@group_required("Бухгалтер садоводства")
+def get_plot_contributions(request):
+    if request.method == "POST" and request.body:
+        body = json.loads(request.body)
+        real_estate, year, error = _resolve_real_estate_year(body=body)
+    else:
+        real_estate, year, error = _resolve_real_estate_year(get=request.GET)
+    if error:
+        return error
+
+    rows = [_contribution_row(real_estate, payment_type, year) for payment_type in _contribution_payment_types(year)]
+    return JsonResponse({"ok": True, "result": {"year": year, "rows": rows}})
 
 
 ELECTRICITY_MONTH_LABELS = (

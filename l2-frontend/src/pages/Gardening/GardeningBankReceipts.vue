@@ -413,6 +413,9 @@ const props = defineProps<{
   year: number | null;
 }>();
 
+const emit = defineEmits<{(e: 'changed'): void;
+}>();
+
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
@@ -652,6 +655,7 @@ const saveCreate = async () => {
     }
     root.$emit('msg', 'ok', 'Сохранено');
     applyResult(result);
+    emit('changed');
     cancelForm();
   } finally {
     saving.value = false;
@@ -698,6 +702,7 @@ const saveEdit = async () => {
     }
     root.$emit('msg', 'ok', 'Сохранено');
     applyResult(result);
+    emit('changed');
     cancelForm();
   } finally {
     saving.value = false;
@@ -725,6 +730,7 @@ const removeItem = async (item: BankReceipt) => {
     }
     root.$emit('msg', 'ok', 'Удалено');
     applyResult(result);
+    emit('changed');
     if (editingId.value === item.id) {
       cancelForm();
     }
@@ -748,9 +754,10 @@ watch(
 .bank-receipts {
   display: flex;
   flex-direction: column;
-  width: 50%;
-  max-width: 50%;
-  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  flex: 1 1 0;
+  min-width: 0;
   height: auto;
   min-height: 0;
   background-color: #f8f7f7;

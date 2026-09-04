@@ -146,14 +146,22 @@
                 :real-estate-id="selectedId"
                 :year="selectedYear"
                 :meters-revision="ownerMetersRevision"
-                @meters-changed="electricityRefresh += 1"
+                @meters-changed="onOwnerMetersChanged"
               />
             </div>
             <div class="accounting-main__rest">
-              <GardeningBankReceipts
-                :real-estate-id="selectedId"
-                :year="selectedYear"
-              />
+              <div class="accounting-main__receipts">
+                <GardeningBankReceipts
+                  :real-estate-id="selectedId"
+                  :year="selectedYear"
+                  @changed="contributionsRefresh += 1"
+                />
+                <GardeningPlotContributions
+                  :key="`contrib-${selectedId}-${selectedYear}-${contributionsRefresh}`"
+                  :real-estate-id="selectedId"
+                  :year="selectedYear"
+                />
+              </div>
               <GardeningElectricityReadings
                 :key="`elec-${selectedId}-${selectedYear}-${electricityRefresh}`"
                 :real-estate-id="selectedId"
@@ -245,6 +253,7 @@ import Modal from '@/ui-cards/Modal.vue';
 import GardeningPaymentTypes from '@/pages/Gardening/GardeningPaymentTypes.vue';
 import GardeningYearRates from '@/pages/Gardening/GardeningYearRates.vue';
 import GardeningObjectOwner from '@/pages/Gardening/GardeningObjectOwner.vue';
+import GardeningPlotContributions from '@/pages/Gardening/GardeningPlotContributions.vue';
 import GardeningBankReceipts from '@/pages/Gardening/GardeningBankReceipts.vue';
 import GardeningElectricityReadings from '@/pages/Gardening/GardeningElectricityReadings.vue';
 import GardeningAccountingSummary from '@/pages/Gardening/GardeningAccountingSummary.vue';
@@ -275,10 +284,16 @@ const yearMin = ref(2000);
 const yearMaxOffset = ref(2);
 const selectedYear = ref<number | null>(currentYear);
 const electricityRefresh = ref(0);
+const contributionsRefresh = ref(0);
 const ownerMetersRevision = ref(0);
 const settingsMode = ref(false);
 const yearPaymentTypes = ref<YearPaymentTypeOption[]>([]);
 const selectedPaymentTypeId = ref<number | null>(null);
+
+const onOwnerMetersChanged = () => {
+  electricityRefresh.value += 1;
+  contributionsRefresh.value += 1;
+};
 
 const showBasePanel = computed(() => settingsMode.value && selectedYear.value === null);
 const showYearPanel = computed(() => settingsMode.value && selectedYear.value !== null);
@@ -596,6 +611,19 @@ onMounted(() => {
   overflow: visible;
   display: flex;
   flex-direction: column;
+  margin-top: 10px;
+}
+
+.accounting-main__receipts {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  padding-right: 10px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 .search {

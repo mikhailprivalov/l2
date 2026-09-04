@@ -42,16 +42,20 @@
       <table class="object-owner__table">
         <thead>
           <tr>
+            <th>№</th>
             <th>Начало</th>
             <th>Окончание</th>
             <th>ФИО</th>
             <th>Д/р</th>
             <th>Тел.</th>
+            <th>Email</th>
+            <th>Площадь</th>
             <th class="object-owner__col-actions" />
           </tr>
         </thead>
         <tbody>
           <tr :key="currentOwner.owner_id">
+            <td>{{ formatNumObject() }}</td>
             <td>{{ formatDate(currentOwner.date_start) }}</td>
             <td>{{ formatDate(currentOwner.date_end) }}</td>
             <td :title="formatFio(currentOwner)">
@@ -61,6 +65,10 @@
             <td :title="formatPhones(currentOwner)">
               {{ formatPhones(currentOwner) }}
             </td>
+            <td :title="formatEmail(currentOwner)">
+              {{ formatEmail(currentOwner) }}
+            </td>
+            <td>{{ formatArea() }}</td>
             <td class="object-owner__col-actions">
               <button
                 class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
@@ -103,7 +111,7 @@
           v-if="historyModalOpen"
           show-footer="true"
           white-bg="true"
-          max-width="860px"
+          max-width="1000px"
           width="100%"
           margin-left-right="auto"
           @close="closeHistoryModal"
@@ -125,11 +133,14 @@
             >
               <thead>
                 <tr>
+                  <th>№</th>
                   <th>Начало</th>
                   <th>Окончание</th>
                   <th>ФИО</th>
                   <th>Д/р</th>
                   <th>Тел.</th>
+                  <th>Email</th>
+                  <th>Площадь</th>
                   <th class="object-owner__col-actions" />
                 </tr>
               </thead>
@@ -138,6 +149,7 @@
                   v-for="item in owners"
                   :key="item.owner_id"
                 >
+                  <td>{{ formatNumObject() }}</td>
                   <td>{{ formatDate(item.date_start) }}</td>
                   <td>{{ formatDate(item.date_end) }}</td>
                   <td :title="formatFio(item)">
@@ -147,6 +159,10 @@
                   <td :title="formatPhones(item)">
                     {{ formatPhones(item) }}
                   </td>
+                  <td :title="formatEmail(item)">
+                    {{ formatEmail(item) }}
+                  </td>
+                  <td>{{ formatArea() }}</td>
                   <td class="object-owner__col-actions object-owner__col-actions--history">
                     <button
                       class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
@@ -224,6 +240,17 @@
               >
             </div>
             <div class="form-group">
+              <label>Площадь участка, м²</label>
+              <input
+                v-model="formArea"
+                class="form-control"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="м²"
+              >
+            </div>
+            <div class="form-group">
               <label>Фамилия</label>
               <input
                 v-model.trim="formFamily"
@@ -294,6 +321,15 @@
                   <i class="fa fa-times" />
                 </button>
               </div>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input
+                v-model.trim="formEmail"
+                class="form-control"
+                type="email"
+                placeholder="email"
+              >
             </div>
             <div class="form-group">
               <div class="phones-header">
@@ -481,6 +517,7 @@ interface OwnerInfo {
   date_end: string | null;
   phones?: OwnerPhone[];
   comment?: string;
+  email?: string;
 }
 
 interface PlotMeter {
@@ -511,7 +548,11 @@ const formName = ref('');
 const formPatronymic = ref('');
 const formBirthday = ref('');
 const formPhones = ref<string[]>([]);
+const formEmail = ref('');
 const formComment = ref('');
+const formArea = ref('');
+const plotArea = ref('');
+const plotNumObject = ref<number | null>(null);
 const formMeters = ref<PlotMeter[]>([]);
 const plotMeters = ref<PlotMeter[]>([]);
 const meterModalOpen = ref(false);
@@ -569,6 +610,14 @@ const formatPhones = (item: OwnerInfo) => {
   return first || '—';
 };
 
+const formatEmail = (item: OwnerInfo) => (item.email || '').trim() || '—';
+
+const formatArea = () => plotArea.value || '—';
+
+const formatNumObject = () => (
+  plotNumObject.value != null ? String(plotNumObject.value) : '—'
+);
+
 const printPdf = () => {
   if (!props.year || !props.realEstateId) {
     return;
@@ -591,9 +640,20 @@ const applyOwnerResult = (result: unknown) => {
     owners.value = result;
     return;
   }
-  const payload = result as { owners?: OwnerInfo[]; meters?: PlotMeter[] } | null;
+  const payload = result as {
+    owners?: OwnerInfo[];
+    meters?: PlotMeter[];
+    area?: string | null;
+    num_object?: number | null;
+  } | null;
   owners.value = Array.isArray(payload?.owners) ? payload.owners : [];
   plotMeters.value = Array.isArray(payload?.meters) ? payload.meters : [];
+  if (payload && 'area' in payload) {
+    plotArea.value = payload.area != null && payload.area !== '' ? String(payload.area) : '';
+  }
+  if (payload && 'num_object' in payload) {
+    plotNumObject.value = typeof payload.num_object === 'number' ? payload.num_object : null;
+  }
 };
 
 const addPhoneRow = () => {
@@ -702,7 +762,9 @@ const resetForm = () => {
   formPatronymic.value = '';
   formBirthday.value = '';
   formPhones.value = [''];
+  formEmail.value = '';
   formComment.value = '';
+  formArea.value = plotArea.value;
   copyPlotMeters();
 };
 
@@ -716,7 +778,9 @@ const fillForm = (item: OwnerInfo) => {
   formBirthday.value = item.birthday || '';
   const phones = (item.phones || []).map((row) => row.phone).filter(Boolean);
   formPhones.value = phones.length > 0 ? [...phones] : [''];
+  formEmail.value = item.email || '';
   formComment.value = item.comment || '';
+  formArea.value = plotArea.value;
   copyPlotMeters();
 };
 
@@ -730,6 +794,8 @@ const loadOwners = async () => {
       root.$emit('msg', 'error', message || 'Не удалось загрузить владельца');
       owners.value = [];
       plotMeters.value = [];
+      plotArea.value = '';
+      plotNumObject.value = null;
       return;
     }
     applyOwnerResult(result);
@@ -776,7 +842,9 @@ const saveOwner = async () => {
       date_start: formDateStart.value,
       date_end: formDateEnd.value || null,
       phones: formPhones.value,
+      email: formEmail.value,
       comment: formComment.value,
+      area: formArea.value === '' ? null : formArea.value,
       meters: formMeters.value,
     };
     if (editingOwnerId.value) {
@@ -842,8 +910,10 @@ watch(() => props.metersRevision, async (value, previous) => {
 .object-owner {
   display: flex;
   flex-direction: column;
-  width: 50%;
-  max-width: 50%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-right: 10px;
   height: auto;
   min-height: 0;
   background-color: #f8f7f7;
@@ -937,26 +1007,41 @@ watch(() => props.metersRevision, async (value, previous) => {
   }
 
   th:nth-child(1),
-  td:nth-child(1),
+  td:nth-child(1) {
+    width: 64px;
+  }
+
   th:nth-child(2),
   td:nth-child(2),
-  th:nth-child(4),
-  td:nth-child(4) {
+  th:nth-child(3),
+  td:nth-child(3),
+  th:nth-child(5),
+  td:nth-child(5) {
     width: 95px;
   }
 
-  th:nth-child(3),
-  td:nth-child(3) {
-    width: 28%;
-  }
-
-  th:nth-child(5),
-  td:nth-child(5) {
-    width: auto;
+  th:nth-child(4),
+  td:nth-child(4) {
+    width: 20%;
   }
 
   th:nth-child(6),
-  td:nth-child(6),
+  td:nth-child(6) {
+    width: 12%;
+  }
+
+  th:nth-child(7),
+  td:nth-child(7) {
+    width: auto;
+  }
+
+  th:nth-child(8),
+  td:nth-child(8) {
+    width: 90px;
+  }
+
+  th:nth-child(9),
+  td:nth-child(9),
   th.object-owner__col-actions,
   td.object-owner__col-actions {
     width: 108px;

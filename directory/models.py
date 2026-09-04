@@ -2326,6 +2326,14 @@ class Contrasts(models.Model):
 class RealEstate(models.Model):
     title = models.CharField(max_length=255, help_text="Название контраста")
     num_object = models.PositiveIntegerField(help_text="Номер объекта", blank=True, null=True, default=None, db_index=True, unique=True)
+    area = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        default=None,
+        help_text="Площадь участка, м²",
+    )
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие набора")
 
     def __str__(self):
@@ -2345,6 +2353,7 @@ class OwnersRealEstate(models.Model):
     part_numerator = models.PositiveIntegerField(help_text="Числитель части доли", blank=True, null=True, default=None)
     part_denominator = models.PositiveIntegerField(help_text="Знаменатель части доли", blank=True, null=True, default=None)
     comment = models.TextField(blank=True, default="", help_text="Комментарий")
+    email = models.CharField(max_length=255, blank=True, default="", help_text="Email")
 
     @property
     def share_display(self):

@@ -16,6 +16,7 @@ urlpatterns = [
     path('get-payment-types', views.get_payment_types),
     path('get-year-payment-types', views.get_year_payment_types),
     path('get-accounting-summary', views.get_accounting_summary),
+    path('get-plot-contributions', views.get_plot_contributions),
     path('create-payment-type', views.create_payment_type),
     path('update-payment-type', views.update_payment_type),
     path('create-payment-type-rate', views.create_payment_type_rate),
