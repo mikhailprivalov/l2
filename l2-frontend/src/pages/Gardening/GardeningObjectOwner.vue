@@ -419,7 +419,7 @@
           v-if="meterModalOpen"
           show-footer="true"
           white-bg="true"
-          max-width="480px"
+          max-width="560px"
           width="100%"
           margin-left-right="auto"
           @close="closeMeterModal"
@@ -453,6 +453,42 @@
                 v-model="meterModalDateEnd"
                 class="form-control"
                 type="date"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Адрес абонента</label>
+              <input
+                v-model.trim="meterModalSubscriberAddress"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Абонент</label>
+              <input
+                v-model.trim="meterModalSubscriber"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Тип прибора</label>
+              <input
+                v-model.trim="meterModalDeviceType"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Серийный № прибора</label>
+              <input
+                v-model.trim="meterModalSerialNumber"
+                class="form-control"
+                type="text"
                 :disabled="savingMeter"
               >
             </div>
@@ -525,6 +561,10 @@ interface PlotMeter {
   title: string;
   date_start?: string | null;
   date_end?: string | null;
+  subscriber_address?: string;
+  subscriber?: string;
+  device_type?: string;
+  serial_number?: string;
 }
 
 const props = defineProps<{
@@ -560,6 +600,10 @@ const meterModalIndex = ref<number | null>(null);
 const meterModalTitle = ref('');
 const meterModalDateStart = ref('');
 const meterModalDateEnd = ref('');
+const meterModalSubscriberAddress = ref('');
+const meterModalSubscriber = ref('');
+const meterModalDeviceType = ref('');
+const meterModalSerialNumber = ref('');
 const savingMeter = ref(false);
 
 const emit = defineEmits<{(e: 'meters-changed'): void;
@@ -631,8 +675,20 @@ const copyPlotMeters = () => {
     title: item.title,
     date_start: item.date_start || '',
     date_end: item.date_end || '',
+    subscriber_address: item.subscriber_address || '',
+    subscriber: item.subscriber || '',
+    device_type: item.device_type || '',
+    serial_number: item.serial_number || '',
   }));
-  formMeters.value = meters.length > 0 ? meters : [{ title: '', date_start: '', date_end: '' }];
+  formMeters.value = meters.length > 0 ? meters : [{
+    title: '',
+    date_start: '',
+    date_end: '',
+    subscriber_address: '',
+    subscriber: '',
+    device_type: '',
+    serial_number: '',
+  }];
 };
 
 const applyOwnerResult = (result: unknown) => {
@@ -665,7 +721,15 @@ const removePhoneRow = (index: number) => {
 };
 
 const addMeterRow = () => {
-  formMeters.value.push({ title: '', date_start: '', date_end: '' });
+  formMeters.value.push({
+    title: '',
+    date_start: '',
+    date_end: '',
+    subscriber_address: '',
+    subscriber: '',
+    device_type: '',
+    serial_number: '',
+  });
 };
 
 const closeMeterModal = () => {
@@ -677,6 +741,10 @@ const closeMeterModal = () => {
   meterModalTitle.value = '';
   meterModalDateStart.value = '';
   meterModalDateEnd.value = '';
+  meterModalSubscriberAddress.value = '';
+  meterModalSubscriber.value = '';
+  meterModalDeviceType.value = '';
+  meterModalSerialNumber.value = '';
 };
 
 const openMeterModal = (index: number) => {
@@ -688,6 +756,10 @@ const openMeterModal = (index: number) => {
   meterModalTitle.value = meter.title || '';
   meterModalDateStart.value = meter.date_start || '';
   meterModalDateEnd.value = meter.date_end || '';
+  meterModalSubscriberAddress.value = meter.subscriber_address || '';
+  meterModalSubscriber.value = meter.subscriber || '';
+  meterModalDeviceType.value = meter.device_type || '';
+  meterModalSerialNumber.value = meter.serial_number || '';
   meterModalOpen.value = true;
 };
 
@@ -707,6 +779,12 @@ const saveMeterModal = async () => {
     root.$emit('msg', 'error', 'Дата окончания не может быть раньше даты начала установки');
     return;
   }
+  const meterExtra = {
+    subscriber_address: meterModalSubscriberAddress.value.trim(),
+    subscriber: meterModalSubscriber.value.trim(),
+    device_type: meterModalDeviceType.value.trim(),
+    serial_number: meterModalSerialNumber.value.trim(),
+  };
   if (current.id) {
     savingMeter.value = true;
     await store.dispatch(actions.INC_LOADING);
@@ -717,6 +795,7 @@ const saveMeterModal = async () => {
         title,
         date_start: dateStart || null,
         date_end: dateEnd || null,
+        ...meterExtra,
       };
       if (props.year) {
         payload.year = props.year;
@@ -735,6 +814,7 @@ const saveMeterModal = async () => {
         title,
         date_start: dateStart,
         date_end: dateEnd,
+        ...meterExtra,
       });
       emit('meters-changed');
       root.$emit('msg', 'ok', 'Счётчик сохранён');
@@ -748,6 +828,7 @@ const saveMeterModal = async () => {
       title,
       date_start: dateStart,
       date_end: dateEnd,
+      ...meterExtra,
     });
   }
   closeMeterModal();

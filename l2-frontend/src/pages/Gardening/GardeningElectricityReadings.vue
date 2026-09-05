@@ -170,7 +170,7 @@
                   {{ formatValue(rowCharge(item)) }}
                 </td>
                 <td class="electricity__num">
-                  {{ formatValue(item.showMoney ? item.row.written_off : null) }}
+                  {{ formatValue(item.row.written_off) }}
                 </td>
                 <td
                   class="electricity__num"
@@ -196,7 +196,7 @@
                       <button
                         class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
                         type="button"
-                        title="Сохранить"
+                        :title="isCurrentLessThanPrevious(formReading, formPrevious) ? READING_ORDER_ERROR : 'Сохранить'"
                         :disabled="saving || !canSaveEdit"
                         @click="saveEdit(item.meter)"
                       >
@@ -292,7 +292,8 @@
                 <button
                   class="btn btn-primary-nb btn-blue-nb"
                   type="button"
-                  :disabled="savingPrevious || previousModalValue === ''"
+                  :title="isCurrentLessThanPrevious(previousModalCurrent, previousModalValue) ? READING_ORDER_ERROR : 'Сохранить'"
+                  :disabled="savingPrevious || !canSavePrevious"
                   @click="savePreviousManual"
                 >
                   Сохранить
@@ -324,7 +325,7 @@
           v-if="meterModalOpen"
           show-footer="true"
           white-bg="true"
-          max-width="480px"
+          max-width="560px"
           width="100%"
           margin-left-right="auto"
           @close="closeMeterModal"
@@ -358,6 +359,42 @@
                 v-model="meterModalDateEnd"
                 class="form-control"
                 type="date"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Адрес абонента</label>
+              <input
+                v-model.trim="meterModalSubscriberAddress"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Абонент</label>
+              <input
+                v-model.trim="meterModalSubscriber"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Тип прибора</label>
+              <input
+                v-model.trim="meterModalDeviceType"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Серийный № прибора</label>
+              <input
+                v-model.trim="meterModalSerialNumber"
+                class="form-control"
+                type="text"
                 :disabled="savingMeter"
               >
             </div>
@@ -428,6 +465,10 @@ interface ElectricityMeter {
   title: string;
   date_start?: string | null;
   date_end?: string | null;
+  subscriber_address?: string;
+  subscriber?: string;
+  device_type?: string;
+  serial_number?: string;
   show_money?: boolean;
   rows: ElectricityRow[];
 }
@@ -454,12 +495,17 @@ const previousModalOpen = ref(false);
 const previousModalRowId = ref<number | null>(null);
 const previousModalMonthLabel = ref('');
 const previousModalValue = ref('');
+const previousModalCurrent = ref('');
 const savingPrevious = ref(false);
 const meterModalOpen = ref(false);
 const meterModalId = ref<number | null>(null);
 const meterModalTitle = ref('');
 const meterModalDateStart = ref('');
 const meterModalDateEnd = ref('');
+const meterModalSubscriberAddress = ref('');
+const meterModalSubscriber = ref('');
+const meterModalDeviceType = ref('');
+const meterModalSerialNumber = ref('');
 const savingMeter = ref(false);
 const tariffsByMonth = ref<Record<string, string | null>>({});
 const rowsExpanded = ref(true);
@@ -467,7 +513,25 @@ const rowsExpanded = ref(true);
 const isBusy = computed(() => (
   saving.value || savingMeter.value || editingMonth.value !== null || meterModalOpen.value
 ));
-const canSaveEdit = computed(() => formReading.value !== '');
+const READING_ORDER_ERROR = 'Текущее показание не может быть меньше предыдущего';
+const isCurrentLessThanPrevious = (currentRaw: string, previousRaw: string) => {
+  if (currentRaw === '' || previousRaw === '') {
+    return false;
+  }
+  const current = Number(String(currentRaw).replace(',', '.'));
+  const previous = Number(String(previousRaw).replace(',', '.'));
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) {
+    return false;
+  }
+  return current < previous;
+};
+const canSaveEdit = computed(() => (
+  formReading.value !== '' && !isCurrentLessThanPrevious(formReading.value, formPrevious.value)
+));
+const canSavePrevious = computed(() => (
+  previousModalValue.value !== ''
+  && !isCurrentLessThanPrevious(previousModalCurrent.value, previousModalValue.value)
+));
 
 const isEditingRow = (meter: ElectricityMeter, row: ElectricityRow) => (
   editingMeterId.value === meter.id && editingMonth.value === row.month
@@ -622,6 +686,7 @@ const tableRows = computed(() => {
     const chargeValues = monthItems.map((item) => (
       item.meter && isEditingRow(item.meter, item.row) ? editCharge.value : item.row.charge
     ));
+    const writtenOffValues = monthItems.map((item) => item.row.written_off);
     result.push({
       key: `total-${month}`,
       isTotal: true,
@@ -635,6 +700,7 @@ const tableRows = computed(() => {
         consumption: sumAmounts(consumptionValues),
         tariff: null,
         charge: sumAmounts(chargeValues),
+        written_off: sumAmounts(writtenOffValues),
       },
       showMoney: true,
       showMonthStart: false,
@@ -768,6 +834,10 @@ const closeMeterModal = () => {
   meterModalTitle.value = '';
   meterModalDateStart.value = '';
   meterModalDateEnd.value = '';
+  meterModalSubscriberAddress.value = '';
+  meterModalSubscriber.value = '';
+  meterModalDeviceType.value = '';
+  meterModalSerialNumber.value = '';
 };
 
 const openMeterModal = (meter: ElectricityMeter) => {
@@ -779,6 +849,10 @@ const openMeterModal = (meter: ElectricityMeter) => {
   meterModalTitle.value = meter.title;
   meterModalDateStart.value = meter.date_start || '';
   meterModalDateEnd.value = meter.date_end || '';
+  meterModalSubscriberAddress.value = meter.subscriber_address || '';
+  meterModalSubscriber.value = meter.subscriber || '';
+  meterModalDeviceType.value = meter.device_type || '';
+  meterModalSerialNumber.value = meter.serial_number || '';
   meterModalOpen.value = true;
 };
 
@@ -797,6 +871,10 @@ const saveMeterModal = async () => {
       title,
       date_start: meterModalDateStart.value || null,
       date_end: meterModalDateEnd.value || null,
+      subscriber_address: meterModalSubscriberAddress.value.trim(),
+      subscriber: meterModalSubscriber.value.trim(),
+      device_type: meterModalDeviceType.value.trim(),
+      serial_number: meterModalSerialNumber.value.trim(),
     });
     if (!ok) {
       root.$emit('msg', 'error', message || 'Не удалось сохранить счётчик');
@@ -821,6 +899,7 @@ const closePreviousModal = (force?: boolean) => {
   previousModalRowId.value = null;
   previousModalMonthLabel.value = '';
   previousModalValue.value = '';
+  previousModalCurrent.value = '';
 };
 
 const openPreviousModal = (row: ElectricityRow) => {
@@ -830,11 +909,15 @@ const openPreviousModal = (row: ElectricityRow) => {
   previousModalRowId.value = row.id;
   previousModalMonthLabel.value = row.month_label;
   previousModalValue.value = row.previous_reading || '';
+  previousModalCurrent.value = row.current_reading || '';
   previousModalOpen.value = true;
 };
 
 const savePreviousManual = async () => {
-  if (savingPrevious.value || previousModalRowId.value == null || previousModalValue.value === '' || !props.year) {
+  if (savingPrevious.value || previousModalRowId.value == null || !canSavePrevious.value || !props.year) {
+    if (isCurrentLessThanPrevious(previousModalCurrent.value, previousModalValue.value)) {
+      root.$emit('msg', 'error', READING_ORDER_ERROR);
+    }
     return;
   }
   savingPrevious.value = true;
@@ -930,6 +1013,9 @@ const previousPayload = () => {
 
 const saveEdit = async (meter: ElectricityMeter) => {
   if (!canSaveEdit.value || saving.value || editingMonth.value == null || !props.year) {
+    if (isCurrentLessThanPrevious(formReading.value, formPrevious.value)) {
+      root.$emit('msg', 'error', READING_ORDER_ERROR);
+    }
     return;
   }
   const row = meter.rows.find((item) => item.month === editingMonth.value);

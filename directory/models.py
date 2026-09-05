@@ -2466,6 +2466,10 @@ class GardeningElectricityMeter(models.Model):
     title = models.CharField(max_length=255, default="Счётчик 1", help_text="Название счётчика")
     date_start = models.DateField(help_text="Дата начала установки", blank=True, null=True, default=None)
     date_end = models.DateField(help_text="Дата окончания", blank=True, null=True, default=None)
+    subscriber_address = models.CharField(max_length=512, blank=True, default="", help_text="Адрес абонента")
+    subscriber = models.CharField(max_length=255, blank=True, default="", help_text="Абонент")
+    device_type = models.CharField(max_length=255, blank=True, default="", help_text="Тип прибора")
+    serial_number = models.CharField(max_length=255, blank=True, default="", help_text="Серийный № прибора")
     sort_weight = models.IntegerField(default=0, blank=True, help_text="Порядок")
     hide = models.BooleanField(default=False, db_index=True)
 

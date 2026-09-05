@@ -13,7 +13,12 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from api.gardening.views import _electricity_result, _list_bank_receipts
+from api.gardening.views import (
+    _contribution_payment_types,
+    _contribution_row,
+    _electricity_result,
+    _list_bank_receipts,
+)
 from directory.models import OwnersRealEstate, RealEstate
 from laboratory.settings import FONTS_FOLDER
 
@@ -86,13 +91,37 @@ def _header_owner(owners):
     return max(pool, key=lambda item: (item.date_start or date.min, item.pk))
 
 
+def _calc_mode_label(payment_type):
+    if getattr(payment_type, "is_use_kilowatt", False):
+        return "кВт энергии"
+    if getattr(payment_type, "is_by_area", False):
+        return "Площадь участка"
+    if getattr(payment_type, "is_absolute", False):
+        return "Абсолютная сумма"
+    return ""
+
+
+def _contribution_pdf_title(payment_type):
+    title = (payment_type.title or "").strip() or "—"
+    mode = _calc_mode_label(payment_type)
+    if mode:
+        return f"{title} ({mode})"
+    return title
+
+
+def _pdf_missing_zero(raw, ok_style, missing_style):
+    if raw in (None, ""):
+        return _p("0.00", missing_style)
+    return _p(raw, ok_style)
+
+
 def _p(text, style):
     return Paragraph(str(text if text not in (None, "") else "—"), style)
 
 
 def form_01(request_data):
     """
-    Садоводство — карточка участка: владелец, приходы, показания электроэнергии.
+    Садоводство — карточка участка: владелец, приходы, взносы, показания электроэнергии.
     type=115.01&real_estate_id=&year=
     """
     pdfmetrics.registerFont(TTFont("PTAstraSerifBold", os.path.join(FONTS_FOLDER, "PTAstraSerif-Bold.ttf")))
@@ -265,6 +294,67 @@ def form_01(request_data):
     objs.append(receipt_table)
     objs.append(Spacer(1, 5 * mm))
 
+    objs.append(Paragraph("Взносы", style_section))
+    payment_types = _contribution_payment_types(year)
+    contrib_data = [
+        [
+            _p("Взнос", style_th),
+            _p("Тариф", style_th),
+            _p("Коэффициент", style_th),
+            _p("Начислено", style_th),
+            _p("Списано", style_th),
+            _p("Долг", style_th),
+            _p("Остаток", style_th),
+        ]
+    ]
+    if not payment_types:
+        contrib_data.append(
+            [
+                _p("Нет взносов", style_td),
+                _p("", style_td),
+                _p("", style_td),
+                _p("", style_td),
+                _p("", style_td),
+                _p("", style_td),
+                _p("", style_td),
+            ]
+        )
+    else:
+        for payment_type in payment_types:
+            row = _contribution_row(real_estate, payment_type, year)
+            debt_amount = _pdf_amount(row.get("debt"))
+            debt_style = style_td_red if debt_amount is not None and debt_amount > 0 else style_td_right
+            contrib_data.append(
+                [
+                    _p(_contribution_pdf_title(payment_type), style_td),
+                    _pdf_missing_zero(row.get("tariff"), style_td_right, style_td_red),
+                    _pdf_missing_zero(row.get("coefficient"), style_td_right, style_td_red),
+                    _pdf_missing_zero(row.get("charge"), style_td_right, style_td_red),
+                    _p(_dash(row.get("written_off")), style_td_right),
+                    _p(_dash(row.get("debt")), debt_style),
+                    _p(_dash(row.get("remainder")), style_td_right),
+                ]
+            )
+    contrib_widths = [70 * mm, 28 * mm, 32 * mm, 30 * mm, 28 * mm, 26 * mm]
+    contrib_widths.append(table_width - sum(contrib_widths))
+    contrib_table = Table(contrib_data, colWidths=contrib_widths, repeatRows=1)
+    contrib_table.hAlign = "LEFT"
+    contrib_table.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#b1b1b1")),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#ececec")),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 3),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        )
+    )
+    objs.append(contrib_table)
+    objs.append(Spacer(1, 5 * mm))
+
     objs.append(Paragraph("Показания электроэнергии", style_section))
     electricity = _electricity_result(real_estate, year)
     meters = electricity.get("meters") or []
@@ -300,7 +390,7 @@ def form_01(request_data):
                     _p(_dash(row.get("consumption")), style_td_right),
                     _p("0.00" if tariff_missing else row.get("tariff"), style_td_red if tariff_missing else style_td_right),
                     _p(_dash(row.get("charge")), style_td_right),
-                    _p(_dash(row.get("written_off")) if show_money else "—", style_td_right),
+                    _p(_dash(row.get("written_off")), style_td_right),
                     _p(_dash(row.get("debt")) if show_money else "—", debt_style),
                     _p(_dash(row.get("remainder")) if show_money else "—", style_td_right),
                     _p(_dash(row.get("receipt")) if show_money else "—", style_td_right),
@@ -322,7 +412,7 @@ def form_01(request_data):
                     _p(_pdf_sum(month_rows, "consumption"), style_td_right_bold),
                     _p("—", style_td_right_bold),
                     _p(_pdf_sum(month_rows, "charge"), style_td_right_bold),
-                    _p(_dash(money_row.get("written_off")), style_td_right_bold),
+                    _p(_pdf_sum(month_rows, "written_off"), style_td_right_bold),
                     _p(_dash(money_row.get("debt")), debt_style),
                     _p(_dash(money_row.get("remainder")), style_td_right_bold),
                     _p(_dash(money_row.get("receipt")), style_td_right_bold),
