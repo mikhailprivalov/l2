@@ -59,7 +59,7 @@
         <tbody>
           <tr
             v-for="row in visibleRows"
-            :key="`${row.real_estate_id}-${row.meter_id}`"
+            :key="rowKey(row)"
           >
             <td>{{ formatText(row.num_object) }}</td>
             <td
@@ -115,25 +115,25 @@
               {{ formatValue(row.written_off) }}
             </td>
             <td class="month-list__num">
-              {{ formatValue(row.consumption_total) }}
+              {{ showPlotTotals(row) ? formatValue(row.consumption_total) : '' }}
             </td>
             <td class="month-list__num">
-              {{ formatValue(row.written_off_total) }}
+              {{ showPlotTotals(row) ? formatValue(row.written_off_total) : '' }}
             </td>
             <td
               class="month-list__num"
-              :class="debtClass(row.debt)"
+              :class="showPlotTotals(row) ? debtClass(row.debt) : null"
             >
-              {{ formatValue(row.debt) }}
+              {{ showPlotTotals(row) ? formatValue(row.debt) : '' }}
             </td>
             <td
               class="month-list__num"
-              :class="remainderClass(row.remainder)"
+              :class="showPlotTotals(row) ? remainderClass(row.remainder) : null"
             >
-              {{ formatRemainder(row.remainder) }}
+              {{ showPlotTotals(row) ? formatRemainder(row.remainder) : '' }}
             </td>
             <td class="month-list__num">
-              {{ formatValue(row.receipt) }}
+              {{ showPlotTotals(row) ? formatValue(row.receipt) : '' }}
             </td>
             <td class="month-list__actions">
               <template v-if="isEditing(row)">
@@ -285,7 +285,7 @@ const columns = computed(() => ([
     numeric: true,
     narrow: true,
   },
-  { key: 'consumption' as SortKey, label: 'Потребление', numeric: true },
+  { key: 'consumption' as SortKey, label: 'Потребл', numeric: true },
   {
     key: 'tariff' as SortKey,
     label: 'Тариф',
@@ -294,7 +294,7 @@ const columns = computed(() => ([
   },
   { key: 'charge' as SortKey, label: 'Начислено', numeric: true },
   { key: 'written_off' as SortKey, label: 'Списано', numeric: true },
-  { key: 'consumption_total' as SortKey, label: 'Потребление общ', numeric: true },
+  { key: 'consumption_total' as SortKey, label: 'Потребл общ', numeric: true },
   { key: 'written_off_total' as SortKey, label: 'Списано общ', numeric: true },
   { key: 'debt' as SortKey, label: 'Долг общ', numeric: true },
   { key: 'remainder' as SortKey, label: 'Остаток общ', numeric: true },
@@ -427,6 +427,21 @@ const visibleRows = computed(() => {
   });
   return list;
 });
+
+const firstPlotRowKeys = computed(() => {
+  const seen = new Set<number>();
+  const keys = new Set<string>();
+  visibleRows.value.forEach((row) => {
+    if (seen.has(row.real_estate_id)) {
+      return;
+    }
+    seen.add(row.real_estate_id);
+    keys.add(rowKey(row));
+  });
+  return keys;
+});
+
+const showPlotTotals = (row: MonthRow) => firstPlotRowKeys.value.has(rowKey(row));
 
 const READING_ORDER_ERROR = 'Текущее показание не может быть меньше предыдущего';
 

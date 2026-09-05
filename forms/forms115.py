@@ -364,7 +364,7 @@ def form_01(request_data):
     elec_headers = ["Месяц"]
     if show_meter_col:
         elec_headers.append("Счётчик")
-    elec_headers.extend(["Предыдущий", "Текущий", "Потребление", "Тариф", "Начислено", "Списано", "Долг", "Остаток", "Приход"])
+    elec_headers.extend(["Предыдущий", "Текущий", "Потребл", "Тариф", "Начислено", "Списано", "Долг", "Остаток", "Приход"])
     elec_data = [[_p(title, style_th) for title in elec_headers]]
     total_row_indexes = []
     for month in range(1, 13):

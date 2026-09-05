@@ -1162,7 +1162,7 @@ def get_accounting_summary(request):
             )
         return JsonResponse({"ok": True, "result": {"mode": "totals", "year": year, "items": items}})
 
-    if not payment_types:
+    if not payment_types or payment_types[0].not_control:
         return JsonResponse(
             {
                 "ok": True,
@@ -1176,25 +1176,20 @@ def get_accounting_summary(request):
         )
 
     payment_type = payment_types[0]
-    estates = RealEstate.objects.filter(hide=False).order_by("num_object")
-    tariff = _tariff_for_year(payment_type, year)
+    estates = RealEstate.objects.filter(hide=False).order_by("num_object", "pk")
     rows = []
     for estate in estates:
-        receipt = _receipts_sum(estate.pk, payment_type.pk, year)
-        balance = _balance_before_year(estate.pk, payment_type, year)
-        if payment_type.is_absolute:
-            total = receipt + balance - tariff
-            total_str = _format_money(total)
-        else:
-            total_str = None
+        contribution = _contribution_row(estate, payment_type, year)
         rows.append(
             {
                 "real_estate_id": estate.pk,
                 "num_object": estate.num_object,
-                "receipt": _format_money(receipt),
-                "balance": _format_money(balance),
-                "tariff": _format_money(tariff),
-                "total": total_str,
+                "tariff": contribution["tariff"],
+                "coefficient": contribution["coefficient"],
+                "charge": contribution["charge"],
+                "written_off": contribution["written_off"],
+                "debt": contribution["debt"],
+                "remainder": contribution["remainder"],
             }
         )
 
@@ -1207,10 +1202,6 @@ def get_accounting_summary(request):
                 "payment_type": {
                     "payment_type_id": payment_type.pk,
                     "title": payment_type.title,
-                    "is_absolute": payment_type.is_absolute,
-                    "date_start": date_start.isoformat(),
-                    "date_end": date_end.isoformat(),
-                    "receipts_total": _format_money(_receipts_sum_all(payment_type.pk, year)),
                 },
                 "rows": rows,
             },
