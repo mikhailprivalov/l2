@@ -3,7 +3,16 @@
     <div class="object-owner__header">
       <span>Владелец</span>
       <button
-        class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+        class="btn btn-blue-nb btn-sm nbr object-owner__pdf-btn"
+        type="button"
+        title="Печать PDF"
+        :disabled="!year"
+        @click="printPdf"
+      >
+        PDF
+      </button>
+      <button
+        class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn object-owner__header-add"
         type="button"
         title="Добавить"
         @click="openCreateModal"
@@ -33,16 +42,20 @@
       <table class="object-owner__table">
         <thead>
           <tr>
+            <th>№</th>
             <th>Начало</th>
             <th>Окончание</th>
             <th>ФИО</th>
             <th>Д/р</th>
             <th>Тел.</th>
+            <th>Email</th>
+            <th>Площадь</th>
             <th class="object-owner__col-actions" />
           </tr>
         </thead>
         <tbody>
           <tr :key="currentOwner.owner_id">
+            <td>{{ formatNumObject() }}</td>
             <td>{{ formatDate(currentOwner.date_start) }}</td>
             <td>{{ formatDate(currentOwner.date_end) }}</td>
             <td :title="formatFio(currentOwner)">
@@ -52,6 +65,10 @@
             <td :title="formatPhones(currentOwner)">
               {{ formatPhones(currentOwner) }}
             </td>
+            <td :title="formatEmail(currentOwner)">
+              {{ formatEmail(currentOwner) }}
+            </td>
+            <td>{{ formatArea() }}</td>
             <td class="object-owner__col-actions">
               <button
                 class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
@@ -94,7 +111,7 @@
           v-if="historyModalOpen"
           show-footer="true"
           white-bg="true"
-          max-width="860px"
+          max-width="1000px"
           width="100%"
           margin-left-right="auto"
           @close="closeHistoryModal"
@@ -116,11 +133,14 @@
             >
               <thead>
                 <tr>
+                  <th>№</th>
                   <th>Начало</th>
                   <th>Окончание</th>
                   <th>ФИО</th>
                   <th>Д/р</th>
                   <th>Тел.</th>
+                  <th>Email</th>
+                  <th>Площадь</th>
                   <th class="object-owner__col-actions" />
                 </tr>
               </thead>
@@ -129,6 +149,7 @@
                   v-for="item in owners"
                   :key="item.owner_id"
                 >
+                  <td>{{ formatNumObject() }}</td>
                   <td>{{ formatDate(item.date_start) }}</td>
                   <td>{{ formatDate(item.date_end) }}</td>
                   <td :title="formatFio(item)">
@@ -138,6 +159,10 @@
                   <td :title="formatPhones(item)">
                     {{ formatPhones(item) }}
                   </td>
+                  <td :title="formatEmail(item)">
+                    {{ formatEmail(item) }}
+                  </td>
+                  <td>{{ formatArea() }}</td>
                   <td class="object-owner__col-actions object-owner__col-actions--history">
                     <button
                       class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
@@ -188,7 +213,7 @@
           v-if="modalOpen"
           show-footer="true"
           white-bg="true"
-          max-width="520px"
+          max-width="560px"
           width="100%"
           margin-left-right="auto"
           @close="closeModal"
@@ -212,6 +237,17 @@
                 v-model="formDateEnd"
                 class="form-control"
                 type="date"
+              >
+            </div>
+            <div class="form-group">
+              <label>Площадь участка, м²</label>
+              <input
+                v-model="formArea"
+                class="form-control"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="м²"
               >
             </div>
             <div class="form-group">
@@ -286,6 +322,63 @@
                 </button>
               </div>
             </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input
+                v-model.trim="formEmail"
+                class="form-control"
+                type="email"
+                placeholder="email"
+              >
+            </div>
+            <div class="form-group">
+              <div class="phones-header">
+                <label>Счётчики</label>
+                <button
+                  class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                  type="button"
+                  title="Добавить счётчик"
+                  @click="addMeterRow"
+                >
+                  <i class="fa fa-plus" />
+                </button>
+              </div>
+              <div
+                v-if="formMeters.length === 0"
+                class="phones-empty"
+              >
+                Нет счётчиков
+              </div>
+              <div
+                v-for="(meter, index) in formMeters"
+                :key="`meter-${meter.id || index}`"
+                class="phone-row"
+              >
+                <input
+                  v-model.trim="meter.title"
+                  class="form-control"
+                  type="text"
+                  placeholder="Название счётчика"
+                >
+                <button
+                  class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                  type="button"
+                  title="Даты счётчика"
+                  @click="openMeterModal(index)"
+                >
+                  <i class="fa fa-pencil" />
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Комментарий</label>
+              <textarea
+                v-model="formComment"
+                class="form-control"
+                rows="3"
+                placeholder="Комментарий"
+              />
+            </div>
           </div>
           <div slot="footer">
             <div class="row">
@@ -306,6 +399,119 @@
                   type="button"
                   :disabled="saving"
                   @click="closeModal"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
+
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="GardeningObjectOwnerMeterModal"
+      append
+    >
+      <transition name="fade">
+        <Modal
+          v-if="meterModalOpen"
+          show-footer="true"
+          white-bg="true"
+          max-width="560px"
+          width="100%"
+          margin-left-right="auto"
+          @close="closeMeterModal"
+        >
+          <span slot="header">Счётчик</span>
+          <div
+            slot="body"
+            class="modal-body-form"
+          >
+            <div class="form-group">
+              <label>Название</label>
+              <input
+                v-model.trim="meterModalTitle"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Дата начала установки</label>
+              <input
+                v-model="meterModalDateStart"
+                class="form-control"
+                type="date"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Дата окончания</label>
+              <input
+                v-model="meterModalDateEnd"
+                class="form-control"
+                type="date"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Адрес абонента</label>
+              <input
+                v-model.trim="meterModalSubscriberAddress"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Абонент</label>
+              <input
+                v-model.trim="meterModalSubscriber"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Тип прибора</label>
+              <input
+                v-model.trim="meterModalDeviceType"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+            <div class="form-group">
+              <label>Серийный № прибора</label>
+              <input
+                v-model.trim="meterModalSerialNumber"
+                class="form-control"
+                type="text"
+                :disabled="savingMeter"
+              >
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-6" />
+              <div class="col-xs-3">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  :disabled="savingMeter || !meterModalTitle"
+                  @click="saveMeterModal"
+                >
+                  Сохранить
+                </button>
+              </div>
+              <div class="col-xs-3">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  :disabled="savingMeter"
+                  @click="closeMeterModal"
                 >
                   Закрыть
                 </button>
@@ -346,10 +552,25 @@ interface OwnerInfo {
   date_start: string | null;
   date_end: string | null;
   phones?: OwnerPhone[];
+  comment?: string;
+  email?: string;
+}
+
+interface PlotMeter {
+  id?: number;
+  title: string;
+  date_start?: string | null;
+  date_end?: string | null;
+  subscriber_address?: string;
+  subscriber?: string;
+  device_type?: string;
+  serial_number?: string;
 }
 
 const props = defineProps<{
   realEstateId: number;
+  year?: number | null;
+  metersRevision?: number;
 }>();
 
 const store = useStore();
@@ -367,6 +588,26 @@ const formName = ref('');
 const formPatronymic = ref('');
 const formBirthday = ref('');
 const formPhones = ref<string[]>([]);
+const formEmail = ref('');
+const formComment = ref('');
+const formArea = ref('');
+const plotArea = ref('');
+const plotNumObject = ref<number | null>(null);
+const formMeters = ref<PlotMeter[]>([]);
+const plotMeters = ref<PlotMeter[]>([]);
+const meterModalOpen = ref(false);
+const meterModalIndex = ref<number | null>(null);
+const meterModalTitle = ref('');
+const meterModalDateStart = ref('');
+const meterModalDateEnd = ref('');
+const meterModalSubscriberAddress = ref('');
+const meterModalSubscriber = ref('');
+const meterModalDeviceType = ref('');
+const meterModalSerialNumber = ref('');
+const savingMeter = ref(false);
+
+const emit = defineEmits<{(e: 'meters-changed'): void;
+}>();
 
 const currentOwner = computed(() => {
   const openOwners = owners.value.filter((item) => !item.date_end);
@@ -413,12 +654,184 @@ const formatPhones = (item: OwnerInfo) => {
   return first || '—';
 };
 
+const formatEmail = (item: OwnerInfo) => (item.email || '').trim() || '—';
+
+const formatArea = () => plotArea.value || '—';
+
+const formatNumObject = () => (
+  plotNumObject.value != null ? String(plotNumObject.value) : '—'
+);
+
+const printPdf = () => {
+  if (!props.year || !props.realEstateId) {
+    return;
+  }
+  window.open(`/forms/pdf?type=115.01&real_estate_id=${props.realEstateId}&year=${props.year}`, '_blank');
+};
+
+const copyPlotMeters = () => {
+  const meters = plotMeters.value.map((item) => ({
+    id: item.id,
+    title: item.title,
+    date_start: item.date_start || '',
+    date_end: item.date_end || '',
+    subscriber_address: item.subscriber_address || '',
+    subscriber: item.subscriber || '',
+    device_type: item.device_type || '',
+    serial_number: item.serial_number || '',
+  }));
+  formMeters.value = meters.length > 0 ? meters : [{
+    title: '',
+    date_start: '',
+    date_end: '',
+    subscriber_address: '',
+    subscriber: '',
+    device_type: '',
+    serial_number: '',
+  }];
+};
+
+const applyOwnerResult = (result: unknown) => {
+  if (Array.isArray(result)) {
+    owners.value = result;
+    return;
+  }
+  const payload = result as {
+    owners?: OwnerInfo[];
+    meters?: PlotMeter[];
+    area?: string | null;
+    num_object?: number | null;
+  } | null;
+  owners.value = Array.isArray(payload?.owners) ? payload.owners : [];
+  plotMeters.value = Array.isArray(payload?.meters) ? payload.meters : [];
+  if (payload && 'area' in payload) {
+    plotArea.value = payload.area != null && payload.area !== '' ? String(payload.area) : '';
+  }
+  if (payload && 'num_object' in payload) {
+    plotNumObject.value = typeof payload.num_object === 'number' ? payload.num_object : null;
+  }
+};
+
 const addPhoneRow = () => {
   formPhones.value.push('');
 };
 
 const removePhoneRow = (index: number) => {
   formPhones.value.splice(index, 1);
+};
+
+const addMeterRow = () => {
+  formMeters.value.push({
+    title: '',
+    date_start: '',
+    date_end: '',
+    subscriber_address: '',
+    subscriber: '',
+    device_type: '',
+    serial_number: '',
+  });
+};
+
+const closeMeterModal = () => {
+  if (savingMeter.value) {
+    return;
+  }
+  meterModalOpen.value = false;
+  meterModalIndex.value = null;
+  meterModalTitle.value = '';
+  meterModalDateStart.value = '';
+  meterModalDateEnd.value = '';
+  meterModalSubscriberAddress.value = '';
+  meterModalSubscriber.value = '';
+  meterModalDeviceType.value = '';
+  meterModalSerialNumber.value = '';
+};
+
+const openMeterModal = (index: number) => {
+  const meter = formMeters.value[index];
+  if (!meter) {
+    return;
+  }
+  meterModalIndex.value = index;
+  meterModalTitle.value = meter.title || '';
+  meterModalDateStart.value = meter.date_start || '';
+  meterModalDateEnd.value = meter.date_end || '';
+  meterModalSubscriberAddress.value = meter.subscriber_address || '';
+  meterModalSubscriber.value = meter.subscriber || '';
+  meterModalDeviceType.value = meter.device_type || '';
+  meterModalSerialNumber.value = meter.serial_number || '';
+  meterModalOpen.value = true;
+};
+
+const saveMeterModal = async () => {
+  const title = meterModalTitle.value.trim();
+  const index = meterModalIndex.value;
+  if (!title || index == null || savingMeter.value) {
+    return;
+  }
+  const current = formMeters.value[index];
+  if (!current) {
+    return;
+  }
+  const dateStart = meterModalDateStart.value || '';
+  const dateEnd = meterModalDateEnd.value || '';
+  if (dateStart && dateEnd && dateEnd < dateStart) {
+    root.$emit('msg', 'error', 'Дата окончания не может быть раньше даты начала установки');
+    return;
+  }
+  const meterExtra = {
+    subscriber_address: meterModalSubscriberAddress.value.trim(),
+    subscriber: meterModalSubscriber.value.trim(),
+    device_type: meterModalDeviceType.value.trim(),
+    serial_number: meterModalSerialNumber.value.trim(),
+  };
+  if (current.id) {
+    savingMeter.value = true;
+    await store.dispatch(actions.INC_LOADING);
+    try {
+      const payload: Record<string, unknown> = {
+        real_estate_id: props.realEstateId,
+        id: current.id,
+        title,
+        date_start: dateStart || null,
+        date_end: dateEnd || null,
+        ...meterExtra,
+      };
+      if (props.year) {
+        payload.year = props.year;
+      }
+      const { ok, message, result } = await api('gardening/update-electricity-meter', payload);
+      if (!ok) {
+        root.$emit('msg', 'error', message || 'Не удалось сохранить счётчик');
+        return;
+      }
+      const ownerPayload = result as { owners?: OwnerInfo[] } | null;
+      if (ownerPayload && Array.isArray(ownerPayload.owners)) {
+        applyOwnerResult(result);
+      }
+      formMeters.value.splice(index, 1, {
+        id: current.id,
+        title,
+        date_start: dateStart,
+        date_end: dateEnd,
+        ...meterExtra,
+      });
+      emit('meters-changed');
+      root.$emit('msg', 'ok', 'Счётчик сохранён');
+    } finally {
+      savingMeter.value = false;
+      await store.dispatch(actions.DEC_LOADING);
+    }
+  } else {
+    formMeters.value.splice(index, 1, {
+      id: current.id,
+      title,
+      date_start: dateStart,
+      date_end: dateEnd,
+      ...meterExtra,
+    });
+  }
+  closeMeterModal();
 };
 
 const resetForm = () => {
@@ -430,6 +843,10 @@ const resetForm = () => {
   formPatronymic.value = '';
   formBirthday.value = '';
   formPhones.value = [''];
+  formEmail.value = '';
+  formComment.value = '';
+  formArea.value = plotArea.value;
+  copyPlotMeters();
 };
 
 const fillForm = (item: OwnerInfo) => {
@@ -442,6 +859,10 @@ const fillForm = (item: OwnerInfo) => {
   formBirthday.value = item.birthday || '';
   const phones = (item.phones || []).map((row) => row.phone).filter(Boolean);
   formPhones.value = phones.length > 0 ? [...phones] : [''];
+  formEmail.value = item.email || '';
+  formComment.value = item.comment || '';
+  formArea.value = plotArea.value;
+  copyPlotMeters();
 };
 
 const loadOwners = async () => {
@@ -453,9 +874,12 @@ const loadOwners = async () => {
     if (ok === false) {
       root.$emit('msg', 'error', message || 'Не удалось загрузить владельца');
       owners.value = [];
+      plotMeters.value = [];
+      plotArea.value = '';
+      plotNumObject.value = null;
       return;
     }
-    owners.value = Array.isArray(result) ? result : [];
+    applyOwnerResult(result);
   } finally {
     await store.dispatch(actions.DEC_LOADING);
   }
@@ -499,6 +923,10 @@ const saveOwner = async () => {
       date_start: formDateStart.value,
       date_end: formDateEnd.value || null,
       phones: formPhones.value,
+      email: formEmail.value,
+      comment: formComment.value,
+      area: formArea.value === '' ? null : formArea.value,
+      meters: formMeters.value,
     };
     if (editingOwnerId.value) {
       payload.owner_id = editingOwnerId.value;
@@ -509,7 +937,8 @@ const saveOwner = async () => {
       return;
     }
     root.$emit('msg', 'ok', 'Сохранено');
-    owners.value = Array.isArray(result) ? result : [];
+    applyOwnerResult(result);
+    emit('meters-changed');
     closeModal();
   } finally {
     saving.value = false;
@@ -534,7 +963,7 @@ const deleteOwner = async (item: OwnerInfo) => {
       return;
     }
     root.$emit('msg', 'ok', 'Удалено');
-    owners.value = Array.isArray(result) ? result : [];
+    applyOwnerResult(result);
     if (editingOwnerId.value === item.owner_id) {
       closeModal();
     }
@@ -546,15 +975,27 @@ const deleteOwner = async (item: OwnerInfo) => {
 watch(() => props.realEstateId, () => {
   loadOwners();
 }, { immediate: true });
+
+watch(() => props.metersRevision, async (value, previous) => {
+  if (!value || value === previous) {
+    return;
+  }
+  await loadOwners();
+  if (modalOpen.value) {
+    copyPlotMeters();
+  }
+});
 </script>
 
 <style scoped lang="scss">
 .object-owner {
   display: flex;
   flex-direction: column;
-  width: 50%;
-  max-width: 50%;
-  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-right: 10px;
+  height: auto;
   min-height: 0;
   background-color: #f8f7f7;
   border-bottom: none;
@@ -563,7 +1004,6 @@ watch(() => props.realEstateId, () => {
 .object-owner__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   box-sizing: border-box;
   height: 34px;
@@ -573,6 +1013,19 @@ watch(() => props.realEstateId, () => {
   color: #FFFFFF;
   font-weight: bold;
   background-color: #aab2bd;
+  flex-shrink: 0;
+}
+
+.object-owner__header-add {
+  margin-left: auto;
+}
+
+.object-owner__pdf-btn {
+  height: 22px;
+  min-height: 22px;
+  max-height: 22px;
+  padding: 0 8px;
+  line-height: 20px;
   flex-shrink: 0;
 }
 
@@ -605,7 +1058,7 @@ watch(() => props.realEstateId, () => {
 }
 
 .object-owner__body {
-  overflow: auto;
+  overflow: visible;
   min-height: 0;
 }
 
@@ -635,26 +1088,41 @@ watch(() => props.realEstateId, () => {
   }
 
   th:nth-child(1),
-  td:nth-child(1),
+  td:nth-child(1) {
+    width: 64px;
+  }
+
   th:nth-child(2),
   td:nth-child(2),
-  th:nth-child(4),
-  td:nth-child(4) {
+  th:nth-child(3),
+  td:nth-child(3),
+  th:nth-child(5),
+  td:nth-child(5) {
     width: 95px;
   }
 
-  th:nth-child(3),
-  td:nth-child(3) {
-    width: 28%;
-  }
-
-  th:nth-child(5),
-  td:nth-child(5) {
-    width: auto;
+  th:nth-child(4),
+  td:nth-child(4) {
+    width: 20%;
   }
 
   th:nth-child(6),
-  td:nth-child(6),
+  td:nth-child(6) {
+    width: 12%;
+  }
+
+  th:nth-child(7),
+  td:nth-child(7) {
+    width: auto;
+  }
+
+  th:nth-child(8),
+  td:nth-child(8) {
+    width: 90px;
+  }
+
+  th:nth-child(9),
+  td:nth-child(9),
   th.object-owner__col-actions,
   td.object-owner__col-actions {
     width: 108px;

@@ -2274,7 +2274,6 @@ class ParaclinicInputFieldFileSettings(models.Model):
 
     @staticmethod
     def update_file_field_settings(field: ParaclinicInputField, file_settings: dict):
-
         # Если поменялся тип поля - удаляем настройки
         if field.field_type != 42:
             ParaclinicInputFieldFileSettings.objects.filter(field=field).delete()
@@ -2327,6 +2326,14 @@ class Contrasts(models.Model):
 class RealEstate(models.Model):
     title = models.CharField(max_length=255, help_text="Название контраста")
     num_object = models.PositiveIntegerField(help_text="Номер объекта", blank=True, null=True, default=None, db_index=True, unique=True)
+    area = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        default=None,
+        help_text="Площадь участка, м²",
+    )
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие набора")
 
     def __str__(self):
@@ -2345,6 +2352,8 @@ class OwnersRealEstate(models.Model):
     date_end = models.DateField(help_text="Дата окончания", blank=True, null=True, default=None)
     part_numerator = models.PositiveIntegerField(help_text="Числитель части доли", blank=True, null=True, default=None)
     part_denominator = models.PositiveIntegerField(help_text="Знаменатель части доли", blank=True, null=True, default=None)
+    comment = models.TextField(blank=True, default="", help_text="Комментарий")
+    email = models.CharField(max_length=255, blank=True, default="", help_text="Email")
 
     @property
     def share_display(self):
@@ -2450,3 +2459,58 @@ class GardeningBankReceipt(models.Model):
     class Meta:
         verbose_name = "Садоводство — приход"
         verbose_name_plural = "Садоводство — приходы"
+
+
+class GardeningElectricityMeter(models.Model):
+    real_estate = models.ForeignKey(RealEstate, help_text="Недвижиомть", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="Счётчик 1", help_text="Название счётчика")
+    date_start = models.DateField(help_text="Дата начала установки", blank=True, null=True, default=None)
+    date_end = models.DateField(help_text="Дата окончания", blank=True, null=True, default=None)
+    subscriber_address = models.CharField(max_length=512, blank=True, default="", help_text="Адрес абонента")
+    subscriber = models.CharField(max_length=255, blank=True, default="", help_text="Абонент")
+    device_type = models.CharField(max_length=255, blank=True, default="", help_text="Тип прибора")
+    serial_number = models.CharField(max_length=255, blank=True, default="", help_text="Серийный № прибора")
+    sort_weight = models.IntegerField(default=0, blank=True, help_text="Порядок")
+    hide = models.BooleanField(default=False, db_index=True)
+
+    def __str__(self):
+        return f"{self.real_estate}:{self.title}"
+
+    class Meta:
+        verbose_name = "Садоводство — счётчик электроэнергии"
+        verbose_name_plural = "Садоводство — счётчики электроэнергии"
+        ordering = ("sort_weight", "pk")
+
+
+class GardeningElectricityMeterReading(models.Model):
+    real_estate = models.ForeignKey(RealEstate, help_text="Недвижиомть", on_delete=models.CASCADE)
+    meter = models.ForeignKey(
+        GardeningElectricityMeter,
+        help_text="Счётчик",
+        related_name="readings",
+        on_delete=models.CASCADE,
+    )
+    year = models.PositiveIntegerField(help_text="Год показания", db_index=True)
+    month = models.PositiveSmallIntegerField(help_text="Месяц показания (1–12)")
+    reading = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Показание счётчика")
+    previous_reading_manual = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        default=None,
+        help_text="Предыдущее показание, введённое вручную",
+    )
+    hide = models.BooleanField(default=False, db_index=True)
+
+    def __str__(self):
+        return f"{self.real_estate}:{self.meter_id}:{self.year}-{self.month}={self.reading}"
+
+    class Meta:
+        verbose_name = "Садоводство — показание счётчика"
+        verbose_name_plural = "Садоводство — показания счётчика"
+        ordering = ("year", "month", "pk")
+        indexes = [
+            models.Index(fields=["real_estate", "year", "month"], name="directory_g_real_es_elec_idx"),
+            models.Index(fields=["meter", "year", "month"], name="directory_g_meter_elec_idx"),
+        ]

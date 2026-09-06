@@ -1,5 +1,8 @@
 <template>
-  <div class="gardening-layout">
+  <div
+    class="gardening-layout"
+    :class="{ 'gardening-layout--page-scroll': showOwnerPanel }"
+  >
     <div class="header-row">
       <div class="header-row__nav">
         <div class="search">
@@ -80,9 +83,29 @@
             </button>
           </div>
         </div>
+        <div
+          v-if="showMonthsStrip"
+          class="header-row__years-bottom"
+        >
+          <div class="months-strip">
+            <button
+              v-for="month in months"
+              :key="month.id"
+              class="year-button nbr"
+              :class="{ 'active-button': selectedMonth === month.id }"
+              type="button"
+              @click="selectedMonth = month.id"
+            >
+              {{ month.label }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="body-row">
+    <div
+      class="body-row"
+      :class="{ 'body-row--page-scroll': showOwnerPanel }"
+    >
       <div class="side-col side-col--nav">
         <div class="object-list">
           <div
@@ -126,6 +149,12 @@
             v-else-if="showYearPanel"
             :year="selectedYear"
           />
+          <GardeningElectricityMonthList
+            v-else-if="showMonthsStrip"
+            :year="selectedYear"
+            :month="selectedMonth"
+            @readings-changed="electricityRefresh += 1"
+          />
           <GardeningAccountingSummary
             v-else-if="showAllPanel"
             :year="selectedYear"
@@ -136,12 +165,31 @@
             class="accounting-main"
           >
             <div class="accounting-main__owner">
-              <GardeningObjectOwner :real-estate-id="selectedId" />
-            </div>
-            <div class="accounting-main__rest">
-              <GardeningBankReceipts
+              <GardeningObjectOwner
                 :real-estate-id="selectedId"
                 :year="selectedYear"
+                :meters-revision="ownerMetersRevision"
+                @meters-changed="onOwnerMetersChanged"
+              />
+            </div>
+            <div class="accounting-main__rest">
+              <div class="accounting-main__receipts">
+                <GardeningBankReceipts
+                  :real-estate-id="selectedId"
+                  :year="selectedYear"
+                  @changed="contributionsRefresh += 1"
+                />
+                <GardeningPlotContributions
+                  :key="`contrib-${selectedId}-${selectedYear}-${contributionsRefresh}`"
+                  :real-estate-id="selectedId"
+                  :year="selectedYear"
+                />
+              </div>
+              <GardeningElectricityReadings
+                :key="`elec-${selectedId}-${selectedYear}-${electricityRefresh}`"
+                :real-estate-id="selectedId"
+                :year="selectedYear"
+                @meters-changed="ownerMetersRevision += 1"
               />
             </div>
           </div>
@@ -228,8 +276,12 @@ import Modal from '@/ui-cards/Modal.vue';
 import GardeningPaymentTypes from '@/pages/Gardening/GardeningPaymentTypes.vue';
 import GardeningYearRates from '@/pages/Gardening/GardeningYearRates.vue';
 import GardeningObjectOwner from '@/pages/Gardening/GardeningObjectOwner.vue';
+import GardeningPlotContributions from '@/pages/Gardening/GardeningPlotContributions.vue';
 import GardeningBankReceipts from '@/pages/Gardening/GardeningBankReceipts.vue';
+import GardeningElectricityReadings from '@/pages/Gardening/GardeningElectricityReadings.vue';
 import GardeningAccountingSummary from '@/pages/Gardening/GardeningAccountingSummary.vue';
+import GardeningElectricityMonthList from '@/pages/Gardening/GardeningElectricityMonthList.vue';
+import { parseGardeningPlotQuery } from '@/pages/Gardening/plotUrl';
 
 interface RealEstateItem {
   id: number;
@@ -240,10 +292,12 @@ interface YearPaymentTypeOption {
   id: number;
   label: string;
   not_control?: boolean;
+  is_electricity?: boolean;
 }
 
 const store = useStore();
-const root = getCurrentInstance().proxy.$root;
+const vm = getCurrentInstance().proxy;
+const root = vm.$root;
 const currentYear = new Date().getFullYear();
 
 const realEstates = ref<RealEstateItem[]>([]);
@@ -256,9 +310,33 @@ const saving = ref(false);
 const yearMin = ref(2000);
 const yearMaxOffset = ref(2);
 const selectedYear = ref<number | null>(currentYear);
+const electricityRefresh = ref(0);
+const contributionsRefresh = ref(0);
+const ownerMetersRevision = ref(0);
 const settingsMode = ref(false);
 const yearPaymentTypes = ref<YearPaymentTypeOption[]>([]);
 const selectedPaymentTypeId = ref<number | null>(null);
+const selectedMonth = ref<number>(1);
+
+const months = [
+  { id: 1, label: 'Январь' },
+  { id: 2, label: 'Февраль' },
+  { id: 3, label: 'Март' },
+  { id: 4, label: 'Апрель' },
+  { id: 5, label: 'Май' },
+  { id: 6, label: 'Июнь' },
+  { id: 7, label: 'Июль' },
+  { id: 8, label: 'Август' },
+  { id: 9, label: 'Сентябрь' },
+  { id: 10, label: 'Октябрь' },
+  { id: 11, label: 'Ноябрь' },
+  { id: 12, label: 'Декабрь' },
+];
+
+const onOwnerMetersChanged = () => {
+  electricityRefresh.value += 1;
+  contributionsRefresh.value += 1;
+};
 
 const showBasePanel = computed(() => settingsMode.value && selectedYear.value === null);
 const showYearPanel = computed(() => settingsMode.value && selectedYear.value !== null);
@@ -269,6 +347,14 @@ const showAllPanel = computed(() => (
   && selectedYear.value !== null
 ));
 const showPaymentTypesStrip = computed(() => showAllPanel.value);
+const selectedPaymentType = computed(() => (
+  yearPaymentTypes.value.find((item) => item.id === selectedPaymentTypeId.value) || null
+));
+const showMonthsStrip = computed(() => (
+  showAllPanel.value
+  && selectedPaymentTypeId.value !== null
+  && Boolean(selectedPaymentType.value?.is_electricity)
+));
 
 watch(settingsMode, (isSettings) => {
   if (isSettings) {
@@ -362,6 +448,23 @@ const loadRealEstates = async () => {
   }
 };
 
+const applyRouteQuery = () => {
+  const { id, year } = parseGardeningPlotQuery(vm.$route?.query || {});
+  settingsMode.value = false;
+  if (year !== null) {
+    selectedYear.value = year;
+  }
+  if (id !== null && realEstates.value.some((item) => item.id === id)) {
+    selectedId.value = id;
+  }
+};
+
+onMounted(async () => {
+  await loadRealEstates();
+  applyRouteQuery();
+  await scrollToSelectedYear();
+});
+
 const openAddModal = () => {
   editingId.value = null;
   newNumObject.value = '';
@@ -409,10 +512,6 @@ const saveRealEstate = async () => {
     await store.dispatch(actions.DEC_LOADING);
   }
 };
-
-onMounted(() => {
-  loadRealEstates();
-});
 </script>
 
 <style scoped lang="scss">
@@ -422,6 +521,30 @@ onMounted(() => {
   height: 100%;
   margin-bottom: 5px;
   background-color: #f8f7f7;
+}
+
+.gardening-layout--page-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  .side-col {
+    min-height: 0;
+  }
+
+  .side-col--nav,
+  .side-col--main {
+    overflow: visible;
+  }
+
+  .main-body {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .object-list {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
 }
 
 .header-row {
@@ -502,6 +625,12 @@ onMounted(() => {
   min-height: 0;
 }
 
+.body-row--page-scroll {
+  flex: 1 0 auto;
+  min-height: min-content;
+  align-items: start;
+}
+
 .side-col {
   display: flex;
   flex-direction: column;
@@ -531,20 +660,34 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   min-height: 0;
 }
 
 .accounting-main__owner {
   flex: 0 0 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .accounting-main__rest {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.accounting-main__receipts {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  padding-right: 10px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 .search {
@@ -593,7 +736,8 @@ onMounted(() => {
   height: 100%;
 }
 
-.payment-types-strip {
+.payment-types-strip,
+.months-strip {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -732,7 +876,9 @@ onMounted(() => {
 .gardening-layout .years-strip .year-button,
 .gardening-layout .years-strip .year-button.active-button,
 .gardening-layout .payment-types-strip .year-button,
-.gardening-layout .payment-types-strip .year-button.active-button {
+.gardening-layout .payment-types-strip .year-button.active-button,
+.gardening-layout .months-strip .year-button,
+.gardening-layout .months-strip .year-button.active-button {
   border-radius: 0 !important;
   -webkit-border-radius: 0 !important;
   -moz-border-radius: 0 !important;
