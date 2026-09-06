@@ -281,6 +281,7 @@ import GardeningBankReceipts from '@/pages/Gardening/GardeningBankReceipts.vue';
 import GardeningElectricityReadings from '@/pages/Gardening/GardeningElectricityReadings.vue';
 import GardeningAccountingSummary from '@/pages/Gardening/GardeningAccountingSummary.vue';
 import GardeningElectricityMonthList from '@/pages/Gardening/GardeningElectricityMonthList.vue';
+import { parseGardeningPlotQuery } from '@/pages/Gardening/plotUrl';
 
 interface RealEstateItem {
   id: number;
@@ -295,7 +296,8 @@ interface YearPaymentTypeOption {
 }
 
 const store = useStore();
-const root = getCurrentInstance().proxy.$root;
+const vm = getCurrentInstance().proxy;
+const root = vm.$root;
 const currentYear = new Date().getFullYear();
 
 const realEstates = ref<RealEstateItem[]>([]);
@@ -446,6 +448,23 @@ const loadRealEstates = async () => {
   }
 };
 
+const applyRouteQuery = () => {
+  const { id, year } = parseGardeningPlotQuery(vm.$route?.query || {});
+  settingsMode.value = false;
+  if (year !== null) {
+    selectedYear.value = year;
+  }
+  if (id !== null && realEstates.value.some((item) => item.id === id)) {
+    selectedId.value = id;
+  }
+};
+
+onMounted(async () => {
+  await loadRealEstates();
+  applyRouteQuery();
+  await scrollToSelectedYear();
+});
+
 const openAddModal = () => {
   editingId.value = null;
   newNumObject.value = '';
@@ -493,10 +512,6 @@ const saveRealEstate = async () => {
     await store.dispatch(actions.DEC_LOADING);
   }
 };
-
-onMounted(() => {
-  loadRealEstates();
-});
 </script>
 
 <style scoped lang="scss">

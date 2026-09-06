@@ -61,7 +61,14 @@
             v-for="row in visibleRows"
             :key="rowKey(row)"
           >
-            <td>{{ formatText(row.num_object) }}</td>
+            <td>
+              <a
+                class="a-under"
+                :href="plotHref(row.real_estate_id)"
+                target="_blank"
+                rel="noopener"
+              >{{ formatText(row.num_object) }}</a>
+            </td>
             <td
               class="month-list__fit month-list__gap-after"
               :title="row.meter_title"
@@ -185,6 +192,7 @@ import {
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import { gardeningPlotHref } from '@/pages/Gardening/plotUrl';
 
 interface MonthRow {
   real_estate_id: number;
@@ -247,6 +255,8 @@ const originalPrevious = ref<string | null>(null);
 const saving = ref(false);
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
+
+const plotHref = (realEstateId: number) => gardeningPlotHref(realEstateId, props.year);
 
 const previousHeader = computed(() => {
   if (!props.year || !props.month) {

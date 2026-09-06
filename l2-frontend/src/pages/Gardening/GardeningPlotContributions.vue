@@ -270,7 +270,7 @@ watch(
   td {
     box-sizing: border-box;
     height: 34px;
-    padding: 0 6px;
+    padding: 0 14px;
     border-bottom: 1px solid #b1b1b1;
     text-align: left;
     vertical-align: middle;

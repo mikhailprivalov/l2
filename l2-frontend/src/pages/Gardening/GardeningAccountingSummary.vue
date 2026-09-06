@@ -80,7 +80,14 @@
             v-for="row in visibleRows"
             :key="row.real_estate_id"
           >
-            <td>{{ formatText(row.num_object) }}</td>
+            <td>
+              <a
+                class="a-under"
+                :href="plotHref(row.real_estate_id)"
+                target="_blank"
+                rel="noopener"
+              >{{ formatText(row.num_object) }}</a>
+            </td>
             <td
               class="accounting-summary__num"
               :class="{ 'accounting-summary__missing': isAmountMissing(row.tariff) }"
@@ -138,6 +145,7 @@ import {
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import { gardeningPlotHref } from '@/pages/Gardening/plotUrl';
 
 interface TotalItem {
   payment_type_id: number;
@@ -193,6 +201,8 @@ const rows = ref<SummaryRow[]>([]);
 const filterDebt = ref(false);
 const sortKey = ref<SortKey>('num_object');
 const sortDir = ref<'asc' | 'desc'>('asc');
+
+const plotHref = (realEstateId: number) => gardeningPlotHref(realEstateId, props.year);
 
 const formatDate = (value: string | null) => {
   if (!value) {
@@ -449,7 +459,7 @@ watch(
   td {
     box-sizing: border-box;
     height: 34px;
-    padding: 0 6px;
+    padding: 0 14px;
     border-bottom: 1px solid #b1b1b1;
     text-align: left;
     vertical-align: middle;
