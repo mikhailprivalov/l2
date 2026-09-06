@@ -779,12 +779,14 @@ def _payment_types_for_year(year, exclude_not_control=False):
                     break
         if include and item.pk not in seen:
             seen.add(item.pk)
-            options.append({
-                "id": item.pk,
-                "label": item.title,
-                "not_control": item.not_control,
-                "is_electricity": _is_electricity_payment_type(item),
-            })
+            options.append(
+                {
+                    "id": item.pk,
+                    "label": item.title,
+                    "not_control": item.not_control,
+                    "is_electricity": _is_electricity_payment_type(item),
+                }
+            )
     return options
 
 
