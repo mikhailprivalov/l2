@@ -572,12 +572,7 @@ def form_02(request_data):
         data.append(empty)
     else:
         for row in rows:
-            data.append(
-                [
-                    _export_pdf_cell(row, col, style_td, style_td_right, style_td_red, style_td_green, style_td_right_bold)
-                    for col in columns
-                ]
-            )
+            data.append([_export_pdf_cell(row, col, style_td, style_td_right, style_td_red, style_td_green, style_td_right_bold) for col in columns])
 
     col_count = max(len(columns), 1)
     col_widths = _export_col_widths(columns, table_width) if columns else [table_width]
