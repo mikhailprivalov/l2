@@ -1698,11 +1698,7 @@ def _open_owners_fio_by_estate(estate_ids):
     names = {pk: [] for pk in estate_ids}
     if not estate_ids:
         return {}
-    owners = (
-        OwnersRealEstate.objects.select_related("individual")
-        .filter(real_estate_id__in=estate_ids, hide=False, date_end__isnull=True)
-        .order_by("date_start", "pk")
-    )
+    owners = OwnersRealEstate.objects.select_related("individual").filter(real_estate_id__in=estate_ids, hide=False, date_end__isnull=True).order_by("date_start", "pk")
     for owner in owners:
         fio = _owner_fio(owner)
         if fio:
