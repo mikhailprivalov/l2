@@ -1,22 +1,12 @@
 <template>
-  <div class="accounting-summary">
+  <div class="debts-list">
     <div
-      v-if="year && !loading"
-      class="accounting-summary__toolbar"
+      v-if="year && paymentTypeId && !loading"
+      class="debts-list__toolbar"
     >
-      <label
-        v-if="mode === 'table'"
-        class="accounting-summary__filter"
-      >
-        <input
-          v-model="filterDebt"
-          type="checkbox"
-        >
-        Есть долг
-      </label>
-      <div class="accounting-summary__print">
+      <div class="debts-list__print">
         <button
-          class="btn btn-blue-nb btn-sm nbr accounting-summary__print-btn"
+          class="btn btn-blue-nb btn-sm nbr debts-list__print-btn"
           type="button"
           title="Печать PDF"
           @click="printFile('pdf')"
@@ -24,7 +14,7 @@
           PDF
         </button>
         <button
-          class="btn btn-blue-nb btn-sm nbr accounting-summary__print-btn"
+          class="btn btn-blue-nb btn-sm nbr debts-list__print-btn"
           type="button"
           title="Выгрузить Excel"
           @click="printFile('xlsx')"
@@ -34,64 +24,43 @@
       </div>
     </div>
     <div
-      v-if="!year"
-      class="accounting-summary__empty"
+      v-if="!year || !paymentTypeId"
+      class="debts-list__empty"
     >
-      Выберите год
+      Выберите вид платежа
     </div>
     <div
       v-else-if="loading"
-      class="accounting-summary__empty"
+      class="debts-list__empty"
     >
       Загрузка…
     </div>
-    <template v-else-if="mode === 'totals'">
-      <div
-        v-if="totalItems.length === 0"
-        class="accounting-summary__empty"
-      >
-        Нет видов платежей за {{ year }}
-      </div>
-      <div
-        v-for="item in totalItems"
-        :key="item.payment_type_id"
-        class="accounting-summary__block"
-      >
-        <div class="accounting-summary__block-header">
-          <span>{{ item.title }}</span>
-          <span class="accounting-summary__period">
-            {{ formatDate(item.date_start) }} — {{ formatDate(item.date_end) }}
-          </span>
-          <span class="accounting-summary__sum">{{ item.receipts_total }}</span>
-        </div>
-      </div>
-    </template>
     <div
-      v-else-if="mode === 'table' && visibleRows.length === 0"
-      class="accounting-summary__empty"
+      v-else-if="visibleRows.length === 0"
+      class="debts-list__empty"
     >
-      Нет данных
+      Нет долгов
     </div>
     <div
-      v-else-if="mode === 'table'"
-      class="accounting-summary__body"
+      v-else
+      class="debts-list__body"
     >
-      <table class="accounting-summary__table">
+      <table class="debts-list__table">
         <thead>
           <tr>
             <th
               v-for="col in columns"
               :key="col.key"
               :class="{
-                'accounting-summary__num': col.numeric,
-                'accounting-summary__sorted': sortKey === col.key,
+                'debts-list__num': col.numeric,
+                'debts-list__sorted': sortKey === col.key,
               }"
               @click="toggleSort(col.key)"
             >
               {{ col.label }}
               <span
                 v-if="sortKey === col.key"
-                class="accounting-summary__sort"
+                class="debts-list__sort"
               >{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
           </tr>
@@ -109,35 +78,23 @@
                 rel="noopener"
               >{{ formatText(row.num_object) }}</a>
             </td>
-            <td
-              class="accounting-summary__num"
-              :class="{ 'accounting-summary__missing': isAmountMissing(row.tariff) }"
-            >
-              {{ formatMissingZero(row.tariff) }}
+            <td :title="row.owner || ''">
+              {{ formatText(row.owner) }}
             </td>
-            <td
-              class="accounting-summary__num"
-              :class="{ 'accounting-summary__missing': isAmountMissing(row.coefficient) }"
-            >
-              {{ formatMissingZero(row.coefficient) }}
+            <td class="debts-list__num">
+              {{ formatValue(row.charge) }}
             </td>
-            <td
-              class="accounting-summary__num"
-              :class="{ 'accounting-summary__missing': isAmountMissing(row.charge) }"
-            >
-              {{ formatMissingZero(row.charge) }}
-            </td>
-            <td class="accounting-summary__num">
+            <td class="debts-list__num">
               {{ formatValue(row.written_off) }}
             </td>
             <td
-              class="accounting-summary__num"
+              class="debts-list__num"
               :class="debtClass(row.debt)"
             >
               {{ formatValue(row.debt) }}
             </td>
             <td
-              class="accounting-summary__num"
+              class="debts-list__num"
               :class="remainderClass(row.remainder)"
             >
               {{ formatRemainder(row.remainder) }}
@@ -145,12 +102,6 @@
           </tr>
         </tbody>
       </table>
-    </div>
-    <div
-      v-else
-      class="accounting-summary__empty"
-    >
-      Нет данных
     </div>
   </div>
 </template>
@@ -168,20 +119,10 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import { gardeningPlotHref, openGardeningAllPrint } from '@/pages/Gardening/plotUrl';
 
-interface TotalItem {
-  payment_type_id: number;
-  title: string;
-  is_absolute: boolean;
-  date_start: string;
-  date_end: string;
-  receipts_total: string;
-}
-
-interface SummaryRow {
+interface DebtRow {
   real_estate_id: number;
   num_object: number | null;
-  tariff: string | null;
-  coefficient: string | null;
+  owner: string;
   charge: string | null;
   written_off: string | null;
   debt: string | null;
@@ -190,8 +131,7 @@ interface SummaryRow {
 
 type SortKey =
   | 'num_object'
-  | 'tariff'
-  | 'coefficient'
+  | 'owner'
   | 'charge'
   | 'written_off'
   | 'debt'
@@ -199,8 +139,7 @@ type SortKey =
 
 const columns: { key: SortKey; label: string; numeric: boolean }[] = [
   { key: 'num_object', label: 'Участок', numeric: false },
-  { key: 'tariff', label: 'Тариф', numeric: true },
-  { key: 'coefficient', label: 'Коэффициент', numeric: true },
+  { key: 'owner', label: 'Владелец', numeric: false },
   { key: 'charge', label: 'Начислено', numeric: true },
   { key: 'written_off', label: 'Списано', numeric: true },
   { key: 'debt', label: 'Долг', numeric: true },
@@ -216,37 +155,23 @@ const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
 const loading = ref(false);
-const mode = ref<'totals' | 'table' | null>(null);
-const totalItems = ref<TotalItem[]>([]);
-const rows = ref<SummaryRow[]>([]);
-const filterDebt = ref(false);
+const rows = ref<DebtRow[]>([]);
 const sortKey = ref<SortKey>('num_object');
 const sortDir = ref<'asc' | 'desc'>('asc');
 
 const plotHref = (realEstateId: number) => gardeningPlotHref(realEstateId, props.year);
 
 const printFile = (format: 'pdf' | 'xlsx') => {
-  if (!props.year) {
+  if (!props.year || !props.paymentTypeId) {
     return;
   }
   openGardeningAllPrint(format, {
     year: props.year,
     payment_type_id: props.paymentTypeId,
-    filter_debt: filterDebt.value,
+    debts: true,
     sort_key: sortKey.value,
     sort_dir: sortDir.value,
   });
-};
-
-const formatDate = (value: string | null) => {
-  if (!value) {
-    return '—';
-  }
-  const [y, month, day] = value.split('-');
-  if (!y || !month || !day) {
-    return value;
-  }
-  return `${day}.${month}.${y}`;
 };
 
 const formatText = (value: string | number | null | undefined) => {
@@ -259,15 +184,6 @@ const formatText = (value: string | number | null | undefined) => {
 const formatValue = (value: string | null | undefined) => {
   if (value === null || value === undefined || value === '') {
     return '—';
-  }
-  return value;
-};
-
-const isAmountMissing = (value: string | null | undefined) => value == null || value === '';
-
-const formatMissingZero = (value: string | null | undefined) => {
-  if (isAmountMissing(value)) {
-    return '0.00';
   }
   return value;
 };
@@ -300,9 +216,9 @@ const remainderClass = (value: string | null) => {
   }
   const amount = parseAmount(value);
   if (!Number.isFinite(amount) || Math.abs(amount) < 0.005) {
-    return 'accounting-summary__remainder--zero';
+    return 'debts-list__remainder--zero';
   }
-  return amount > 0 ? 'accounting-summary__remainder--plus' : 'accounting-summary__remainder--minus';
+  return amount > 0 ? 'debts-list__remainder--plus' : 'debts-list__remainder--minus';
 };
 
 const debtClass = (value: string | null) => {
@@ -313,27 +229,22 @@ const debtClass = (value: string | null) => {
   if (!Number.isFinite(amount) || amount <= 0.005) {
     return null;
   }
-  return 'accounting-summary__debt';
+  return 'debts-list__debt';
 };
 
-const hasDebt = (row: SummaryRow) => {
-  const amount = parseAmount(row.debt);
-  return Number.isFinite(amount) && amount > 0.005;
-};
-
-const sortValue = (row: SummaryRow, key: SortKey) => {
+const sortValue = (row: DebtRow, key: SortKey) => {
   if (key === 'num_object') {
     return row.num_object == null ? Number.POSITIVE_INFINITY : row.num_object;
+  }
+  if (key === 'owner') {
+    return (row.owner || '').toLowerCase();
   }
   const amount = parseAmount(row[key]);
   return Number.isFinite(amount) ? amount : Number.NEGATIVE_INFINITY;
 };
 
 const visibleRows = computed(() => {
-  let list = rows.value.slice();
-  if (filterDebt.value) {
-    list = list.filter((row) => hasDebt(row));
-  }
+  const list = rows.value.slice();
   const dir = sortDir.value === 'asc' ? 1 : -1;
   const key = sortKey.value;
   list.sort((left, right) => {
@@ -360,37 +271,23 @@ const toggleSort = (key: SortKey) => {
 };
 
 const loadData = async () => {
-  if (!props.year) {
-    mode.value = null;
-    totalItems.value = [];
+  if (!props.year || !props.paymentTypeId) {
     rows.value = [];
     return;
   }
   loading.value = true;
   await store.dispatch(actions.INC_LOADING);
   try {
-    const { ok, message, result } = await api('gardening/get-accounting-summary', {
+    const { ok, message, result } = await api('gardening/get-payment-type-debts', {
       year: props.year,
       payment_type_id: props.paymentTypeId,
     });
     if (ok === false) {
-      root.$emit('msg', 'error', message || 'Не удалось загрузить сводку');
-      mode.value = null;
-      totalItems.value = [];
+      root.$emit('msg', 'error', message || 'Не удалось загрузить долги');
       rows.value = [];
       return;
     }
-    mode.value = result?.mode || null;
-    if (result?.mode === 'totals') {
-      totalItems.value = Array.isArray(result.items) ? result.items : [];
-      rows.value = [];
-    } else if (result?.mode === 'table') {
-      totalItems.value = [];
-      rows.value = Array.isArray(result.rows) ? result.rows : [];
-    } else {
-      totalItems.value = [];
-      rows.value = [];
-    }
+    rows.value = Array.isArray(result?.rows) ? result.rows : [];
   } finally {
     loading.value = false;
     await store.dispatch(actions.DEC_LOADING);
@@ -407,7 +304,7 @@ watch(
 </script>
 
 <style scoped lang="scss">
-.accounting-summary {
+.debts-list {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -418,7 +315,7 @@ watch(
   color: #434A54;
 }
 
-.accounting-summary__toolbar {
+.debts-list__toolbar {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -429,14 +326,14 @@ watch(
   background-color: #ececec;
 }
 
-.accounting-summary__print {
+.debts-list__print {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   margin-left: auto;
 }
 
-.accounting-summary__print-btn {
+.debts-list__print-btn {
   height: 22px;
   min-height: 22px;
   max-height: 22px;
@@ -445,61 +342,17 @@ watch(
   flex-shrink: 0;
 }
 
-.accounting-summary__filter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  font-weight: normal;
-  cursor: pointer;
-  white-space: nowrap;
-
-  input {
-    margin: 0;
-    cursor: pointer;
-  }
-}
-
-.accounting-summary__empty {
+.debts-list__empty {
   padding: 10px;
   color: #666;
 }
 
-.accounting-summary__block {
-  margin-bottom: 12px;
-}
-
-.accounting-summary__block-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-sizing: border-box;
-  min-height: 34px;
-  padding: 0 10px;
-  border-bottom: 1px solid #b1b1b1;
-  background-color: #aab2bd;
-  color: #FFFFFF;
-  font-weight: bold;
-}
-
-.accounting-summary__period {
-  margin-left: auto;
-  font-weight: normal;
-}
-
-.accounting-summary__sum {
-  color: #000000;
-  font-weight: bold;
-  min-width: 90px;
-  text-align: right;
-}
-
-.accounting-summary__body {
+.debts-list__body {
   overflow: auto;
   min-height: 0;
 }
 
-.accounting-summary__table {
+.debts-list__table {
   width: max-content;
   min-width: 0;
   border-collapse: collapse;
@@ -530,36 +383,35 @@ watch(
   }
 }
 
-.accounting-summary__num {
+.debts-list__num {
   text-align: right !important;
 }
 
-.accounting-summary__sorted {
+.debts-list__sorted {
   background-color: #dfe3e8 !important;
 }
 
-.accounting-summary__sort {
+.debts-list__sort {
   margin-left: 4px;
   font-size: 10px;
 }
 
-.accounting-summary__missing,
-.accounting-summary__debt {
+.debts-list__debt {
   color: #c62828;
   font-weight: bold;
 }
 
-.accounting-summary__remainder--plus {
+.debts-list__remainder--plus {
   color: #2e7d32;
   font-weight: bold;
 }
 
-.accounting-summary__remainder--minus {
+.debts-list__remainder--minus {
   color: #c62828;
   font-weight: bold;
 }
 
-.accounting-summary__remainder--zero {
+.debts-list__remainder--zero {
   font-weight: bold;
 }
 </style>

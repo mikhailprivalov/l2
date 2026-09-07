@@ -92,11 +92,19 @@
               v-for="month in months"
               :key="month.id"
               class="year-button nbr"
-              :class="{ 'active-button': selectedMonth === month.id }"
+              :class="{ 'active-button': !selectedDebts && selectedMonth === month.id }"
               type="button"
-              @click="selectedMonth = month.id"
+              @click="selectMonth(month.id)"
             >
               {{ month.label }}
+            </button>
+            <button
+              class="year-button nbr"
+              :class="{ 'active-button': selectedDebts }"
+              type="button"
+              @click="selectedDebts = true"
+            >
+              Долги
             </button>
           </div>
         </div>
@@ -149,10 +157,16 @@
             v-else-if="showYearPanel"
             :year="selectedYear"
           />
+          <GardeningDebtsList
+            v-else-if="showDebtsList"
+            :year="selectedYear"
+            :payment-type-id="selectedPaymentTypeId"
+          />
           <GardeningElectricityMonthList
-            v-else-if="showMonthsStrip"
+            v-else-if="showMonthsStrip && !selectedDebts"
             :year="selectedYear"
             :month="selectedMonth"
+            :payment-type-id="selectedPaymentTypeId"
             @readings-changed="electricityRefresh += 1"
           />
           <GardeningAccountingSummary
@@ -281,6 +295,7 @@ import GardeningBankReceipts from '@/pages/Gardening/GardeningBankReceipts.vue';
 import GardeningElectricityReadings from '@/pages/Gardening/GardeningElectricityReadings.vue';
 import GardeningAccountingSummary from '@/pages/Gardening/GardeningAccountingSummary.vue';
 import GardeningElectricityMonthList from '@/pages/Gardening/GardeningElectricityMonthList.vue';
+import GardeningDebtsList from '@/pages/Gardening/GardeningDebtsList.vue';
 import { parseGardeningPlotQuery } from '@/pages/Gardening/plotUrl';
 
 interface RealEstateItem {
@@ -317,6 +332,7 @@ const settingsMode = ref(false);
 const yearPaymentTypes = ref<YearPaymentTypeOption[]>([]);
 const selectedPaymentTypeId = ref<number | null>(null);
 const selectedMonth = ref<number>(1);
+const selectedDebts = ref(false);
 
 const months = [
   { id: 1, label: 'Январь' },
@@ -355,11 +371,18 @@ const showMonthsStrip = computed(() => (
   && selectedPaymentTypeId.value !== null
   && Boolean(selectedPaymentType.value?.is_electricity)
 ));
+const showDebtsList = computed(() => showMonthsStrip.value && selectedDebts.value);
+
+const selectMonth = (monthId: number) => {
+  selectedDebts.value = false;
+  selectedMonth.value = monthId;
+};
 
 watch(settingsMode, (isSettings) => {
   if (isSettings) {
     selectedYear.value = null;
     selectedPaymentTypeId.value = null;
+    selectedDebts.value = false;
     return;
   }
   if (selectedYear.value === null) {
@@ -369,6 +392,11 @@ watch(settingsMode, (isSettings) => {
 
 watch(selectedId, () => {
   selectedPaymentTypeId.value = null;
+  selectedDebts.value = false;
+});
+
+watch(selectedPaymentTypeId, () => {
+  selectedDebts.value = false;
 });
 
 const loadYearPaymentTypes = async () => {
@@ -560,6 +588,7 @@ const saveRealEstate = async () => {
   min-width: 0;
   border-right: 1px solid #b1b1b1;
   align-self: stretch;
+  align-items: flex-start;
 }
 
 .header-row__years {
@@ -697,7 +726,9 @@ const saveRealEstate = async () => {
   flex-wrap: nowrap;
   flex: 1;
   min-width: 0;
-  height: 100%;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
 
   :deep(input.form-control),
   :deep(.btn) {

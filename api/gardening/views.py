@@ -1146,6 +1146,10 @@ def get_accounting_summary(request):
         except (TypeError, ValueError):
             return JsonResponse({"ok": False, "message": "Некорректный вид платежа"})
 
+    return JsonResponse({"ok": True, "result": _accounting_summary_result(year, payment_type_id)})
+
+
+def _accounting_summary_result(year, payment_type_id):
     date_start, date_end = _year_bounds(year)
     payment_types = _accounting_payment_types(year, payment_type_id)
 
@@ -1162,20 +1166,10 @@ def get_accounting_summary(request):
                     "receipts_total": _format_money(_receipts_sum_all(payment_type.pk, year)),
                 }
             )
-        return JsonResponse({"ok": True, "result": {"mode": "totals", "year": year, "items": items}})
+        return {"mode": "totals", "year": year, "items": items}
 
     if not payment_types or payment_types[0].not_control:
-        return JsonResponse(
-            {
-                "ok": True,
-                "result": {
-                    "mode": "table",
-                    "year": year,
-                    "payment_type": None,
-                    "rows": [],
-                },
-            }
-        )
+        return {"mode": "table", "year": year, "payment_type": None, "rows": []}
 
     payment_type = payment_types[0]
     estates = RealEstate.objects.filter(hide=False).order_by("num_object", "pk")
@@ -1194,21 +1188,15 @@ def get_accounting_summary(request):
                 "remainder": contribution["remainder"],
             }
         )
-
-    return JsonResponse(
-        {
-            "ok": True,
-            "result": {
-                "mode": "table",
-                "year": year,
-                "payment_type": {
-                    "payment_type_id": payment_type.pk,
-                    "title": payment_type.title,
-                },
-                "rows": rows,
-            },
-        }
-    )
+    return {
+        "mode": "table",
+        "year": year,
+        "payment_type": {
+            "payment_type_id": payment_type.pk,
+            "title": payment_type.title,
+        },
+        "rows": rows,
+    }
 
 
 def _tariff_for_year_or_none(payment_type: GardeningPaymentType, year):
@@ -1689,6 +1677,263 @@ def _electricity_month_rows(year, month):
     return rows
 
 
+def _parse_money_decimal(raw):
+    if raw in (None, ""):
+        return None
+    try:
+        return Decimal(str(raw).replace(",", "."))
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+
+
+def _owner_fio(owner: OwnersRealEstate):
+    individual = owner.individual
+    if not individual:
+        return ""
+    parts = [individual.family or "", individual.name or "", individual.patronymic or ""]
+    return " ".join(part.strip() for part in parts if part and part.strip())
+
+
+def _open_owners_fio_by_estate(estate_ids):
+    names = {pk: [] for pk in estate_ids}
+    if not estate_ids:
+        return {}
+    owners = (
+        OwnersRealEstate.objects.select_related("individual")
+        .filter(real_estate_id__in=estate_ids, hide=False, date_end__isnull=True)
+        .order_by("date_start", "pk")
+    )
+    for owner in owners:
+        fio = _owner_fio(owner)
+        if fio:
+            names.setdefault(owner.real_estate_id, []).append(fio)
+    return {pk: ", ".join(items) for pk, items in names.items()}
+
+
+def _debts_as_of_month(year):
+    today = date.today()
+    year = int(year)
+    if year < today.year:
+        return 12
+    if year > today.year:
+        return None
+    return today.month
+
+
+def _electricity_debt_rows(year, month):
+    plots = []
+    seen = set()
+    charge_totals = {}
+    for row in _electricity_month_rows(year, month):
+        estate_id = row["real_estate_id"]
+        charge = _parse_money_decimal(row.get("charge"))
+        if charge is not None:
+            charge_totals[estate_id] = charge_totals.get(estate_id, Decimal("0")) + charge
+        if estate_id in seen:
+            continue
+        seen.add(estate_id)
+        plots.append(row)
+
+    debt_rows = []
+    for row in plots:
+        debt = _parse_money_decimal(row.get("debt"))
+        if debt is None or debt <= Decimal("0.005"):
+            continue
+        estate_id = row["real_estate_id"]
+        charge_total = charge_totals.get(estate_id)
+        debt_rows.append(
+            {
+                "real_estate_id": estate_id,
+                "num_object": row["num_object"],
+                "charge": _format_money(charge_total) if charge_total is not None else None,
+                "written_off": row.get("written_off_total"),
+                "debt": row.get("debt"),
+                "remainder": row.get("remainder"),
+            }
+        )
+    owners = _open_owners_fio_by_estate([item["real_estate_id"] for item in debt_rows])
+    for item in debt_rows:
+        item["owner"] = owners.get(item["real_estate_id"], "")
+    return debt_rows
+
+
+def _export_truthy(raw):
+    return str(raw or "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _export_int(raw):
+    if raw in (None, ""):
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def _export_format_date(value):
+    if not value:
+        return "—"
+    if isinstance(value, str):
+        parts = value.split("-")
+        if len(parts) >= 3:
+            return f"{parts[2]}.{parts[1]}.{parts[0]}"
+        return value
+    return value.strftime("%d.%m.%Y")
+
+
+def _export_has_debt(value):
+    amount = _parse_money_decimal(value)
+    return amount is not None and amount > Decimal("0.005")
+
+
+def _export_sort_value(row, sort_key):
+    if sort_key == "num_object":
+        value = row.get("num_object")
+        return value if value is not None else float("inf")
+    if sort_key in ("owner", "meter_title", "title"):
+        return (row.get(sort_key) or "").lower()
+    amount = _parse_money_decimal(row.get(sort_key))
+    if amount is None:
+        return float("-inf")
+    return float(amount)
+
+
+def _export_sort_rows(rows, sort_key, sort_dir):
+    if not sort_key:
+        return list(rows)
+    reverse = str(sort_dir or "asc").lower() == "desc"
+    return sorted(rows, key=lambda row: _export_sort_value(row, sort_key), reverse=reverse)
+
+
+def _export_blank_plot_totals(rows):
+    seen = set()
+    result = []
+    keys = ("consumption_total", "written_off_total", "debt", "remainder", "receipt")
+    for row in rows:
+        item = dict(row)
+        estate_id = item.get("real_estate_id")
+        if estate_id in seen:
+            for key in keys:
+                item[key] = ""
+            item["_show_plot_totals"] = False
+        else:
+            seen.add(estate_id)
+            item["_show_plot_totals"] = True
+        result.append(item)
+    return result
+
+
+def _month_reading_headers(year, month):
+    previous = f"01.{int(month):02d}.{int(year)}"
+    last_day = calendar.monthrange(int(year), int(month))[1]
+    current = f"{last_day:02d}.{int(month):02d}.{int(year)}"
+    return previous, current
+
+
+def _all_plots_export(request_data):
+    year = _export_int(request_data.get("year"))
+    if not year:
+        return {"title": "Учёт", "columns": [], "rows": []}
+
+    payment_type_id = _export_int(request_data.get("payment_type_id"))
+    month = _export_int(request_data.get("month"))
+    debts = _export_truthy(request_data.get("debts"))
+    filter_debt = _export_truthy(request_data.get("filter_debt"))
+    filter_no_reading = _export_truthy(request_data.get("filter_no_reading"))
+    sort_key = request_data.get("sort_key") or "num_object"
+    sort_dir = request_data.get("sort_dir") or "asc"
+    payment_type = GardeningPaymentType.objects.filter(pk=payment_type_id, hide=False).first() if payment_type_id else None
+    type_title = (payment_type.title if payment_type else "") or "—"
+
+    if debts:
+        as_of_month = _debts_as_of_month(year)
+        rows = [] if as_of_month is None else _electricity_debt_rows(year, as_of_month)
+        rows = _export_sort_rows(rows, sort_key, sort_dir)
+        return {
+            "title": f"Учёт {year} — {type_title} — Долги",
+            "columns": [
+                {"key": "num_object", "label": "Участок", "numeric": False},
+                {"key": "owner", "label": "Владелец", "numeric": False},
+                {"key": "charge", "label": "Начислено", "numeric": True},
+                {"key": "written_off", "label": "Списано", "numeric": True},
+                {"key": "debt", "label": "Долг", "numeric": True, "debt": True},
+                {"key": "remainder", "label": "Остаток", "numeric": True, "remainder": True},
+            ],
+            "rows": rows,
+        }
+
+    if payment_type and _is_electricity_payment_type(payment_type) and month:
+        previous_header, current_header = _month_reading_headers(year, month)
+        rows = list(_electricity_month_rows(year, month))
+        if filter_debt and filter_no_reading:
+            rows = [row for row in rows if _export_has_debt(row.get("debt")) or row.get("current_reading") in (None, "")]
+        elif filter_debt:
+            rows = [row for row in rows if _export_has_debt(row.get("debt"))]
+        elif filter_no_reading:
+            rows = [row for row in rows if row.get("current_reading") in (None, "")]
+        rows = _export_blank_plot_totals(_export_sort_rows(rows, sort_key, sort_dir))
+        month_label = ELECTRICITY_MONTH_LABELS[month] if 1 <= month <= 12 else str(month)
+        return {
+            "title": f"Учёт {year} — {type_title} — {month_label}",
+            "columns": [
+                {"key": "num_object", "label": "Участок", "numeric": False},
+                {"key": "meter_title", "label": "Счётчик", "numeric": False},
+                {"key": "previous_reading", "label": previous_header, "numeric": True},
+                {"key": "current_reading", "label": current_header, "numeric": True},
+                {"key": "consumption", "label": "Потребл", "numeric": True},
+                {"key": "tariff", "label": "Тариф", "numeric": True, "missing_zero": True},
+                {"key": "charge", "label": "Начислено", "numeric": True},
+                {"key": "written_off", "label": "Списано", "numeric": True},
+                {"key": "consumption_total", "label": "Потребл общ", "numeric": True, "empty_ok": True},
+                {"key": "written_off_total", "label": "Списано общ", "numeric": True, "empty_ok": True},
+                {"key": "debt", "label": "Долг общ", "numeric": True, "debt": True, "empty_ok": True},
+                {"key": "remainder", "label": "Остаток общ", "numeric": True, "remainder": True, "empty_ok": True},
+                {"key": "receipt", "label": "Приход общ", "numeric": True, "empty_ok": True},
+            ],
+            "rows": rows,
+        }
+
+    summary = _accounting_summary_result(year, payment_type_id)
+    if summary.get("mode") == "totals":
+        rows = []
+        for item in summary.get("items") or []:
+            rows.append(
+                {
+                    "title": item.get("title") or "",
+                    "period": f"{_export_format_date(item.get('date_start'))} — {_export_format_date(item.get('date_end'))}",
+                    "receipts_total": item.get("receipts_total"),
+                }
+            )
+        return {
+            "title": f"Учёт {year} — Итого",
+            "columns": [
+                {"key": "title", "label": "Вид платежа", "numeric": False},
+                {"key": "period", "label": "Период", "numeric": False},
+                {"key": "receipts_total", "label": "Приход", "numeric": True},
+            ],
+            "rows": rows,
+        }
+
+    rows = list(summary.get("rows") or [])
+    if filter_debt:
+        rows = [row for row in rows if _export_has_debt(row.get("debt"))]
+    rows = _export_sort_rows(rows, sort_key, sort_dir)
+    summary_title = ((summary.get("payment_type") or {}).get("title") or type_title) or "—"
+    return {
+        "title": f"Учёт {year} — {summary_title}",
+        "columns": [
+            {"key": "num_object", "label": "Участок", "numeric": False},
+            {"key": "tariff", "label": "Тариф", "numeric": True, "missing_zero": True},
+            {"key": "coefficient", "label": "Коэффициент", "numeric": True, "missing_zero": True},
+            {"key": "charge", "label": "Начислено", "numeric": True, "missing_zero": True},
+            {"key": "written_off", "label": "Списано", "numeric": True},
+            {"key": "debt", "label": "Долг", "numeric": True, "debt": True},
+            {"key": "remainder", "label": "Остаток", "numeric": True, "remainder": True},
+        ],
+        "rows": rows,
+    }
+
+
 def _resolve_real_estate_year(body=None, get=None):
     source = body if body is not None else {}
     get = get or {}
@@ -1741,6 +1986,47 @@ def get_electricity_month_rows(request):
     if error:
         return JsonResponse({"ok": False, "message": error})
     return JsonResponse({"ok": True, "result": {"year": year, "month": month, "rows": _electricity_month_rows(year, month)}})
+
+
+@login_required
+@group_required("Бухгалтер садоводства")
+def get_payment_type_debts(request):
+    if request.method == "POST" and request.body:
+        body = json.loads(request.body)
+        year = body.get("year")
+        payment_type_id = body.get("payment_type_id")
+    else:
+        year = request.GET.get("year")
+        payment_type_id = request.GET.get("payment_type_id")
+
+    if not year:
+        return JsonResponse({"ok": False, "message": "Не указан год"})
+    try:
+        year = int(year)
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "message": "Некорректный год"})
+
+    if not payment_type_id:
+        return JsonResponse({"ok": False, "message": "Не указан вид платежа"})
+    try:
+        payment_type_id = int(payment_type_id)
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "message": "Некорректный вид платежа"})
+
+    payment_type = GardeningPaymentType.objects.filter(pk=payment_type_id, hide=False).first()
+    if not payment_type:
+        return JsonResponse({"ok": False, "message": "Вид платежа не найден"})
+    if not _is_electricity_payment_type(payment_type):
+        return JsonResponse({"ok": False, "message": "Долги доступны только для электроэнергии"})
+
+    as_of_month = _debts_as_of_month(year)
+    payload = {
+        "year": year,
+        "month": as_of_month,
+        "payment_type": {"payment_type_id": payment_type.pk, "title": payment_type.title},
+        "rows": [] if as_of_month is None else _electricity_debt_rows(year, as_of_month),
+    }
+    return JsonResponse({"ok": True, "result": payload})
 
 
 @login_required
