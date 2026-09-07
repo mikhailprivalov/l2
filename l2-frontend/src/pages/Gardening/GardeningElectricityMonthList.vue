@@ -15,6 +15,26 @@
         >
         Нет показаний
       </label>
+      <div class="month-list__print">
+        <button
+          class="btn btn-blue-nb btn-sm nbr month-list__print-btn"
+          type="button"
+          title="Печать PDF"
+          :disabled="!year || !month"
+          @click="printFile('pdf')"
+        >
+          PDF
+        </button>
+        <button
+          class="btn btn-blue-nb btn-sm nbr month-list__print-btn"
+          type="button"
+          title="Выгрузить Excel"
+          :disabled="!year || !month"
+          @click="printFile('xlsx')"
+        >
+          Excel
+        </button>
+      </div>
     </div>
     <div
       v-if="!year || !month"
@@ -192,7 +212,7 @@ import {
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
-import { gardeningPlotHref } from '@/pages/Gardening/plotUrl';
+import { gardeningPlotHref, openGardeningAllPrint } from '@/pages/Gardening/plotUrl';
 
 interface MonthRow {
   real_estate_id: number;
@@ -236,6 +256,7 @@ type SortKey =
 const props = defineProps<{
   year: number | null;
   month: number | null;
+  paymentTypeId?: number | null;
 }>();
 
 const emit = defineEmits<{(e: 'readings-changed'): void;
@@ -257,6 +278,21 @@ const saving = ref(false);
 const pad2 = (value: number) => String(value).padStart(2, '0');
 
 const plotHref = (realEstateId: number) => gardeningPlotHref(realEstateId, props.year);
+
+const printFile = (format: 'pdf' | 'xlsx') => {
+  if (!props.year || !props.month) {
+    return;
+  }
+  openGardeningAllPrint(format, {
+    year: props.year,
+    month: props.month,
+    payment_type_id: props.paymentTypeId,
+    filter_debt: filterDebt.value,
+    filter_no_reading: filterNoReading.value,
+    sort_key: sortKey.value,
+    sort_dir: sortDir.value,
+  });
+};
 
 const previousHeader = computed(() => {
   if (!props.year || !props.month) {
@@ -614,6 +650,22 @@ watch(
   padding: 0 10px;
   border-bottom: 1px solid #b1b1b1;
   background-color: #ececec;
+}
+
+.month-list__print {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.month-list__print-btn {
+  height: 22px;
+  min-height: 22px;
+  max-height: 22px;
+  padding: 0 8px;
+  line-height: 20px;
+  flex-shrink: 0;
 }
 
 .month-list__filter {

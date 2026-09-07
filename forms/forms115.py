@@ -14,6 +14,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from api.gardening.views import (
+    _all_plots_export,
     _contribution_payment_types,
     _contribution_row,
     _electricity_result,
@@ -441,6 +442,156 @@ def form_01(request_data):
     elec_table.setStyle(TableStyle(elec_style))
     objs.append(elec_table)
 
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def _export_col_widths(columns, table_width):
+    weights = []
+    for col in columns:
+        key = col.get("key")
+        if key in ("owner", "title", "period", "meter_title"):
+            weights.append(2.2)
+        elif key == "num_object":
+            weights.append(0.9)
+        elif col.get("numeric"):
+            weights.append(1.0)
+        else:
+            weights.append(1.4)
+    total = sum(weights) or 1
+    return [table_width * weight / total for weight in weights]
+
+
+def _export_pdf_cell(row, col, style_td, style_td_right, style_td_red, style_td_green, style_td_right_bold):
+    raw = row.get(col["key"])
+    if col.get("empty_ok") and raw == "":
+        return _p("", style_td)
+    if col.get("missing_zero"):
+        if raw in (None, ""):
+            return _p("0.00", style_td_red)
+        return _p(raw, style_td_right)
+    if col.get("remainder"):
+        amount = _pdf_amount(raw)
+        if raw in (None, ""):
+            return _p("—", style_td_right)
+        if amount is None:
+            return _p(raw, style_td_right)
+        if abs(amount) < Decimal("0.005"):
+            return _p("0.00", style_td_right_bold)
+        text = f"{amount.quantize(Decimal('0.01'))}"
+        if amount > 0:
+            return _p(text, style_td_green)
+        return _p(text, style_td_red)
+    if col.get("debt"):
+        amount = _pdf_amount(raw)
+        if raw in (None, ""):
+            return _p("—", style_td_right)
+        if amount is not None and amount > Decimal("0.005"):
+            return _p(str(raw), style_td_red)
+        return _p(raw, style_td_right)
+    if col.get("numeric"):
+        if raw in (None, ""):
+            return _p("—", style_td_right)
+        return _p(raw, style_td_right)
+    if raw in (None, ""):
+        return _p("—", style_td)
+    return _p(raw, style_td)
+
+
+def form_02(request_data):
+    """
+    Садоводство — сводка «Все»: итого, вид платежа, месяц электроэнергии, долги.
+    type=115.02&year=&payment_type_id=&month=&debts=&filter_debt=&filter_no_reading=&sort_key=&sort_dir=
+    """
+    pdfmetrics.registerFont(TTFont("PTAstraSerifBold", os.path.join(FONTS_FOLDER, "PTAstraSerif-Bold.ttf")))
+    pdfmetrics.registerFont(TTFont("PTAstraSerifReg", os.path.join(FONTS_FOLDER, "PTAstraSerif-Regular.ttf")))
+
+    style_sheet = getSampleStyleSheet()
+    style = style_sheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 8
+    style.leading = 10
+    style.alignment = TA_LEFT
+
+    style_title = deepcopy(style)
+    style_title.fontName = "PTAstraSerifBold"
+    style_title.fontSize = 12
+    style_title.leading = 14
+
+    style_th = deepcopy(style)
+    style_th.fontName = "PTAstraSerifBold"
+    style_th.fontSize = 8
+    style_th.leading = 9
+    style_th.alignment = TA_CENTER
+
+    style_td = deepcopy(style)
+    style_td.fontSize = 8
+    style_td.leading = 9
+
+    style_td_right = deepcopy(style_td)
+    style_td_right.alignment = TA_RIGHT
+
+    style_td_right_bold = deepcopy(style_td_right)
+    style_td_right_bold.fontName = "PTAstraSerifBold"
+
+    style_td_red = deepcopy(style_td_right)
+    style_td_red.textColor = colors.HexColor("#c62828")
+    style_td_red.fontName = "PTAstraSerifBold"
+
+    style_td_green = deepcopy(style_td_right)
+    style_td_green.textColor = colors.HexColor("#2e7d32")
+    style_td_green.fontName = "PTAstraSerifBold"
+
+    payload = _all_plots_export(request_data)
+    columns = payload.get("columns") or []
+    rows = payload.get("rows") or []
+    title = payload.get("title") or "Учёт"
+
+    buffer = BytesIO()
+    page = landscape(A4)
+    table_width = page[0] - 20 * mm
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=page,
+        leftMargin=10 * mm,
+        rightMargin=10 * mm,
+        topMargin=8 * mm,
+        bottomMargin=8 * mm,
+        title=title,
+    )
+    objs = [Paragraph(title, style_title), Spacer(1, 4 * mm)]
+
+    header = [_p(col.get("label") or "", style_th) for col in columns]
+    data = [header]
+    if not columns:
+        data = [[_p("Нет данных", style_td)]]
+    elif not rows:
+        empty = [_p("Нет данных" if idx == 0 else "", style_td) for idx in range(len(columns))]
+        data.append(empty)
+    else:
+        for row in rows:
+            data.append([_export_pdf_cell(row, col, style_td, style_td_right, style_td_red, style_td_green, style_td_right_bold) for col in columns])
+
+    col_count = max(len(columns), 1)
+    col_widths = _export_col_widths(columns, table_width) if columns else [table_width]
+    table = Table(data, colWidths=col_widths, repeatRows=1)
+    table.hAlign = "LEFT"
+    table.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#b1b1b1")),
+                ("BACKGROUND", (0, 0), (col_count - 1, 0), colors.HexColor("#ececec")),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 2),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        )
+    )
+    objs.append(table)
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()

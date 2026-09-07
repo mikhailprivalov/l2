@@ -7,6 +7,26 @@ export const gardeningPlotHref = (realEstateId: number, year?: number | null) =>
   return `/ui/gardening?${params.toString()}`;
 };
 
+export const openGardeningAllPrint = (
+  format: 'pdf' | 'xlsx',
+  params: Record<string, string | number | boolean | null | undefined>,
+) => {
+  const query = new URLSearchParams();
+  query.set('type', '115.02');
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '' || value === false) {
+      return;
+    }
+    if (value === true) {
+      query.set(key, '1');
+      return;
+    }
+    query.set(key, String(value));
+  });
+  const path = format === 'xlsx' ? '/forms/xlsx' : '/forms/pdf';
+  window.open(`${path}?${query.toString()}`, '_blank');
+};
+
 const firstQueryValue = (value: unknown) => {
   if (Array.isArray(value)) {
     return value[0];
