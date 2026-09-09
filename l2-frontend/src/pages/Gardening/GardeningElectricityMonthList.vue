@@ -15,6 +15,31 @@
         >
         Нет показаний
       </label>
+      <button
+        class="btn btn-blue-nb btn-sm nbr month-list__print-btn"
+        type="button"
+        title="Загрузить показания из Excel"
+        :disabled="importing || clearing"
+        @click="openXlsxPicker"
+      >
+        загрузить
+      </button>
+      <button
+        class="btn btn-blue-nb btn-sm nbr month-list__print-btn"
+        type="button"
+        title="Очистить показания за месяц"
+        :disabled="!year || !month || importing || clearing"
+        @click="clearMonth"
+      >
+        очистить
+      </button>
+      <input
+        ref="xlsxInput"
+        class="month-list__xlsx-input"
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        @change="onXlsxPicked"
+      >
       <div class="month-list__print">
         <button
           class="btn btn-blue-nb btn-sm nbr month-list__print-btn"
@@ -212,11 +237,11 @@ import {
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
-import { gardeningPlotHref, openGardeningAllPrint } from '@/pages/Gardening/plotUrl';
+import { comparePlotNumbers, gardeningPlotHref, openGardeningAllPrint } from '@/pages/Gardening/plotUrl';
 
 interface MonthRow {
   real_estate_id: number;
-  num_object: number | null;
+  num_object: string | number | null;
   meter_id: number;
   meter_title: string;
   subscriber_address: string;
@@ -257,10 +282,14 @@ const props = defineProps<{
   year: number | null;
   month: number | null;
   paymentTypeId?: number | null;
+  importing?: boolean;
 }>();
 
 const emit = defineEmits<{(e: 'readings-changed'): void;
+  (e: 'xlsx-selected', file: File): void;
 }>();
+
+const xlsxInput = ref<HTMLInputElement | null>(null);
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -274,10 +303,78 @@ const formPrevious = ref('');
 const formCurrent = ref('');
 const originalPrevious = ref<string | null>(null);
 const saving = ref(false);
+const clearing = ref(false);
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
 
 const plotHref = (realEstateId: number) => gardeningPlotHref(realEstateId, props.year);
+
+const openXlsxPicker = () => {
+  if (props.importing || clearing.value) {
+    return;
+  }
+  const input = xlsxInput.value;
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+};
+
+const onXlsxPicked = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file || props.importing || clearing.value) {
+    return;
+  }
+  emit('xlsx-selected', file);
+};
+
+const fetchRows = async () => {
+  if (!props.year || !props.month) {
+    rows.value = [];
+    return;
+  }
+  const { ok, message, result } = await api('gardening/get-electricity-month-rows', {
+    year: props.year,
+    month: props.month,
+  });
+  if (ok === false) {
+    root.$emit('msg', 'error', message || 'Не удалось загрузить показания');
+    rows.value = [];
+    return;
+  }
+  rows.value = Array.isArray(result?.rows) ? result.rows : [];
+};
+
+const clearMonth = async () => {
+  if (!props.year || !props.month || props.importing || clearing.value) {
+    return;
+  }
+  try {
+    await root.$dialog.confirm('Очистить показания за месяц?');
+  } catch (_) {
+    return;
+  }
+  clearing.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { ok, message } = await api('gardening/clear-electricity-month', {
+      year: props.year,
+      month: props.month,
+    });
+    if (!ok) {
+      root.$emit('msg', 'error', message || 'Не удалось очистить показания');
+      return;
+    }
+    await fetchRows();
+    emit('readings-changed');
+    root.$emit('msg', 'ok', 'Показания за месяц очищены');
+  } finally {
+    clearing.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
 
 const printFile = (format: 'pdf' | 'xlsx') => {
   if (!props.year || !props.month) {
@@ -428,7 +525,7 @@ const hasNoReading = (row: MonthRow) => isMissing(row.current_reading);
 const sortValue = (row: MonthRow, key: SortKey) => {
   const value = row[key];
   if (key === 'num_object') {
-    return row.num_object == null ? Number.POSITIVE_INFINITY : row.num_object;
+    return row.num_object;
   }
   if (
     key === 'previous_reading'
@@ -461,6 +558,9 @@ const visibleRows = computed(() => {
   const dir = sortDir.value === 'asc' ? 1 : -1;
   const key = sortKey.value;
   list.sort((left, right) => {
+    if (key === 'num_object') {
+      return comparePlotNumbers(left.num_object, right.num_object) * dir;
+    }
     const a = sortValue(left, key);
     const b = sortValue(right, key);
     if (a < b) {
@@ -538,23 +638,6 @@ const previousPayload = () => {
     return formPrevious.value;
   }
   return undefined;
-};
-
-const fetchRows = async () => {
-  if (!props.year || !props.month) {
-    rows.value = [];
-    return;
-  }
-  const { ok, message, result } = await api('gardening/get-electricity-month-rows', {
-    year: props.year,
-    month: props.month,
-  });
-  if (ok === false) {
-    root.$emit('msg', 'error', message || 'Не удалось загрузить показания');
-    rows.value = [];
-    return;
-  }
-  rows.value = Array.isArray(result?.rows) ? result.rows : [];
 };
 
 const loadData = async () => {
@@ -650,6 +733,10 @@ watch(
   padding: 0 10px;
   border-bottom: 1px solid #b1b1b1;
   background-color: #ececec;
+}
+
+.month-list__xlsx-input {
+  display: none;
 }
 
 .month-list__print {

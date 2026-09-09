@@ -37,7 +37,10 @@ export const smartCall = async ({
         formData.append('form', blob);
       }
       response = await HTTP.post(url, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'X-CSRFToken': Cookies.get('csrftoken'),
+        },
       });
     } else {
       response = await HTTP[method](url, data, {

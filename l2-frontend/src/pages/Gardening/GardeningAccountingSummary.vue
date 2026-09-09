@@ -166,7 +166,7 @@ import {
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
-import { gardeningPlotHref, openGardeningAllPrint } from '@/pages/Gardening/plotUrl';
+import { comparePlotNumbers, gardeningPlotHref, openGardeningAllPrint } from '@/pages/Gardening/plotUrl';
 
 interface TotalItem {
   payment_type_id: number;
@@ -179,7 +179,7 @@ interface TotalItem {
 
 interface SummaryRow {
   real_estate_id: number;
-  num_object: number | null;
+  num_object: string | number | null;
   tariff: string | null;
   coefficient: string | null;
   charge: string | null;
@@ -323,7 +323,7 @@ const hasDebt = (row: SummaryRow) => {
 
 const sortValue = (row: SummaryRow, key: SortKey) => {
   if (key === 'num_object') {
-    return row.num_object == null ? Number.POSITIVE_INFINITY : row.num_object;
+    return row.num_object;
   }
   const amount = parseAmount(row[key]);
   return Number.isFinite(amount) ? amount : Number.NEGATIVE_INFINITY;
@@ -337,6 +337,9 @@ const visibleRows = computed(() => {
   const dir = sortDir.value === 'asc' ? 1 : -1;
   const key = sortKey.value;
   list.sort((left, right) => {
+    if (key === 'num_object') {
+      return comparePlotNumbers(left.num_object, right.num_object) * dir;
+    }
     const a = sortValue(left, key);
     const b = sortValue(right, key);
     if (a < b) {
