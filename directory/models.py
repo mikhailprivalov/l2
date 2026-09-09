@@ -2325,7 +2325,7 @@ class Contrasts(models.Model):
 
 class RealEstate(models.Model):
     title = models.CharField(max_length=255, help_text="Название контраста")
-    num_object = models.PositiveIntegerField(help_text="Номер объекта", blank=True, null=True, default=None, db_index=True, unique=True)
+    num_object = models.CharField(max_length=64, help_text="Номер объекта", blank=True, null=True, default=None, db_index=True, unique=True)
     area = models.DecimalField(
         max_digits=12,
         decimal_places=2,

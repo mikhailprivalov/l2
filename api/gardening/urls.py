@@ -31,4 +31,7 @@ urlpatterns = [
     path('create-electricity-meter', views.create_electricity_meter),
     path('update-electricity-meter', views.update_electricity_meter),
     path('delete-electricity-meter', views.delete_electricity_meter),
+    path('import-electricity-xlsx', views.import_electricity_xlsx_view),
+    path('clear-electricity-month', views.clear_electricity_month),
+    path('backup-sql', views.backup_sql),
 ]

@@ -1,14 +1,22 @@
 import calendar
+import gzip
+import os
+import shutil
+import subprocess
+import tempfile
+import threading
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from shutil import which
 
 import simplejson as json
 from django.conf import settings as django_settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum
 from django.db.utils import IntegrityError
-from django.http import JsonResponse
+from django.http import FileResponse, JsonResponse
 
+from api.gardening.electricity_import import import_electricity_xlsx, meter_title_with_serial, normalize_plot_number, ordered_real_estates, plot_sort_key
 from clients.models import Individual, IndividualPhones
 from directory.models import (
     GardeningBankReceipt,
@@ -172,7 +180,7 @@ def _parse_payment_type_body(body):
 @login_required
 @group_required("Бухгалтер садоводства")
 def get_real_estates(request):
-    result = [{"id": item.pk, "num_object": item.num_object} for item in RealEstate.objects.filter(hide=False).order_by("num_object")]
+    result = [{"id": item.pk, "num_object": item.num_object} for item in ordered_real_estates()]
     return JsonResponse(
         {
             "result": result,
@@ -182,28 +190,26 @@ def get_real_estates(request):
     )
 
 
+def _parse_plot_number(raw):
+    num_object = normalize_plot_number(raw)
+    if not num_object:
+        return None, "Укажите номер объекта"
+    return num_object, None
+
+
 @login_required
 @group_required("Бухгалтер садоводства")
 def create_real_estate(request):
     body = json.loads(request.body)
-    num_object = body.get("num_object")
-
-    if num_object is None or num_object == "":
-        return JsonResponse({"ok": False, "message": "Укажите номер объекта"})
-
-    try:
-        num_object = int(num_object)
-    except (TypeError, ValueError):
-        return JsonResponse({"ok": False, "message": "Номер объекта должен быть числом"})
-
-    if num_object <= 0:
-        return JsonResponse({"ok": False, "message": "Номер объекта должен быть больше 0"})
+    num_object, error = _parse_plot_number(body.get("num_object"))
+    if error:
+        return JsonResponse({"ok": False, "message": error})
 
     if RealEstate.objects.filter(num_object=num_object).exists():
         return JsonResponse({"ok": False, "message": "Объект с таким номером уже существует"})
 
     try:
-        obj = RealEstate.objects.create(title=str(num_object), num_object=num_object)
+        obj = RealEstate.objects.create(title=num_object, num_object=num_object)
     except IntegrityError:
         return JsonResponse({"ok": False, "message": "Объект с таким номером уже существует"})
 
@@ -215,21 +221,12 @@ def create_real_estate(request):
 def update_real_estate(request):
     body = json.loads(request.body)
     real_estate_id = body.get("id")
-    num_object = body.get("num_object")
-
     if not real_estate_id:
         return JsonResponse({"ok": False, "message": "Не указан объект"})
 
-    if num_object is None or num_object == "":
-        return JsonResponse({"ok": False, "message": "Укажите номер объекта"})
-
-    try:
-        num_object = int(num_object)
-    except (TypeError, ValueError):
-        return JsonResponse({"ok": False, "message": "Номер объекта должен быть числом"})
-
-    if num_object <= 0:
-        return JsonResponse({"ok": False, "message": "Номер объекта должен быть больше 0"})
+    num_object, error = _parse_plot_number(body.get("num_object"))
+    if error:
+        return JsonResponse({"ok": False, "message": error})
 
     obj = RealEstate.objects.filter(pk=real_estate_id, hide=False).first()
     if not obj:
@@ -240,7 +237,7 @@ def update_real_estate(request):
 
     try:
         obj.num_object = num_object
-        obj.title = str(num_object)
+        obj.title = num_object
         obj.save(update_fields=["num_object", "title"])
     except IntegrityError:
         return JsonResponse({"ok": False, "message": "Объект с таким номером уже существует"})
@@ -423,7 +420,7 @@ def _list_plot_meters(real_estate: RealEstate):
 def _serialize_plot_meter(meter: GardeningElectricityMeter):
     return {
         "id": meter.pk,
-        "title": meter.title,
+        "title": meter_title_with_serial(meter.title, meter.serial_number),
         "date_start": meter.date_start.isoformat() if meter.date_start else None,
         "date_end": meter.date_end.isoformat() if meter.date_end else None,
         "subscriber_address": meter.subscriber_address or "",
@@ -502,11 +499,13 @@ def _sync_plot_meters(real_estate: RealEstate, meters_raw):
     sort_weight = 0
     for item in meters_raw:
         pk = None
+        extra = _meter_extra_fields(item if isinstance(item, dict) else {})
         if isinstance(item, dict):
             title = (item.get("title") or "").strip()
             pk = item.get("id")
         else:
             title = str(item or "").strip()
+        title = meter_title_with_serial(title, extra["serial_number"])
         if not title:
             continue
         date_start, date_end, error = _parse_meter_dates(item if isinstance(item, dict) else {})
@@ -521,7 +520,6 @@ def _sync_plot_meters(real_estate: RealEstate, meters_raw):
             meter.date_start = date_start
             meter.date_end = date_end
             meter.sort_weight = sort_weight
-            extra = _meter_extra_fields(item if isinstance(item, dict) else {})
             meter.subscriber_address = extra["subscriber_address"]
             meter.subscriber = extra["subscriber"]
             meter.device_type = extra["device_type"]
@@ -539,7 +537,6 @@ def _sync_plot_meters(real_estate: RealEstate, meters_raw):
                 ]
             )
         else:
-            extra = _meter_extra_fields(item if isinstance(item, dict) else {})
             GardeningElectricityMeter.objects.create(
                 real_estate=real_estate,
                 title=title,
@@ -1172,7 +1169,7 @@ def _accounting_summary_result(year, payment_type_id):
         return {"mode": "table", "year": year, "payment_type": None, "rows": []}
 
     payment_type = payment_types[0]
-    estates = RealEstate.objects.filter(hide=False).order_by("num_object", "pk")
+    estates = ordered_real_estates()
     rows = []
     for estate in estates:
         contribution = _contribution_row(estate, payment_type, year)
@@ -1493,7 +1490,7 @@ def _serialize_electricity_row(curr_row, year, month, calc, plot_calc, show_mone
     return row
 
 
-def _electricity_result(real_estate: RealEstate, year):
+def _compute_electricity(real_estate: RealEstate, year):
     year = int(year)
     meters = _ensure_meters(real_estate)
     payment_type = _electricity_payment_type()
@@ -1579,10 +1576,30 @@ def _electricity_result(real_estate: RealEstate, year):
             balance = remainder
             plot_calc[(y, month)] = {
                 "receipt": receipts,
+                "charge": total_charge if any_charge else None,
                 "written_off": written_off,
                 "debt": debt,
                 "remainder": remainder,
             }
+    return {
+        "year": year,
+        "start_year": start_year,
+        "meters": meters,
+        "readings": readings,
+        "meter_calc": meter_calc,
+        "plot_calc": plot_calc,
+        "payment_type": payment_type,
+    }
+
+
+def _electricity_result(real_estate: RealEstate, year):
+    computed = _compute_electricity(real_estate, year)
+    year = computed["year"]
+    meters = computed["meters"]
+    readings = computed["readings"]
+    meter_calc = computed["meter_calc"]
+    plot_calc = computed["plot_calc"]
+    payment_type = computed["payment_type"]
 
     first_money_by_month = {}
     for month in range(1, 13):
@@ -1633,7 +1650,7 @@ def _electricity_month_rows(year, month):
     year = int(year)
     month = int(month)
     rows = []
-    for estate in RealEstate.objects.filter(hide=False).order_by("num_object", "pk"):
+    for estate in ordered_real_estates():
         result = _electricity_result(estate, year)
         month_entries = []
         for meter in result.get("meters") or []:
@@ -1716,35 +1733,57 @@ def _debts_as_of_month(year):
     return today.month
 
 
-def _electricity_debt_rows(year, month):
-    plots = []
-    seen = set()
-    charge_totals = {}
-    for row in _electricity_month_rows(year, month):
-        estate_id = row["real_estate_id"]
-        charge = _parse_money_decimal(row.get("charge"))
-        if charge is not None:
-            charge_totals[estate_id] = charge_totals.get(estate_id, Decimal("0")) + charge
-        if estate_id in seen:
-            continue
-        seen.add(estate_id)
-        plots.append(row)
+def _electricity_debt_snapshot(plot_calc, start_year, year, month):
+    charge_total = Decimal("0")
+    written_total = Decimal("0")
+    debt_total = Decimal("0")
+    any_charge = False
+    any_written = False
+    remainder = Decimal("0")
+    for y in range(int(start_year), int(year) + 1):
+        last_month = int(month) if y == int(year) else 12
+        for m in range(1, last_month + 1):
+            calc = plot_calc.get((y, m))
+            if not calc:
+                continue
+            remainder = calc["remainder"] if calc.get("remainder") is not None else remainder
+            charge = calc.get("charge")
+            written_off = calc.get("written_off")
+            debt = calc.get("debt")
+            if charge is not None:
+                charge_total += charge
+                any_charge = True
+            if written_off is not None:
+                written_total += written_off
+                any_written = True
+            if debt is not None:
+                debt_total += debt
+    return {
+        "charge": charge_total if any_charge else None,
+        "written_off": written_total if any_written else None,
+        "debt": debt_total if any_charge else None,
+        "remainder": remainder,
+    }
 
+
+def _electricity_debt_rows(year, month):
+    year = int(year)
+    month = int(month)
     debt_rows = []
-    for row in plots:
-        debt = _parse_money_decimal(row.get("debt"))
+    for estate in ordered_real_estates():
+        computed = _compute_electricity(estate, year)
+        snapshot = _electricity_debt_snapshot(computed["plot_calc"], computed["start_year"], year, month)
+        debt = snapshot["debt"]
         if debt is None or debt <= Decimal("0.005"):
             continue
-        estate_id = row["real_estate_id"]
-        charge_total = charge_totals.get(estate_id)
         debt_rows.append(
             {
-                "real_estate_id": estate_id,
-                "num_object": row["num_object"],
-                "charge": _format_money(charge_total) if charge_total is not None else None,
-                "written_off": row.get("written_off_total"),
-                "debt": row.get("debt"),
-                "remainder": row.get("remainder"),
+                "real_estate_id": estate.pk,
+                "num_object": estate.num_object,
+                "charge": _format_money(snapshot["charge"]) if snapshot["charge"] is not None else None,
+                "written_off": _format_money(snapshot["written_off"]) if snapshot["written_off"] is not None else None,
+                "debt": _format_money(debt),
+                "remainder": _format_money(snapshot["remainder"]),
             }
         )
     owners = _open_owners_fio_by_estate([item["real_estate_id"] for item in debt_rows])
@@ -1784,8 +1823,7 @@ def _export_has_debt(value):
 
 def _export_sort_value(row, sort_key):
     if sort_key == "num_object":
-        value = row.get("num_object")
-        return value if value is not None else float("inf")
+        return plot_sort_key(row.get("num_object"))
     if sort_key in ("owner", "meter_title", "title"):
         return (row.get(sort_key) or "").lower()
     amount = _parse_money_decimal(row.get(sort_key))
@@ -2196,12 +2234,12 @@ def create_electricity_meter(request):
         return error
 
     meters = list(_meters_qs(real_estate))
-    title = (body.get("title") or "").strip() or f"Счётчик {len(meters) + 1}"
+    extra = _meter_extra_fields(body)
+    title = meter_title_with_serial((body.get("title") or "").strip() or f"Счётчик {len(meters) + 1}", extra["serial_number"])
     date_start, date_end, dates_error = _parse_meter_dates(body)
     if dates_error:
         return JsonResponse({"ok": False, "message": dates_error})
     sort_weight = (meters[-1].sort_weight if meters else 0) + 1
-    extra = _meter_extra_fields(body)
     GardeningElectricityMeter.objects.create(
         real_estate=real_estate,
         title=title,
@@ -2234,13 +2272,13 @@ def update_electricity_meter(request):
     meter, meter_error = _resolve_meter(real_estate, body.get("id") or body.get("meter_id"))
     if meter_error:
         return JsonResponse({"ok": False, "message": meter_error})
-    title = (body.get("title") or "").strip()
+    extra = _meter_extra_fields(body)
+    title = meter_title_with_serial((body.get("title") or "").strip(), extra["serial_number"])
     if not title:
         return JsonResponse({"ok": False, "message": "Укажите название счётчика"})
     date_start, date_end, dates_error = _parse_meter_dates(body)
     if dates_error:
         return JsonResponse({"ok": False, "message": dates_error})
-    extra = _meter_extra_fields(body)
     meter.title = title
     meter.date_start = date_start
     meter.date_end = date_end
@@ -2268,3 +2306,116 @@ def update_electricity_meter(request):
 @group_required("Бухгалтер садоводства")
 def delete_electricity_meter(request):
     return JsonResponse({"ok": False, "message": "Счётчик нельзя удалить, укажите дату окончания"})
+
+
+@login_required
+@group_required("Бухгалтер садоводства")
+def import_electricity_xlsx_view(request):
+    uploaded = request.FILES.get("file")
+    if not uploaded:
+        return JsonResponse({"ok": False, "message": "Файл не выбран"})
+    name = (uploaded.name or "").lower()
+    if not name.endswith(".xlsx"):
+        return JsonResponse({"ok": False, "message": "Нужен файл XLSX"})
+    result = import_electricity_xlsx(uploaded)
+    return JsonResponse({"ok": True, "result": result})
+
+
+@login_required
+@group_required("Бухгалтер садоводства")
+def clear_electricity_month(request):
+    body = json.loads(request.body)
+    year = body.get("year")
+    if not year:
+        return JsonResponse({"ok": False, "message": "Не указан год"})
+    try:
+        year = int(year)
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "message": "Некорректный год"})
+    month, error = _parse_month(body.get("month"))
+    if error:
+        return JsonResponse({"ok": False, "message": error})
+    cleared = GardeningElectricityMeterReading.objects.filter(hide=False, year=year, month=month).update(hide=True)
+    return JsonResponse({"ok": True, "result": {"year": year, "month": month, "cleared": cleared}})
+
+
+class _DeletingFile:
+    def __init__(self, path):
+        self.name = path
+        self._file = open(path, "rb")
+
+    def read(self, size=-1):
+        return self._file.read(size)
+
+    def seek(self, offset, whence=0):
+        return self._file.seek(offset, whence)
+
+    def tell(self):
+        return self._file.tell()
+
+    def close(self):
+        self._file.close()
+        try:
+            os.remove(self.name)
+        except OSError:
+            pass
+
+    def __iter__(self):
+        return iter(self._file)
+
+
+@login_required
+@group_required("Бухгалтер садоводства")
+def backup_sql(request):
+    pg_dump = which("pg_dump")
+    if not pg_dump:
+        return JsonResponse({"ok": False, "message": "pg_dump не найден на сервере"})
+
+    db = django_settings.DATABASES.get("default") or {}
+    db_name = db.get("NAME")
+    if not db_name:
+        return JsonResponse({"ok": False, "message": "Не настроена база данных"})
+
+    env = os.environ.copy()
+    env["PGPASSWORD"] = str(db.get("PASSWORD") or "")
+    command = [
+        pg_dump,
+        f"--host={db.get('HOST') or '127.0.0.1'}",
+        f"--port={db.get('PORT') or 5432}",
+        f"--dbname={db_name}",
+        f"--username={db.get('USER') or 'postgres'}",
+        "--no-password",
+    ]
+    tmp = tempfile.NamedTemporaryFile(prefix="l2-backup-", suffix=".sql.gz", delete=False)
+    tmp_path = tmp.name
+    tmp.close()
+    try:
+        with gzip.open(tmp_path, "wb") as gz:
+            proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+            stderr_chunks = []
+
+            def read_stderr():
+                stderr_chunks.append(proc.stderr.read() if proc.stderr else b"")
+
+            stderr_thread = threading.Thread(target=read_stderr)
+            stderr_thread.start()
+            shutil.copyfileobj(proc.stdout, gz)
+            if proc.stdout:
+                proc.stdout.close()
+            stderr_thread.join()
+            code = proc.wait()
+        if code != 0:
+            os.unlink(tmp_path)
+            stderr = b"".join(stderr_chunks)
+            message = stderr.decode("utf-8", errors="replace").strip() or "Не удалось создать дамп"
+            return JsonResponse({"ok": False, "message": message})
+    except Exception as exc:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        return JsonResponse({"ok": False, "message": str(exc)})
+
+    filename = f"l2-{datetime.now().strftime('%Y%m%d%H%M%S')}.sql.gz"
+    response = FileResponse(_DeletingFile(tmp_path), as_attachment=True, filename=filename, content_type="application/gzip")
+    return response

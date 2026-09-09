@@ -592,7 +592,7 @@ const formEmail = ref('');
 const formComment = ref('');
 const formArea = ref('');
 const plotArea = ref('');
-const plotNumObject = ref<number | null>(null);
+const plotNumObject = ref<string | number | null>(null);
 const formMeters = ref<PlotMeter[]>([]);
 const plotMeters = ref<PlotMeter[]>([]);
 const meterModalOpen = ref(false);
@@ -700,7 +700,7 @@ const applyOwnerResult = (result: unknown) => {
     owners?: OwnerInfo[];
     meters?: PlotMeter[];
     area?: string | null;
-    num_object?: number | null;
+    num_object?: string | number | null;
   } | null;
   owners.value = Array.isArray(payload?.owners) ? payload.owners : [];
   plotMeters.value = Array.isArray(payload?.meters) ? payload.meters : [];
@@ -708,7 +708,7 @@ const applyOwnerResult = (result: unknown) => {
     plotArea.value = payload.area != null && payload.area !== '' ? String(payload.area) : '';
   }
   if (payload && 'num_object' in payload) {
-    plotNumObject.value = typeof payload.num_object === 'number' ? payload.num_object : null;
+    plotNumObject.value = payload.num_object != null && payload.num_object !== '' ? payload.num_object : null;
   }
 };
 

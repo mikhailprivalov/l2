@@ -47,6 +47,16 @@
               База
             </button>
             <button
+              v-if="settingsMode"
+              class="year-button nbr"
+              type="button"
+              title="Скачать SQL-дамп базы"
+              :disabled="backingUp"
+              @click="downloadSqlBackup"
+            >
+              Бэкап SQL
+            </button>
+            <button
               v-for="year in years"
               :key="year"
               class="year-button nbr"
@@ -159,18 +169,23 @@
           />
           <GardeningDebtsList
             v-else-if="showDebtsList"
+            :key="`debts-${selectedYear}-${selectedPaymentTypeId}-${electricityRefresh}`"
             :year="selectedYear"
             :payment-type-id="selectedPaymentTypeId"
           />
           <GardeningElectricityMonthList
             v-else-if="showMonthsStrip && !selectedDebts"
+            :key="`month-${selectedYear}-${selectedMonth}-${electricityRefresh}`"
             :year="selectedYear"
             :month="selectedMonth"
             :payment-type-id="selectedPaymentTypeId"
+            :importing="importing"
             @readings-changed="electricityRefresh += 1"
+            @xlsx-selected="onXlsxSelected"
           />
           <GardeningAccountingSummary
             v-else-if="showAllPanel"
+            :key="`summary-${selectedYear}-${selectedPaymentTypeId}-${electricityRefresh}`"
             :year="selectedYear"
             :payment-type-id="selectedPaymentTypeId"
           />
@@ -236,8 +251,7 @@
               <input
                 v-model="newNumObject"
                 class="form-control"
-                type="number"
-                min="1"
+                type="text"
                 placeholder="Введите номер"
               >
             </div>
@@ -261,6 +275,68 @@
                   type="button"
                   :disabled="saving"
                   @click="closeAddModal"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
+
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="GardeningImportElectricity"
+      append
+    >
+      <transition name="fade">
+        <Modal
+          v-if="importResult"
+          show-footer="true"
+          white-bg="true"
+          max-width="560px"
+          width="100%"
+          margin-left-right="auto"
+          @close="importResult = null"
+        >
+          <span slot="header">Загрузка показаний</span>
+          <div
+            slot="body"
+            class="modal-body-form"
+          >
+            <div class="import-summary">
+              <div>Период: {{ importPeriodLabel }}</div>
+              <div>Участков создано: {{ importResult.plots_created }}</div>
+              <div>Счётчиков создано: {{ importResult.meters_created }}</div>
+              <div>Владельцев создано: {{ importResult.owners_created }}</div>
+              <div>Показаний записано: {{ importResult.readings_created }}</div>
+              <div>Показаний обновлено: {{ importResult.readings_updated }}</div>
+              <div>Без показаний: {{ importResult.skipped_no_reading }}</div>
+              <div v-if="importResult.errors.length">
+                Ошибки: {{ importResult.errors.length }}
+              </div>
+            </div>
+            <div
+              v-if="importResult.errors.length"
+              class="import-errors"
+            >
+              <div
+                v-for="(item, index) in importResult.errors.slice(0, 20)"
+                :key="`${item.row}-${index}`"
+              >
+                Строка {{ item.row }}{{ item.plot ? ` (${item.plot})` : '' }}: {{ item.message }}
+              </div>
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-9" />
+              <div class="col-xs-3">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  @click="importResult = null"
                 >
                   Закрыть
                 </button>
@@ -300,7 +376,25 @@ import { parseGardeningPlotQuery } from '@/pages/Gardening/plotUrl';
 
 interface RealEstateItem {
   id: number;
-  num_object: number | null;
+  num_object: string | number | null;
+}
+
+interface ImportErrorItem {
+  row: number;
+  plot: string;
+  message: string;
+}
+
+interface ImportResult {
+  year: number | null;
+  month: number | null;
+  plots_created: number;
+  meters_created: number;
+  owners_created: number;
+  readings_created: number;
+  readings_updated: number;
+  skipped_no_reading: number;
+  errors: ImportErrorItem[];
 }
 
 interface YearPaymentTypeOption {
@@ -333,6 +427,9 @@ const yearPaymentTypes = ref<YearPaymentTypeOption[]>([]);
 const selectedPaymentTypeId = ref<number | null>(null);
 const selectedMonth = ref<number>(1);
 const selectedDebts = ref(false);
+const importing = ref(false);
+const backingUp = ref(false);
+const importResult = ref<ImportResult | null>(null);
 
 const months = [
   { id: 1, label: 'Январь' },
@@ -499,6 +596,46 @@ const openAddModal = () => {
   showAddModal.value = true;
 };
 
+const downloadSqlBackup = async () => {
+  if (backingUp.value) {
+    return;
+  }
+  backingUp.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const response = await fetch('/api/gardening/backup-sql', {
+      credentials: 'same-origin',
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      root.$emit('msg', 'error', data.message || 'Не удалось создать дамп');
+      return;
+    }
+    if (!response.ok || contentType.includes('text/html')) {
+      root.$emit('msg', 'error', 'Не удалось создать дамп');
+      return;
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get('content-disposition') || '';
+    const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^";]+)/i);
+    const filename = match ? decodeURIComponent(match[1].replace(/["']/g, '')) : 'l2.sql.gz';
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (_) {
+    root.$emit('msg', 'error', 'Не удалось создать дамп');
+  } finally {
+    backingUp.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
 const openEditModal = (item: RealEstateItem) => {
   editingId.value = item.id;
   newNumObject.value = item.num_object != null ? String(item.num_object) : '';
@@ -537,6 +674,52 @@ const saveRealEstate = async () => {
     }
   } finally {
     saving.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+const importPeriodLabel = computed(() => {
+  if (!importResult.value?.year || !importResult.value?.month) {
+    return '—';
+  }
+  const month = months.find((item) => item.id === importResult.value.month);
+  return `${month ? month.label : importResult.value.month} ${importResult.value.year}`;
+});
+
+const onXlsxSelected = async (file: File) => {
+  if (!file || importing.value) {
+    return;
+  }
+  importing.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { ok, message, result } = await api(
+      'gardening/import-electricity-xlsx',
+      null,
+      null,
+      {},
+      formData,
+    );
+    if (!ok || !result) {
+      root.$emit('msg', 'error', message || 'Не удалось загрузить файл');
+      return;
+    }
+    importResult.value = result;
+    if (result.year) {
+      selectedYear.value = result.year;
+    }
+    if (result.month) {
+      selectedMonth.value = result.month;
+      selectedDebts.value = false;
+    }
+    electricityRefresh.value += 1;
+    contributionsRefresh.value += 1;
+    await loadRealEstates();
+    root.$emit('msg', 'ok', 'Файл загружен');
+  } finally {
+    importing.value = false;
     await store.dispatch(actions.DEC_LOADING);
   }
 };
@@ -755,6 +938,19 @@ const saveRealEstate = async () => {
     border-right: none !important;
     margin: 0;
   }
+}
+
+.import-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.import-errors {
+  margin-top: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+  color: #da4453;
 }
 
 .years-strip {

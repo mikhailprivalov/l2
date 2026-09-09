@@ -117,11 +117,11 @@ import {
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
-import { gardeningPlotHref, openGardeningAllPrint } from '@/pages/Gardening/plotUrl';
+import { comparePlotNumbers, gardeningPlotHref, openGardeningAllPrint } from '@/pages/Gardening/plotUrl';
 
 interface DebtRow {
   real_estate_id: number;
-  num_object: number | null;
+  num_object: string | number | null;
   owner: string;
   charge: string | null;
   written_off: string | null;
@@ -234,7 +234,7 @@ const debtClass = (value: string | null) => {
 
 const sortValue = (row: DebtRow, key: SortKey) => {
   if (key === 'num_object') {
-    return row.num_object == null ? Number.POSITIVE_INFINITY : row.num_object;
+    return row.num_object;
   }
   if (key === 'owner') {
     return (row.owner || '').toLowerCase();
@@ -248,6 +248,9 @@ const visibleRows = computed(() => {
   const dir = sortDir.value === 'asc' ? 1 : -1;
   const key = sortKey.value;
   list.sort((left, right) => {
+    if (key === 'num_object') {
+      return comparePlotNumbers(left.num_object, right.num_object) * dir;
+    }
     const a = sortValue(left, key);
     const b = sortValue(right, key);
     if (a < b) {
