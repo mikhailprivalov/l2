@@ -28,15 +28,15 @@ from hospitals.models import Hospitals
 def search(request):
     request_data = json.loads(request.body)
     research_pk = request_data["research"]
-    date = request_data["date"]
+    date = request_data.get("date") or ""
 
-    prepare_date = date.split("-")
+    prepare_date = date.split("-") if date else []
 
     research_obj = Researches.objects.get(pk=research_pk)
     type_period = research_obj.type_period
     start_date, end_date = None, None
     param_hour, param_day, param_month, param_quarter, param_halfyear, param_year = None, None, None, None, None, None
-    param_hour = request_data["hour"]
+    param_hour = request_data.get("hour")
     if param_hour == '-':
         param_hour = None
 
@@ -54,7 +54,16 @@ def search(request):
     if type_period == "PERIOD_HALFYEAR":
         param_halfyear = prepare_date[1]
 
-    param_year = prepare_date[0]
+    param_year = request_data.get("year") or (prepare_date[0] if prepare_date else None)
+    if param_year is not None:
+        param_year = int(param_year)
+
+    if type_period == "PERIOD_QURTER":
+        param_quarter = request_data.get("quarter")
+        if param_quarter is None and len(prepare_date) > 1:
+            param_quarter = (int(prepare_date[1]) - 1) // 3 + 1
+        if param_quarter is not None:
+            param_quarter = int(param_quarter)
     result_monitoring = monitoring_sql_by_all_hospital(
         monitoring_research=research_pk,
         type_period=type_period,

@@ -199,6 +199,7 @@ def get_researches(request, last_used=False):
                     "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
                     "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location_list],
                     "direction_params": direction_params_pk,
+                    "type_period": r.type_period,
                     "research_data": {'research': {'status': 'NOT_LOADED'}},
                 }
                 cache.set(k, json.dumps(research_data), 30)
