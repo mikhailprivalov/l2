@@ -379,7 +379,9 @@ def result_print(request):
             canvas_mark.drawString(155 * mm, 285 * mm, '{}'.format(" НЕ ПОДТВЕРЖДЕНО "))
             canvas_mark.setFont('FreeSans', 12)
             canvas_mark.drawString(175 * mm, 281 * mm, '{}'.format("( образец )"))
-        if not watermarks and not DEATH_RESEARCH_PK and not GISTOLOGY_RESEARCH_PK and not SELF_WATERMARKS and not DISABLE_PATIENT_CANVAS_MARKER:
+        research = direction.research()
+        skip_patient_marker = bool(research and research.is_monitoring)
+        if not watermarks and not DEATH_RESEARCH_PK and not GISTOLOGY_RESEARCH_PK and not SELF_WATERMARKS and not DISABLE_PATIENT_CANVAS_MARKER and not skip_patient_marker:
             if direction.hospital:
                 canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.safe_short_title)
             else:
@@ -457,6 +459,7 @@ def result_print(request):
                 iss.research.is_paraclinic
                 or iss.research.is_doc_refferal
                 or iss.research.is_treatment
+                or iss.research.is_monitoring
                 or iss.research.is_microbiology
                 or iss.research.is_citology
                 or iss.research.is_gistology
@@ -557,7 +560,18 @@ def result_print(request):
             if result_title_form:
                 t = result_title_form(temp_iss)
             else:
-                t = default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col, is_extract, temp_iss.research.is_form)
+                t = default_title_result_form(
+                    direction,
+                    doc,
+                    date_t,
+                    has_paraclinic,
+                    individual_birthday,
+                    number_poliklinika,
+                    logo_col,
+                    is_extract,
+                    temp_iss.research.is_form,
+                    is_monitoring=temp_iss.research.is_monitoring,
+                )
             if not schema_pdf_form:
                 fwb.append(t)
             fwb.append(Spacer(1, 5 * mm))
@@ -728,7 +742,7 @@ def result_print(request):
                     if iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
                     else:
-                        if not is_gistology:
+                        if not is_gistology and not iss.research.is_monitoring:
                             fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                     if not iss.research.is_doc_refferal:
                         fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
@@ -736,7 +750,7 @@ def result_print(request):
                     fwb.append(Paragraph("Дата заполнения пациентом: {}".format(t2), styleBold))
 
                 if not iss.research.has_own_form_result and not iss.research.is_form and not iss.research.is_aux and not iss.research.is_expertise:
-                    if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
+                    if iss.doc_confirmation and (iss.doc_confirmation.podrazdeleniye.vaccine or iss.research.is_monitoring):
                         fwb.append(Paragraph("Исполнитель: {}".format(iss.doc_confirmation.get_full_fio()), styleBold))
                     else:
                         if iss.doc_confirmation:
