@@ -28,7 +28,7 @@
             :class="{ 'active-button': selectedGroup === group.id}"
             @click="selectGroup(group.id)"
           >
-            {{ group.label }}
+            {{ group.title }}
           </button>
         </div>
       </div>
@@ -52,7 +52,7 @@
             :class="{ 'active-button': selectedType === type.id}"
             @click="selectType(type.id)"
           >
-            {{ type.label }}
+            {{ type.title }}
           </button>
         </div>
       </div>
@@ -74,7 +74,7 @@
             :class="{ 'active-button': selectedDocument === document.id}"
             @click="selectDocument(document.id)"
           >
-            {{ document.label }}
+            {{ document.title }}
           </button>
         </div>
       </div>
@@ -84,62 +84,72 @@
 
 <script setup lang="ts">
 import {
-  ref,
+  onMounted, ref, watch,
 } from 'vue';
 
-// import { useStore } from '@/store';
-// import * as actions from '@/store/action-types';
-// import api from '@/api';
+import { useStore } from '@/store';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
-const selectedGroup = ref(null);
-const documentGroups = ref([
-  { id: 1, label: 'Группа доков 1' },
-  { id: 2, label: 'Группа доков 2' },
-  { id: 3, label: 'Группа доков 3' },
-  { id: 4, label: 'Группа доков 4' },
-  { id: 5, label: 'Группа доков 5' },
-  { id: 6, label: 'Группа доков 6' },
-  { id: 7, label: 'Группа доков 7' },
-]);
+interface CatalogItem {
+  id: number;
+  title: string;
+}
+
+const store = useStore();
+
+const selectedGroup = ref<number | null>(null);
+const documentGroups = ref<CatalogItem[]>([]);
+
+const selectedType = ref<number | null>(null);
+const documentTypes = ref<CatalogItem[]>([]);
+
+const selectedDocument = ref<number | null>(null);
+const documents = ref<CatalogItem[]>([]);
+
+const loadGroups = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { result } = await api('document-manager/groups/list');
+    documentGroups.value = result || [];
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+const loadTypes = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { result } = await api('document-manager/types/list', { groupId: selectedGroup.value });
+    documentTypes.value = result || [];
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
 
 const selectGroup = (groupId: number) => {
   selectedGroup.value = groupId;
+  selectedType.value = null;
+  selectedDocument.value = null;
 };
-
-const selectedType = ref(null);
-const documentTypes = ref([
-  { id: 1, label: 'Тип дока 1' },
-  { id: 2, label: 'Тип дока 2' },
-  { id: 3, label: 'Тип дока 3' },
-  { id: 4, label: 'Тип дока 4' },
-  { id: 5, label: 'Тип дока 5' },
-  { id: 6, label: 'Тип дока 6' },
-  { id: 7, label: 'Тип дока 7' },
-]);
 
 const selectType = (typeId: number) => {
   selectedType.value = typeId;
+  selectedDocument.value = null;
 };
-
-const selectedDocument = ref(null);
-const documents = ref([
-  { id: 1, label: 'Документ 1' },
-  { id: 2, label: 'Документ 2' },
-  { id: 3, label: 'Документ 3' },
-  { id: 4, label: 'Документ 4' },
-  { id: 5, label: 'Документ 5' },
-  { id: 6, label: 'Документ 6' },
-  { id: 7, label: 'Документ 7' },
-  { id: 8, label: 'Документ 8' },
-  { id: 9, label: 'Документ 9' },
-  { id: 10, label: 'Документ 10' },
-  { id: 11, label: 'Документ 11' },
-]);
 
 const selectDocument = (documentId: number) => {
   selectedDocument.value = documentId;
 };
 
+watch(selectedGroup, () => {
+  loadTypes();
+});
+
+onMounted(async () => {
+  await loadGroups();
+  await loadTypes();
+});
 </script>
 
 <style scoped lang="scss">

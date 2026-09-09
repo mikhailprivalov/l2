@@ -362,8 +362,18 @@ DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK = []
 DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK = []
 HIDE_TITLE_BUTTONS_MAIN_MENU = {}
 DOU_CONSTRUCTOR_NAV_BUTTONS = [
+    {"id": "type_organization", "title": "Вид организации"},
+    {"id": "organization", "title": "Организации"},
     {"id": "document_groups", "title": "Группа документов"},
     {"id": "document_types", "title": "Виды документов"},
+    {"id": "cases", "title": "Виды дел"},
+    {"id": "element", "title": "Элементы"},
+    {"id": "group_element", "title": "Группировка Элементов"},
+    {"id": "type_section", "title": "Тип раздела"},
+    {"id": "place_section", "title": "Подраздел/место"},
+    {"id": "schema", "title": "Схемы (pdf, cda, docx)"},
+    {"id": "skeleton", "title": "Структура документа"},
+    {"id": "autofill_templates", "title": "Шаблоны автозаполнения"},
 ]
 USE_COMBO_ROLE = {}
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
