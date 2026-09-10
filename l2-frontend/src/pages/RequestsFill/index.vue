@@ -121,68 +121,51 @@
                 </div>
               </template>
               <template #bottom>
-                <TopBottomLayout :top-height-percent="70">
-                  <template #top>
-                    <div class="requests-list">
+                <div class="requests-panel">
+                  <div class="requests-list">
+                    <div
+                      v-if="initialLoading"
+                      class="requests-list__loading"
+                    >
+                      Загрузка...
+                    </div>
+                    <div
+                      v-else
+                      class="requests-list__items"
+                    >
+                      <RequestCard
+                        v-for="request in filteredWaitRequests"
+                        :key="`wait-${request.id}`"
+                        :request="request"
+                        :hospital-id="selectedHospitalId"
+                        @request-accepted="handleRequestAccepted"
+                        @card-clicked="handleCardClick"
+                      />
+                      <RequestCard
+                        v-for="request in filteredDoneRequests"
+                        :key="`done-${request.id}`"
+                        :request="request"
+                        :hospital-id="selectedHospitalId"
+                        @card-clicked="handleCardClick"
+                      />
                       <div
-                        v-if="initialLoading"
-                        class="requests-list__loading"
+                        v-if="filteredWaitRequests.length === 0 && filteredDoneRequests.length === 0"
+                        class="requests-list__empty"
                       >
-                        Загрузка...
-                      </div>
-                      <div
-                        v-else
-                        class="requests-list__items"
-                      >
-                        <RequestCard
-                          v-for="request in filteredWaitRequests"
-                          :key="request.id"
-                          :request="request"
-                          :hospital-id="selectedHospitalId"
-                          @request-accepted="handleRequestAccepted"
-                          @card-clicked="handleCardClick"
-                        />
-                        <div
-                          v-if="filteredWaitRequests.length === 0"
-                          class="requests-list__empty"
-                        >
-                          {{ showAccepted ? 'Нет принятых заявок' : 'Нет ожидающих заявок' }}
-                        </div>
+                        Нет заявок
                       </div>
                     </div>
-                  </template>
-                  <template #bottom>
-                    <div class="requests-list">
-                      <div class="requests-list__header">
-                        Исполненные
-                      </div>
-                      <div
-                        v-if="initialLoading"
-                        class="requests-list__loading"
-                      >
-                        Загрузка...
-                      </div>
-                      <div
-                        v-else
-                        class="requests-list__items"
-                      >
-                        <RequestCard
-                          v-for="request in filteredDoneRequests"
-                          :key="request.id"
-                          :request="request"
-                          :hospital-id="selectedHospitalId"
-                          @card-clicked="handleCardClick"
-                        />
-                        <div
-                          v-if="filteredDoneRequests.length === 0"
-                          class="requests-list__empty"
-                        >
-                          Нет исполненных заявок
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                </TopBottomLayout>
+                  </div>
+                  <div class="requests-footer">
+                    <button
+                      class="btn btn-blue-nb"
+                      type="button"
+                      @click="openWorkloadReport"
+                    >
+                      Моя нагрузка
+                    </button>
+                  </div>
+                </div>
               </template>
             </TopBottomLayout>
           </template>
@@ -579,7 +562,19 @@ const filteredWaitRequests = computed(() => {
   return base.filter(request => request.patient.toLowerCase().includes(query));
 });
 
-const filteredDoneRequests = computed(() => departmentFilteredDoneRequests.value);
+const filteredDoneRequests = computed(() => {
+  const query = patientQuery.value.trim().toLowerCase();
+  if (!query) return departmentFilteredDoneRequests.value;
+  return departmentFilteredDoneRequests.value.filter(request => request.patient.toLowerCase().includes(query));
+});
+
+const openWorkloadReport = () => {
+  const [dateStart, dateEnd] = dateRange.value;
+  window.open(
+    `/statistic/xls?type=statistics-workload&date-start=${encodeURIComponent(dateStart)}&date-end=${encodeURIComponent(dateEnd)}`,
+    '_blank',
+  );
+};
 
 const isDepartmentSelected = (department: string) => selectedDepartments.value.has(department);
 
@@ -999,23 +994,36 @@ onBeforeUnmount(() => {
   }
 }
 
-.requests-list {
+.requests-panel {
   height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.requests-list {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   background: #ffffff;
 }
 
-.requests-list__header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+.requests-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  border-top: 1px solid #e0e0e0;
   background: #f5f5f7;
-  font-weight: 500;
-  font-size: 14px;
-  padding: 4px 6px;
-  border-radius: 6px;
+
+  .btn {
+    flex: 1;
+    border-radius: 0;
+    height: 100%;
+  }
 }
 
 .requests-list__items {

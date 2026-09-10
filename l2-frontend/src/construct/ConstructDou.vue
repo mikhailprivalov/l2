@@ -18,14 +18,25 @@
     </div>
     <div class="panel panel-middle">
       <template v-if="isWorkingSection">
-        <input
-          v-model="titleFilter"
-          class="form-control search-input"
-          placeholder="Фильтр по названию"
-        >
+        <div class="middle-search">
+          <input
+            v-model="titleFilter"
+            type="text"
+            class="form-control nbr"
+            placeholder="Фильтр по названию"
+          >
+          <button
+            v-if="canAdd"
+            class="btn btn-blue-nb nbr nba"
+            type="button"
+            @click="addItem"
+          >
+            Добавить
+          </button>
+        </div>
         <div
-          class="sidebar-content"
-          :class="{ fcenter: filteredItems.length === 0 }"
+          class="item-list"
+          :class="{ 'item-list--empty': filteredItems.length === 0 }"
         >
           <div v-if="filteredItems.length === 0">
             Не найдено
@@ -33,30 +44,23 @@
           <div
             v-for="row in filteredItems"
             :key="row.id"
-            class="research"
-            :class="{ active: selectedId === row.id }"
+            class="object-row"
+            :class="{ 'object-row--active': selectedId === row.id }"
+            role="button"
+            tabindex="0"
             @click="selectedId = row.id"
+            @keydown.enter.prevent="selectedId = row.id"
+            @keydown.space.prevent="selectedId = row.id"
           >
-            <div class="research-head">
-              {{ row.title }}
-            </div>
-            <div
+            <span class="object-row__label">{{ row.title }}</span>
+            <span
               v-if="row.groupTitle"
-              class="research-sub"
+              class="object-row__sub"
             >
               {{ row.groupTitle }}
-            </div>
+            </span>
           </div>
         </div>
-        <button
-          v-if="canAdd"
-          class="btn btn-blue-nb sidebar-footer"
-          type="button"
-          @click="addItem"
-        >
-          <i class="glyphicon glyphicon-plus" />
-          Добавить
-        </button>
       </template>
     </div>
     <div class="panel panel-main">
@@ -209,7 +213,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .three-col {
   display: grid;
-  grid-template-columns: 1fr 1fr 5.56fr;
+  grid-template-columns: 1fr 1.75fr 4.81fr;
   height: calc(100vh - 36px);
   margin-bottom: 5px;
 }
@@ -227,6 +231,108 @@ onMounted(() => {
 
 .panel-middle {
   overflow: hidden;
+}
+
+.middle-search {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  flex: 0 0 34px;
+  min-width: 0;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  border-bottom: 1px solid #b1b1b1;
+
+  :deep(input.form-control),
+  :deep(.btn) {
+    align-self: stretch;
+    border-radius: 0 !important;
+    -webkit-border-radius: 0 !important;
+    -moz-border-radius: 0 !important;
+  }
+
+  :deep(input.form-control) {
+    border: none;
+    box-shadow: none;
+    width: auto !important;
+    flex: 2 166px;
+    min-width: 0;
+  }
+
+  :deep(.btn) {
+    flex: 3 94px;
+    width: 94px;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: none !important;
+    margin: 0;
+  }
+}
+
+.item-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.item-list--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.object-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  line-height: 22px;
+  border: none;
+  border-bottom: 1px solid #b1b1b1;
+  border-radius: 0;
+  background-color: transparent;
+  color: #434A54;
+  padding: 0 6px 0 10px;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+}
+
+.object-row__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.object-row__sub {
+  flex-shrink: 1;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.object-row:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+}
+
+.object-row--active,
+.object-row--active:hover {
+  background-color: #049372;
+  color: #FFFFFF;
 }
 
 .panel-main {
@@ -268,80 +374,19 @@ onMounted(() => {
   background-color: #049372;
   color: #FFFFFF;
 }
+</style>
 
-.search-input {
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  height: 34px;
-  flex: 0 0 34px;
+<style lang="scss">
+.three-col .middle-search .btn.btn-blue-nb {
+  border-radius: 0 !important;
+  -webkit-border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
 }
 
-.sidebar-content {
-  flex: 1;
-  overflow-y: auto;
-  background-color: hsla(30, 3%, 97%, 1);
-}
-
-.sidebar-content:not(.fcenter) {
-  padding-bottom: 10px;
-}
-
-.fcenter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sidebar-footer {
-  flex: 0 0 34px;
-  border-radius: 0;
-  margin: 0;
-}
-
-.research {
-  background-color: #fff;
-  margin: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  overflow: hidden;
-  border: 2px solid transparent;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-
-  &:hover {
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-    z-index: 1;
-    transform: scale(1.008);
-  }
-
-  &.active {
-    border-color: #049372;
-
-    .research-head {
-      background-color: #049372;
-      color: #FFFFFF;
-    }
-  }
-}
-
-.research:not(:first-child) {
-  margin-top: 0;
-}
-
-.research:last-child {
-  margin-bottom: 0;
-}
-
-.research-head {
-  padding: 5px 8px;
-}
-
-.research-sub {
-  padding: 3px 8px 6px;
-  font-size: 12px;
-  color: #6c7a89;
-  background-color: #f3f6f4;
+.three-col .object-row,
+.three-col .object-row--active {
+  border-radius: 0 !important;
+  -webkit-border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
 }
 </style>
