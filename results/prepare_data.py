@@ -391,7 +391,7 @@ def gen_hospital_stamp(direction):
     return gentbl
 
 
-def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col_func, is_extract, is_form):
+def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col_func, is_extract, is_form, is_monitoring=False):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "FreeSans"
@@ -417,6 +417,30 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
     styleTableMonoBold.fontName = "Consolas-Bold"
     styleTableSm = deepcopy(styleTable)
     styleTableSm.fontSize = 4
+
+    if is_monitoring:
+        hospital_title = ""
+        iss = Issledovaniya.objects.filter(napravleniye=direction).select_related("doc_confirmation", "doc_confirmation__hospital").first()
+        if iss and iss.doc_confirmation and iss.doc_confirmation.hospital:
+            hospital_title = iss.doc_confirmation.hospital.safe_full_title or ""
+            hospital_title = hospital_title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        data = [
+            [Paragraph("Номер:", styleTableMono), Paragraph(str(direction.pk), styleTableMono)],
+            [Paragraph("Учреждение:", styleTableMono), Paragraph(hospital_title, styleTableMono)],
+        ]
+        t = Table(data, colWidths=[doc.width * 0.145, doc.width * 0.855])
+        t.setStyle(
+            TableStyle(
+                [
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                    ('TOPPADDING', (0, 0), (-1, -1), 0),
+                ]
+            )
+        )
+        return t
 
     if not TITLE_RESULT_FORM_USE_HOSPITAL_STAMP:
         data = [

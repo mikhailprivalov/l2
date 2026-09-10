@@ -1,8 +1,9 @@
 import os
 import uuid
 
+import simplejson as json
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
+from django.db import models, transaction
 
 from hospitals.models import Hospitals
 from podrazdeleniya.models import Podrazdeleniya
@@ -23,8 +24,27 @@ class GroupDocuments(models.Model):
     def json(self):
         return {
             "id": self.id,
-            "title": self.title,
+            "title": self.title or "",
         }
+
+    @staticmethod
+    def get_list():
+        return [row.json for row in GroupDocuments.objects.all().order_by("title", "pk")]
+
+    @staticmethod
+    def save_group(pk, title):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        if pk in (None, -1, "-1"):
+            obj = GroupDocuments(title=title)
+        else:
+            obj = GroupDocuments.objects.filter(pk=pk).first()
+            if not obj:
+                return {"ok": False, "message": "Группа не найдена"}
+            obj.title = title
+        obj.save()
+        return {"ok": True, "id": obj.pk, "title": obj.title}
 
 
 class TypeDocuments(models.Model):
@@ -43,8 +63,125 @@ class TypeDocuments(models.Model):
     def json(self):
         return {
             "id": self.id,
-            "title": self.title,
+            "title": self.title or "",
+            "code": self.code or "",
+            "groupId": self.group_document_id,
+            "groupTitle": self.group_document.title if self.group_document else "",
         }
+
+    @staticmethod
+    def get_list(group_id=None):
+        qs = TypeDocuments.objects.select_related("group_document").all().order_by("title", "pk")
+        if group_id not in (None, "", -1, "-1"):
+            qs = qs.filter(group_document_id=group_id)
+        return [row.json for row in qs]
+
+    @staticmethod
+    def save_type(pk, title, group_id=None, code=""):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        group = None
+        if group_id not in (None, "", -1, "-1"):
+            group = GroupDocuments.objects.filter(pk=group_id).first()
+            if not group:
+                return {"ok": False, "message": "Группа не найдена"}
+        if pk in (None, -1, "-1"):
+            obj = TypeDocuments(title=title, group_document=group, code=code or "")
+        else:
+            obj = TypeDocuments.objects.filter(pk=pk).first()
+            if not obj:
+                return {"ok": False, "message": "Вид документа не найден"}
+            obj.title = title
+            obj.group_document = group
+            obj.code = code or ""
+        obj.save()
+        return {"ok": True, "id": obj.pk, "title": obj.title}
+
+
+class DocumentFieldGroups(models.Model):
+    title = models.CharField(max_length=550, help_text="Название группы")
+    show_title = models.BooleanField(default=True, blank=True)
+    type_document = models.ForeignKey(TypeDocuments, db_index=True, on_delete=models.CASCADE, help_text="Вид документа")
+    order = models.IntegerField()
+    hide = models.BooleanField(default=False, blank=True)
+    visibility = models.TextField(default="", blank=True)
+    fields_inline = models.BooleanField(default=False, blank=True)
+
+    class Meta:
+        verbose_name = "Группа полей документа"
+        verbose_name_plural = "Группы полей документа"
+
+    def __str__(self):
+        return f"{self.type_document} – {self.title}"
+
+    def as_json(self):
+        return {
+            "pk": self.pk,
+            "order": self.order,
+            "title": self.title,
+            "show_title": self.show_title,
+            "hide": self.hide,
+            "visibility": self.visibility,
+            "fieldsInline": self.fields_inline,
+            "fields": [field.as_json() for field in self.fields.all().order_by("order")],
+        }
+
+    @staticmethod
+    def get_structure(type_document_id):
+        type_doc = TypeDocuments.objects.filter(pk=type_document_id).first()
+        if not type_doc:
+            return {"ok": False, "message": "Вид документа не найден"}
+        groups = [group.as_json() for group in DocumentFieldGroups.objects.filter(type_document=type_doc).prefetch_related("fields").order_by("order")]
+        orphan_fields = DocumentFields.objects.filter(type_document=type_doc, group__isnull=True).order_by("order")
+        if orphan_fields.exists():
+            next_order = max([group["order"] for group in groups], default=0) + 1
+            groups.append(
+                {
+                    "pk": -1,
+                    "order": next_order,
+                    "title": "Основное",
+                    "show_title": True,
+                    "hide": False,
+                    "visibility": "",
+                    "fieldsInline": False,
+                    "fields": [field.as_json() for field in orphan_fields],
+                }
+            )
+        return {"ok": True, "id": type_doc.pk, "title": type_doc.title or "", "groups": groups}
+
+    @staticmethod
+    @transaction.atomic
+    def save_structure(type_document_id, groups):
+        type_doc = TypeDocuments.objects.filter(pk=type_document_id).first()
+        if not type_doc:
+            return {"ok": False, "message": "Вид документа не найден"}
+        for group_data in groups or []:
+            group_pk = group_data.get("pk", -1)
+            if group_pk in (None, -1, "-1"):
+                group = DocumentFieldGroups(
+                    title=group_data.get("title") or "",
+                    show_title=bool(group_data.get("show_title", True)),
+                    type_document=type_doc,
+                    order=int(group_data.get("order") or 0),
+                    hide=bool(group_data.get("hide", False)),
+                    visibility=group_data.get("visibility") or "",
+                    fields_inline=bool(group_data.get("fieldsInline", False)),
+                )
+            else:
+                group = DocumentFieldGroups.objects.filter(pk=group_pk, type_document=type_doc).first()
+                if not group:
+                    continue
+                group.title = group_data.get("title") or ""
+                group.show_title = bool(group_data.get("show_title", True))
+                group.order = int(group_data.get("order") or 0)
+                group.hide = bool(group_data.get("hide", False))
+                group.visibility = group_data.get("visibility") or ""
+                group.fields_inline = bool(group_data.get("fieldsInline", False))
+            group.save()
+            for field_data in group_data.get("fields") or []:
+                DocumentFields.save_field(type_doc, group, field_data)
+        return {"ok": True, "id": type_doc.pk}
 
 
 class Nomenclature(models.Model):
@@ -131,6 +268,7 @@ class DocumentFields(models.Model):
         (10, "Исполнитель"),
     )
     type_document = models.ForeignKey(TypeDocuments, default=None, db_index=True, blank=True, null=True, help_text="Тип документа", on_delete=models.SET_NULL)
+    group = models.ForeignKey("DocumentFieldGroups", related_name="fields", default=None, blank=True, null=True, db_index=True, help_text="Группа полей", on_delete=models.CASCADE)
     title = models.CharField(max_length=400, help_text="Название поля ввода")
     short_title = models.CharField(max_length=400, default="", blank=True, help_text="Синоним-короткое название поля ввода")
     order = models.IntegerField()
@@ -149,6 +287,75 @@ class DocumentFields(models.Model):
 
     def __str__(self):
         return f"{self.type_document}"
+
+    @staticmethod
+    def _parse_templates(raw):
+        if not raw:
+            return []
+        try:
+            data = json.loads(raw)
+            return data if isinstance(data, list) else []
+        except (TypeError, ValueError):
+            return []
+
+    def as_json(self):
+        return {
+            "pk": self.pk,
+            "order": self.order,
+            "title": self.title,
+            "short_title": self.short_title,
+            "default": self.default_value,
+            "values_to_input": self._parse_templates(self.input_templates),
+            "new_value": "",
+            "hide": self.hide,
+            "lines": self.lines,
+            "field_type": self.field_type,
+            "required": self.required,
+            "is_meta_attributes": self.is_meta_attributes,
+            "is_content_attributes": self.is_content_attributes,
+        }
+
+    @staticmethod
+    def save_field(type_doc, group, field_data):
+        field_pk = field_data.get("pk", -1)
+        values_to_input = field_data.get("values_to_input") or []
+        if not isinstance(values_to_input, list):
+            values_to_input = []
+        templates = json.dumps(values_to_input)
+        if field_pk in (None, -1, "-1"):
+            field = DocumentFields(
+                type_document=type_doc,
+                group=group,
+                title=field_data.get("title") or "",
+                short_title=field_data.get("short_title") or "",
+                order=int(field_data.get("order") or 0),
+                default_value=field_data.get("default") or "",
+                input_templates=templates,
+                hide=bool(field_data.get("hide", False)),
+                lines=int(field_data.get("lines") or 3),
+                field_type=int(field_data.get("field_type") or 0),
+                required=bool(field_data.get("required", False)),
+                is_meta_attributes=bool(field_data.get("is_meta_attributes", False)),
+                is_content_attributes=bool(field_data.get("is_content_attributes", False)),
+            )
+        else:
+            field = DocumentFields.objects.filter(pk=field_pk).first()
+            if not field:
+                return
+            field.type_document = type_doc
+            field.group = group
+            field.title = field_data.get("title") or ""
+            field.short_title = field_data.get("short_title") or ""
+            field.order = int(field_data.get("order") or 0)
+            field.default_value = field_data.get("default") or ""
+            field.input_templates = templates
+            field.hide = bool(field_data.get("hide", False))
+            field.lines = int(field_data.get("lines") or 3)
+            field.field_type = int(field_data.get("field_type") or 0)
+            field.required = bool(field_data.get("required", False))
+            field.is_meta_attributes = bool(field_data.get("is_meta_attributes", False))
+            field.is_content_attributes = bool(field_data.get("is_content_attributes", False))
+        field.save()
 
 
 class Documents(models.Model):

@@ -107,7 +107,43 @@
             class="col-xs-9 col-md-6"
             style="padding-right: 5px"
           >
-            <div class="input-group">
+            <div
+              v-if="isQuarterPeriod"
+              class="input-group"
+            >
+              <span class="input-group-addon">Квартал</span>
+              <select
+                v-model.number="quarter"
+                class="form-control"
+                style="width: 80px"
+              >
+                <option
+                  v-for="q in QUARTERS"
+                  :key="q.id"
+                  :value="q.id"
+                >
+                  {{ q.label }}
+                </option>
+              </select>
+              <span class="input-group-addon">Год</span>
+              <select
+                v-model.number="year"
+                class="form-control"
+                style="min-width: 100px; width: 100%"
+              >
+                <option
+                  v-for="y in YEARS"
+                  :key="y.id"
+                  :value="y.id"
+                >
+                  {{ y.label }}
+                </option>
+              </select>
+            </div>
+            <div
+              v-else
+              class="input-group"
+            >
               <span class="input-group-addon">
                 <span class="hidden-xs">Дата<span class="hidden-sm"> или начало периода</span></span>
                 <i class="fa fa-calendar visible-xs" />
@@ -374,6 +410,19 @@ for (let i = 0; i < 24; i++) {
   HOURS.push({ id, label });
 }
 
+const QUARTERS = [
+  { id: 1, label: '1' },
+  { id: 2, label: '2' },
+  { id: 3, label: '3' },
+  { id: 4, label: '4' },
+];
+
+const YEARS = [];
+const currentYear = moment().year();
+for (let y = currentYear + 1; y >= currentYear - 10; y -= 1) {
+  YEARS.push({ id: y, label: String(y) });
+}
+
 const MIN_FONT = 9;
 const MAX_FONT = 14;
 
@@ -405,6 +454,10 @@ export default {
       loadedDate: '',
       hour: '-',
       HOURS,
+      quarter: moment().quarter(),
+      year: moment().year(),
+      QUARTERS,
+      YEARS,
       data: null,
       fontSize: 12,
       mode: MODE_DASHBOARD,
@@ -426,7 +479,14 @@ export default {
   computed: {
     ...mapGetters(['researches']),
     monitorings() {
-      return (this.researches['-12'] || []).map((r) => ({ id: r.pk, label: r.title }));
+      return (this.researches['-12'] || []).map((r) => ({ id: r.pk, label: r.title, type_period: r.type_period }));
+    },
+    selectedTypePeriod() {
+      const selected = this.monitorings.find((r) => r.id === this.research);
+      return selected?.type_period || null;
+    },
+    isQuarterPeriod() {
+      return this.selectedTypePeriod === 'PERIOD_QURTER';
     },
     canIncFont() {
       return this.fontSize < MAX_FONT;
@@ -478,8 +538,19 @@ export default {
     async loadSearch() {
       await this.$store.dispatch(actions.INC_LOADING);
       this.loadedResearch = this.research;
-      this.loadedDate = this.date;
-      const { rows } = await this.$api('/monitorings/search', this, ['research', 'date', 'hour']);
+      let { date } = this;
+      if (this.isQuarterPeriod) {
+        const month = String((this.quarter - 1) * 3 + 1).padStart(2, '0');
+        date = `${this.year}-${month}-01`;
+      }
+      this.loadedDate = date;
+      const { rows } = await this.$api('/monitorings/search', {
+        research: this.research,
+        date,
+        hour: this.isQuarterPeriod ? '-' : this.hour,
+        quarter: this.isQuarterPeriod ? this.quarter : null,
+        year: this.isQuarterPeriod ? this.year : null,
+      });
       this.data = rows;
       await this.$store.dispatch(actions.DEC_LOADING);
       if (this.$refs.loadButton) {
