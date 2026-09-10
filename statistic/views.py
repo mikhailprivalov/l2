@@ -2422,9 +2422,14 @@ def statistic_xls(request):
 
     elif tp == "statistics-workload":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Нагрузка.xlsx\"", tr)
-        # user_groups = request.user.groups.values_list('name', flat=True)
-        if not check_comborole_for_user(request.user, check_simple_role='Статистика-моя нагрузка'):
-            return True
+        user_groups = request.user.groups.values_list('name', flat=True)
+        has_workload_access = (
+            'Статистика-моя нагрузка' in user_groups
+            or 'Заполнение заявок' in user_groups
+            or check_comborole_for_user(request.user, check_simple_role='Статистика-моя нагрузка')
+        )
+        if not has_workload_access:
+            return JsonResponse({"error": "Нет доступа к данному отчету"})
 
         doctor = request.user.doctorprofile.pk
 

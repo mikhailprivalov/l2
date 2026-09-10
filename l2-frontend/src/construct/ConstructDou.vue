@@ -213,7 +213,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .three-col {
   display: grid;
-  grid-template-columns: 1fr 1fr 5.56fr;
+  grid-template-columns: 1fr 1.75fr 4.81fr;
   height: calc(100vh - 36px);
   margin-bottom: 5px;
 }

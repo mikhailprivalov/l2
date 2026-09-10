@@ -1,7 +1,10 @@
 <template>
-  <div class="editor">
-    <div class="content">
-      <div class="form-box">
+  <div class="root">
+    <div
+      class="top-editor"
+      :class="{ oneLine: kind === 'group' }"
+    >
+      <div class="left">
         <div class="input-group">
           <span class="input-group-addon">Название</span>
           <input
@@ -10,37 +13,37 @@
             class="form-control"
           >
         </div>
-        <template v-if="kind === 'type'">
-          <div class="input-group">
-            <span class="input-group-addon">Группа</span>
-            <select
-              v-model.number="groupId"
-              class="form-control"
+        <div
+          v-if="kind === 'type'"
+          class="input-group"
+        >
+          <span class="input-group-addon">Короткое</span>
+          <input
+            v-model="code"
+            type="text"
+            class="form-control"
+          >
+          <span class="input-group-addon">Группа</span>
+          <select
+            v-model.number="groupId"
+            class="form-control"
+          >
+            <option :value="-1">
+              Не выбрана
+            </option>
+            <option
+              v-for="group in groups || []"
+              :key="group.id"
+              :value="group.id"
             >
-              <option :value="-1">
-                Не выбрана
-              </option>
-              <option
-                v-for="group in groups"
-                :key="group.id"
-                :value="group.id"
-              >
-                {{ group.title }}
-              </option>
-            </select>
-          </div>
-          <div class="input-group">
-            <span class="input-group-addon">Код</span>
-            <input
-              v-model="code"
-              type="text"
-              class="form-control"
-            >
-          </div>
-        </template>
+              {{ group.title }}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
-    <div class="footer">
+    <div class="content-editor" />
+    <div class="footer-editor">
       <button
         class="btn btn-blue-nb"
         type="button"
@@ -131,59 +134,61 @@ const save = async () => {
 </script>
 
 <style scoped lang="scss">
-.editor {
+.root {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   height: 100%;
   background-color: #f8f7f7;
 }
 
-.content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.form-box {
-  background-color: #fff;
-  border: 1px solid #b1b1b1;
-  padding: 8px;
-}
-
-.input-group {
-  margin-bottom: 5px;
+.top-editor {
   display: flex;
-  width: 100%;
+  flex: 0 0 68px;
+  align-self: stretch;
+
+  &.oneLine {
+    flex: 0 0 34px;
+  }
+
+  .left {
+    flex: 0 0 45%;
+    border-right: 1px solid #96a0ad;
+  }
+
+  .input-group {
+    margin-bottom: 0;
+  }
+
+  .input-group-addon {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+
+  .form-control {
+    height: 34px;
+    border-top: none;
+    border-radius: 0;
+  }
+
+  .input-group > .form-control:last-child {
+    border-right: none;
+  }
 }
 
-.input-group:last-child {
-  margin-bottom: 0;
-}
-
-.input-group-addon {
-  display: flex;
-  align-items: center;
-  background-color: #AAB2BD;
-  border: 1px solid #96a0ad;
-  color: #FFF;
-  min-width: 88px;
-  padding: 6px 10px;
-  line-height: 20px;
-  white-space: nowrap;
-  border-radius: 4px 0 0 4px;
-}
-
-.form-control {
-  height: 34px;
+.content-editor {
   flex: 1;
-  border-radius: 0 4px 4px 0;
-  border-left: none;
+  min-height: 0;
+  align-self: stretch;
 }
 
-.footer {
+.footer-editor {
   flex: 0 0 34px;
   display: flex;
   justify-content: flex-end;
+  align-self: stretch;
   background-color: #f4f4f4;
   border-top: 1px solid #b1b1b1;
 
