@@ -3,20 +3,23 @@
     <DocumentsFilters class="two-col-filters" />
     <div class="two-col">
       <div class="sidebar">
-        <DocumentsExplorer />
+        <DocumentsExplorer @select="selectedDocumentId = $event" />
       </div>
       <div class="viewer">
-        <DocumentViewer />
+        <DocumentViewer :document-id="selectedDocumentId" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 
 import DocumentsExplorer from '@/pages/DocumentManagement/DocumentsExplorer.vue';
 import DocumentsFilters from '@/pages/DocumentManagement/DocumentsFilters.vue';
 import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
+
+const selectedDocumentId = ref<number | null>(null);
 
 </script>
 
@@ -29,8 +32,14 @@ import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
 .sidebar {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   background-color: #f8f7f7;
   border-right: 1px solid #b1b1b1;
+}
+.viewer {
+  min-height: 0;
+  overflow: hidden;
 }
 .two-col-filters {
   display: grid;

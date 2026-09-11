@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div class="flex">
+  <div class="explorer">
+    <div class="flex search-row">
       <input
         class="form-control search"
         placeholder="Номер документа"
@@ -9,7 +9,7 @@
         Найти
       </button>
     </div>
-    <div>
+    <div class="section section-groups">
       <div class="flex">
         <span
           class="group-button-header"
@@ -33,7 +33,7 @@
         </div>
       </div>
     </div>
-    <div>
+    <div class="section section-equal">
       <div class="flex">
         <span
           class="group-button-header"
@@ -41,7 +41,7 @@
           Виды
         </span>
       </div>
-      <div class="scroll">
+      <div class="scroll-equal">
         <div
           v-for="type in documentTypes"
           :key="type.id"
@@ -57,13 +57,21 @@
         </div>
       </div>
     </div>
-    <div>
+    <div class="section section-equal">
       <div class="flex">
         <span class="group-button-header">
           Документы
         </span>
+        <button
+          class="btn btn-blue-nb nbr create-btn"
+          type="button"
+          :disabled="!selectedType"
+          @click="createDocument"
+        >
+          Создать
+        </button>
       </div>
-      <div class="scroll-doc">
+      <div class="scroll-equal">
         <div
           v-for="document in documents"
           :key="document.id"
@@ -84,7 +92,7 @@
 
 <script setup lang="ts">
 import {
-  onMounted, ref, watch,
+  getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 
 import { useStore } from '@/store';
@@ -96,7 +104,13 @@ interface CatalogItem {
   title: string;
 }
 
+// eslint-disable-next-line no-spaced-func,func-call-spacing
+const emit = defineEmits<{
+  (e: 'select', documentId: number | null): void;
+}>();
+
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
 const selectedGroup = ref<number | null>(null);
 const documentGroups = ref<CatalogItem[]>([]);
@@ -127,10 +141,44 @@ const loadTypes = async () => {
   }
 };
 
+const loadDocuments = async () => {
+  documents.value = [];
+  if (!selectedType.value) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { result } = await api('document-manager/documents/list', { typeId: selectedType.value });
+    documents.value = result || [];
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+const createDocument = async () => {
+  if (!selectedType.value) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/documents/create', { typeId: selectedType.value });
+    if (result?.ok) {
+      root.$emit('msg', 'ok', 'Документ создан');
+      await loadDocuments();
+      selectedDocument.value = result.id;
+    } else {
+      root.$emit('msg', 'error', result?.message || 'Ошибка создания');
+    }
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
 const selectGroup = (groupId: number) => {
   selectedGroup.value = groupId;
   selectedType.value = null;
   selectedDocument.value = null;
+  documents.value = [];
 };
 
 const selectType = (typeId: number) => {
@@ -142,8 +190,16 @@ const selectDocument = (documentId: number) => {
   selectedDocument.value = documentId;
 };
 
+watch(selectedDocument, (id) => {
+  emit('select', id);
+});
+
 watch(selectedGroup, () => {
   loadTypes();
+});
+
+watch(selectedType, () => {
+  loadDocuments();
 });
 
 onMounted(async () => {
@@ -153,6 +209,31 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+.explorer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
+
+.search-row {
+  flex: 0 0 auto;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.section-groups {
+  flex: 0 0 auto;
+}
+
+.section-equal {
+  flex: 1 1 0;
+}
 
 .flex {
   display: flex;
@@ -172,11 +253,20 @@ onMounted(async () => {
 .group-button-header {
   background-color: #ededed;
   flex: 1;
-  align-self: flex-start;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
   border: none;
   padding: 1px 5px 1px 10px;
   text-align: left;
   cursor: default;
+}
+
+.create-btn {
+  border-radius: 0;
+  padding: 1px 10px;
+  flex: 0 0 auto;
+  align-self: stretch;
 }
 
 .transparent-button {
@@ -205,8 +295,9 @@ onMounted(async () => {
   height: 139px;
   overflow-y: auto;
 }
-.scroll-doc {
-  height: calc(100vh - 465px);
+.scroll-equal {
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
 }
 </style>

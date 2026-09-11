@@ -297,7 +297,7 @@ def get_direction_params(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def localization(request):
     request_data = json.loads(request.body)
     pk = int(request_data["pk"])
@@ -308,7 +308,7 @@ def localization(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def localization_save(request):
     request_data = json.loads(request.body)
     pk = int(request_data["pk"])
@@ -325,7 +325,7 @@ def localization_save(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара", "Конструктор: Редактировать свои услуги")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара", "Конструктор: Редактировать свои услуги", "Конструктор: ДОУ")
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
     result_form = [i for i in DResearches.RESULT_FORMS if i[0] not in DISABLED_RESULT_FORMS]
@@ -436,7 +436,7 @@ def researches_params(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: Редактировать свои услуги")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: Редактировать свои услуги", "Конструктор: ДОУ")
 @transaction.atomic
 def researches_update(request):
     response = {"ok": False}
@@ -508,7 +508,10 @@ def researches_update(request):
             res = None
             if int(hospital_research_department_pk) > -1:
                 department = Podrazdeleniya.objects.filter(pk=int(hospital_research_department_pk))[0]
-            if pk == -1 and "Конструктор: Параклинические (описательные) исследования" in user_groups:
+            can_create_research = "Конструктор: Параклинические (описательные) исследования" in user_groups
+            if not can_create_research and department_pk == -17 and "Конструктор: ДОУ" in user_groups:
+                can_create_research = True
+            if pk == -1 and can_create_research:
                 res = DResearches(
                     title=title,
                     short_title=short_title,
@@ -772,7 +775,7 @@ def researches_update(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def researches_details(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
@@ -782,7 +785,7 @@ def researches_details(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def paraclinic_details(request):
     response = {"groups": []}
     request_data = json.loads(request.body)
@@ -872,7 +875,7 @@ def fast_template_data(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def fast_template_save(request):
     request_data = json.loads(request.body)
     data = request_data["data"]
@@ -1341,7 +1344,7 @@ def get_research_performer(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def get_research_permissions(request):
     request_data = json.loads(request.body)
     research_id = request_data.get('researchId')
@@ -1350,7 +1353,7 @@ def get_research_permissions(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def save_research_permissions(request):
     request_data = json.loads(request.body)
     research_id = request_data.get('researchId')
@@ -1368,7 +1371,7 @@ def save_research_permissions(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def change_group_field(request):
     request_data = json.loads(request.body)
     field_id = request_data.get('fieldId')
@@ -1390,7 +1393,7 @@ def change_group_field(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: Редактировать свои услуги")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: Редактировать свои услуги", "Конструктор: ДОУ")
 def researches_for_formula(request):
     request_data = json.loads(request.body)
     type = request_data.get('type')

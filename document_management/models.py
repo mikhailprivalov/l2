@@ -51,6 +51,15 @@ class TypeDocuments(models.Model):
     title = models.CharField(max_length=128, blank=True, null=True)
     group_document = models.ForeignKey(GroupDocuments, default=None, blank=True, null=True, help_text="Группа документов", on_delete=models.SET_NULL)
     code = models.CharField(max_length=55, blank=True, null=True)
+    layout_template = models.ForeignKey(
+        "directory.Researches",
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Шаблон документа",
+        on_delete=models.SET_NULL,
+    )
 
     class Meta:
         verbose_name = "Вид документа"
@@ -67,6 +76,7 @@ class TypeDocuments(models.Model):
             "code": self.code or "",
             "groupId": self.group_document_id,
             "groupTitle": self.group_document.title if self.group_document else "",
+            "layoutTemplateId": self.layout_template_id,
         }
 
     @staticmethod
@@ -77,7 +87,9 @@ class TypeDocuments(models.Model):
         return [row.json for row in qs]
 
     @staticmethod
-    def save_type(pk, title, group_id=None, code=""):
+    def save_type(pk, title, group_id=None, code="", layout_template_id=None):
+        from directory.models import Researches
+
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
@@ -86,8 +98,13 @@ class TypeDocuments(models.Model):
             group = GroupDocuments.objects.filter(pk=group_id).first()
             if not group:
                 return {"ok": False, "message": "Группа не найдена"}
+        layout_template = None
+        if layout_template_id not in (None, "", -1, "-1"):
+            layout_template = Researches.objects.filter(pk=layout_template_id, is_layout_template=True).first()
+            if not layout_template:
+                return {"ok": False, "message": "Шаблон не найден"}
         if pk in (None, -1, "-1"):
-            obj = TypeDocuments(title=title, group_document=group, code=code or "")
+            obj = TypeDocuments(title=title, group_document=group, code=code or "", layout_template=layout_template)
         else:
             obj = TypeDocuments.objects.filter(pk=pk).first()
             if not obj:
@@ -95,6 +112,7 @@ class TypeDocuments(models.Model):
             obj.title = title
             obj.group_document = group
             obj.code = code or ""
+            obj.layout_template = layout_template
         obj.save()
         return {"ok": True, "id": obj.pk, "title": obj.title}
 
@@ -370,6 +388,18 @@ class Documents(models.Model):
     total_approved = models.BooleanField(default=False, blank=True, help_text="Полностью согласован", db_index=True)
     total_completed = models.BooleanField(default=False, blank=True, help_text="Полностью завершен/снят с контроля", db_index=True)
     parent_document = models.ForeignKey("self", db_index=True, related_name="document_p", help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    body_values = models.JSONField(default=dict, blank=True, help_text="Значения полей шаблона")
+    time_confirm = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время подтверждения")
+    who_confirm = models.ForeignKey(
+        DoctorProfile,
+        related_name="document_who_confirm",
+        db_index=True,
+        default=None,
+        blank=True,
+        null=True,
+        help_text="Кто подтвердил",
+        on_delete=models.SET_NULL,
+    )
 
     class Meta:
         verbose_name = "Документ-экземпляр"
@@ -377,6 +407,187 @@ class Documents(models.Model):
 
     def __str__(self):
         return f"{self.type_document}"
+
+    @property
+    def json(self):
+        type_title = self.type_document.title if self.type_document else "Документ"
+        title = self.number_registration or f"{type_title} №{self.pk}"
+        return {
+            "id": self.id,
+            "title": title,
+            "typeId": self.type_document_id,
+            "confirmed": bool(self.time_confirm),
+        }
+
+    @staticmethod
+    def get_list(type_id=None):
+        if type_id in (None, "", -1, "-1"):
+            return []
+        qs = Documents.objects.select_related("type_document").filter(type_document_id=type_id).order_by("-pk")
+        return [row.json for row in qs]
+
+    @staticmethod
+    def create_document(type_id, who_create):
+        from directions.models import Issledovaniya
+
+        if type_id in (None, "", -1, "-1"):
+            return {"ok": False, "message": "Выберите вид документа"}
+        type_doc = TypeDocuments.objects.filter(pk=type_id).first()
+        if not type_doc:
+            return {"ok": False, "message": "Вид документа не найден"}
+        with transaction.atomic():
+            obj = Documents.objects.create(type_document=type_doc, who_create=who_create, body_values={})
+            Issledovaniya.objects.create(
+                document=obj,
+                research=type_doc.layout_template,
+                creator=who_create,
+            )
+        return {"ok": True, "id": obj.pk, "title": obj.json["title"]}
+
+    def build_research(self):
+        from django.db.models import Prefetch
+
+        from directory.models import ParaclinicInputField, ParaclinicInputGroups
+
+        type_doc = self.type_document
+        template = type_doc.layout_template if type_doc else None
+        if not template:
+            return None
+        saved = self.body_values if isinstance(self.body_values, dict) else {}
+        groups = []
+        group_qs = (
+            ParaclinicInputGroups.objects.filter(research=template)
+            .order_by("order")
+            .prefetch_related(
+                Prefetch(
+                    "paraclinicinputfield_set",
+                    queryset=ParaclinicInputField.objects.select_related("denied_group").order_by("order"),
+                )
+            )
+        )
+        for group in group_qs:
+            if group.hide:
+                continue
+            g = {
+                "pk": group.pk,
+                "order": group.order,
+                "title": group.title if group.show_title else "",
+                "show_title": group.show_title,
+                "hide": group.hide,
+                "display_hidden": False,
+                "fields": [],
+                "visibility": group.visibility or "",
+                "fieldsInline": group.fields_inline,
+            }
+            for field in group.paraclinicinputfield_set.all():
+                if field.hide:
+                    continue
+                try:
+                    values_to_input = json.loads(field.input_templates or "[]")
+                    if not isinstance(values_to_input, list):
+                        values_to_input = []
+                except (TypeError, ValueError):
+                    values_to_input = []
+                field_type = field.field_type
+                if field.required and field_type in [10, 12] and "- Не выбрано" not in values_to_input:
+                    values_to_input = ["- Не выбрано", *values_to_input]
+                default_value = field.default_value or ""
+                if field_type in [3, 11, 13, 14, 30]:
+                    default_value = ""
+                key = str(field.pk)
+                value = saved[key] if key in saved else saved.get(field.pk, default_value)
+                g["fields"].append(
+                    {
+                        "pk": field.pk,
+                        "order": field.order,
+                        "lines": field.lines,
+                        "title": field.short_title if field.short_title else field.title,
+                        "hide": field.hide,
+                        "values_to_input": values_to_input,
+                        "value": value if value is not None else "",
+                        "field_type": field_type,
+                        "can_edit": field.can_edit_computed,
+                        "default_value": field.default_value or "",
+                        "visibility": field.visibility or "",
+                        "required": field.required or field.required_set_by_admin,
+                        "helper": field.helper or "",
+                        "controlParam": field.control_param or "",
+                        "not_edit": field.not_edit,
+                        "operator_enter_param": field.operator_enter_param,
+                        "deniedGroup": field.denied_group.name if field.denied_group else "",
+                        "isDiagTable": field.is_diag_table,
+                    }
+                )
+            groups.append(g)
+        return {
+            "pk": template.pk,
+            "title": template.title,
+            "version": 0,
+            "wide_headers": bool(getattr(template, "wide_headers", False)),
+            "groups": groups,
+            "is_gistology": False,
+            "show_more_services": False,
+        }
+
+    @staticmethod
+    def get_details(pk):
+        obj = Documents.objects.select_related("type_document", "type_document__layout_template").filter(pk=pk).first()
+        if not obj:
+            return {"ok": False, "message": "Документ не найден"}
+        payload = obj.json
+        payload["ok"] = True
+        payload["research"] = obj.build_research()
+        payload["confirmed"] = bool(obj.time_confirm)
+        return payload
+
+    @staticmethod
+    def _apply_groups(obj, groups):
+        values = {}
+        for group in groups or []:
+            for field in group.get("fields") or []:
+                field_pk = field.get("pk")
+                if field_pk is None:
+                    continue
+                values[str(field_pk)] = field.get("value") if field.get("value") is not None else ""
+        obj.body_values = values
+
+    @staticmethod
+    def save_body(pk, groups):
+        obj = Documents.objects.filter(pk=pk).first()
+        if not obj:
+            return {"ok": False, "message": "Документ не найден"}
+        if obj.time_confirm:
+            return {"ok": False, "message": "Документ подтверждён"}
+        Documents._apply_groups(obj, groups)
+        obj.save(update_fields=["body_values"])
+        return {"ok": True, "id": obj.pk, "confirmed": False}
+
+    @staticmethod
+    def confirm(pk, groups, who):
+        from django.utils import timezone
+
+        obj = Documents.objects.filter(pk=pk).first()
+        if not obj:
+            return {"ok": False, "message": "Документ не найден"}
+        if obj.time_confirm:
+            return {"ok": False, "message": "Документ уже подтверждён"}
+        Documents._apply_groups(obj, groups)
+        obj.time_confirm = timezone.now()
+        obj.who_confirm = who
+        obj.save(update_fields=["body_values", "time_confirm", "who_confirm"])
+        return {"ok": True, "id": obj.pk, "confirmed": True}
+
+    @staticmethod
+    def confirm_reset(pk):
+        obj = Documents.objects.filter(pk=pk).first()
+        if not obj:
+            return {"ok": False, "message": "Документ не найден"}
+        if not obj.time_confirm:
+            return {"ok": False, "message": "Документ не подтверждён"}
+        obj.time_confirm = None
+        obj.who_confirm = None
+        obj.save(update_fields=["time_confirm", "who_confirm"])
+        return {"ok": True, "id": obj.pk, "confirmed": False}
 
 
 class DocumentEmployeeApprove(models.Model):

@@ -45,7 +45,7 @@
             v-for="row in filteredItems"
             :key="row.id"
             class="object-row"
-            :class="{ 'object-row--active': selectedId === row.id }"
+            :class="{ 'object-row--active': selectedId === row.id, 'object-row--hide': row.hide }"
             role="button"
             tabindex="0"
             @click="selectedId = row.id"
@@ -72,6 +72,7 @@
         :title-value="selectedItem?.title"
         :code-value="selectedItem?.code"
         :group-id-value="selectedItem?.groupId"
+        :layout-template-id-value="selectedItem?.layoutTemplateId"
         :groups="groups"
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
@@ -83,13 +84,25 @@
         @saved="onStructureSaved"
         @cancel="selectedId = null"
       />
+      <ParaclinicResearchEditor
+        v-else-if="showTemplateEditor"
+        :key="selectedId"
+        style="position: absolute; top: 0; right: 0; bottom: 0; left: 0"
+        :pk="selectedId"
+        :department="LAYOUT_TEMPLATE_DEPARTMENT"
+        :direction_forms="directionForms"
+        :result_forms="resultForms"
+        :specialities="specialities"
+        :permanent_directories="permanentDirectories"
+        :period_types="periodTypes"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, onMounted, ref, watch,
+  computed, getCurrentInstance, onMounted, onUnmounted, ref, watch,
 } from 'vue';
 
 import { useStore } from '@/store';
@@ -97,6 +110,7 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import DouCatalogEditor from '@/construct/DouCatalogEditor.vue';
 import DouDocumentStructureEditor from '@/construct/DouDocumentStructureEditor.vue';
+import ParaclinicResearchEditor from '@/construct/ParaclinicResearchEditor.vue';
 
 interface NavButton {
   id: string;
@@ -109,20 +123,33 @@ interface CatalogItem {
   code?: string;
   groupId?: number | null;
   groupTitle?: string;
+  layoutTemplateId?: number | null;
+  hide?: boolean;
 }
 
-const WORKING_NAV = ['document_groups', 'document_types', 'skeleton'];
+const LAYOUT_TEMPLATE_DEPARTMENT = -17;
+const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'skeleton'];
 
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 const navButtons = ref<NavButton[]>([]);
 const selectedNavId = ref<string | null>(null);
 const titleFilter = ref('');
 const items = ref<CatalogItem[]>([]);
 const groups = ref<CatalogItem[]>([]);
 const selectedId = ref<number | null>(null);
+const directionForms = ref([]);
+const resultForms = ref([]);
+const specialities = ref([]);
+const permanentDirectories = ref<Record<string, unknown>>({});
+const periodTypes = ref([]);
 
 const isWorkingSection = computed(() => WORKING_NAV.includes(selectedNavId.value || ''));
-const canAdd = computed(() => selectedNavId.value === 'document_groups' || selectedNavId.value === 'document_types');
+const canAdd = computed(() => (
+  selectedNavId.value === 'document_groups'
+  || selectedNavId.value === 'document_types'
+  || selectedNavId.value === 'document_templates'
+));
 const catalogKind = computed<'group' | 'type'>(() => (selectedNavId.value === 'document_groups' ? 'group' : 'type'));
 
 const filteredItems = computed(() => {
@@ -142,6 +169,10 @@ const showCatalogEditor = computed(
 
 const showStructureEditor = computed(
   () => selectedNavId.value === 'skeleton' && selectedId.value !== null && selectedId.value > 0,
+);
+
+const showTemplateEditor = computed(
+  () => selectedNavId.value === 'document_templates' && selectedId.value !== null,
 );
 
 const loadNavButtons = async () => {
@@ -173,6 +204,18 @@ const loadItems = async () => {
     if (selectedNavId.value === 'document_groups') {
       const { result } = await api('document-manager/groups/list');
       items.value = result || [];
+    } else if (selectedNavId.value === 'document_templates') {
+      const data = await api('researches/by-department', { department: LAYOUT_TEMPLATE_DEPARTMENT, isConstructor: true });
+      items.value = (data.researches || []).map((row: { pk: number; title: string; hide?: boolean }) => ({
+        id: row.pk,
+        title: row.title,
+        hide: row.hide,
+      }));
+      directionForms.value = data.direction_forms || [];
+      resultForms.value = data.result_forms || [];
+      specialities.value = data.specialities || [];
+      permanentDirectories.value = data.permanent_directories || {};
+      periodTypes.value = data.period_types || [];
     } else {
       await loadGroups();
       const { result } = await api('document-manager/types/list');
@@ -200,6 +243,13 @@ const onStructureSaved = async () => {
   await loadItems();
 };
 
+const onTemplateCancel = async () => {
+  if (selectedNavId.value !== 'document_templates') {
+    return;
+  }
+  await loadItems();
+};
+
 watch(selectedNavId, () => {
   titleFilter.value = '';
   loadItems();
@@ -207,13 +257,18 @@ watch(selectedNavId, () => {
 
 onMounted(() => {
   loadNavButtons();
+  root.$on('research-editor:cancel', onTemplateCancel);
+});
+
+onUnmounted(() => {
+  root.$off('research-editor:cancel', onTemplateCancel);
 });
 </script>
 
 <style scoped lang="scss">
 .three-col {
   display: grid;
-  grid-template-columns: 1fr 1.75fr 4.81fr;
+  grid-template-columns: 0.75fr 1.17fr 5.64fr;
   height: calc(100vh - 36px);
   margin-bottom: 5px;
 }
@@ -248,6 +303,11 @@ onMounted(() => {
   :deep(input.form-control),
   :deep(.btn) {
     align-self: stretch;
+    height: 34px;
+    min-height: 34px;
+    padding: 0 10px;
+    line-height: 22px;
+    font-size: 14px;
     border-radius: 0 !important;
     -webkit-border-radius: 0 !important;
     -moz-border-radius: 0 !important;
@@ -335,7 +395,12 @@ onMounted(() => {
   color: #FFFFFF;
 }
 
+.object-row--hide {
+  opacity: 0.65;
+}
+
 .panel-main {
+  position: relative;
   border-right: none;
   overflow: hidden;
   background-color: #f8f7f7;
@@ -344,10 +409,9 @@ onMounted(() => {
 .row-border {
   border-bottom: 1px solid #b1b1b1;
   display: flex;
-}
-
-.row-border:first-child {
-  border-top: 1px solid #b1b1b1;
+  flex: 0 0 34px;
+  height: 34px;
+  min-height: 34px;
 }
 
 .transparent-button {
@@ -355,7 +419,11 @@ onMounted(() => {
   color: #434A54;
   flex: 1;
   border: none;
-  padding: 6px 10px;
+  border-radius: 0;
+  height: 34px;
+  padding: 0 10px;
+  line-height: 22px;
+  font-size: 14px;
   text-align: left;
   cursor: pointer;
 }
@@ -377,14 +445,8 @@ onMounted(() => {
 </style>
 
 <style lang="scss">
-.three-col .middle-search .btn.btn-blue-nb {
-  border-radius: 0 !important;
-  -webkit-border-radius: 0 !important;
-  -moz-border-radius: 0 !important;
-}
-
-.three-col .object-row,
-.three-col .object-row--active {
+.three-col,
+.three-col * {
   border-radius: 0 !important;
   -webkit-border-radius: 0 !important;
   -moz-border-radius: 0 !important;

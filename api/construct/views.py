@@ -292,7 +292,7 @@ def create_tube(request):
 
 
 @login_required
-@group_required("Конструктор: Параклинические (описательные) исследования")
+@group_required("Конструктор: Параклинические (описательные) исследования", "Конструктор: ДОУ")
 def get_descriptive_ref_books(request):
     file_field_limits = PARACLINIC_FILE_HARD_LIMITS
     file_field_default_settings = PARACLINIC_FILE_DEFAULTS

@@ -92,6 +92,7 @@
 - `forms/` - document templates
 - `construct/` - form constructor
 - `document_management/` - document management
+- **DOU constructor** (`/ui/construct/dou`): groups, types, structure, and **Шаблоны документов** (`is_layout_template` researches via `ParaclinicResearchEditor`, department `-17`). Layout templates are no longer created under `/ui/construct/descriptive` (**Шаблоны**). **Формы** stay on descriptive.
 
 ## Data Patterns
 

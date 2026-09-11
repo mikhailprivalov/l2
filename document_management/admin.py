@@ -11,7 +11,7 @@ class GroupDocumentsAdmin(admin.ModelAdmin):
 
 @admin.register(TypeDocuments)
 class TypeDocumentsAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "code", "group_document")
+    list_display = ("pk", "title", "code", "group_document", "layout_template")
     search_fields = ("title", "code")
     list_filter = ("group_document",)
 
