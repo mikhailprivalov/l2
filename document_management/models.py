@@ -626,10 +626,7 @@ class Documents(models.Model):
         saved = self.body_values if isinstance(self.body_values, dict) else {}
         result_fields = {}
         if iss:
-            result_fields = {
-                row.field_id: row
-                for row in ParaclinicResult.objects.filter(issledovaniye=iss).select_related("field").prefetch_related("files")
-            }
+            result_fields = {row.field_id: row for row in ParaclinicResult.objects.filter(issledovaniye=iss).select_related("field").prefetch_related("files")}
         confirmed = bool(iss.time_confirmation) if iss else False
         groups = []
         for group in snapshot.get("groups") or []:
