@@ -3,35 +3,41 @@
     <div class="top-editor oneLine">
       <div class="left">
         <div class="input-group">
-          <span class="input-group-addon">Название</span>
-          <input
-            v-model="title"
-            type="text"
-            class="form-control"
-          >
-          <template v-if="kind === 'type'">
-            <span class="input-group-addon">Короткое</span>
+          <div class="field-slot">
+            <span class="input-group-addon">Название</span>
             <input
-              v-model="code"
+              v-model="title"
               type="text"
               class="form-control"
             >
-            <span class="input-group-addon">Группа</span>
-            <select
-              v-model.number="groupId"
-              class="form-control"
-            >
-              <option :value="-1">
-                Не выбрана
-              </option>
-              <option
-                v-for="group in groups || []"
-                :key="group.id"
-                :value="group.id"
+          </div>
+          <template v-if="kind === 'type'">
+            <div class="field-slot">
+              <span class="input-group-addon">Код</span>
+              <input
+                v-model="code"
+                type="text"
+                class="form-control"
               >
-                {{ group.title }}
-              </option>
-            </select>
+            </div>
+            <div class="field-slot">
+              <span class="input-group-addon">Группа</span>
+              <select
+                v-model.number="groupId"
+                class="form-control"
+              >
+                <option :value="-1">
+                  Не выбрана
+                </option>
+                <option
+                  v-for="group in groups || []"
+                  :key="group.id"
+                  :value="group.id"
+                >
+                  {{ group.title }}
+                </option>
+              </select>
+            </div>
           </template>
         </div>
       </div>
@@ -178,7 +184,6 @@ const save = async () => {
   width: 100%;
   min-width: 0;
   height: 34px;
-  border-bottom: 1px solid #b1b1b1;
 
   .left {
     flex: 1 1 auto;
@@ -211,9 +216,9 @@ const save = async () => {
     background-color: #aab2bd;
     border-top: none;
     border-left: none;
-    border-right: 1px solid #aab2bd;
-    border-bottom: none;
-    border-radius: 0 !important;
+    border-right: none;
+    border-bottom: 1px solid #96a0ad;
+    border-radius: 0;
   }
 
   .form-control {
@@ -227,13 +232,22 @@ const save = async () => {
     font-size: 14px;
     color: #434A54;
     border-top: none;
-    border-bottom: none;
-    border-radius: 0 !important;
+    border-left: 1px solid #96a0ad;
+    border-right: 1px solid #96a0ad;
+    border-bottom: 1px solid #96a0ad;
+    border-radius: 0;
     display: block !important;
     box-shadow: none;
   }
 
-  .input-group > .form-control:last-child {
+  .field-slot {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    align-items: stretch;
+  }
+
+  .field-slot:last-child .form-control {
     border-right: none;
   }
 }
@@ -248,7 +262,6 @@ const save = async () => {
   display: flex;
   align-items: stretch;
   height: 34px;
-  border-bottom: 1px solid #b1b1b1;
 
   .input-group-addon {
     display: flex;
@@ -264,9 +277,11 @@ const save = async () => {
     color: #FFF;
     white-space: nowrap;
     background-color: #aab2bd;
-    border: none;
-    border-right: 1px solid #aab2bd;
-    border-radius: 0 !important;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid #96a0ad;
+    border-radius: 0;
   }
 }
 
@@ -277,7 +292,10 @@ const save = async () => {
 
 :deep(.template-select .vue-treeselect__control) {
   height: 34px;
-  border: none;
+  border-top: none;
+  border-left: 1px solid #96a0ad;
+  border-right: none;
+  border-bottom: 1px solid #96a0ad;
   border-radius: 0;
 }
 

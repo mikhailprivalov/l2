@@ -107,7 +107,9 @@ def structure_update(request):
 @group_required("ДОУ: просмотр документов")
 def documents_list(request):
     data = _request_data(request)
-    return JsonResponse({"result": Documents.get_list(data.get("typeId"))})
+    return JsonResponse(
+        {"result": Documents.get_list(data.get("typeId"), data.get("groupId"), data.get("filter"), request.user.doctorprofile)}
+    )
 
 
 @login_required

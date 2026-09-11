@@ -374,7 +374,7 @@ DOU_CONSTRUCTOR_NAV_BUTTONS = [
     {"id": "place_section", "title": "Подраздел/место"},
     {"id": "schema", "title": "Схемы (pdf, cda, docx)"},
     {"id": "skeleton", "title": "Структура документа"},
-    {"id": "autofill_templates", "title": "Шаблоны автозаполнения"},
+    {"id": "autofill_templates", "title": "Шаблоны заполнения"},
 ]
 USE_COMBO_ROLE = {}
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5

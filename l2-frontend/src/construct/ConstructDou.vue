@@ -54,6 +54,13 @@
           >
             <span class="object-row__label">{{ row.title }}</span>
             <span
+              v-if="row.code"
+              class="object-row__code"
+              :title="row.code"
+            >
+              {{ row.code }}
+            </span>
+            <span
               v-if="row.groupTitle"
               class="object-row__sub"
             >
@@ -157,7 +164,10 @@ const filteredItems = computed(() => {
   if (!search) {
     return items.value;
   }
-  return items.value.filter(row => (row.title || '').toLowerCase().includes(search));
+  return items.value.filter(row => (
+    (row.title || '').toLowerCase().includes(search)
+    || (row.code || '').toLowerCase().includes(search)
+  ));
 });
 
 const selectedItem = computed(() => items.value.find(row => row.id === selectedId.value) || null);
@@ -268,7 +278,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .three-col {
   display: grid;
-  grid-template-columns: 0.75fr 1.17fr 5.64fr;
+  grid-template-columns: 1fr 1.17fr 5.39fr;
   height: calc(100vh - 36px);
   margin-bottom: 5px;
 }
@@ -372,6 +382,16 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.object-row__code {
+  flex-shrink: 0;
+  max-width: 30%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: 0.85;
 }
 
 .object-row__sub {

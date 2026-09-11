@@ -1,9 +1,15 @@
 <template>
   <div>
-    <DocumentsFilters class="two-col-filters" />
+    <DocumentsFilters
+      class="two-col-filters"
+      @update:filter="roleFilter = $event"
+    />
     <div class="two-col">
       <div class="sidebar">
-        <DocumentsExplorer @select="selectedDocumentId = $event" />
+        <DocumentsExplorer
+          :role-filter="roleFilter"
+          @select="selectedDocumentId = $event"
+        />
       </div>
       <div class="viewer">
         <DocumentViewer :document-id="selectedDocumentId" />
@@ -20,6 +26,7 @@ import DocumentsFilters from '@/pages/DocumentManagement/DocumentsFilters.vue';
 import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
 
 const selectedDocumentId = ref<number | null>(null);
+const roleFilter = ref<string | null>(null);
 
 </script>
 

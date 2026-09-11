@@ -82,7 +82,9 @@ class TypeDocuments(models.Model):
     @staticmethod
     def get_list(group_id=None):
         qs = TypeDocuments.objects.select_related("group_document").all().order_by("title", "pk")
-        if group_id not in (None, "", -1, "-1"):
+        if group_id in (-1, "-1"):
+            qs = qs.filter(group_document__isnull=True)
+        elif group_id not in (None, "", 0, "0"):
             qs = qs.filter(group_document_id=group_id)
         return [row.json for row in qs]
 
@@ -114,6 +116,8 @@ class TypeDocuments(models.Model):
             obj.code = code or ""
             obj.layout_template = layout_template
         obj.save()
+        if obj.layout_template:
+            TypeDocumentsSchema.get_or_create_for_type(obj)
         return {"ok": True, "id": obj.pk, "title": obj.title}
 
 
@@ -166,7 +170,7 @@ class DocumentFieldGroups(models.Model):
                     "fields": [field.as_json() for field in orphan_fields],
                 }
             )
-        return {"ok": True, "id": type_doc.pk, "title": type_doc.title or "", "groups": groups}
+        return {"ok": True, "id": type_doc.pk, "title": type_doc.title or "", "code": type_doc.code or "", "groups": groups}
 
     @staticmethod
     @transaction.atomic
@@ -376,8 +380,146 @@ class DocumentFields(models.Model):
         field.save()
 
 
+class TypeDocumentsSchema(models.Model):
+    type_document = models.ForeignKey(TypeDocuments, db_index=True, related_name="schemas", on_delete=models.CASCADE, help_text="Вид документа")
+    version = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True, help_text="Версия схемы")
+    schema = models.JSONField(default=dict, blank=True, help_text="Снимок шаблона со всеми правилами")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, help_text="Дата создания версии")
+
+    class Meta:
+        verbose_name = "Схема вида документа"
+        verbose_name_plural = "Схемы видов документов"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        title = self.type_document.title if self.type_document else "Документ"
+        return f"{title} {self.version}"
+
+    @staticmethod
+    def _schema_key(schema):
+        return json.dumps(schema, sort_keys=True, ensure_ascii=False, default=str)
+
+    @staticmethod
+    def _parse_templates(raw):
+        if not raw:
+            return []
+        try:
+            data = json.loads(raw)
+            return data if isinstance(data, list) else []
+        except (TypeError, ValueError):
+            return []
+
+    @staticmethod
+    def serialize_field(field):
+        from directory.models import ParaclinicInputFieldFileSettings
+
+        values_to_input = TypeDocumentsSchema._parse_templates(field.input_templates)
+        field_type = field.field_type
+        if field.required and field_type in [10, 12] and "- Не выбрано" not in values_to_input:
+            values_to_input = ["- Не выбрано", *values_to_input]
+        file_settings = None
+        if field_type == 42:
+            file_settings = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
+        return {
+            "pk": field.pk,
+            "order": field.order,
+            "lines": field.lines,
+            "title": field.title,
+            "short_title": field.short_title or "",
+            "hide": field.hide,
+            "values_to_input": values_to_input,
+            "field_type": field_type,
+            "can_edit": field.can_edit_computed,
+            "default_value": field.default_value or "",
+            "visibility": field.visibility or "",
+            "required": bool(field.required or field.required_set_by_admin),
+            "required_set_by_admin": bool(field.required_set_by_admin),
+            "helper": field.helper or "",
+            "controlParam": field.control_param or "",
+            "not_edit": field.not_edit,
+            "operator_enter_param": field.operator_enter_param,
+            "deniedGroup": field.denied_group.name if field.denied_group else "",
+            "isDiagTable": field.is_diag_table,
+            "file_settings": file_settings,
+            "for_talon": field.for_talon,
+            "sign_organization": field.sign_organization,
+            "for_extract_card": field.for_extract_card,
+            "for_med_certificate": field.for_med_certificate,
+            "attached": field.attached or "",
+            "layout_link_research_id": field.layout_link_research_id,
+        }
+
+    @staticmethod
+    def serialize_group(group):
+        fields = [TypeDocumentsSchema.serialize_field(field) for field in group.paraclinicinputfield_set.all()]
+        fields.sort(key=lambda row: row["order"])
+        return {
+            "pk": group.pk,
+            "order": group.order,
+            "title": group.title,
+            "show_title": group.show_title,
+            "hide": group.hide,
+            "visibility": group.visibility or "",
+            "fieldsInline": group.fields_inline,
+            "fields": fields,
+        }
+
+    @staticmethod
+    def dump_from_type(type_doc):
+        from django.db.models import Prefetch
+
+        from directory.models import ParaclinicInputField, ParaclinicInputGroups
+
+        template = type_doc.layout_template if type_doc else None
+        if not template:
+            return None
+        group_qs = (
+            ParaclinicInputGroups.objects.filter(research=template)
+            .order_by("order")
+            .prefetch_related(
+                Prefetch(
+                    "paraclinicinputfield_set",
+                    queryset=ParaclinicInputField.objects.select_related("denied_group", "file_settings").order_by("order"),
+                )
+            )
+        )
+        return {
+            "pk": template.pk,
+            "title": template.title,
+            "wide_headers": bool(getattr(template, "wide_headers", False)),
+            "groups": [TypeDocumentsSchema.serialize_group(group) for group in group_qs],
+        }
+
+    @staticmethod
+    def get_or_create_for_type(type_doc):
+        dumped = TypeDocumentsSchema.dump_from_type(type_doc)
+        if not dumped:
+            return None
+        latest = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
+        if latest and TypeDocumentsSchema._schema_key(latest.schema) == TypeDocumentsSchema._schema_key(dumped):
+            return latest
+        return TypeDocumentsSchema.objects.create(type_document=type_doc, schema=dumped)
+
+    @staticmethod
+    def sync_for_layout_template(template):
+        if not template:
+            return
+        for type_doc in TypeDocuments.objects.filter(layout_template=template):
+            TypeDocumentsSchema.get_or_create_for_type(type_doc)
+
+
 class Documents(models.Model):
     type_document = models.ForeignKey(TypeDocuments, db_index=True, default=None, blank=True, null=True, help_text="Тип документа", on_delete=models.SET_NULL)
+    schema = models.ForeignKey(
+        TypeDocumentsSchema,
+        related_name="documents",
+        db_index=True,
+        default=None,
+        blank=True,
+        null=True,
+        help_text="Снимок схемы шаблона",
+        on_delete=models.PROTECT,
+    )
     who_create = models.ForeignKey(DoctorProfile, db_index=True, default=None, blank=True, null=True, help_text="Создатель документа", on_delete=models.SET_NULL)
     create_at = models.DateTimeField(auto_now_add=True, help_text="Дата создания документа", db_index=True)
     time_registration = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время регистрации")
@@ -412,18 +554,28 @@ class Documents(models.Model):
     def json(self):
         type_title = self.type_document.title if self.type_document else "Документ"
         title = self.number_registration or f"{type_title} №{self.pk}"
+        group = self.type_document.group_document if self.type_document else None
         return {
             "id": self.id,
             "title": title,
             "typeId": self.type_document_id,
+            "typeTitle": type_title,
+            "groupId": group.pk if group else None,
+            "groupTitle": group.title if group else "",
             "confirmed": bool(self.time_confirm),
         }
 
     @staticmethod
-    def get_list(type_id=None):
-        if type_id in (None, "", -1, "-1"):
-            return []
-        qs = Documents.objects.select_related("type_document").filter(type_document_id=type_id).order_by("-pk")
+    def get_list(type_id=None, group_id=None, role_filter=None, who=None):
+        qs = Documents.objects.select_related("type_document", "type_document__group_document").order_by("-pk")
+        if type_id not in (None, "", -1, "-1"):
+            qs = qs.filter(type_document_id=type_id)
+        elif group_id in (-1, "-1"):
+            qs = qs.filter(models.Q(type_document__isnull=True) | models.Q(type_document__group_document__isnull=True))
+        elif group_id not in (None, "", 0, "0"):
+            qs = qs.filter(type_document__group_document_id=group_id)
+        if role_filter == "created" and who:
+            qs = qs.filter(who_create=who)
         return [row.json for row in qs]
 
     @staticmethod
@@ -436,7 +588,8 @@ class Documents(models.Model):
         if not type_doc:
             return {"ok": False, "message": "Вид документа не найден"}
         with transaction.atomic():
-            obj = Documents.objects.create(type_document=type_doc, who_create=who_create, body_values={})
+            schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
+            obj = Documents.objects.create(type_document=type_doc, who_create=who_create, body_values={}, schema=schema)
             Issledovaniya.objects.create(
                 document=obj,
                 research=type_doc.layout_template,
@@ -458,15 +611,18 @@ class Documents(models.Model):
         )
 
     def build_research(self, iss=None):
-        from django.db.models import Prefetch
+        snapshot = None
+        if self.schema_id and isinstance(getattr(self.schema, "schema", None), dict) and self.schema.schema.get("groups") is not None:
+            snapshot = self.schema.schema
+        else:
+            snapshot = TypeDocumentsSchema.dump_from_type(self.type_document)
+        if not snapshot:
+            return None
+        return self._research_from_schema(snapshot, iss)
 
-        from directory.models import ParaclinicInputField, ParaclinicInputFieldFileSettings, ParaclinicInputGroups
+    def _research_from_schema(self, snapshot, iss=None):
         from directions.models import ParaclinicResult, ParaclinicResultFile
 
-        type_doc = self.type_document
-        template = type_doc.layout_template if type_doc else None
-        if not template:
-            return None
         saved = self.body_values if isinstance(self.body_values, dict) else {}
         result_fields = {}
         if iss:
@@ -474,94 +630,81 @@ class Documents(models.Model):
                 row.field_id: row
                 for row in ParaclinicResult.objects.filter(issledovaniye=iss).select_related("field").prefetch_related("files")
             }
-        groups = []
-        group_qs = (
-            ParaclinicInputGroups.objects.filter(research=template)
-            .order_by("order")
-            .prefetch_related(
-                Prefetch(
-                    "paraclinicinputfield_set",
-                    queryset=ParaclinicInputField.objects.select_related("denied_group", "file_settings").order_by("order"),
-                )
-            )
-        )
         confirmed = bool(iss.time_confirmation) if iss else False
-        for group in group_qs:
-            if group.hide:
+        groups = []
+        for group in snapshot.get("groups") or []:
+            if group.get("hide"):
                 continue
             g = {
-                "pk": group.pk,
-                "order": group.order,
-                "title": group.title if group.show_title else "",
-                "show_title": group.show_title,
-                "hide": group.hide,
+                "pk": group.get("pk"),
+                "order": group.get("order"),
+                "title": group.get("title") if group.get("show_title") else "",
+                "show_title": group.get("show_title"),
+                "hide": group.get("hide"),
                 "display_hidden": False,
                 "fields": [],
-                "visibility": group.visibility or "",
-                "fieldsInline": group.fields_inline,
+                "visibility": group.get("visibility") or "",
+                "fieldsInline": group.get("fieldsInline"),
             }
-            for field in group.paraclinicinputfield_set.all():
-                if field.hide:
+            for field in group.get("fields") or []:
+                if field.get("hide"):
                     continue
-                try:
-                    values_to_input = json.loads(field.input_templates or "[]")
-                    if not isinstance(values_to_input, list):
-                        values_to_input = []
-                except (TypeError, ValueError):
+                field_pk = field.get("pk")
+                values_to_input = field.get("values_to_input") or []
+                if not isinstance(values_to_input, list):
                     values_to_input = []
-                result_field = result_fields.get(field.pk)
-                field_type = field.field_type
+                result_field = result_fields.get(field_pk)
+                field_type = field.get("field_type") or 0
                 if result_field:
-                    field_type = result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=confirmed)
-                if field.required and field_type in [10, 12] and "- Не выбрано" not in values_to_input:
+                    field_type = result_field.get_field_type(default_field_type=field_type, is_confirmed_strict=confirmed)
+                if field.get("required") and field_type in [10, 12] and "- Не выбрано" not in values_to_input:
                     values_to_input = ["- Не выбрано", *values_to_input]
-                default_value = field.default_value or ""
+                default_value = field.get("default_value") or ""
                 if field_type in [3, 11, 13, 14, 30, 42, 44]:
                     default_value = ""
-                key = str(field.pk)
+                key = str(field_pk)
                 if result_field:
                     value = result_field.value
                 elif key in saved:
                     value = saved[key]
                 else:
-                    value = saved.get(field.pk, default_value)
-                file_settings = None
+                    value = saved.get(field_pk, default_value)
+                file_settings = field.get("file_settings")
                 files = []
                 if field_type == 42:
-                    file_settings = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
                     value = ""
                     if result_field:
                         files = [ParaclinicResultFile.serialize(row) for row in result_field.files.all()]
                 g["fields"].append(
                     {
-                        "pk": field.pk,
-                        "order": field.order,
-                        "lines": field.lines,
-                        "title": field.short_title if field.short_title else field.title,
-                        "hide": field.hide,
+                        "pk": field_pk,
+                        "order": field.get("order"),
+                        "lines": field.get("lines"),
+                        "title": field.get("short_title") or field.get("title") or "",
+                        "hide": field.get("hide"),
                         "values_to_input": values_to_input,
                         "value": value if value is not None else "",
                         "field_type": field_type,
-                        "can_edit": field.can_edit_computed,
-                        "default_value": field.default_value or "",
-                        "visibility": field.visibility or "",
-                        "required": field.required or field.required_set_by_admin,
-                        "helper": field.helper or "",
-                        "controlParam": field.control_param or "",
-                        "not_edit": field.not_edit,
-                        "operator_enter_param": field.operator_enter_param,
-                        "deniedGroup": field.denied_group.name if field.denied_group else "",
-                        "isDiagTable": field.is_diag_table,
+                        "can_edit": field.get("can_edit"),
+                        "default_value": field.get("default_value") or "",
+                        "visibility": field.get("visibility") or "",
+                        "required": field.get("required"),
+                        "helper": field.get("helper") or "",
+                        "controlParam": field.get("controlParam") or "",
+                        "not_edit": field.get("not_edit"),
+                        "operator_enter_param": field.get("operator_enter_param"),
+                        "deniedGroup": field.get("deniedGroup") or "",
+                        "isDiagTable": field.get("isDiagTable"),
                         "file_settings": file_settings,
                         "files": files,
                     }
                 )
             groups.append(g)
         return {
-            "pk": template.pk,
-            "title": template.title,
+            "pk": snapshot.get("pk"),
+            "title": snapshot.get("title"),
             "version": 0,
-            "wide_headers": bool(getattr(template, "wide_headers", False)),
+            "wide_headers": bool(snapshot.get("wide_headers")),
             "groups": groups,
             "is_gistology": False,
             "show_more_services": False,
@@ -569,7 +712,7 @@ class Documents(models.Model):
 
     @staticmethod
     def get_details(pk):
-        obj = Documents.objects.select_related("type_document", "type_document__layout_template").filter(pk=pk).first()
+        obj = Documents.objects.select_related("schema", "type_document", "type_document__layout_template").filter(pk=pk).first()
         if not obj:
             return {"ok": False, "message": "Документ не найден"}
         iss = obj.get_issledovaniye()
@@ -596,11 +739,17 @@ class Documents(models.Model):
         v_f = (visibility_state or {}).get("fields") or {}
         groups = (research or {}).get("groups") or []
         files_by_field = {}
+        document = iss.document
+        body_values = dict(document.body_values) if isinstance(document.body_values, dict) else {}
         with transaction.atomic():
             for group in groups:
                 group_pk = group.get("pk")
                 if not v_g.get(str(group_pk), True):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group_pk).delete()
+                    for field in group.get("fields") or []:
+                        field_pk = field.get("pk")
+                        if field_pk:
+                            body_values.pop(str(field_pk), None)
                     continue
                 for field in group.get("fields") or []:
                     field_pk = field.get("pk")
@@ -608,17 +757,24 @@ class Documents(models.Model):
                         continue
                     if not v_f.get(str(field_pk), True):
                         ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field_pk).delete()
+                        body_values.pop(str(field_pk), None)
                         continue
+                    value = field.get("value")
+                    stored_value = "" if not value else value
+                    payload_field_type = field.get("field_type")
                     f = ParaclinicInputField.objects.filter(pk=field_pk).first()
                     if not f or f.field_type == 21:
+                        if payload_field_type != 21:
+                            body_values[str(field_pk)] = stored_value
                         continue
+                    body_values[str(field_pk)] = stored_value
                     f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f).first()
                     if not f_result:
                         f_result = ParaclinicResult(issledovaniye=iss, field=f, value="")
-                    value = field.get("value")
-                    f_result.value = "" if not value else value
-                    f_result.field_type = f.field_type
-                    if f.field_type in [27, 28, 29, 32, 33, 34, 35, 44]:
+                    f_result.value = stored_value
+                    f_result.field_type = payload_field_type if payload_field_type is not None else f.field_type
+                    field_type = f_result.field_type
+                    if field_type in [27, 28, 29, 32, 33, 34, 35, 44]:
                         if isinstance(value, (dict, list)):
                             val = value
                         else:
@@ -628,7 +784,7 @@ class Documents(models.Model):
                                 val = []
                         f_result.value_json = val
                     f_result.save()
-                    if f.field_type == 42:
+                    if field_type == 42:
                         files_by_field[field_pk] = ParaclinicResultFile.sync_field_files(
                             f_result=f_result,
                             payload_files=field.get("files") or [],
@@ -637,14 +793,16 @@ class Documents(models.Model):
                         )
             iss.doc_save = who
             iss.time_save = timezone.now()
-            document = iss.document
+            document.body_values = body_values
+            update_fields = ["body_values"]
             if with_confirm:
                 now = timezone.now()
                 iss.doc_confirmation = who
                 iss.time_confirmation = now
                 document.time_confirm = now
                 document.who_confirm = who
-                document.save(update_fields=["time_confirm", "who_confirm"])
+                update_fields.extend(["time_confirm", "who_confirm"])
+            document.save(update_fields=update_fields)
             iss.save()
         return {
             "ok": True,
