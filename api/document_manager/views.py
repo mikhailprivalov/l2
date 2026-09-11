@@ -13,6 +13,37 @@ def _request_data(request):
     return json.loads(request.body)
 
 
+def _load_save_request(request):
+    content_type = (request.content_type or "").lower()
+    if content_type.startswith("multipart/form-data"):
+        form_raw = request.POST.get("form")
+        if form_raw is None:
+            form_file = request.FILES.get("form")
+            if form_file is not None:
+                form_raw = form_file.read().decode("utf-8")
+        if not form_raw:
+            form_raw = "{}"
+        files = {key: value for key, value in request.FILES.items() if key != "form"}
+        return json.loads(form_raw), files
+    if not request.body:
+        return {}, {}
+    return json.loads(request.body), {}
+
+
+def _save_from_request(request, with_confirm=None):
+    rb, request_files = _load_save_request(request)
+    request_data = rb.get("data") or {}
+    confirm = rb.get("with_confirm", False) if with_confirm is None else with_confirm
+    return Documents.save_paraclinic_result(
+        request_data.get("pk"),
+        request_data.get("research"),
+        confirm,
+        rb.get("visibility_state") or {},
+        request.user.doctorprofile,
+        request_files,
+    )
+
+
 @login_required
 @group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def groups_list(request):
@@ -102,8 +133,7 @@ def documents_details(request):
 @login_required
 @group_required("ДОУ: просмотр документов")
 def documents_save(request):
-    data = _request_data(request)
-    result = Documents.save_body(data.get("id"), data.get("groups"))
+    result = _save_from_request(request)
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -112,8 +142,7 @@ def documents_save(request):
 @login_required
 @group_required("ДОУ: просмотр документов")
 def documents_confirm(request):
-    data = _request_data(request)
-    result = Documents.confirm(data.get("id"), data.get("groups"), request.user.doctorprofile)
+    result = _save_from_request(request, with_confirm=True)
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))

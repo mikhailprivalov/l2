@@ -444,16 +444,36 @@ class Documents(models.Model):
             )
         return {"ok": True, "id": obj.pk, "title": obj.json["title"]}
 
-    def build_research(self):
+    def get_issledovaniye(self):
+        from directions.models import Issledovaniya
+
+        iss = Issledovaniya.objects.filter(document=self).order_by("pk").first()
+        if iss:
+            return iss
+        type_doc = self.type_document
+        return Issledovaniya.objects.create(
+            document=self,
+            research=type_doc.layout_template if type_doc else None,
+            creator=self.who_create,
+        )
+
+    def build_research(self, iss=None):
         from django.db.models import Prefetch
 
-        from directory.models import ParaclinicInputField, ParaclinicInputGroups
+        from directory.models import ParaclinicInputField, ParaclinicInputFieldFileSettings, ParaclinicInputGroups
+        from directions.models import ParaclinicResult, ParaclinicResultFile
 
         type_doc = self.type_document
         template = type_doc.layout_template if type_doc else None
         if not template:
             return None
         saved = self.body_values if isinstance(self.body_values, dict) else {}
+        result_fields = {}
+        if iss:
+            result_fields = {
+                row.field_id: row
+                for row in ParaclinicResult.objects.filter(issledovaniye=iss).select_related("field").prefetch_related("files")
+            }
         groups = []
         group_qs = (
             ParaclinicInputGroups.objects.filter(research=template)
@@ -461,10 +481,11 @@ class Documents(models.Model):
             .prefetch_related(
                 Prefetch(
                     "paraclinicinputfield_set",
-                    queryset=ParaclinicInputField.objects.select_related("denied_group").order_by("order"),
+                    queryset=ParaclinicInputField.objects.select_related("denied_group", "file_settings").order_by("order"),
                 )
             )
         )
+        confirmed = bool(iss.time_confirmation) if iss else False
         for group in group_qs:
             if group.hide:
                 continue
@@ -488,14 +509,29 @@ class Documents(models.Model):
                         values_to_input = []
                 except (TypeError, ValueError):
                     values_to_input = []
+                result_field = result_fields.get(field.pk)
                 field_type = field.field_type
+                if result_field:
+                    field_type = result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=confirmed)
                 if field.required and field_type in [10, 12] and "- Не выбрано" not in values_to_input:
                     values_to_input = ["- Не выбрано", *values_to_input]
                 default_value = field.default_value or ""
-                if field_type in [3, 11, 13, 14, 30]:
+                if field_type in [3, 11, 13, 14, 30, 42, 44]:
                     default_value = ""
                 key = str(field.pk)
-                value = saved[key] if key in saved else saved.get(field.pk, default_value)
+                if result_field:
+                    value = result_field.value
+                elif key in saved:
+                    value = saved[key]
+                else:
+                    value = saved.get(field.pk, default_value)
+                file_settings = None
+                files = []
+                if field_type == 42:
+                    file_settings = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
+                    value = ""
+                    if result_field:
+                        files = [ParaclinicResultFile.serialize(row) for row in result_field.files.all()]
                 g["fields"].append(
                     {
                         "pk": field.pk,
@@ -516,6 +552,8 @@ class Documents(models.Model):
                         "operator_enter_param": field.operator_enter_param,
                         "deniedGroup": field.denied_group.name if field.denied_group else "",
                         "isDiagTable": field.is_diag_table,
+                        "file_settings": file_settings,
+                        "files": files,
                     }
                 )
             groups.append(g)
@@ -534,56 +572,103 @@ class Documents(models.Model):
         obj = Documents.objects.select_related("type_document", "type_document__layout_template").filter(pk=pk).first()
         if not obj:
             return {"ok": False, "message": "Документ не найден"}
+        iss = obj.get_issledovaniye()
         payload = obj.json
         payload["ok"] = True
-        payload["research"] = obj.build_research()
-        payload["confirmed"] = bool(obj.time_confirm)
+        payload["issPk"] = iss.pk if iss else None
+        payload["research"] = obj.build_research(iss)
+        payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
         return payload
 
     @staticmethod
-    def _apply_groups(obj, groups):
-        values = {}
-        for group in groups or []:
-            for field in group.get("fields") or []:
-                field_pk = field.get("pk")
-                if field_pk is None:
-                    continue
-                values[str(field_pk)] = field.get("value") if field.get("value") is not None else ""
-        obj.body_values = values
-
-    @staticmethod
-    def save_body(pk, groups):
-        obj = Documents.objects.filter(pk=pk).first()
-        if not obj:
-            return {"ok": False, "message": "Документ не найден"}
-        if obj.time_confirm:
-            return {"ok": False, "message": "Документ подтверждён"}
-        Documents._apply_groups(obj, groups)
-        obj.save(update_fields=["body_values"])
-        return {"ok": True, "id": obj.pk, "confirmed": False}
-
-    @staticmethod
-    def confirm(pk, groups, who):
+    def save_paraclinic_result(iss_pk, research, with_confirm, visibility_state, who, request_files=None):
         from django.utils import timezone
 
-        obj = Documents.objects.filter(pk=pk).first()
-        if not obj:
-            return {"ok": False, "message": "Документ не найден"}
-        if obj.time_confirm:
-            return {"ok": False, "message": "Документ уже подтверждён"}
-        Documents._apply_groups(obj, groups)
-        obj.time_confirm = timezone.now()
-        obj.who_confirm = who
-        obj.save(update_fields=["body_values", "time_confirm", "who_confirm"])
-        return {"ok": True, "id": obj.pk, "confirmed": True}
+        from directory.models import ParaclinicInputField
+        from directions.models import Issledovaniya, ParaclinicResult, ParaclinicResultFile
+
+        iss = Issledovaniya.objects.filter(pk=iss_pk, document__isnull=False).select_related("document", "research").first()
+        if not iss or not iss.document:
+            return {"ok": False, "message": "Исследование не найдено"}
+        if iss.time_confirmation or iss.document.time_confirm:
+            return {"ok": False, "message": "Документ подтверждён"}
+        v_g = (visibility_state or {}).get("groups") or {}
+        v_f = (visibility_state or {}).get("fields") or {}
+        groups = (research or {}).get("groups") or []
+        files_by_field = {}
+        with transaction.atomic():
+            for group in groups:
+                group_pk = group.get("pk")
+                if not v_g.get(str(group_pk), True):
+                    ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group_pk).delete()
+                    continue
+                for field in group.get("fields") or []:
+                    field_pk = field.get("pk")
+                    if not field_pk:
+                        continue
+                    if not v_f.get(str(field_pk), True):
+                        ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field_pk).delete()
+                        continue
+                    f = ParaclinicInputField.objects.filter(pk=field_pk).first()
+                    if not f or f.field_type == 21:
+                        continue
+                    f_result = ParaclinicResult.objects.filter(issledovaniye=iss, field=f).first()
+                    if not f_result:
+                        f_result = ParaclinicResult(issledovaniye=iss, field=f, value="")
+                    value = field.get("value")
+                    f_result.value = "" if not value else value
+                    f_result.field_type = f.field_type
+                    if f.field_type in [27, 28, 29, 32, 33, 34, 35, 44]:
+                        if isinstance(value, (dict, list)):
+                            val = value
+                        else:
+                            try:
+                                val = json.loads(value)
+                            except Exception:
+                                val = []
+                        f_result.value_json = val
+                    f_result.save()
+                    if f.field_type == 42:
+                        files_by_field[field_pk] = ParaclinicResultFile.sync_field_files(
+                            f_result=f_result,
+                            payload_files=field.get("files") or [],
+                            uploaded_files=request_files or {},
+                            field_pk=field_pk,
+                        )
+            iss.doc_save = who
+            iss.time_save = timezone.now()
+            document = iss.document
+            if with_confirm:
+                now = timezone.now()
+                iss.doc_confirmation = who
+                iss.time_confirmation = now
+                document.time_confirm = now
+                document.who_confirm = who
+                document.save(update_fields=["time_confirm", "who_confirm"])
+            iss.save()
+        return {
+            "ok": True,
+            "id": iss.document_id,
+            "issPk": iss.pk,
+            "confirmed": bool(iss.time_confirmation),
+            "files_by_field": files_by_field,
+        }
 
     @staticmethod
     def confirm_reset(pk):
+        from directions.models import Issledovaniya
+
         obj = Documents.objects.filter(pk=pk).first()
         if not obj:
             return {"ok": False, "message": "Документ не найден"}
-        if not obj.time_confirm:
+        iss = Issledovaniya.objects.filter(document=obj).order_by("pk").first()
+        if (not iss or not iss.time_confirmation) and not obj.time_confirm:
             return {"ok": False, "message": "Документ не подтверждён"}
+        if iss:
+            iss.time_confirmation = None
+            iss.doc_confirmation = None
+            iss.executor_confirmation = None
+            iss.save(update_fields=["time_confirmation", "doc_confirmation", "executor_confirmation"])
         obj.time_confirm = None
         obj.who_confirm = None
         obj.save(update_fields=["time_confirm", "who_confirm"])

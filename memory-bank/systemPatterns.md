@@ -93,6 +93,7 @@
 - `construct/` - form constructor
 - `document_management/` - document management
 - **DOU constructor** (`/ui/construct/dou`): groups, types, structure, and **Шаблоны документов** (`is_layout_template` researches via `ParaclinicResearchEditor`, department `-17`). Layout templates are no longer created under `/ui/construct/descriptive` (**Шаблоны**). **Формы** stay on descriptive.
+- **DOU document manager** (`/ui/document-manager`): a `Documents` row has `Issledovaniya.document`; field values are `ParaclinicResult` on that iss (same payload as `directions/paraclinic_result`, without direction-only side effects). Save stays on `document-manager/documents/save` because DOU users have group **ДОУ: просмотр документов**, not the doctor groups for `paraclinic_result`. Confirm writes `Issledovaniya.time_confirmation` and mirrors `Documents.time_confirm` / `who_confirm`.
 
 ## Data Patterns
 
