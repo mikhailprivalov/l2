@@ -2439,6 +2439,7 @@ class Issledovaniya(models.Model):
     """
     Направления на исследования
     """
+
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     document = models.ForeignKey(Documents, null=True, default=None, blank=True, help_text='Документ из ДОУ', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
