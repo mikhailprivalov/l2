@@ -11,6 +11,18 @@
         >
       </div>
     </div>
+    <div
+      v-if="typeCode"
+      class="code-row"
+    >
+      <span class="input-group-addon">Код</span>
+      <input
+        :value="typeCode"
+        type="text"
+        class="form-control"
+        disabled
+      >
+    </div>
     <div class="content-editor">
       <div
         v-for="group in orderedGroups"
@@ -370,6 +382,7 @@ const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
 const typeTitle = ref('');
+const typeCode = ref('');
 const groups = ref<DocumentGroup[]>([]);
 
 const fieldTypes = [
@@ -540,6 +553,7 @@ const onFieldTypeChange = (row: DocumentField) => {
 const load = async () => {
   groups.value = [];
   typeTitle.value = '';
+  typeCode.value = '';
   if (!props.typeDocumentId || props.typeDocumentId < 0) {
     return;
   }
@@ -551,6 +565,7 @@ const load = async () => {
       return;
     }
     typeTitle.value = data.title || '';
+    typeCode.value = data.code || '';
     groups.value = [];
     if (data.groups?.length) {
       for (const group of data.groups) {
@@ -594,8 +609,102 @@ watch(() => props.typeDocumentId, load, { immediate: true });
 }
 
 .top-editor {
-  flex: 0 0 auto;
-  padding: 8px 8px 0;
+  display: flex;
+  flex: 0 0 34px;
+  height: 34px;
+  width: 100%;
+  min-width: 0;
+
+  .input-group {
+    display: flex !important;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    width: 100%;
+    margin-bottom: 0;
+    height: 34px;
+  }
+
+  .input-group-addon {
+    display: flex !important;
+    align-items: center;
+    flex: 0 0 auto;
+    float: none !important;
+    width: auto;
+    height: 34px;
+    padding: 0 10px;
+    line-height: 22px;
+    font-size: 14px;
+    font-weight: normal;
+    color: #FFF;
+    white-space: nowrap;
+    background-color: #aab2bd;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid #96a0ad;
+    border-radius: 0;
+  }
+
+  .form-control {
+    flex: 1 1 0;
+    float: none !important;
+    width: auto !important;
+    min-width: 0;
+    height: 34px;
+    padding: 0 10px;
+    line-height: 22px;
+    font-size: 14px;
+    color: #434A54;
+    border-top: none;
+    border-left: 1px solid #96a0ad;
+    border-right: none;
+    border-bottom: 1px solid #96a0ad;
+    border-radius: 0;
+    display: block !important;
+    box-shadow: none;
+  }
+}
+
+.code-row {
+  display: flex;
+  align-items: stretch;
+  flex: 0 0 34px;
+  height: 34px;
+
+  .input-group-addon {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    height: 34px;
+    padding: 0 10px;
+    line-height: 22px;
+    font-size: 14px;
+    font-weight: normal;
+    color: #FFF;
+    white-space: nowrap;
+    background-color: #aab2bd;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid #96a0ad;
+    border-radius: 0;
+  }
+
+  .form-control {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 34px;
+    padding: 0 10px;
+    line-height: 22px;
+    font-size: 14px;
+    color: #434A54;
+    border-top: none;
+    border-left: 1px solid #96a0ad;
+    border-right: none;
+    border-bottom: 1px solid #96a0ad;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 
 .footer-editor {
@@ -621,7 +730,7 @@ watch(() => props.typeDocumentId, load, { immediate: true });
 .ed-group {
   padding: 5px;
   margin: 5px;
-  border-radius: 5px;
+  border-radius: 0;
   background: #f0f0f0;
 }
 
@@ -636,7 +745,7 @@ watch(() => props.typeDocumentId, load, { immediate: true });
 .ed-field {
   padding: 5px;
   margin: 5px;
-  border-radius: 5px;
+  border-radius: 0;
   background: #fff;
 }
 

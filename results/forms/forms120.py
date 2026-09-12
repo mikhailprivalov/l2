@@ -121,6 +121,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph(f"{iss.research.title}", style),
         ],
         [
+            Paragraph("Анатомическая область", style),
+            Paragraph('', style),
+        ],
+        [
             Paragraph("Наименование медицинского оборудования", style),
             Paragraph(equipment_title, style),
         ],

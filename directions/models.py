@@ -35,6 +35,7 @@ from directions.sql_func import (
     get_directions_by_complex_id,
 )
 from directions.tasks import send_result
+from document_management.models import Documents
 from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import (
     PERINATAL_DEATH_RESEARCH_PK,
@@ -2440,6 +2441,7 @@ class Issledovaniya(models.Model):
     """
 
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    document = models.ForeignKey(Documents, null=True, default=None, blank=True, help_text='Документ из ДОУ', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
     tubes = models.ManyToManyField(TubesRegistration, help_text='Ёмкости, необходимые для исследования', db_index=True)
     doc_save = models.ForeignKey(

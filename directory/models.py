@@ -679,6 +679,16 @@ class Researches(models.Model):
         return result.exists()
 
     @staticmethod
+    def internal_code_from_pk(pk):
+        return f"{pk}-code"
+
+    def ensure_internal_code(self):
+        if self.pk and not (self.internal_code or "").strip():
+            self.internal_code = Researches.internal_code_from_pk(self.pk)
+            return True
+        return False
+
+    @staticmethod
     def get_laboratory_researches(podrazdelenie_id: int):
         if podrazdelenie_id == -1:
             podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list("pk", flat=True)

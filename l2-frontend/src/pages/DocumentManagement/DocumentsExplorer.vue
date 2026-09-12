@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div class="flex">
+  <div class="explorer">
+    <div class="flex search-row">
       <input
         class="form-control search"
         placeholder="Номер документа"
@@ -9,69 +9,66 @@
         Найти
       </button>
     </div>
-    <div>
-      <div class="flex">
-        <span
-          class="group-button-header"
-        >
-          Группы
-        </span>
-      </div>
-      <div class="scroll">
-        <div
-          v-for="group in documentGroups"
-          :key="group.id"
-          class="flex row-border"
-        >
-          <button
-            class="transparent-button"
-            :class="{ 'active-button': selectedGroup === group.id}"
-            @click="selectGroup(group.id)"
-          >
-            {{ group.title }}
-          </button>
-        </div>
+    <div class="section section-groups">
+      <div class="flex group-select-row">
+        <Treeselect
+          v-model="selectedGroup"
+          class="treeselect-wide treeselect-34px group-select"
+          :multiple="false"
+          :options="groupOptions"
+          placeholder="Выберите группу"
+          :append-to-body="true"
+          :clearable="false"
+          no-options-text="Нет групп"
+        />
       </div>
     </div>
-    <div>
-      <div class="flex">
-        <span
-          class="group-button-header"
-        >
-          Виды
-        </span>
-      </div>
-      <div class="scroll">
+    <div class="section section-equal">
+      <div class="scroll-equal">
         <div
           v-for="type in documentTypes"
           :key="type.id"
-          class="flex row-border"
+          class="type-row"
         >
           <button
-            class="transparent-button"
+            v-tippy="{ placement: 'right' }"
+            class="btn btn-blue-nb type-btn"
             :class="{ 'active-button': selectedType === type.id}"
+            type="button"
+            :title="type.title"
             @click="selectType(type.id)"
           >
             {{ type.title }}
           </button>
+          <button
+            class="btn btn-blue-nb type-btn type-btn-plus"
+            type="button"
+            title="Создать"
+            @click="createDocument(type.id)"
+          >
+            <i class="fa fa-plus" />
+          </button>
         </div>
       </div>
     </div>
-    <div>
-      <div class="flex">
+    <div class="section section-equal">
+      <div class="flex section-header">
         <span class="group-button-header">
           Документы
         </span>
       </div>
-      <div class="scroll-doc">
+      <div class="scroll-equal">
         <div
           v-for="document in documents"
           :key="document.id"
           class="flex row-border"
         >
           <button
+            v-tippy="{ placement: 'right' }"
             class="transparent-button"
             :class="{ 'active-button': selectedDocument === document.id}"
+            type="button"
+            :title="document.title"
             @click="selectDocument(document.id)"
           >
             {{ document.title }}
@@ -84,22 +81,46 @@
 
 <script setup lang="ts">
 import {
-  onMounted, ref, watch,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
 
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
+const GROUP_ALL = 0;
+const GROUP_NONE = -1;
 
 interface CatalogItem {
   id: number;
   title: string;
 }
 
-const store = useStore();
+const props = defineProps<{
+  roleFilter?: string | null;
+}>();
 
-const selectedGroup = ref<number | null>(null);
+// eslint-disable-next-line no-spaced-func,func-call-spacing
+const emit = defineEmits<{
+  (e: 'select', documentId: number | null): void;
+}>();
+
+const store = useStore();
+const root = getCurrentInstance().proxy.$root;
+
+const selectedGroup = ref<number>(GROUP_ALL);
 const documentGroups = ref<CatalogItem[]>([]);
+const groupOptions = computed(() => [
+  { id: GROUP_ALL, label: 'Все' },
+  { id: GROUP_NONE, label: 'Без группы' },
+  ...documentGroups.value.map(group => ({
+    id: group.id,
+    label: group.title,
+  })),
+]);
 
 const selectedType = ref<number | null>(null);
 const documentTypes = ref<CatalogItem[]>([]);
@@ -127,10 +148,48 @@ const loadTypes = async () => {
   }
 };
 
-const selectGroup = (groupId: number) => {
-  selectedGroup.value = groupId;
-  selectedType.value = null;
-  selectedDocument.value = null;
+let documentsLoadId = 0;
+
+const loadDocuments = async () => {
+  const loadId = ++documentsLoadId;
+  documents.value = [];
+  if (!selectedType.value && props.roleFilter !== 'created') {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { result } = await api('document-manager/documents/list', {
+      typeId: selectedType.value,
+      groupId: selectedGroup.value,
+      filter: props.roleFilter,
+    });
+    if (loadId !== documentsLoadId) {
+      return;
+    }
+    documents.value = result || [];
+    if (selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
+      selectedDocument.value = null;
+    }
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+const createDocument = async (typeId: number) => {
+  selectedType.value = typeId;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/documents/create', { typeId });
+    if (result?.ok) {
+      root.$emit('msg', 'ok', 'Документ создан');
+      await loadDocuments();
+      selectedDocument.value = result.id;
+    } else {
+      root.$emit('msg', 'error', result?.message || 'Ошибка создания');
+    }
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
 };
 
 const selectType = (typeId: number) => {
@@ -142,8 +201,23 @@ const selectDocument = (documentId: number) => {
   selectedDocument.value = documentId;
 };
 
+watch(selectedDocument, (id) => {
+  emit('select', id);
+});
+
 watch(selectedGroup, () => {
+  selectedType.value = null;
+  selectedDocument.value = null;
+  documents.value = [];
   loadTypes();
+});
+
+watch(selectedType, () => {
+  loadDocuments();
+});
+
+watch(() => props.roleFilter, () => {
+  loadDocuments();
 });
 
 onMounted(async () => {
@@ -153,11 +227,67 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+.explorer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
+
+.search-row {
+  flex: 0 0 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.section-groups {
+  flex: 0 0 auto;
+}
+
+.group-select-row,
+.section-header {
+  flex: 0 0 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
+.group-select {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+:deep(.group-select .vue-treeselect__control) {
+  height: 34px;
+  border: none;
+  border-radius: 0;
+}
+
+:deep(.group-select .vue-treeselect__single-value),
+:deep(.group-select .vue-treeselect__placeholder) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.section-equal {
+  flex: 1 1 0;
+}
 
 .flex {
   display: flex;
+  min-width: 0;
 }
 .row-border {
+  height: 34px;
+  min-height: 34px;
+  min-width: 0;
   border-bottom: 1px solid #b1b1b1;
 }
 .row-border:nth-child(1) {
@@ -165,18 +295,71 @@ onMounted(async () => {
 }
 
 .search {
+  height: 34px;
   border-radius: 0;
   padding-left: 10px;
 }
 
+.search-row .btn {
+  height: 34px;
+  border-radius: 0;
+}
+
 .group-button-header {
-  background-color: #ededed;
+  background-color: transparent;
   flex: 1;
-  align-self: flex-start;
+  min-width: 0;
+  height: 34px;
+  line-height: 34px;
   border: none;
-  padding: 1px 5px 1px 10px;
+  padding: 0 5px 0 10px;
   text-align: left;
   cursor: default;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.type-row {
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+}
+
+.type-btn {
+  border-radius: 0;
+  text-align: left;
+  border-top: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  padding: 0 12px;
+  height: 24px;
+  line-height: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:not(:hover):not(.active-button) {
+    background-color: rgba(#000, 0.02) !important;
+    color: #000 !important;
+    border-bottom: 1px solid #b1b1b1 !important;
+  }
+
+  &.active-button:not(:hover) {
+    background-color: #049372 !important;
+    color: #fff;
+    border-bottom: 1px solid #b1b1b1 !important;
+  }
+}
+
+.type-row .type-btn:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.type-btn-plus {
+  flex: 0 0 auto;
+  padding: 0 12px;
 }
 
 .transparent-button {
@@ -184,9 +367,15 @@ onMounted(async () => {
   align-self: stretch;
   color: #434A54;
   flex: 1;
+  min-width: 0;
+  height: 34px;
+  line-height: 22px;
   border: none;
-  padding: 1px 5px 1px 10px;
+  padding: 0 5px 0 10px;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .transparent-button:hover {
   background-color: #434a54;
@@ -201,12 +390,9 @@ onMounted(async () => {
   background-color: #049372;
   color: #FFFFFF;
 }
-.scroll {
-  height: 139px;
-  overflow-y: auto;
-}
-.scroll-doc {
-  height: calc(100vh - 465px);
+.scroll-equal {
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
 }
 </style>

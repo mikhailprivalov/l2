@@ -53,7 +53,14 @@ class RefHospitalParams(admin.ModelAdmin):
     autocomplete_fields = ('hospital',)
 
 
+class ResTitleResearchHospital(admin.ModelAdmin):
+    list_display = ('title',)
+    search_fields = ('title',)
+    filter_horizontal = ('hospital', 'research')
+
+
 admin.site.register(models.Hospitals, RefHospitals)
 admin.site.register(models.HospitalParams, RefHospitalParams)
 admin.site.register(models.HospitalsGroup, ResHospitalsGroup)
 admin.site.register(models.DisableIstochnikiFinansirovaniya, ResDisableIstochnikiFinansirovaniya)
+admin.site.register(models.TitleResearchHospital, ResTitleResearchHospital)

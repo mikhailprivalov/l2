@@ -46,6 +46,7 @@ from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign, IssledovaniyaFiles, ComplexResearchAccountPerson
+from hospitals.models import TitleResearchHospital
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import (
     DEATH_RESEARCH_PK,
@@ -115,6 +116,12 @@ def results_preview(request):
     return redirect('/ui/results/preview?{}'.format(request.META['QUERY_STRING']))
 
 
+def _research_title_for_request(research, request, fallback=None):
+    title = fallback if fallback is not None else (research.title if research else "")
+    hospital_id = TitleResearchHospital.hospital_id_from_user(getattr(request, "user", None))
+    return TitleResearchHospital.get_display_title(hospital_id, research, title)
+
+
 @logged_in_or_token
 def result_print(request):
     """Печать результатов"""
@@ -128,7 +135,8 @@ def result_print(request):
         direction_for_client = Napravleniya.objects.filter(pk=pk[0]).first()
         patient_fio = direction_for_client.client.individual.fio(short=True, dots=False)
         iss_for_client = Issledovaniya.objects.filter(napravleniye_id=direction_for_client).first()
-        file_title = iri_to_uri(f"{patient_fio.replace(' ', '_')}_{iss_for_client.research.title.replace(' ', '_')}")
+        print_title = _research_title_for_request(iss_for_client.research, request)
+        file_title = iri_to_uri(f"{patient_fio.replace(' ', '_')}_{print_title.replace(' ', '_')}")
     if inline:
         if SettingManager.get("pdf_auto_print", "true", "b") and not plain_response:
             pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
@@ -597,6 +605,7 @@ def result_print(request):
                         if interactive_text_field:
                             fwb.append(InteractiveTextField())
                         fwb.append(Spacer(1, 2 * mm))
+                    research_title = _research_title_for_request(iss.research, request)
                     if (
                         iss.research.is_doc_refferal
                         or iss.research.is_microbiology
@@ -606,18 +615,18 @@ def result_print(request):
                         or iss.research.is_gistology
                         or iss.research.is_form
                     ):
-                        iss_title = f"{med_certificate_title}{iss.research.title}"
+                        iss_title = f"{med_certificate_title}{research_title}"
                     elif iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
-                        iss_title = "Вакцина: " + iss.research.title
+                        iss_title = "Вакцина: " + research_title
                     elif iss.doc_confirmation and iss.research.is_paraclinic:
-                        iss_title = "Исследование: " + iss.research.title
+                        iss_title = "Исследование: " + research_title
                     else:
-                        iss_title = iss.research.title
+                        iss_title = research_title
                     if not result_title_form and not schema_pdf_form:
                         fwb.append(Paragraph(f"<para align='center'><font size='9'>{iss_title}</font></para>", styleBold))
                 else:
                     if not is_gistology and not has_own_form_result and not schema_pdf_form:
-                        fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
+                        fwb.append(Paragraph(_research_title_for_request(iss.research, request) + ' (' + str(dpk) + ')', styleBold))
 
                 type_form = iss.research.result_form
                 form_result = None

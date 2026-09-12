@@ -72,7 +72,7 @@ from directory.models import (
 )
 from doctor_call.models import DoctorCall
 from external_system.models import FsliRefbookTest
-from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya
+from hospitals.models import Hospitals, DisableIstochnikiFinansirovaniya, TitleResearchHospital
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from pharmacotherapy.models import Drugs
@@ -2929,7 +2929,7 @@ def parse_coast_cito(value):
 @group_required("Конструктор: Настройка организации")
 def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
-    current_coast_research = PriceCoast.objects.filter(id=request_data["coastResearchId"]).select_related('price_name').first()
+    current_coast_research = PriceCoast.objects.filter(id=request_data["coastResearchId"]).select_related('price_name', 'research').first()
     if not current_coast_research.price_name.active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:
@@ -2941,6 +2941,9 @@ def update_coast_research_in_price(request):
     current_coast_research.coast_cito = parse_coast_cito(request_data.get("coastCito"))
     current_coast_research.number_services_by_contract = request_data.get("numberService", 0)
     current_coast_research.save()
+    price = current_coast_research.price_name
+    if price.is_customer_hospital_price():
+        TitleResearchHospital.set_title_for_research(price.hospital, current_coast_research.research, request_data.get("hospitalSynonym"))
     Log.log(
         current_coast_research.pk,
         130000,

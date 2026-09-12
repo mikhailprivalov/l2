@@ -9,4 +9,10 @@ urlpatterns = [
     path('types/update', views.types_update),
     path('structure/details', views.structure_details),
     path('structure/update', views.structure_update),
+    path('documents/list', views.documents_list),
+    path('documents/create', views.documents_create),
+    path('documents/details', views.documents_details),
+    path('documents/save', views.documents_save),
+    path('documents/confirm', views.documents_confirm),
+    path('documents/confirm-reset', views.documents_confirm_reset),
 ]
