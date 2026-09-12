@@ -113,6 +113,7 @@ Result (Result)
 - **Soft Delete** - `hide`, `cancel` flags instead of physical deletion
 - **Audit Trail** - `slog/` module, `create_at`, `who_create` fields
 - **Multi-tenancy** - Support for multiple hospitals via `Hospitals`, data filtering by organization
+- **Research internal_code:** empty `Researches.internal_code` is filled as `{pk}-code`. Command `fill_empty_internal_code` backfills existing rows. Constructor save (`researches_update` for `/ui/construct/descriptive`) fills the same way after save if the field is empty.
 
 ## Integration Patterns
 

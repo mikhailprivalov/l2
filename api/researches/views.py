@@ -625,6 +625,8 @@ def researches_update(request):
                     res.templates_by_department = templates_by_department
             if res:
                 res.save()
+                if res.ensure_internal_code():
+                    res.save(update_fields=["internal_code"])
                 if main_service_pk != 1 and stationar_slave:
                     if hs_pk == -1:
                         hs = HospitalService(main_research_id=main_service_pk, hide=hide_main, site_type=-department_pk - 500, slave_research=res)
