@@ -1,12 +1,12 @@
 <template>
   <div v-tippy="V_TIPPY_PROPS">
-    <span class="rps">{{ research.short_title || research.title }}</span>
+    <span class="rps">{{ displayTitle }}</span>
     <div
-      v-if="research.full_title || research.code || force_tippy || research.auto_deselect"
+      v-if="displayFullTitle || research.code || force_tippy || research.auto_deselect"
       :id="tid"
     >
       <div class="rtitle">
-        {{ research.full_title || research.title }}
+        {{ displayFullTitle }}
       </div>
       <span
         v-if="research.code"
@@ -33,6 +33,11 @@ export default {
       required: false,
       default: false,
     },
+    useHospitalSynonym: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     const tid = `research-pick-tip-${this.research.pk}-${Math.floor(Math.random() * 100000)}`;
@@ -48,6 +53,20 @@ export default {
         theme: 'light',
       },
     };
+  },
+  computed: {
+    displayTitle() {
+      if (this.useHospitalSynonym && this.research.hospitalTitle) {
+        return this.research.hospitalTitle;
+      }
+      return this.research.short_title || this.research.title;
+    },
+    displayFullTitle() {
+      if (this.useHospitalSynonym && this.research.hospitalTitle) {
+        return this.research.hospitalTitle;
+      }
+      return this.research.full_title || this.research.title;
+    },
   },
 };
 </script>

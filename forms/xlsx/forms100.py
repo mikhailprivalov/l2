@@ -4,6 +4,7 @@ from openpyxl import Workbook
 from contracts.models import PriceName
 from directory.models import Researches
 from forms.sql_func import get_researches, get_coasts, get_prices
+from hospitals.models import TitleResearchHospital
 
 
 def form_01(request_data) -> Workbook:
@@ -35,6 +36,7 @@ def form_01(request_data) -> Workbook:
             research_dict[research.id] = {
                 "internal_code": research.internal_code,
                 "research_title": research.title,
+                "synonym": "",
                 "research_code": research.code,
                 "fsidi": research.nsi_id,
                 "category": research.categoty_title,
@@ -48,7 +50,15 @@ def form_01(request_data) -> Workbook:
             research_dict[coast.research_id][coast.price_name_id] = str(coast.coast)
             research_dict[coast.research_id][f"{coast.price_name_id}_cito"] = str(coast.coast_cito) if coast.coast_cito is not None else ""
 
-    headers = ["Код по прайсу", "Услуга", "Код НМУ", "ФСИДИ", "Категория", "Короткое название"]
+    if price_id and price_id != 'null':
+        price = PriceName.objects.filter(pk=price_id).first()
+        if price and price.is_customer_hospital_price():
+            synonyms = TitleResearchHospital.get_titles_for_hospital(price.hospital_id, list(research_dict.keys()))
+            for research_id, synonym in synonyms.items():
+                if research_id in research_dict:
+                    research_dict[research_id]["synonym"] = synonym
+
+    headers = ["Код по прайсу", "Услуга", "Синоним", "Код НМУ", "ФСИДИ", "Категория", "Короткое название"]
     headers.extend(price_titles)
     work_sheet.append(headers)
 

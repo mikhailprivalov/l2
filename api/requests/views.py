@@ -21,7 +21,7 @@ from utils.response import status_response
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, NapravleniyaFiles
 from clients.models import Card
 from integration_framework.models import EquipmentReceive
-from hospitals.models import Hospitals
+from hospitals.models import Hospitals, TitleResearchHospital
 from users.models import DoctorProfile, DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
 from slog.models import Log
 
@@ -29,6 +29,38 @@ logger = logging.getLogger(__name__)
 
 ALL_LIST_PAGE_SIZE = 50
 ALLOWED_ALL_LIST_PAGE_SIZES = {50, 100, 150}
+
+
+def _research_fallback_title(research):
+    if not research:
+        return ""
+    return research.short_title or research.title or ""
+
+
+def _titles_for_hospital_from_directions(hospital_id, directions):
+    research_ids = []
+    for direction in directions:
+        for iss in direction.issledovaniya_set.all():
+            if iss.research_id:
+                research_ids.append(iss.research_id)
+    return TitleResearchHospital.get_titles_for_hospital(hospital_id, research_ids)
+
+
+def _iss_display_title(iss, hospital_id, synonyms=None):
+    if not iss or not iss.research:
+        return ""
+    fallback = _research_fallback_title(iss.research)
+    if synonyms is not None:
+        return synonyms.get(iss.research_id) or fallback
+    return TitleResearchHospital.get_display_title(hospital_id, iss.research, fallback)
+
+
+def _first_iss_display_title(direction, hospital_id, synonyms=None):
+    for iss in direction.issledovaniya_set.all():
+        title = _iss_display_title(iss, hospital_id, synonyms)
+        if title:
+            return title
+    return ""
 
 
 def get_requests_journal_max_period_days():
@@ -130,6 +162,9 @@ def get_requests(request):
     direction_ids = [d.pk for d in directions_list]
     equipment_receives = set(EquipmentReceive.objects.filter(napravleniye_id__in=direction_ids).values_list('napravleniye_id', flat=True))
 
+    hospital_id = request.user.doctorprofile.get_hospital_id()
+    synonyms = _titles_for_hospital_from_directions(hospital_id, directions_list)
+
     rows = []
     for direction in directions_list:
         has_image = direction.pk in equipment_receives
@@ -144,10 +179,9 @@ def get_requests(request):
 
         research_titles = []
         for iss in direction.issledovaniya_set.all():
-            if iss.research and iss.research.short_title:
-                research_titles.append(iss.research.short_title)
-            elif iss.research and iss.research.title:
-                research_titles.append(iss.research.title)
+            title = _iss_display_title(iss, hospital_id, synonyms)
+            if title:
+                research_titles.append(title)
 
         rows.append(
             {
@@ -505,18 +539,15 @@ def _get_request_research_id(direction):
     return None
 
 
-def _get_request_research_title(direction):
-    for iss in direction.issledovaniya_set.all():
-        if iss.research:
-            return iss.research.short_title or iss.research.title
-    return ''
+def _get_request_research_title(direction, hospital_id=None):
+    return _first_iss_display_title(direction, hospital_id)
 
 
-def _build_request_edit_snapshot(direction):
+def _build_request_edit_snapshot(direction, hospital_id=None):
     files = [f.uploaded_file.name.split('/')[-1] if f.uploaded_file else 'Файл' for f in direction.napravleniyafiles_set.all()]
     return {
         'researchId': _get_request_research_id(direction),
-        'researchTitle': _get_request_research_title(direction),
+        'researchTitle': _get_request_research_title(direction, hospital_id),
         'date': str(direction.fact_research_date) if direction.fact_research_date else '',
         'time': direction.fact_research_time.strftime('%H:%M') if direction.fact_research_time else '',
         'dose': direction.dose or '',
@@ -562,13 +593,15 @@ def get_request_details(request):
         return JsonResponse({"success": False, "message": "Нет доступа к этой заявке"})
 
     researches = []
+    hospital_id = request.user.doctorprofile.get_hospital_id()
     for iss in direction.issledovaniya_set.all():
         if iss.research:
+            display_title = _iss_display_title(iss, hospital_id)
             researches.append(
                 {
                     'id': iss.research.pk,
-                    'title': iss.research.title,
-                    'short_title': iss.research.short_title,
+                    'title': display_title,
+                    'short_title': display_title,
                 }
             )
 
@@ -656,7 +689,8 @@ def update_request(request):
         return status_response(False, "Услуга не найдена")
 
     with transaction.atomic():
-        old_snapshot = _build_request_edit_snapshot(direction)
+        hospital_id = request.user.doctorprofile.get_hospital_id()
+        old_snapshot = _build_request_edit_snapshot(direction, hospital_id)
 
         iss = direction.issledovaniya_set.first()
         if not iss:
@@ -717,7 +751,7 @@ def update_request(request):
                 NapravleniyaFiles(napravleniye=direction, uploaded_file=django_file).save()
 
         direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id)
-        new_snapshot = _build_request_edit_snapshot(direction)
+        new_snapshot = _build_request_edit_snapshot(direction, hospital_id)
         log_body = _build_edit_log_body(old_snapshot, new_snapshot)
         if log_body:
             Log.log(key=request_id, type=250002, user=request.user.doctorprofile, body=log_body)
@@ -830,13 +864,14 @@ def get_unlinked_requests(request):
             pass
 
     rows = []
+    hospital_id = request.user.doctorprofile.get_hospital_id()
+    synonyms = _titles_for_hospital_from_directions(hospital_id, directions)
     for direction in directions:
         research_titles = []
         for iss in direction.issledovaniya_set.all():
-            if iss.research and iss.research.short_title:
-                research_titles.append(iss.research.short_title)
-            elif iss.research and iss.research.title:
-                research_titles.append(iss.research.title)
+            title = _iss_display_title(iss, hospital_id, synonyms)
+            if title:
+                research_titles.append(title)
 
         rows.append(
             {
@@ -852,14 +887,14 @@ def get_unlinked_requests(request):
 
 
 def direction_to_request(direction, doctor_profile):
+    hospital_id = doctor_profile.get_hospital_id() if doctor_profile else None
     research_titles = []
     podrzdeleniye_titles = []
     for iss in direction.issledovaniya_set.all():
-        if iss.research and iss.research.short_title:
-            research_titles.append(iss.research.short_title)
-        elif iss.research and iss.research.title:
-            research_titles.append(iss.research.title)
-        podrzdeleniye_titles.append(iss.research.podrazdeleniye.title if iss.research.podrazdeleniye else "-")
+        title = _iss_display_title(iss, hospital_id)
+        if title:
+            research_titles.append(title)
+        podrzdeleniye_titles.append(iss.research.podrazdeleniye.title if iss.research and iss.research.podrazdeleniye else "-")
 
     return {
         "id": direction.pk,
@@ -900,13 +935,8 @@ def _parse_date_range(date_from, date_to, max_days=None):
     return search_date_from, search_date_to, None
 
 
-def _get_research_title(direction):
-    for iss in direction.issledovaniya_set.all():
-        if iss.research and iss.research.short_title:
-            return iss.research.short_title
-        if iss.research and iss.research.title:
-            return iss.research.title
-    return ''
+def _get_research_title(direction, hospital_id=None):
+    return _first_iss_display_title(direction, hospital_id)
 
 
 def _get_last_confirmed_issledovaniya(direction):
@@ -936,7 +966,7 @@ def _get_journal_doctor_fio(direction, confirmed_by):
     return '—'
 
 
-def direction_to_all_list_row(direction):
+def direction_to_all_list_row(direction, hospital_id=None):
     last_confirmed = _get_last_confirmed_issledovaniya(direction)
     confirmed_by = None
     if last_confirmed:
@@ -953,7 +983,7 @@ def direction_to_all_list_row(direction):
         'id': direction.pk,
         'hospital': hospital_title,
         'patient': direction.client.individual.fio(short=True),
-        'research': _get_research_title(direction),
+        'research': _get_research_title(direction, hospital_id),
         'doctorFio': _get_journal_doctor_fio(direction, confirmed_by),
         'createdAt': strfdatetime(direction.data_sozdaniya, '%d.%m.%Y %H:%M'),
         'acceptedAt': strfdatetime(direction.accept_time, '%d.%m.%Y %H:%M') if direction.accept_time else None,
@@ -1178,7 +1208,8 @@ def get_requests_all_list(request):
     total = directions.count()
     directions_list = list(directions[offset : offset + limit])
 
-    rows = [direction_to_all_list_row(direction) for direction in directions_list]
+    hospital_id = request.user.doctorprofile.get_hospital_id()
+    rows = [direction_to_all_list_row(direction, hospital_id) for direction in directions_list]
     filter_options = _get_all_list_filter_options(hospital_id)
 
     return JsonResponse(

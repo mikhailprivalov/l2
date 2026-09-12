@@ -5,6 +5,7 @@ import requests
 from openpyxl.reader.excel import load_workbook
 from contracts.models import PriceName, PriceCoast
 from directory.models import Researches, CategoryDirectory
+from hospitals.models import TitleResearchHospital
 from laboratory.settings import RMIS_MIDDLE_SERVER_ADDRESS, RMIS_MIDDLE_SERVER_TOKEN
 
 
@@ -36,7 +37,8 @@ def form_01(request_data):
     Cтруктура:
     Код по прайсу (internal_code Researches), Услуга (title_researches),
     колонка с названием прайса (priceCoasts.coast),
-    опционально колонка "<название прайса> ЦИТО" (priceCoasts.coast_cito)
+    опционально колонка "<название прайса> ЦИТО" (priceCoasts.coast_cito),
+    опционально колонка "Синоним" (TitleResearchHospital, только прайс Заказчик с больницей)
     """
     price_id = request_data.get("entity_id")
     file = request_data.get("file")
@@ -45,12 +47,13 @@ def form_01(request_data):
         return {"ok": False, "result": [], "message": "Такого прайса нет"}
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    internal_code_idx, coast_idx, coast_cito_idx, category_idx, short_title_research_idx = (
+    internal_code_idx, coast_idx, coast_cito_idx, category_idx, short_title_research_idx, synonym_idx = (
         '',
         '',
         None,
         '',
         '',
+        None,
     )
     starts = False
     for row in ws.rows:
@@ -60,6 +63,7 @@ def form_01(request_data):
                 internal_code_idx = cells.index("Код по прайсу")
                 category_idx = cells.index("Категория")
                 short_title_research_idx = cells.index("Короткое название")
+                synonym_idx = _find_column_index(cells, "Синоним")
                 coast_idx = _find_column_index(cells, price.title, f"{price.title}-{price.symbol_code}")
                 if coast_idx is None:
                     return {"ok": False, "result": [], "message": "Название прайса не совпадает"}
@@ -102,6 +106,8 @@ def form_01(request_data):
             if service.short_title != short_service_title:
                 service.short_title = short_service_title
             service.save()
+            if synonym_idx is not None and synonym_idx < len(cells) and price.is_customer_hospital_price():
+                TitleResearchHospital.set_title_for_research(price.hospital, service, cells[synonym_idx])
 
     if not starts:
         return {"ok": False, "result": [], "message": "Не найдены колонка 'Код по прайсу' "}

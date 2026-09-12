@@ -10,6 +10,7 @@ const stateInitial = {
   researches: {},
   tubes: {},
   researches_loaded: false,
+  researchesHospitalSynonymsLoaded: false,
   permanentDirectories: {},
   LayoutTemplate: {},
   requiredStattalonFields: {},
@@ -46,14 +47,24 @@ const actions = {
     commit(mutationTypes.UPDATE_TEMPLATES, { templates });
     commit(mutationTypes.SET_TEMPLATES_LOADED, { templates_loaded: true });
   },
-  async [actionsTypes.GET_RESEARCHES]({ commit, state }) {
-    if (state.researches_loaded) {
+  async [actionsTypes.GET_RESEARCHES](
+    { commit, state },
+    payload: { withHospitalSynonym?: boolean } = {},
+  ) {
+    const withHospitalSynonym = Boolean(payload?.withHospitalSynonym);
+    if (withHospitalSynonym) {
+      if (state.researchesHospitalSynonymsLoaded) {
+        return;
+      }
+    } else if (state.researches_loaded) {
       return;
     }
-    const answer = await researchesPoint.getResearches();
+    const answer = await researchesPoint.getResearches(
+      withHospitalSynonym ? { params: { withHospitalSynonym: 1 } } : null,
+    );
     const { researches } = answer;
     const { tubes } = answer;
-    commit(mutationTypes.UPDATE_RESEARCHES, { researches });
+    commit(mutationTypes.UPDATE_RESEARCHES, { researches, hospitalSynonymsLoaded: withHospitalSynonym });
     commit(mutationTypes.UPDATE_TUBES, { tubes });
   },
   async [actionsTypes.GET_LAST_USED_RESEARCHES]({ commit }) {
@@ -91,9 +102,12 @@ const mutations = {
   [mutationTypes.SET_TEMPLATES_LOADED](state, { templates_loaded: tl }) {
     state.templates_loaded = tl;
   },
-  [mutationTypes.UPDATE_RESEARCHES](state, { researches }) {
+  [mutationTypes.UPDATE_RESEARCHES](state, { researches, hospitalSynonymsLoaded }) {
     state.researches = researches;
     state.researches_loaded = true;
+    if (hospitalSynonymsLoaded) {
+      state.researchesHospitalSynonymsLoaded = true;
+    }
   },
   [mutationTypes.ADD_RESEARCHES](state, { researches }) {
     state.researches = {

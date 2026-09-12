@@ -13,6 +13,7 @@ from integration_framework.models import EquipmentReceive
 from laboratory.settings import COMMAND_DOCX_2_PDF
 from results.sql_func import get_paraclinic_result_by_iss
 from slog.models import Log
+from hospitals.models import TitleResearchHospital
 from utils.dates import normalize_date
 import simplejson as json
 
@@ -26,6 +27,12 @@ def get_stamp_doctor_image(doc, doctor):
     width = doctor.width_stamp_jpg if doctor.width_stamp_jpg else 35
     height = doctor.height_stamp_jpg if doctor.height_stamp_jpg else 35
     return InlineImage(doc, stamp_path, width=Mm(width), height=Mm(height))
+
+
+def _research_title_for_user(iss, user):
+    fallback = iss.research.title if iss.research else ""
+    hospital_id = TitleResearchHospital.hospital_id_from_user(user)
+    return TitleResearchHospital.get_display_title(hospital_id, iss.research, fallback)
 
 
 def transform_value(field_value, type_field):
@@ -96,7 +103,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "sex": individula.get('sex'),
             "born": individula.get('born'),
             "protocol_number": direction.pk,
-            "research": iss.research.title,
+            "research": _research_title_for_user(iss, user),
             "hosp_confirmation": iss.doc_confirmation.hospital.title if iss.doc_confirmation else "",
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
@@ -177,7 +184,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "sex": individula.get('sex'),
             "born": individula.get('born'),
             "protocol_number": direction.pk,
-            "research": iss.research.title,
+            "research": _research_title_for_user(iss, user),
             "hosp_confirmation": iss.doc_confirmation.hospital.title if iss.doc_confirmation else "",
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,

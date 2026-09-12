@@ -248,3 +248,93 @@ class HospitalParams(models.Model):
     class Meta:
         verbose_name = 'Параметр больницы произвольный'
         verbose_name_plural = 'Параметры больницы произвольные'
+
+
+class TitleResearchHospital(models.Model):
+    title = models.CharField(max_length=255, help_text="Синоним услуги")
+    hospital = models.ManyToManyField(Hospitals, blank=True, default=None, help_text="Больница")
+    research = models.ManyToManyField(Researches, blank=True, default=None, help_text="Основная услуга из справочника")
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = 'Синоним услуги для больницы'
+        verbose_name_plural = 'Синонимы услуг для больниц'
+
+    @staticmethod
+    def get_titles_for_hospital(hospital_id, research_ids):
+        if not hospital_id or not research_ids:
+            return {}
+        rows = TitleResearchHospital.objects.filter(hospital__id=hospital_id, research__id__in=research_ids).prefetch_related("research")
+        research_ids_set = set(research_ids)
+        result = {}
+        for row in rows:
+            for research in row.research.all():
+                if research.id in research_ids_set:
+                    result[research.id] = row.title
+        return result
+
+    @staticmethod
+    def hospital_id_from_user(user):
+        if user and getattr(user, "is_authenticated", False) and getattr(user, "doctorprofile", None):
+            return user.doctorprofile.get_hospital_id()
+        return None
+
+    @staticmethod
+    def get_display_title(hospital_id, research, fallback=None):
+        if research is None:
+            return fallback or ""
+        if fallback is None:
+            fallback = research.short_title or research.title or ""
+        if not hospital_id:
+            return fallback
+        synonym = TitleResearchHospital.get_titles_for_hospital(hospital_id, [research.pk]).get(research.pk)
+        return synonym or fallback
+
+    @staticmethod
+    def apply_to_researches_map(hospital_id, researches_map):
+        if not hospital_id or not researches_map:
+            return
+        items = []
+        for group in researches_map.values():
+            items.extend(group)
+        research_ids = []
+        for item in items:
+            if item.get("auto_deselect"):
+                continue
+            pk = item.get("pk")
+            try:
+                research_ids.append(int(pk))
+            except (TypeError, ValueError):
+                continue
+        synonyms = TitleResearchHospital.get_titles_for_hospital(hospital_id, research_ids)
+        if not synonyms:
+            return
+        for item in items:
+            if item.get("auto_deselect"):
+                continue
+            try:
+                pk = int(item.get("pk"))
+            except (TypeError, ValueError):
+                continue
+            synonym = synonyms.get(pk)
+            if synonym:
+                item["hospitalTitle"] = synonym
+
+    @staticmethod
+    def set_title_for_research(hospital, research, title):
+        if not hospital or not research:
+            return
+        synonym = str(title or "").strip()
+        if not synonym or synonym == "None":
+            return
+        obj = TitleResearchHospital.objects.filter(hospital=hospital, research=research).first()
+        if obj:
+            if obj.title != synonym:
+                obj.title = synonym
+                obj.save()
+            return
+        obj = TitleResearchHospital.objects.create(title=synonym)
+        obj.hospital.add(hospital)
+        obj.research.add(research)
