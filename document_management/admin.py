@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from document_management.models import DocumentFieldGroups, DocumentFields, GroupDocuments, TypeDocuments, TypeDocumentsSchema
+from document_management.models import DocumentFieldGroups, DocumentFields, GroupDocuments, TypeDocumentLayoutTemplate, TypeDocuments, TypeDocumentsSchema
 
 
 @admin.register(GroupDocuments)
@@ -9,11 +9,18 @@ class GroupDocumentsAdmin(admin.ModelAdmin):
     search_fields = ("title",)
 
 
+class TypeDocumentLayoutTemplateInline(admin.TabularInline):
+    model = TypeDocumentLayoutTemplate
+    extra = 0
+    ordering = ("order", "pk")
+
+
 @admin.register(TypeDocuments)
 class TypeDocumentsAdmin(admin.ModelAdmin):
     list_display = ("pk", "title", "code", "group_document", "layout_template")
     search_fields = ("title", "code")
     list_filter = ("group_document",)
+    inlines = (TypeDocumentLayoutTemplateInline,)
 
 
 @admin.register(DocumentFieldGroups)

@@ -80,6 +80,8 @@
         :code-value="selectedItem?.code"
         :group-id-value="selectedItem?.groupId"
         :layout-template-id-value="selectedItem?.layoutTemplateId"
+        :layout-template-ids-value="selectedItem?.layoutTemplateIds"
+        :layout-templates-value="selectedItem?.layoutTemplates"
         :groups="groups"
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
@@ -131,6 +133,8 @@ interface CatalogItem {
   groupId?: number | null;
   groupTitle?: string;
   layoutTemplateId?: number | null;
+  layoutTemplateIds?: number[];
+  layoutTemplates?: { id: number; label: string }[];
   hide?: boolean;
 }
 

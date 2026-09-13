@@ -937,7 +937,7 @@
                       :permanent_directories_keys="permanent_directories_keys"
                       :permanent_directories="permanent_directories"
                     />
-                    <div v-else-if="row.field_type === 41">
+                    <div v-else-if="row.field_type === 41 && Number(department) !== -17">
                       <strong>Шаблон-макет:</strong>
                       <br>
                       <Treeselect
@@ -1211,7 +1211,10 @@
                         </option>
                         <option value="35">Врач</option>
                         <option value="39">Динамический справочник</option>
-                        <option value="41">Шаблон макет</option>
+                        <option
+                          v-if="Number(department) !== -17 || Number(row.field_type) === 41"
+                          value="41"
+                        >Шаблон макет</option>
                         <option value="42">Файл</option>
                         <option value="43">Ссылка на документ(ы)</option>
                         <option
