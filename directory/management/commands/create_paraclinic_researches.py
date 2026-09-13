@@ -49,8 +49,8 @@ class Command(BaseCommand):
         if not template:
             raise CommandError(f"Template research {template_research_id} not found")
 
-        template_groups = list(ParaclinicInputGroups.objects.filter(research=template).order_by("order"))
-        template_fields_by_group = {group.pk: list(ParaclinicInputField.objects.filter(group=group).order_by("order")) for group in template_groups}
+        template_groups = list(ParaclinicInputGroups.objects.filter(research=template, hide=False).order_by("order"))
+        template_fields_by_group = {group.pk: list(ParaclinicInputField.objects.filter(group=group, hide=False).order_by("order")) for group in template_groups}
 
         created = 0
         skipped = 0
