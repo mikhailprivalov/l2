@@ -9,6 +9,16 @@ from hospitals.models import Hospitals
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 
+LAYOUT_TEMPLATE_FIELD_TYPE = 41
+
+
+def layout_template_is_simple(research):
+    from directory.models import ParaclinicInputField
+
+    if not research:
+        return False
+    return not ParaclinicInputField.objects.filter(group__research=research, field_type=LAYOUT_TEMPLATE_FIELD_TYPE).exists()
+
 
 class GroupDocuments(models.Model):
     title = models.CharField(max_length=128, blank=True, null=True)
@@ -68,20 +78,45 @@ class TypeDocuments(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+    def get_layout_templates(self):
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("layout_template_links")
+        if prefetched is not None:
+            templates = [row.layout_template for row in prefetched if row.layout_template_id]
+        else:
+            templates = [row.layout_template for row in self.layout_template_links.select_related("layout_template").order_by("order", "pk") if row.layout_template_id]
+        if templates:
+            return templates
+        if self.layout_template_id and self.layout_template:
+            return [self.layout_template]
+        return []
+
     @property
     def json(self):
+        templates = self.get_layout_templates()
+        template_ids = [row.pk for row in templates]
         return {
             "id": self.id,
             "title": self.title or "",
             "code": self.code or "",
             "groupId": self.group_document_id,
             "groupTitle": self.group_document.title if self.group_document else "",
-            "layoutTemplateId": self.layout_template_id,
+            "layoutTemplateId": template_ids[0] if template_ids else self.layout_template_id,
+            "layoutTemplateIds": template_ids,
+            "layoutTemplates": [{"id": row.pk, "label": row.title} for row in templates],
         }
 
     @staticmethod
     def get_list(group_id=None):
-        qs = TypeDocuments.objects.select_related("group_document").all().order_by("title", "pk")
+        qs = (
+            TypeDocuments.objects.select_related("group_document", "layout_template")
+            .prefetch_related(
+                models.Prefetch(
+                    "layout_template_links",
+                    queryset=TypeDocumentLayoutTemplate.objects.select_related("layout_template").order_by("order", "pk"),
+                )
+            )
+            .order_by("title", "pk")
+        )
         if group_id in (-1, "-1"):
             qs = qs.filter(group_document__isnull=True)
         elif group_id not in (None, "", 0, "0"):
@@ -89,7 +124,29 @@ class TypeDocuments(models.Model):
         return [row.json for row in qs]
 
     @staticmethod
-    def save_type(pk, title, group_id=None, code="", layout_template_id=None):
+    def _parse_template_ids(layout_template_ids, layout_template_id):
+        raw = layout_template_ids
+        if raw is None:
+            raw = [layout_template_id] if layout_template_id not in (None, "", -1, "-1") else []
+        if not isinstance(raw, (list, tuple)):
+            raw = [raw]
+        seen = set()
+        result = []
+        for item in raw:
+            if item in (None, "", -1, "-1"):
+                continue
+            try:
+                value = int(item)
+            except (TypeError, ValueError):
+                continue
+            if value <= 0 or value in seen:
+                continue
+            seen.add(value)
+            result.append(value)
+        return result
+
+    @staticmethod
+    def save_type(pk, title, group_id=None, code="", layout_template_id=None, layout_template_ids=None):
         from directory.models import Researches
 
         title = (title or "").strip()
@@ -100,25 +157,50 @@ class TypeDocuments(models.Model):
             group = GroupDocuments.objects.filter(pk=group_id).first()
             if not group:
                 return {"ok": False, "message": "Группа не найдена"}
-        layout_template = None
-        if layout_template_id not in (None, "", -1, "-1"):
-            layout_template = Researches.objects.filter(pk=layout_template_id, is_layout_template=True).first()
+        template_ids = TypeDocuments._parse_template_ids(layout_template_ids, layout_template_id)
+        templates = []
+        for template_id in template_ids:
+            layout_template = Researches.objects.filter(pk=template_id, is_layout_template=True).first()
             if not layout_template:
                 return {"ok": False, "message": "Шаблон не найден"}
-        if pk in (None, -1, "-1"):
-            obj = TypeDocuments(title=title, group_document=group, code=code or "", layout_template=layout_template)
-        else:
-            obj = TypeDocuments.objects.filter(pk=pk).first()
-            if not obj:
-                return {"ok": False, "message": "Вид документа не найден"}
-            obj.title = title
-            obj.group_document = group
-            obj.code = code or ""
-            obj.layout_template = layout_template
-        obj.save()
-        if obj.layout_template:
-            TypeDocumentsSchema.get_or_create_for_type(obj)
+            if not layout_template_is_simple(layout_template):
+                return {"ok": False, "message": f"Шаблон «{layout_template.title}» содержит вложенный шаблон"}
+            templates.append(layout_template)
+        first_template = templates[0] if templates else None
+        with transaction.atomic():
+            if pk in (None, -1, "-1"):
+                obj = TypeDocuments(title=title, group_document=group, code=code or "", layout_template=first_template)
+            else:
+                obj = TypeDocuments.objects.filter(pk=pk).first()
+                if not obj:
+                    return {"ok": False, "message": "Вид документа не найден"}
+                obj.title = title
+                obj.group_document = group
+                obj.code = code or ""
+                obj.layout_template = first_template
+            obj.save()
+            TypeDocumentLayoutTemplate.objects.filter(type_document=obj).delete()
+            TypeDocumentLayoutTemplate.objects.bulk_create(
+                [TypeDocumentLayoutTemplate(type_document=obj, layout_template=row, order=index) for index, row in enumerate(templates)]
+            )
+            if templates:
+                TypeDocumentsSchema.get_or_create_for_type(obj)
         return {"ok": True, "id": obj.pk, "title": obj.title}
+
+
+class TypeDocumentLayoutTemplate(models.Model):
+    type_document = models.ForeignKey(TypeDocuments, related_name="layout_template_links", on_delete=models.CASCADE)
+    layout_template = models.ForeignKey("directory.Researches", related_name="type_document_links", on_delete=models.CASCADE)
+    order = models.IntegerField(default=0, db_index=True)
+
+    class Meta:
+        verbose_name = "Шаблон вида документа"
+        verbose_name_plural = "Шаблоны видов документов"
+        ordering = ["order", "pk"]
+        unique_together = ("type_document", "layout_template")
+
+    def __str__(self):
+        return f"{self.type_document} – {self.layout_template} ({self.order})"
 
 
 class DocumentFieldGroups(models.Model):
@@ -451,7 +533,7 @@ class TypeDocumentsSchema(models.Model):
 
     @staticmethod
     def serialize_group(group):
-        fields = [TypeDocumentsSchema.serialize_field(field) for field in group.paraclinicinputfield_set.all()]
+        fields = [TypeDocumentsSchema.serialize_field(field) for field in group.paraclinicinputfield_set.all() if field.field_type != LAYOUT_TEMPLATE_FIELD_TYPE]
         fields.sort(key=lambda row: row["order"])
         return {
             "pk": group.pk,
@@ -470,24 +552,34 @@ class TypeDocumentsSchema(models.Model):
 
         from directory.models import ParaclinicInputField, ParaclinicInputGroups
 
-        template = type_doc.layout_template if type_doc else None
-        if not template:
+        templates = type_doc.get_layout_templates() if type_doc else []
+        if not templates:
             return None
-        group_qs = (
-            ParaclinicInputGroups.objects.filter(research=template)
-            .order_by("order")
-            .prefetch_related(
-                Prefetch(
-                    "paraclinicinputfield_set",
-                    queryset=ParaclinicInputField.objects.select_related("denied_group", "file_settings").order_by("order"),
+        groups = []
+        group_order = 0
+        for template in templates:
+            group_qs = (
+                ParaclinicInputGroups.objects.filter(research=template)
+                .order_by("order")
+                .prefetch_related(
+                    Prefetch(
+                        "paraclinicinputfield_set",
+                        queryset=ParaclinicInputField.objects.select_related("denied_group", "file_settings").order_by("order"),
+                    )
                 )
             )
-        )
+            for group in group_qs:
+                serialized = TypeDocumentsSchema.serialize_group(group)
+                serialized["order"] = group_order
+                group_order += 1
+                groups.append(serialized)
+        first = templates[0]
         return {
-            "pk": template.pk,
-            "title": template.title,
-            "wide_headers": bool(getattr(template, "wide_headers", False)),
-            "groups": [TypeDocumentsSchema.serialize_group(group) for group in group_qs],
+            "pk": first.pk,
+            "title": first.title,
+            "wide_headers": any(bool(getattr(row, "wide_headers", False)) for row in templates),
+            "layoutTemplateIds": [row.pk for row in templates],
+            "groups": groups,
         }
 
     @staticmethod
@@ -504,7 +596,9 @@ class TypeDocumentsSchema(models.Model):
     def sync_for_layout_template(template):
         if not template:
             return
-        for type_doc in TypeDocuments.objects.filter(layout_template=template):
+        type_ids = TypeDocumentLayoutTemplate.objects.filter(layout_template=template).values_list("type_document_id", flat=True)
+        qs = TypeDocuments.objects.filter(models.Q(pk__in=type_ids) | models.Q(layout_template=template)).distinct()
+        for type_doc in qs:
             TypeDocumentsSchema.get_or_create_for_type(type_doc)
 
 
@@ -590,9 +684,10 @@ class Documents(models.Model):
         with transaction.atomic():
             schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
             obj = Documents.objects.create(type_document=type_doc, who_create=who_create, body_values={}, schema=schema)
+            templates = type_doc.get_layout_templates()
             Issledovaniya.objects.create(
                 document=obj,
-                research=type_doc.layout_template,
+                research=templates[0] if templates else type_doc.layout_template,
                 creator=who_create,
             )
         return {"ok": True, "id": obj.pk, "title": obj.json["title"]}
@@ -604,9 +699,10 @@ class Documents(models.Model):
         if iss:
             return iss
         type_doc = self.type_document
+        templates = type_doc.get_layout_templates() if type_doc else []
         return Issledovaniya.objects.create(
             document=self,
-            research=type_doc.layout_template if type_doc else None,
+            research=templates[0] if templates else (type_doc.layout_template if type_doc else None),
             creator=self.who_create,
         )
 
@@ -644,7 +740,7 @@ class Documents(models.Model):
                 "fieldsInline": group.get("fieldsInline"),
             }
             for field in group.get("fields") or []:
-                if field.get("hide"):
+                if field.get("hide") or field.get("field_type") == LAYOUT_TEMPLATE_FIELD_TYPE:
                     continue
                 field_pk = field.get("pk")
                 values_to_input = field.get("values_to_input") or []

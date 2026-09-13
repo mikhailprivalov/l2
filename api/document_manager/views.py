@@ -77,6 +77,7 @@ def types_update(request):
         data.get("groupId"),
         data.get("code", ""),
         data.get("layoutTemplateId"),
+        data.get("layoutTemplateIds"),
     )
     if result.get("ok"):
         return status_response(True, data=result)

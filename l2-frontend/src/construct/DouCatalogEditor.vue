@@ -45,19 +45,61 @@
     <div class="content-editor">
       <div
         v-if="kind === 'type'"
-        class="template-row"
+        class="templates-block"
       >
-        <span class="input-group-addon">Шаблон документа</span>
-        <Treeselect
-          v-model="layoutTemplateId"
-          class="treeselect-wide treeselect-34px template-select"
-          :multiple="false"
-          :disable-branch-nodes="true"
-          :options="layoutTemplates"
-          placeholder="Шаблон не выбран"
-          :append-to-body="true"
-          :clearable="true"
-        />
+        <div class="template-row">
+          <span class="input-group-addon">Шаблоны документа</span>
+          <Treeselect
+            v-model="templateToAdd"
+            class="treeselect-wide treeselect-34px template-select"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="availableTemplates"
+            placeholder="Добавить шаблон"
+            :append-to-body="true"
+            :clearable="true"
+            @select="onSelectTemplate"
+          />
+        </div>
+        <div
+          v-if="selectedTemplates.length === 0"
+          class="empty-templates"
+        >
+          Шаблоны не выбраны
+        </div>
+        <div
+          v-for="(row, index) in selectedTemplates"
+          :key="row.id"
+          class="template-item"
+        >
+          <span class="template-item-title">{{ row.label }}</span>
+          <button
+            class="btn btn-blue-nb template-item-btn"
+            type="button"
+            :disabled="index === 0"
+            title="Выше"
+            @click="moveTemplate(index, -1)"
+          >
+            <i class="glyphicon glyphicon-arrow-up" />
+          </button>
+          <button
+            class="btn btn-blue-nb template-item-btn"
+            type="button"
+            :disabled="index === selectedTemplates.length - 1"
+            title="Ниже"
+            @click="moveTemplate(index, 1)"
+          >
+            <i class="glyphicon glyphicon-arrow-down" />
+          </button>
+          <button
+            class="btn btn-blue-nb template-item-btn"
+            type="button"
+            title="Удалить"
+            @click="removeTemplate(index)"
+          >
+            <i class="glyphicon glyphicon-remove" />
+          </button>
+        </div>
       </div>
     </div>
     <div class="footer-editor">
@@ -82,7 +124,7 @@
 
 <script setup lang="ts">
 import {
-  getCurrentInstance, onMounted, ref, watch,
+  computed, getCurrentInstance, nextTick, onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -97,6 +139,13 @@ interface CatalogGroup {
   title: string;
 }
 
+interface LayoutTemplateOption {
+  id: number;
+  label: string;
+  hasNested?: boolean;
+  isDisabled?: boolean;
+}
+
 const props = defineProps<{
   kind: 'group' | 'type';
   itemId: number;
@@ -104,6 +153,8 @@ const props = defineProps<{
   codeValue?: string;
   groupIdValue?: number | null;
   layoutTemplateIdValue?: number | null;
+  layoutTemplateIdsValue?: number[];
+  layoutTemplatesValue?: LayoutTemplateOption[];
   groups?: CatalogGroup[];
 }>();
 
@@ -119,21 +170,102 @@ const root = getCurrentInstance().proxy.$root;
 const title = ref('');
 const code = ref('');
 const groupId = ref<number>(-1);
-const layoutTemplateId = ref<number | null>(null);
-const layoutTemplates = ref<{ id: number; label: string }[]>([]);
+const templateToAdd = ref<number | null>(null);
+const layoutTemplates = ref<LayoutTemplateOption[]>([]);
+const selectedTemplates = ref<LayoutTemplateOption[]>([]);
+
+const availableTemplates = computed(() => {
+  const selected = new Set(selectedTemplates.value.map(row => row.id));
+  return layoutTemplates.value
+    .filter(row => !selected.has(row.id))
+    .map(row => ({
+      ...row,
+      isDisabled: Boolean(row.isDisabled || row.hasNested),
+    }));
+});
+
+const applySelectedTemplates = () => {
+  if (props.layoutTemplatesValue?.length) {
+    selectedTemplates.value = props.layoutTemplatesValue.map(row => ({
+      id: row.id,
+      label: row.label,
+    }));
+    return;
+  }
+  let ids = props.layoutTemplateIdsValue || [];
+  if (!ids.length && props.layoutTemplateIdValue) {
+    ids = [props.layoutTemplateIdValue];
+  }
+  selectedTemplates.value = ids.filter(Boolean).map((id) => {
+    const option = layoutTemplates.value.find(row => row.id === id);
+    return { id, label: option?.label || String(id) };
+  });
+};
 
 const fill = () => {
   title.value = props.titleValue || '';
   code.value = props.codeValue || '';
   groupId.value = props.groupIdValue ?? -1;
-  layoutTemplateId.value = props.layoutTemplateIdValue ?? null;
+  applySelectedTemplates();
 };
 
 watch(
-  () => [props.itemId, props.titleValue, props.codeValue, props.groupIdValue, props.layoutTemplateIdValue],
+  () => [
+    props.itemId,
+    props.titleValue,
+    props.codeValue,
+    props.groupIdValue,
+    props.layoutTemplateIdValue,
+    props.layoutTemplateIdsValue,
+    props.layoutTemplatesValue,
+  ],
   fill,
   { immediate: true },
 );
+
+const addTemplateById = (id: number) => {
+  const option = layoutTemplates.value.find(row => row.id === id);
+  if (!option) {
+    root.$emit('msg', 'error', 'Шаблон не найден');
+    return;
+  }
+  if (option.hasNested || option.isDisabled) {
+    root.$emit('msg', 'error', 'Нельзя выбрать шаблон с вложенностью');
+    return;
+  }
+  if (selectedTemplates.value.some(row => row.id === option.id)) {
+    root.$emit('msg', 'error', 'Шаблон уже добавлен');
+    return;
+  }
+  selectedTemplates.value = [
+    ...selectedTemplates.value,
+    { id: option.id, label: option.label },
+  ];
+};
+
+const onSelectTemplate = (node: LayoutTemplateOption) => {
+  if (node?.id) {
+    addTemplateById(node.id);
+  }
+  nextTick(() => {
+    templateToAdd.value = null;
+  });
+};
+
+const moveTemplate = (index: number, delta: number) => {
+  const nextIndex = index + delta;
+  if (nextIndex < 0 || nextIndex >= selectedTemplates.value.length) {
+    return;
+  }
+  const rows = [...selectedTemplates.value];
+  const [row] = rows.splice(index, 1);
+  rows.splice(nextIndex, 0, row);
+  selectedTemplates.value = rows;
+};
+
+const removeTemplate = (index: number) => {
+  selectedTemplates.value = selectedTemplates.value.filter((_, current) => current !== index);
+};
 
 const loadLayoutTemplates = async () => {
   if (props.kind !== 'type') {
@@ -141,6 +273,7 @@ const loadLayoutTemplates = async () => {
   }
   const { rows } = await api('layout-template/list-treeselect', { pk: -1 });
   layoutTemplates.value = rows || [];
+  applySelectedTemplates();
 };
 
 onMounted(loadLayoutTemplates);
@@ -154,7 +287,8 @@ const save = async () => {
       title: title.value,
       code: code.value,
       groupId: groupId.value,
-      layoutTemplateId: layoutTemplateId.value,
+      layoutTemplateId: selectedTemplates.value[0]?.id ?? null,
+      layoutTemplateIds: selectedTemplates.value.map(row => row.id),
     });
     if (result?.ok) {
       root.$emit('msg', 'ok', 'Сохранено');
@@ -256,6 +390,12 @@ const save = async () => {
   flex: 1;
   min-height: 0;
   align-self: stretch;
+  overflow-y: auto;
+}
+
+.templates-block {
+  display: flex;
+  flex-direction: column;
 }
 
 .template-row {
@@ -297,6 +437,40 @@ const save = async () => {
   border-right: none;
   border-bottom: 1px solid #96a0ad;
   border-radius: 0;
+}
+
+.empty-templates {
+  padding: 10px;
+  color: #656d78;
+}
+
+.template-item {
+  display: flex;
+  align-items: stretch;
+  min-height: 34px;
+  border-bottom: 1px solid #b1b1b1;
+}
+
+.template-item-title {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-item-btn {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-right: none !important;
 }
 
 .footer-editor {
