@@ -569,7 +569,11 @@ class TypeDocumentsSchema(models.Model):
                 )
             )
             for group in group_qs:
+                if group.hide:
+                    continue
                 serialized = TypeDocumentsSchema.serialize_group(group)
+                if not serialized["fields"]:
+                    continue
                 serialized["order"] = group_order
                 group_order += 1
                 groups.append(serialized)
@@ -792,6 +796,8 @@ class Documents(models.Model):
                         "files": files,
                     }
                 )
+            if not g["fields"]:
+                continue
             groups.append(g)
         return {
             "pk": snapshot.get("pk"),

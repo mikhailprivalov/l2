@@ -2,12 +2,16 @@
   <div>
     <VisibilityGroupWrapper
       v-for="group in research.groups"
+      v-show="group.fields && group.fields.length"
       :key="group.pk"
       :group="group"
       :groups="groups"
       :patient="patient"
     >
-      <div class="group">
+      <div
+        v-if="group.fields && group.fields.length"
+        class="group"
+      >
         <div
           v-if="group.title !== ''"
           class="group-title"

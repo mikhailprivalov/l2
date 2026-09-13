@@ -1,71 +1,90 @@
 <template>
   <div class="viewer-root">
-    <div class="filters-panel document-panel">
-      <span class="document-title">{{ title || '' }}</span>
-    </div>
-    <div class="document-body">
-      <div
-        v-if="!documentId"
-        class="empty"
-      >
-        Выберите документ
-      </div>
-      <template v-else>
-        <div class="service-number field">
-          <div class="field-title">
-            Служебный номер
-          </div>
-          <div class="field-value simple-value">
-            {{ documentId }}
-          </div>
-        </div>
-        <div
-          v-if="loaded && !research"
-          class="empty"
-        >
-          У вида не выбран шаблон
-        </div>
-        <DescriptiveForm
-          v-else-if="research"
-          :key="`${documentId}-${issPk}-${confirmed}`"
-          :research="research"
-          :confirmed="confirmed"
-          :patient="patient"
-          :pk="issPk"
-        />
-      </template>
+    <div
+      v-if="!documentId"
+      class="empty"
+    >
+      Выберите документ
     </div>
     <div
-      v-if="research"
-      class="control-row"
+      v-else
+      class="results-content"
     >
-      <div class="res-title">
-        {{ title }}
+      <div class="research-title">
+        <div class="research-left">
+          {{ title || '' }}
+        </div>
+        <div class="research-right">
+          <button
+            v-if="research && !confirmed"
+            v-tippy
+            class="btn btn-blue-nb"
+            type="button"
+            title="Сохранить без подтверждения"
+            @click="save"
+          >
+            &nbsp;<i class="fa fa-save" />&nbsp;
+          </button>
+        </div>
       </div>
-      <button
-        v-if="!confirmed"
-        class="btn btn-blue-nb"
-        type="button"
-        @click="save"
+      <div class="group">
+        <div class="fields">
+          <div class="field">
+            <div class="field-title">
+              Служебный номер
+            </div>
+            <div class="field-value simple-value">
+              {{ documentId }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        v-if="loaded && !research"
+        class="empty"
       >
-        Сохранить
-      </button>
-      <button
-        v-if="!confirmed"
-        class="btn btn-blue-nb"
-        type="button"
-        @click="confirm"
+        У вида не выбран шаблон
+      </div>
+      <DescriptiveForm
+        v-else-if="research"
+        :key="`${documentId}-${issPk}-${confirmed}`"
+        :research="research"
+        :confirmed="confirmed"
+        :patient="patient"
+        :pk="issPk"
+      />
+      <div
+        v-if="research"
+        class="control-row"
       >
-        Подтвердить
-      </button>
-      <button
-        v-if="confirmed"
-        class="btn btn-blue-nb"
-        type="button"
-        @click="resetConfirm"
-      >
-        Сброс подтверждения
-      </button>
+        <div class="res-title">
+          {{ title }}:
+        </div>
+        <button
+          v-if="!confirmed"
+          class="btn btn-blue-nb"
+          type="button"
+          @click="save"
+        >
+          Сохранить
+        </button>
+        <button
+          v-if="!confirmed"
+          class="btn btn-blue-nb"
+          type="button"
+          @click="confirm"
+        >
+          Сохранить и подтвердить
+        </button>
+        <button
+          v-if="confirmed"
+          class="btn btn-blue-nb"
+          type="button"
+          @click="resetConfirm"
+        >
+          Сброс подтверждения
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -234,46 +253,49 @@ watch(() => props.documentId, load, { immediate: true });
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
+  background: #fff;
 }
 
-.filters-panel {
+.results-content {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.research-title {
+  position: sticky;
+  top: 0;
+  background-color: #ddd;
+  text-align: center;
+  padding: 5px;
+  font-weight: bold;
+  z-index: 4;
   display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  background-color: #f8f7f7;
 }
 
-.document-panel {
-  flex: 0 0 34px;
-  height: 34px;
-  border-top: 1px solid #b1b1b1;
-  border-bottom: 1px solid #b1b1b1;
-}
-
-.document-title {
+.research-left {
+  position: relative;
+  text-align: left;
   flex: 1;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.document-body {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
-  background: #fff;
-}
+.research-right {
+  text-align: right;
+  flex: 0 0 auto;
+  margin-top: -5px;
+  margin-right: -5px;
+  margin-bottom: -5px;
+  white-space: nowrap;
 
-.service-number {
-  padding: 5px 5px 5px 10px;
-  border-bottom: 1px solid #eaeaea;
-}
-
-.simple-value {
-  padding: 5px;
+  .btn {
+    border-radius: 0;
+    padding: 5px 4px;
+  }
 }
 
 .empty {
@@ -281,23 +303,30 @@ watch(() => props.documentId, load, { immediate: true });
   color: #656d78;
 }
 
+.simple-value {
+  padding: 5px;
+}
+
 .control-row {
-  flex: 0 0 34px;
   height: 34px;
   background-color: #f3f3f3;
   display: flex;
   flex-direction: row;
-  border-top: 1px solid #b1b1b1;
+  margin-bottom: 10px;
 
   button {
     align-self: stretch;
     border-radius: 0;
   }
+
+  div {
+    align-self: stretch;
+  }
 }
 
 .res-title {
   flex: 1;
-  padding: 5px 10px;
+  padding: 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
