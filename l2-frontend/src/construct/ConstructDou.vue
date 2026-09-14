@@ -93,6 +93,13 @@
         @saved="onStructureSaved"
         @cancel="selectedId = null"
       />
+      <DouAddresseeEditor
+        v-else-if="showAddresseeEditor"
+        :key="`addressee-${selectedId}`"
+        :item-id="selectedId"
+        @saved="onCatalogSaved"
+        @cancel="selectedId = null"
+      />
       <ParaclinicResearchEditor
         v-else-if="showTemplateEditor"
         :key="selectedId"
@@ -119,6 +126,7 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import DouCatalogEditor from '@/construct/DouCatalogEditor.vue';
 import DouDocumentStructureEditor from '@/construct/DouDocumentStructureEditor.vue';
+import DouAddresseeEditor from '@/construct/DouAddresseeEditor.vue';
 import ParaclinicResearchEditor from '@/construct/ParaclinicResearchEditor.vue';
 
 interface NavButton {
@@ -139,7 +147,7 @@ interface CatalogItem {
 }
 
 const LAYOUT_TEMPLATE_DEPARTMENT = -17;
-const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'skeleton'];
+const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'skeleton', 'addressees'];
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -160,6 +168,7 @@ const canAdd = computed(() => (
   selectedNavId.value === 'document_groups'
   || selectedNavId.value === 'document_types'
   || selectedNavId.value === 'document_templates'
+  || selectedNavId.value === 'addressees'
 ));
 const catalogKind = computed<'group' | 'type'>(() => (selectedNavId.value === 'document_groups' ? 'group' : 'type'));
 
@@ -187,6 +196,10 @@ const showStructureEditor = computed(
 
 const showTemplateEditor = computed(
   () => selectedNavId.value === 'document_templates' && selectedId.value !== null,
+);
+
+const showAddresseeEditor = computed(
+  () => selectedNavId.value === 'addressees' && selectedId.value !== null,
 );
 
 const loadNavButtons = async () => {
@@ -230,6 +243,13 @@ const loadItems = async () => {
       specialities.value = data.specialities || [];
       permanentDirectories.value = data.permanent_directories || {};
       periodTypes.value = data.period_types || [];
+    } else if (selectedNavId.value === 'addressees') {
+      const { result } = await api('document-manager/addressees/groups/list', {
+        includeAll: false,
+        includeHidden: true,
+        globalOnly: true,
+      });
+      items.value = result || [];
     } else {
       await loadGroups();
       const { result } = await api('document-manager/types/list');

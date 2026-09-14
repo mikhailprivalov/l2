@@ -1,6 +1,26 @@
 <template>
   <div>
     <div class="sidebar">
+      <div class="flex search-row">
+        <input
+          v-model="query"
+          class="form-control search"
+          placeholder="Номер документа"
+          maxlength="15"
+          spellcheck="false"
+          @keypress.enter="search"
+        >
+        <button
+          class="btn btn-blue-nb nbr"
+          type="button"
+          :disabled="!query"
+          @click="search"
+        >
+          Найти
+        </button>
+      </div>
+    </div>
+    <div class="filters-panel">
       <div class="filter-checks">
         <label
           v-for="item in filterButtons"
@@ -10,56 +30,54 @@
         >
           <input
             type="checkbox"
-            :checked="selectedFilter === item.id"
+            :checked="filter === item.id"
             tabindex="-1"
           >
           <span>{{ item.label }}</span>
         </label>
       </div>
     </div>
-    <div class="filters-panel">
-      <input
-        class="form-control filters-input"
-        placeholder="Исполнитель"
-      >
-      <input
-        class="form-control filters-input"
-        placeholder="Контроль до"
-      >
-      <input
-        class="form-control filters-input"
-        placeholder="Фильтр 3"
-      >
-      <input
-        class="form-control filters-input"
-        placeholder="фильтр 4"
-      >
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+
+const props = defineProps<{
+  filter?: string | null;
+}>();
 
 const filterButtons = [
   { id: 'created', label: 'Создал' },
   { id: 'doing', label: 'Исполняю' },
   { id: 'wrote', label: 'Поручил' },
   { id: 'onControl', label: 'Контролирую' },
-  { id: 'toBeAgreed', label: 'Согласовать' },
-  { id: 'onSignature', label: 'Подписать' },
 ];
+
+const query = ref('');
+
+watch(query, (value) => {
+  const digits = String(value || '').replace(/[^0-9]/g, '');
+  if (digits !== value) {
+    query.value = digits;
+  }
+});
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
   (e: 'update:filter', value: string | null): void;
+  (e: 'search', value: string): void;
 }>();
 
-const selectedFilter = ref<string | null>(null);
-
 const toggleFilter = (id: string) => {
-  selectedFilter.value = selectedFilter.value === id ? null : id;
-  emit('update:filter', selectedFilter.value);
+  emit('update:filter', props.filter === id ? null : id);
+};
+
+const search = () => {
+  if (!query.value) {
+    return;
+  }
+  emit('search', query.value);
 };
 </script>
 
@@ -71,16 +89,36 @@ const toggleFilter = (id: string) => {
   border-right: 1px solid #b1b1b1;
 }
 
+.search-row {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
+.search {
+  height: 34px;
+  border-radius: 0;
+  padding-left: 10px;
+}
+
+.search-row .btn {
+  height: 34px;
+  border-radius: 0;
+}
+
 .filter-checks {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   width: 100%;
+  height: 34px;
 }
 
 .filter-check {
-  flex: 1 1 33%;
+  flex: 1 1 0;
   min-width: 0;
-  height: 25px;
+  height: 34px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -107,11 +145,7 @@ const toggleFilter = (id: string) => {
 .filters-panel {
   display: flex;
   flex-direction: row;
+  align-items: center;
   background-color: #f8f7f7;
-}
-
-.filters-input {
-  height: 25px;
-  border-radius: 0;
 }
 </style>

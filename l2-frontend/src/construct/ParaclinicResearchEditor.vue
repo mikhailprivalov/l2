@@ -1221,6 +1221,7 @@
                           v-if="paragraph_field_enabled || Number(row.field_type) === 44"
                           value="44"
                         >Параграф</option>
+                        <option value="45">Адресат</option>
                       </select>
                     </label>
                   </div>

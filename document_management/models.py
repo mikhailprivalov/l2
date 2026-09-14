@@ -10,6 +10,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 
 LAYOUT_TEMPLATE_FIELD_TYPE = 41
+ADDRESSEE_FIELD_TYPE = 45
 
 
 def layout_template_is_simple(research):
@@ -55,6 +56,230 @@ class GroupDocuments(models.Model):
             obj.title = title
         obj.save()
         return {"ok": True, "id": obj.pk, "title": obj.title}
+
+
+class AddresseeGroup(models.Model):
+    ALL_ID = 0
+    ALL_TITLE = "Все"
+    ALL_GROUP = "Все адресаты"
+    CONSTRUCTOR_GROUP = "Конструктор: ДОУ"
+
+    title = models.CharField(max_length=128, blank=True, null=True)
+    hide = models.BooleanField(default=False, blank=True, db_index=True)
+    order = models.IntegerField(default=0)
+    who_create = models.ForeignKey(
+        DoctorProfile,
+        related_name="addressee_groups",
+        db_index=True,
+        default=None,
+        blank=True,
+        null=True,
+        help_text="Автор личного набора; пусто — общий набор конструктора",
+        on_delete=models.SET_NULL,
+    )
+
+    class Meta:
+        verbose_name = "Набор адресатов"
+        verbose_name_plural = "Наборы адресатов"
+        ordering = ("order", "title", "pk")
+
+    def __str__(self):
+        return self.title or ""
+
+    @property
+    def json(self):
+        return {
+            "id": self.id,
+            "title": self.title or "",
+            "hide": self.hide,
+            "order": self.order,
+            "own": False,
+        }
+
+    def as_json(self, doctor_id=None):
+        data = self.json
+        data["own"] = bool(self.who_create_id and doctor_id and self.who_create_id == doctor_id)
+        return data
+
+    @staticmethod
+    def _employee_json(doctor):
+        return {
+            "id": doctor.pk,
+            "fio": doctor.get_fio(),
+            "department": doctor.podrazdeleniye.title if doctor.podrazdeleniye else "",
+        }
+
+    @classmethod
+    def can_see_all(cls, user):
+        if not user:
+            return False
+        if getattr(user, "is_superuser", False):
+            return True
+        return user.groups.filter(name=cls.ALL_GROUP).exists()
+
+    @classmethod
+    def can_list_all_employees(cls, user, doctor=None):
+        if cls.can_see_all(user):
+            return True
+        if doctor and doctor.has_group(cls.CONSTRUCTOR_GROUP):
+            return True
+        return bool(user and user.groups.filter(name=cls.CONSTRUCTOR_GROUP).exists())
+
+    @classmethod
+    def empty_employees(cls, page=1, page_size=100):
+        return {
+            "result": [],
+            "total": 0,
+            "page": page,
+            "pageSize": page_size if page_size is not None else 0,
+            "hasMore": False,
+        }
+
+    @classmethod
+    def get_list(cls, include_all=True, include_hidden=False, doctor_id=None, global_only=False):
+        rows = cls.objects.all().order_by("order", "title", "pk")
+        if global_only or not doctor_id:
+            rows = rows.filter(who_create__isnull=True)
+        else:
+            rows = rows.filter(models.Q(who_create__isnull=True) | models.Q(who_create_id=doctor_id))
+        if not include_hidden:
+            rows = rows.filter(hide=False)
+        result = []
+        if include_all:
+            result.append({"id": cls.ALL_ID, "title": cls.ALL_TITLE, "hide": False, "order": -1, "own": False})
+        result.extend([row.as_json(doctor_id) for row in rows])
+        return result
+
+    @classmethod
+    def get_details(cls, pk):
+        if pk in (None, cls.ALL_ID, 0, "0", -1, "-1"):
+            return {"ok": False, "message": "Набор не найден"}
+        obj = cls.objects.filter(pk=pk).first()
+        if not obj:
+            return {"ok": False, "message": "Набор не найден"}
+        members = [cls._employee_json(row.doctor) for row in obj.members.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk") if row.doctor_id]
+        payload = obj.json
+        payload["ok"] = True
+        payload["members"] = members
+        return payload
+
+    @classmethod
+    def _set_members(cls, obj, member_ids):
+        ids = []
+        seen = set()
+        for raw in member_ids:
+            try:
+                doctor_id = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if doctor_id < 1 or doctor_id in seen:
+                continue
+            seen.add(doctor_id)
+            ids.append(doctor_id)
+        valid = set(DoctorProfile.objects.filter(pk__in=ids).values_list("pk", flat=True))
+        ids = [doctor_id for doctor_id in ids if doctor_id in valid]
+        obj.members.all().delete()
+        AddresseeGroupMember.objects.bulk_create([AddresseeGroupMember(group=obj, doctor_id=doctor_id) for doctor_id in ids])
+        return ids
+
+    @classmethod
+    def save_group(cls, pk, title, hide=False, member_ids=None):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        if pk in (None, -1, "-1"):
+            obj = cls(title=title, hide=bool(hide))
+        else:
+            obj = cls.objects.filter(pk=pk, who_create__isnull=True).first()
+            if not obj:
+                return {"ok": False, "message": "Набор не найден"}
+            obj.title = title
+            obj.hide = bool(hide)
+        obj.save()
+        if member_ids is not None:
+            cls._set_members(obj, member_ids)
+        return {"ok": True, "id": obj.pk, "title": obj.title}
+
+    @classmethod
+    def save_personal(cls, who_create, title, member_ids):
+        if not who_create:
+            return {"ok": False, "message": "Нет пользователя"}
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        if not member_ids:
+            return {"ok": False, "message": "Выберите сотрудников"}
+        obj = cls(title=title, who_create=who_create)
+        obj.save()
+        cls._set_members(obj, member_ids)
+        return {"ok": True, "id": obj.pk, "title": obj.title, "own": True}
+
+    @classmethod
+    def delete_personal(cls, pk, who_create):
+        if not who_create:
+            return {"ok": False, "message": "Нет пользователя"}
+        obj = cls.objects.filter(pk=pk, who_create=who_create).first()
+        if not obj:
+            return {"ok": False, "message": "Набор не найден"}
+        obj.delete()
+        return {"ok": True}
+
+    @classmethod
+    def get_employees(cls, group_id, hospital_id, query="", page=1, page_size=100, allow_all=False):
+        try:
+            group_id = int(group_id)
+        except (TypeError, ValueError):
+            group_id = cls.ALL_ID
+        if (not group_id or group_id <= 0) and not allow_all:
+            return cls.empty_employees(page, page_size)
+        doctors = DoctorProfile.objects.filter(user__is_active=True, is_system_user=False).select_related("user", "podrazdeleniye")
+        if group_id and group_id > 0:
+            doctors = doctors.filter(addressee_group_members__group_id=group_id)
+        query = (query or "").strip()
+        if query:
+            parts = [p for p in query.split() if p]
+            q_filter = models.Q()
+            for part in parts:
+                q_filter &= models.Q(family__icontains=part) | models.Q(name__icontains=part) | models.Q(patronymic__icontains=part) | models.Q(fio__icontains=part)
+            doctors = doctors.filter(q_filter)
+        doctors = doctors.distinct().order_by("family", "name", "patronymic", "pk")
+        total = doctors.count()
+        if page_size is None:
+            page = 1
+            rows = doctors
+            has_more = False
+        else:
+            try:
+                page = max(int(page or 1), 1)
+            except (TypeError, ValueError):
+                page = 1
+            try:
+                page_size = max(int(page_size or 100), 1)
+            except (TypeError, ValueError):
+                page_size = 100
+            start = (page - 1) * page_size
+            rows = doctors[start : start + page_size]
+            has_more = start + page_size < total
+        return {
+            "result": [cls._employee_json(row) for row in rows],
+            "total": total,
+            "page": page,
+            "pageSize": page_size if page_size is not None else total,
+            "hasMore": has_more,
+        }
+
+
+class AddresseeGroupMember(models.Model):
+    group = models.ForeignKey(AddresseeGroup, related_name="members", on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, related_name="addressee_group_members", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Сотрудник набора адресатов"
+        verbose_name_plural = "Сотрудники наборов адресатов"
+        unique_together = ("group", "doctor")
+
+    def __str__(self):
+        return f"{self.group} {self.doctor}"
 
 
 class TypeDocuments(models.Model):
@@ -529,6 +754,7 @@ class TypeDocumentsSchema(models.Model):
             "for_med_certificate": field.for_med_certificate,
             "attached": field.attached or "",
             "layout_link_research_id": field.layout_link_research_id,
+            "cdaOption": field.cda_option_id if field.cda_option_id else -1,
         }
 
     @staticmethod
@@ -640,6 +866,18 @@ class Documents(models.Model):
         help_text="Кто подтвердил",
         on_delete=models.SET_NULL,
     )
+    is_hidden = models.BooleanField(default=False, blank=True, db_index=True, help_text="Скрыт из списков")
+
+    HIDDEN_DOCS_GROUP = "Скрытые документы"
+    RESET_GROUP = "Сброс документов"
+    HISTORY_GROUP = "История документа"
+    LOG_CREATE = 260000
+    LOG_SAVE = 260001
+    LOG_CONFIRM = 260002
+    LOG_RESET = 260003
+    LOG_HIDE = 260004
+    LOG_SHOW = 260005
+    LOG_TYPES = (LOG_CREATE, LOG_SAVE, LOG_CONFIRM, LOG_RESET, LOG_HIDE, LOG_SHOW)
 
     class Meta:
         verbose_name = "Документ-экземпляр"
@@ -648,33 +886,226 @@ class Documents(models.Model):
     def __str__(self):
         return f"{self.type_document}"
 
+    def list_title(self, iss=None, topic=None):
+        type_title = self.type_document.title if self.type_document else "Документ"
+        fallback = self.number_registration or f"{type_title} №{self.pk}"
+        is_saved = bool(self.time_confirm or (iss and (iss.time_confirmation or iss.time_save)))
+        topic_text = "" if topic is None else str(topic).strip()
+        if is_saved and topic_text:
+            return topic_text
+        return fallback
+
+    @staticmethod
+    def topic_cda_id():
+        from laboratory.settings import CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER
+
+        raw = CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER
+        if raw in (None, "", -1, "-1"):
+            return None
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            return None
+        return value if value > 0 else None
+
+    @staticmethod
+    def topic_from_research(research):
+        topic_id = Documents.topic_cda_id()
+        if not topic_id or not research:
+            return ""
+        for group in research.get("groups") or []:
+            for field in group.get("fields") or []:
+                cda = field.get("cdaOption")
+                if cda in (None, "", -1, "-1"):
+                    continue
+                try:
+                    if int(cda) != topic_id:
+                        continue
+                except (TypeError, ValueError):
+                    continue
+                value = (field.get("value") or "").strip()
+                if value:
+                    return value
+        return ""
+
+    @staticmethod
+    def _topic_field_ids_from_schema(doc, topic_id):
+        schema = getattr(doc, "schema", None)
+        snapshot = getattr(schema, "schema", None) if schema else None
+        if not isinstance(snapshot, dict):
+            return []
+        ids = []
+        for group in snapshot.get("groups") or []:
+            for field in group.get("fields") or []:
+                cda = field.get("cdaOption")
+                if cda in (None, "", -1, "-1"):
+                    continue
+                try:
+                    if int(cda) != topic_id:
+                        continue
+                except (TypeError, ValueError):
+                    continue
+                pk = field.get("pk")
+                if pk:
+                    ids.append(pk)
+        return ids
+
+    @staticmethod
+    def topics_for_documents(docs, iss_by_doc=None):
+        from directory.models import ParaclinicInputField
+        from directions.models import ParaclinicResult
+
+        topic_id = Documents.topic_cda_id()
+        if not topic_id or not docs:
+            return {}
+        iss_by_doc = iss_by_doc or {}
+        topic_by_doc = {}
+        field_ids = list(ParaclinicInputField.objects.filter(cda_option_id=topic_id).values_list("pk", flat=True))
+        snapshot_field_ids_by_doc = {}
+        for doc in docs:
+            extra = Documents._topic_field_ids_from_schema(doc, topic_id)
+            if extra:
+                snapshot_field_ids_by_doc[doc.pk] = extra
+                field_ids = list({*field_ids, *extra})
+        iss_ids = [iss.pk for iss in iss_by_doc.values()]
+        if field_ids and iss_ids:
+            rows = ParaclinicResult.objects.filter(issledovaniye_id__in=iss_ids, field_id__in=field_ids).exclude(value="").select_related("issledovaniye")
+            for row in rows:
+                value = (row.value or "").strip()
+                if value:
+                    topic_by_doc.setdefault(row.issledovaniye.document_id, value)
+        for doc in docs:
+            if doc.pk in topic_by_doc:
+                continue
+            body = doc.body_values if isinstance(doc.body_values, dict) else {}
+            ids = list(dict.fromkeys([*snapshot_field_ids_by_doc.get(doc.pk, []), *field_ids]))
+            for field_id in ids:
+                value = body.get(str(field_id), body.get(field_id))
+                if value and str(value).strip():
+                    topic_by_doc[doc.pk] = str(value).strip()
+                    break
+        return topic_by_doc
+
+    def topic_value(self, iss=None, research=None):
+        from_research = Documents.topic_from_research(research)
+        if from_research:
+            return from_research
+        iss_by_doc = {self.pk: iss} if iss else {}
+        return Documents.topics_for_documents([self], iss_by_doc).get(self.pk, "")
+
     @property
     def json(self):
         type_title = self.type_document.title if self.type_document else "Документ"
-        title = self.number_registration or f"{type_title} №{self.pk}"
         group = self.type_document.group_document if self.type_document else None
         return {
             "id": self.id,
-            "title": title,
+            "title": self.list_title(),
             "typeId": self.type_document_id,
             "typeTitle": type_title,
             "groupId": group.pk if group else None,
             "groupTitle": group.title if group else "",
             "confirmed": bool(self.time_confirm),
+            "isHidden": self.is_hidden,
         }
 
+    @classmethod
+    def can_view_all_hidden(cls, who):
+        if not who:
+            return False
+        user = getattr(who, "user", None)
+        if user and getattr(user, "is_superuser", False):
+            return True
+        return who.has_group(cls.HIDDEN_DOCS_GROUP)
+
+    @classmethod
+    def can_see_document(cls, obj, who):
+        if not obj.is_hidden:
+            return True
+        if not who:
+            return False
+        if obj.who_create_id == getattr(who, "pk", None):
+            return True
+        return cls.can_view_all_hidden(who)
+
+    @classmethod
+    def can_set_hidden(cls, obj, who):
+        if not who:
+            return False
+        if obj.who_create_id == getattr(who, "pk", None):
+            return True
+        return cls.can_view_all_hidden(who)
+
+    @classmethod
+    def can_reset_confirm(cls, who):
+        if not who:
+            return False
+        user = getattr(who, "user", None)
+        if user and getattr(user, "is_superuser", False):
+            return True
+        return who.has_group(cls.RESET_GROUP)
+
     @staticmethod
-    def get_list(type_id=None, group_id=None, role_filter=None, who=None):
-        qs = Documents.objects.select_related("type_document", "type_document__group_document").order_by("-pk")
-        if type_id not in (None, "", -1, "-1"):
-            qs = qs.filter(type_document_id=type_id)
-        elif group_id in (-1, "-1"):
-            qs = qs.filter(models.Q(type_document__isnull=True) | models.Q(type_document__group_document__isnull=True))
-        elif group_id not in (None, "", 0, "0"):
-            qs = qs.filter(type_document__group_document_id=group_id)
-        if role_filter == "created" and who:
-            qs = qs.filter(who_create=who)
-        return [row.json for row in qs]
+    def find_by_id(pk, who=None):
+        try:
+            pk = int(pk)
+        except (TypeError, ValueError):
+            return {"ok": False, "message": "Введите номер документа"}
+        if pk <= 0:
+            return {"ok": False, "message": "Введите номер документа"}
+        obj = Documents.objects.select_related("type_document", "type_document__group_document").filter(pk=pk).first()
+        if not obj or not Documents.can_see_document(obj, who):
+            return {"ok": False, "message": "Документ не найден"}
+        payload = obj.json
+        payload["ok"] = True
+        return payload
+
+    @classmethod
+    def log_action(cls, pk, log_type, who, extra=None):
+        from slog.models import Log
+
+        Log.log(str(pk), log_type, who, extra or {})
+
+    @staticmethod
+    def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False):
+        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema").order_by("-pk")
+        if role_filter == "toReview":
+            if not who:
+                return []
+            qs = qs.filter(pk__in=DocumentReview.pending_document_ids(who))
+        else:
+            if type_id not in (None, "", -1, "-1"):
+                qs = qs.filter(type_document_id=type_id)
+            elif group_id in (-1, "-1"):
+                qs = qs.filter(models.Q(type_document__isnull=True) | models.Q(type_document__group_document__isnull=True))
+            elif group_id not in (None, "", 0, "0"):
+                qs = qs.filter(type_document__group_document_id=group_id)
+            if role_filter == "created" and who:
+                qs = qs.filter(who_create=who)
+        if hidden:
+            qs = qs.filter(is_hidden=True)
+            if not Documents.can_view_all_hidden(who):
+                if not who:
+                    return []
+                qs = qs.filter(who_create=who)
+        else:
+            qs = qs.filter(is_hidden=False)
+        docs = list(qs)
+        if not docs:
+            return []
+
+        from directions.models import Issledovaniya
+
+        iss_by_doc = {}
+        for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in docs]).order_by("pk"):
+            iss_by_doc.setdefault(iss.document_id, iss)
+        topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
+
+        result = []
+        for doc in docs:
+            payload = doc.json
+            payload["title"] = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
+            result.append(payload)
+        return result
 
     @staticmethod
     def create_document(type_id, who_create):
@@ -694,6 +1125,12 @@ class Documents(models.Model):
                 research=templates[0] if templates else type_doc.layout_template,
                 creator=who_create,
             )
+        Documents.log_action(
+            obj.pk,
+            Documents.LOG_CREATE,
+            who_create,
+            {"title": obj.json["title"], "typeId": obj.type_document_id, "typeTitle": obj.type_document.title if obj.type_document else ""},
+        )
         return {"ok": True, "id": obj.pk, "title": obj.json["title"]}
 
     def get_issledovaniye(self):
@@ -757,7 +1194,7 @@ class Documents(models.Model):
                 if field.get("required") and field_type in [10, 12] and "- Не выбрано" not in values_to_input:
                     values_to_input = ["- Не выбрано", *values_to_input]
                 default_value = field.get("default_value") or ""
-                if field_type in [3, 11, 13, 14, 30, 42, 44]:
+                if field_type in [3, 11, 13, 14, 30, 42, 44, ADDRESSEE_FIELD_TYPE]:
                     default_value = ""
                 key = str(field_pk)
                 if result_field:
@@ -766,6 +1203,8 @@ class Documents(models.Model):
                     value = saved[key]
                 else:
                     value = saved.get(field_pk, default_value)
+                if field_type == ADDRESSEE_FIELD_TYPE and not value:
+                    value = "[]"
                 file_settings = field.get("file_settings")
                 files = []
                 if field_type == 42:
@@ -794,6 +1233,7 @@ class Documents(models.Model):
                         "isDiagTable": field.get("isDiagTable"),
                         "file_settings": file_settings,
                         "files": files,
+                        "cdaOption": field.get("cdaOption", -1),
                     }
                 )
             if not g["fields"]:
@@ -810,16 +1250,24 @@ class Documents(models.Model):
         }
 
     @staticmethod
-    def get_details(pk):
+    def get_details(pk, who=None):
         obj = Documents.objects.select_related("schema", "type_document", "type_document__layout_template").filter(pk=pk).first()
         if not obj:
             return {"ok": False, "message": "Документ не найден"}
+        if not Documents.can_see_document(obj, who):
+            return {"ok": False, "message": "Документ не найден"}
         iss = obj.get_issledovaniye()
+        research = obj.build_research(iss)
         payload = obj.json
         payload["ok"] = True
         payload["issPk"] = iss.pk if iss else None
-        payload["research"] = obj.build_research(iss)
+        payload["research"] = research
         payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
+        payload["canHide"] = Documents.can_set_hidden(obj, who)
+        payload["canReset"] = Documents.can_reset_confirm(who)
+        payload["reviewedNow"] = DocumentReview.mark_opened(obj, who) if payload["confirmed"] else False
+        type_doc = obj.type_document.title if obj.type_document else ""
+        DocumentRecent.remember(who, obj, topic=obj.topic_value(iss, research=research), type_doc=type_doc)
         return payload
 
     @staticmethod
@@ -832,6 +1280,8 @@ class Documents(models.Model):
         iss = Issledovaniya.objects.filter(pk=iss_pk, document__isnull=False).select_related("document", "research").first()
         if not iss or not iss.document:
             return {"ok": False, "message": "Исследование не найдено"}
+        if not Documents.can_see_document(iss.document, who):
+            return {"ok": False, "message": "Документ не найден"}
         if iss.time_confirmation or iss.document.time_confirm:
             return {"ok": False, "message": "Документ подтверждён"}
         v_g = (visibility_state or {}).get("groups") or {}
@@ -840,6 +1290,9 @@ class Documents(models.Model):
         files_by_field = {}
         document = iss.document
         body_values = dict(document.body_values) if isinstance(document.body_values, dict) else {}
+        addressee_ids = []
+        addressee_seen = set()
+        has_addressee_field = False
         with transaction.atomic():
             for group in groups:
                 group_pk = group.get("pk")
@@ -873,7 +1326,17 @@ class Documents(models.Model):
                     f_result.value = stored_value
                     f_result.field_type = payload_field_type if payload_field_type is not None else f.field_type
                     field_type = f_result.field_type
-                    if field_type in [27, 28, 29, 32, 33, 34, 35, 44]:
+                    if field_type == ADDRESSEE_FIELD_TYPE:
+                        has_addressee_field = True
+                        if isinstance(stored_value, (dict, list)):
+                            stored_value = json.dumps(stored_value)
+                            f_result.value = stored_value
+                            body_values[str(field_pk)] = stored_value
+                        for doctor_id in DocumentReview.parse_addressee_ids(value):
+                            if doctor_id not in addressee_seen:
+                                addressee_seen.add(doctor_id)
+                                addressee_ids.append(doctor_id)
+                    if field_type in [27, 28, 29, 32, 33, 34, 35, 44, ADDRESSEE_FIELD_TYPE]:
                         if isinstance(value, (dict, list)):
                             val = value
                         else:
@@ -903,6 +1366,21 @@ class Documents(models.Model):
                 update_fields.extend(["time_confirm", "who_confirm"])
             document.save(update_fields=update_fields)
             iss.save()
+            if has_addressee_field:
+                DocumentReview.sync_for_document(document, addressee_ids)
+            DocumentRecent.objects.filter(document=document).update(topic=document.topic_value(iss, research=research))
+        Documents.log_action(
+            document.pk,
+            Documents.LOG_CONFIRM if with_confirm else Documents.LOG_SAVE,
+            who,
+            {
+                "title": document.json.get("title") if isinstance(document.json, dict) else "",
+                "typeId": document.type_document_id,
+                "typeTitle": document.type_document.title if document.type_document else "",
+                "issPk": iss.pk,
+                "confirmed": bool(iss.time_confirmation),
+            },
+        )
         return {
             "ok": True,
             "id": iss.document_id,
@@ -912,11 +1390,15 @@ class Documents(models.Model):
         }
 
     @staticmethod
-    def confirm_reset(pk):
+    def confirm_reset(pk, who=None):
         from directions.models import Issledovaniya
 
         obj = Documents.objects.filter(pk=pk).first()
         if not obj:
+            return {"ok": False, "message": "Документ не найден"}
+        if not Documents.can_reset_confirm(who):
+            return {"ok": False, "message": "Нет прав"}
+        if not Documents.can_see_document(obj, who):
             return {"ok": False, "message": "Документ не найден"}
         iss = Issledovaniya.objects.filter(document=obj).order_by("pk").first()
         if (not iss or not iss.time_confirmation) and not obj.time_confirm:
@@ -929,7 +1411,90 @@ class Documents(models.Model):
         obj.time_confirm = None
         obj.who_confirm = None
         obj.save(update_fields=["time_confirm", "who_confirm"])
+        Documents.log_action(
+            obj.pk,
+            Documents.LOG_RESET,
+            who,
+            {
+                "title": obj.json.get("title") if isinstance(obj.json, dict) else "",
+                "typeId": obj.type_document_id,
+                "typeTitle": obj.type_document.title if obj.type_document else "",
+            },
+        )
         return {"ok": True, "id": obj.pk, "confirmed": False}
+
+    @staticmethod
+    def set_hidden(pk, hidden, who):
+        obj = Documents.objects.filter(pk=pk).first()
+        if not obj:
+            return {"ok": False, "message": "Документ не найден"}
+        if not Documents.can_set_hidden(obj, who):
+            return {"ok": False, "message": "Нет прав"}
+        obj.is_hidden = bool(hidden)
+        obj.save(update_fields=["is_hidden"])
+        Documents.log_action(
+            obj.pk,
+            Documents.LOG_HIDE if obj.is_hidden else Documents.LOG_SHOW,
+            who,
+            {
+                "title": obj.json.get("title") if isinstance(obj.json, dict) else "",
+                "typeId": obj.type_document_id,
+                "typeTitle": obj.type_document.title if obj.type_document else "",
+                "isHidden": obj.is_hidden,
+            },
+        )
+        return {"ok": True, "id": obj.pk, "isHidden": obj.is_hidden}
+
+    @classmethod
+    def get_history_for_document(cls, pk):
+        from laboratory.utils import strdatetime
+        from slog.models import Log
+
+        try:
+            pk = int(pk)
+        except (TypeError, ValueError):
+            return []
+        if pk < 1 or not cls.objects.filter(pk=pk).exists():
+            return []
+
+        body_labels = {
+            "title": "Заголовок",
+            "typeId": "Код вида",
+            "typeTitle": "Вид",
+            "issPk": "Исследование",
+            "confirmed": "Подтверждён",
+            "isHidden": "Скрыт",
+        }
+        yesno = {True: "да", False: "нет"}
+        events = []
+        logs = Log.objects.filter(key=str(pk), type__in=cls.LOG_TYPES).select_related("user__user", "user__podrazdeleniye").order_by("time", "pk")
+        for lg in logs:
+            event = [["title", f"{strdatetime(lg.time)} {lg.get_type_display()}"]]
+            if lg.user:
+                podr = lg.user.podrazdeleniye.title if lg.user.podrazdeleniye else ""
+                username = lg.user.user.username if lg.user.user else ""
+                event.append(["Пользователь", f"{lg.user.fio}, {username}, {podr}"])
+            if lg.body:
+                try:
+                    parsed = json.loads(lg.body)
+                except Exception:
+                    parsed = None
+                if isinstance(parsed, dict):
+                    for key, value in parsed.items():
+                        if isinstance(value, (dict, list)):
+                            event.append(["json_data", json.dumps(value, ensure_ascii=False)])
+                            continue
+                        if isinstance(value, bool):
+                            value = yesno[value]
+                        if value in ("", None):
+                            continue
+                        event.append([body_labels.get(key, key), str(value)])
+                elif parsed is not None:
+                    event.append(["json_data", lg.body])
+                else:
+                    event.append(["Данные", lg.body])
+            events.append(event)
+        return [{"type": f"Документ №{pk}", "events": events}]
 
 
 class DocumentEmployeeApprove(models.Model):
@@ -983,6 +1548,200 @@ class DocumentControl(models.Model):
 
     def __str__(self):
         return f"{self.document} {self.document} {self.time_control}"
+
+
+class DocumentReview(models.Model):
+    document = models.ForeignKey(Documents, db_index=True, on_delete=models.CASCADE)
+    time_review = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Дата ознакомления")
+    doctor_review = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text="Кто  должен ознакомлен", on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = "Ознакомление документа"
+        verbose_name_plural = "Ознакомления документов"
+
+    def __str__(self):
+        return f"{self.document} {self.doctor_review} {self.time_review}"
+
+    @classmethod
+    def pending_qs(cls, who):
+        qs = cls.objects.filter(time_review__isnull=True)
+        if who:
+            qs = qs.filter(doctor_review=who)
+        else:
+            qs = qs.none()
+        return qs
+
+    @classmethod
+    def pending_document_ids(cls, who):
+        return cls.pending_qs(who).values("document_id")
+
+    @classmethod
+    def pending_count(cls, who):
+        if not who:
+            return 0
+        return cls.pending_qs(who).values("document_id").distinct().count()
+
+    @classmethod
+    def mark_opened(cls, document, who):
+        if not document or not who:
+            return False
+        if not document.time_confirm:
+            iss = document.get_issledovaniye()
+            if not iss or not iss.time_confirmation:
+                return False
+        from django.utils import timezone
+
+        updated = cls.objects.filter(document=document, doctor_review=who, time_review__isnull=True).update(time_review=timezone.now())
+        return updated > 0
+
+    @classmethod
+    def parse_addressee_ids(cls, value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except Exception:
+                value = []
+        if not isinstance(value, list):
+            return []
+        ids = []
+        seen = set()
+        for item in value:
+            raw = item.get("id") if isinstance(item, dict) else item
+            try:
+                doctor_id = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if doctor_id < 1 or doctor_id in seen:
+                continue
+            seen.add(doctor_id)
+            ids.append(doctor_id)
+        return ids
+
+    @classmethod
+    def collect_ids_from_research(cls, research):
+        ids = []
+        seen = set()
+        for group in (research or {}).get("groups") or []:
+            for field in group.get("fields") or []:
+                field_type = field.get("field_type")
+                if field_type != ADDRESSEE_FIELD_TYPE:
+                    continue
+                for doctor_id in cls.parse_addressee_ids(field.get("value")):
+                    if doctor_id in seen:
+                        continue
+                    seen.add(doctor_id)
+                    ids.append(doctor_id)
+        return ids
+
+    @classmethod
+    def sync_for_document(cls, document, doctor_ids):
+        wanted = set(doctor_ids or [])
+        if wanted:
+            wanted = set(DoctorProfile.objects.filter(pk__in=wanted).values_list("pk", flat=True))
+        existing = list(cls.objects.filter(document=document))
+        keep = set()
+        to_delete = []
+        for row in existing:
+            if row.doctor_review_id and row.doctor_review_id in wanted:
+                keep.add(row.doctor_review_id)
+            else:
+                to_delete.append(row.pk)
+        if to_delete:
+            cls.objects.filter(pk__in=to_delete).delete()
+        cls.objects.bulk_create([cls(document=document, doctor_review_id=doctor_id) for doctor_id in wanted if doctor_id not in keep])
+
+    @classmethod
+    def sync_from_research(cls, document, research):
+        cls.sync_for_document(document, cls.collect_ids_from_research(research))
+
+
+class DocumentRecent(models.Model):
+    PAGE_SIZE = 50
+    MAX_ITEMS = 200
+
+    doctor = models.ForeignKey(DoctorProfile, related_name="document_recents", on_delete=models.CASCADE, help_text="Пользователь")
+    document = models.ForeignKey(Documents, related_name="recent_opens", on_delete=models.CASCADE, help_text="Документ")
+    topic = models.CharField(max_length=255, blank=True, default="", help_text="Тема документа")
+    type_doc = models.CharField(max_length=128, blank=True, default="", help_text="Вид документа")
+    opened_at = models.DateTimeField(db_index=True, help_text="Дата и время последнего открытия")
+
+    class Meta:
+        verbose_name = "Последний документ"
+        verbose_name_plural = "Последние документы"
+        unique_together = ("doctor", "document")
+        indexes = (models.Index(fields=("doctor", "-opened_at")),)
+        ordering = ("-opened_at", "-pk")
+
+    def __str__(self):
+        return f"{self.doctor_id} {self.document_id} {self.opened_at}"
+
+    @classmethod
+    def remember(cls, who, document, topic="", type_doc=""):
+        if not who or not document:
+            return
+        from django.utils import timezone
+
+        cls.objects.update_or_create(
+            doctor=who,
+            document=document,
+            defaults={
+                "topic": topic or "",
+                "type_doc": type_doc or "",
+                "opened_at": timezone.now(),
+            },
+        )
+        extra_ids = list(cls.objects.filter(doctor=who).order_by("-opened_at", "-pk").values_list("pk", flat=True)[cls.MAX_ITEMS :])
+        if extra_ids:
+            cls.objects.filter(pk__in=extra_ids).delete()
+
+    @classmethod
+    def get_page(cls, who, page=1, page_size=None):
+        if not who:
+            return {"result": [], "page": 1, "pageSize": cls.PAGE_SIZE, "hasMore": False}
+        try:
+            page = max(int(page or 1), 1)
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            page_size = max(int(page_size or cls.PAGE_SIZE), 1)
+        except (TypeError, ValueError):
+            page_size = cls.PAGE_SIZE
+        qs = cls.objects.filter(doctor=who).select_related("document", "document__type_document", "document__schema").order_by("-opened_at", "-pk")
+        if not Documents.can_view_all_hidden(who):
+            qs = qs.filter(models.Q(document__is_hidden=False) | models.Q(document__who_create=who))
+        offset = (page - 1) * page_size
+        rows = list(qs[offset : offset + page_size + 1])
+        has_more = len(rows) > page_size
+        rows = rows[:page_size]
+        from directions.models import Issledovaniya
+
+        docs = [row.document for row in rows]
+        iss_by_doc = {}
+        if docs:
+            for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in docs]).order_by("pk"):
+                iss_by_doc.setdefault(iss.document_id, iss)
+        live_topics = Documents.topics_for_documents(docs, iss_by_doc)
+        result = []
+        for row in rows:
+            topic = (live_topics.get(row.document_id) or row.topic or "").strip()
+            type_doc = (row.type_doc or "").strip()
+            if not type_doc and row.document.type_document:
+                type_doc = row.document.type_document.title
+            title = " ".join(part for part in (topic, type_doc) if part) or f"Документ №{row.document_id}"
+            result.append(
+                {
+                    "id": row.document_id,
+                    "title": title,
+                    "topic": topic,
+                    "typeDoc": type_doc,
+                }
+            )
+        return {
+            "result": result,
+            "page": page,
+            "pageSize": page_size,
+            "hasMore": has_more,
+        }
 
 
 class DocumentResult(models.Model):

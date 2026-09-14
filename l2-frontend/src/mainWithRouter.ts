@@ -849,6 +849,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/document-history',
+      name: 'document-history',
+      component: () => import('@/pages/DocumentManagement/DocumentHistory.vue'),
+      meta: {
+        title: 'История документов',
+        narrowLayout: true,
+        groups: ['История документа'],
+      },
+    },
+    {
       path: '/ui/gardening',
       name: 'gardening',
       component: () => import('@/pages/Gardening/index.vue'),

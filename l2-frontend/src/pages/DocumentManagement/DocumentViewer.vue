@@ -27,18 +27,6 @@
           </button>
         </div>
       </div>
-      <div class="group">
-        <div class="fields">
-          <div class="field">
-            <div class="field-title">
-              Служебный номер
-            </div>
-            <div class="field-value simple-value">
-              {{ documentId }}
-            </div>
-          </div>
-        </div>
-      </div>
       <div
         v-if="loaded && !research"
         class="empty"
@@ -77,12 +65,28 @@
           Сохранить и подтвердить
         </button>
         <button
-          v-if="confirmed"
+          v-if="confirmed && canReset"
           class="btn btn-blue-nb"
           type="button"
           @click="resetConfirm"
         >
           Сброс подтверждения
+        </button>
+        <button
+          v-if="canHide && !isHidden"
+          class="btn btn-blue-nb"
+          type="button"
+          @click="setHidden(true)"
+        >
+          Скрыть
+        </button>
+        <button
+          v-if="canHide && isHidden"
+          class="btn btn-blue-nb"
+          type="button"
+          @click="setHidden(false)"
+        >
+          Показать
         </button>
       </div>
     </div>
@@ -105,6 +109,12 @@ const props = defineProps<{
   documentId?: number | null;
 }>();
 
+// eslint-disable-next-line no-spaced-func,func-call-spacing
+const emit = defineEmits<{
+  (e: 'visibility-change'): void;
+  (e: 'reviewed'): void;
+}>();
+
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
@@ -113,6 +123,9 @@ const research = ref(null);
 const issPk = ref<number | null>(null);
 const loaded = ref(false);
 const confirmed = ref(false);
+const isHidden = ref(false);
+const canHide = ref(false);
+const canReset = ref(false);
 const patient = {};
 
 const visibilityState = () => {
@@ -168,6 +181,9 @@ const load = async () => {
   issPk.value = null;
   loaded.value = false;
   confirmed.value = false;
+  isHidden.value = false;
+  canHide.value = false;
+  canReset.value = false;
   if (!props.documentId) {
     return;
   }
@@ -179,6 +195,12 @@ const load = async () => {
       research.value = result.research || null;
       issPk.value = result.issPk || null;
       confirmed.value = Boolean(result.confirmed);
+      isHidden.value = Boolean(result.isHidden);
+      canHide.value = Boolean(result.canHide);
+      canReset.value = Boolean(result.canReset);
+      if (result.reviewedNow) {
+        emit('reviewed');
+      }
     } else {
       root.$emit('msg', 'error', result?.message || 'Ошибка загрузки');
     }
@@ -198,6 +220,7 @@ const save = async () => {
     if (result?.ok) {
       applyFilesByField(result.files_by_field);
       root.$emit('msg', 'ok', 'Сохранено');
+      emit('visibility-change');
       return true;
     }
     root.$emit('msg', 'error', result?.message || 'Ошибка сохранения');
@@ -218,6 +241,7 @@ const confirm = async () => {
       applyFilesByField(result.files_by_field);
       confirmed.value = true;
       root.$emit('msg', 'ok', 'Подтверждено');
+      emit('visibility-change');
     } else {
       root.$emit('msg', 'error', result?.message || 'Ошибка подтверждения');
     }
@@ -238,6 +262,25 @@ const resetConfirm = async () => {
       root.$emit('msg', 'ok', 'Подтверждение сброшено');
     } else {
       root.$emit('msg', 'error', result?.message || 'Ошибка сброса');
+    }
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+const setHidden = async (hidden: boolean) => {
+  if (!props.documentId) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/documents/hide', { id: props.documentId, hidden });
+    if (result?.ok) {
+      isHidden.value = Boolean(result.isHidden);
+      root.$emit('msg', 'ok', hidden ? 'Документ скрыт' : 'Документ показан');
+      emit('visibility-change');
+    } else {
+      root.$emit('msg', 'error', result?.message || 'Ошибка');
     }
   } finally {
     await store.dispatch(actions.DEC_LOADING);
@@ -301,10 +344,6 @@ watch(() => props.documentId, load, { immediate: true });
 .empty {
   padding: 16px 10px;
   color: #656d78;
-}
-
-.simple-value {
-  padding: 5px;
 }
 
 .control-row {

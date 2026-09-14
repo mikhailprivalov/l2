@@ -1,14 +1,5 @@
 <template>
   <div class="explorer">
-    <div class="flex search-row">
-      <input
-        class="form-control search"
-        placeholder="Номер документа"
-      >
-      <button class="btn btn-blue-nb nbr">
-        Найти
-      </button>
-    </div>
     <div class="section section-groups">
       <div class="flex group-select-row">
         <Treeselect
@@ -23,7 +14,7 @@
         />
       </div>
     </div>
-    <div class="section section-equal">
+    <div class="section section-types">
       <div class="scroll-equal">
         <div
           v-for="type in documentTypes"
@@ -51,13 +42,70 @@
         </div>
       </div>
     </div>
-    <div class="section section-equal">
+    <div class="section section-documents">
       <div class="flex section-header">
         <span class="group-button-header">
           Документы
         </span>
+        <label
+          class="filter-check review-check"
+          @click.prevent="toggleRoleFilter('toReview')"
+        >
+          <input
+            type="checkbox"
+            :checked="roleFilter === 'toReview'"
+            tabindex="-1"
+          >
+          <span>Новые {{ pendingReviewCount }}</span>
+        </label>
+        <label
+          class="filter-check review-check"
+          @click.prevent="toggleRoleFilter('recent')"
+        >
+          <input
+            type="checkbox"
+            :checked="roleFilter === 'recent'"
+            tabindex="-1"
+          >
+          <span>Последние</span>
+        </label>
+        <label
+          class="filter-check hidden-check"
+          @click.prevent="toggleHidden"
+        >
+          <input
+            type="checkbox"
+            :checked="showHidden"
+            tabindex="-1"
+          >
+          <span>Скрытые</span>
+        </label>
       </div>
-      <div class="scroll-equal">
+      <div
+        v-if="actionButtons.length"
+        class="section-actions"
+      >
+        <div class="filter-checks">
+          <label
+            v-for="item in actionButtons"
+            :key="item.id"
+            class="filter-check"
+            @click.prevent="toggleRoleFilter(item.id)"
+          >
+            <input
+              type="checkbox"
+              :checked="roleFilter === item.id"
+              tabindex="-1"
+            >
+            <span>{{ item.label }}</span>
+          </label>
+        </div>
+      </div>
+      <div
+        ref="docsEl"
+        class="scroll-equal"
+        @scroll="onDocumentsScroll"
+      >
         <div
           v-for="document in documents"
           :key="document.id"
@@ -73,6 +121,12 @@
           >
             {{ document.title }}
           </button>
+        </div>
+        <div
+          v-if="isLoadingMoreRecent"
+          class="filter-check"
+        >
+          Загрузка...
         </div>
       </div>
     </div>
@@ -101,15 +155,34 @@ interface CatalogItem {
 
 const props = defineProps<{
   roleFilter?: string | null;
+  listRefresh?: number;
+  countRefresh?: number;
+  foundDocument?: { id: number; title: string } | null;
 }>();
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
   (e: 'select', documentId: number | null): void;
+  (e: 'update:filter', value: string | null): void;
 }>();
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
+const userGroups = computed(() => store.getters.user_groups || []);
+const actionButtons = computed(() => {
+  const items = [];
+  if (userGroups.value.includes('Согласование')) {
+    items.push({ id: 'toBeAgreed', label: 'Согласовать' });
+  }
+  if (userGroups.value.includes('Подписание')) {
+    items.push({ id: 'onSignature', label: 'Подписать' });
+  }
+  return items;
+});
+
+const toggleRoleFilter = (id: string) => {
+  emit('update:filter', props.roleFilter === id ? null : id);
+};
 
 const selectedGroup = ref<number>(GROUP_ALL);
 const documentGroups = ref<CatalogItem[]>([]);
@@ -127,6 +200,13 @@ const documentTypes = ref<CatalogItem[]>([]);
 
 const selectedDocument = ref<number | null>(null);
 const documents = ref<CatalogItem[]>([]);
+const showHidden = ref(false);
+const pendingReviewCount = ref(0);
+const docsEl = ref<HTMLElement | null>(null);
+const recentPage = ref(1);
+const recentHasMore = ref(false);
+const isLoadingMoreRecent = ref(false);
+const RECENT_PAGE_SIZE = 50;
 
 const loadGroups = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -150,23 +230,81 @@ const loadTypes = async () => {
 
 let documentsLoadId = 0;
 
+const loadPendingCount = async () => {
+  const { pendingReviewCount: count } = await api('document-manager/documents/list', { countOnly: true });
+  pendingReviewCount.value = Number(count) || 0;
+};
+
+const loadRecent = async (append = false) => {
+  if (append) {
+    if (!recentHasMore.value || isLoadingMoreRecent.value) {
+      return;
+    }
+    isLoadingMoreRecent.value = true;
+  }
+  try {
+    const nextPage = append ? recentPage.value + 1 : 1;
+    const data = await api('document-manager/documents/recent', {
+      page: nextPage,
+      pageSize: RECENT_PAGE_SIZE,
+    });
+    const rows = data.result || [];
+    recentPage.value = data.page || nextPage;
+    recentHasMore.value = Boolean(data.hasMore);
+    documents.value = append ? [...documents.value, ...rows] : rows;
+  } finally {
+    isLoadingMoreRecent.value = false;
+  }
+};
+
+const onDocumentsScroll = () => {
+  if (props.roleFilter !== 'recent') {
+    return;
+  }
+  const el = docsEl.value;
+  if (!el || !recentHasMore.value || isLoadingMoreRecent.value) {
+    return;
+  }
+  if (el.scrollHeight - el.scrollTop - el.clientHeight < 80) {
+    loadRecent(true);
+  }
+};
+
 const loadDocuments = async () => {
   const loadId = ++documentsLoadId;
   documents.value = [];
-  if (!selectedType.value && props.roleFilter !== 'created') {
+  recentPage.value = 1;
+  recentHasMore.value = false;
+  if (
+    !selectedType.value
+    && props.roleFilter !== 'created'
+    && props.roleFilter !== 'toReview'
+    && props.roleFilter !== 'recent'
+  ) {
+    await loadPendingCount();
     return;
   }
   await store.dispatch(actions.INC_LOADING);
   try {
-    const { result } = await api('document-manager/documents/list', {
+    if (props.roleFilter === 'recent') {
+      await loadRecent(false);
+      await loadPendingCount();
+      if (loadId !== documentsLoadId) {
+        return;
+      }
+      return;
+    }
+    const { result, pendingReviewCount: count } = await api('document-manager/documents/list', {
       typeId: selectedType.value,
       groupId: selectedGroup.value,
       filter: props.roleFilter,
+      hidden: showHidden.value,
     });
     if (loadId !== documentsLoadId) {
       return;
     }
     documents.value = result || [];
+    pendingReviewCount.value = Number(count) || 0;
     if (selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
       selectedDocument.value = null;
     }
@@ -175,8 +313,15 @@ const loadDocuments = async () => {
   }
 };
 
+const toggleHidden = () => {
+  showHidden.value = !showHidden.value;
+  selectedDocument.value = null;
+  loadDocuments();
+};
+
 const createDocument = async (typeId: number) => {
   selectedType.value = typeId;
+  showHidden.value = false;
   await store.dispatch(actions.INC_LOADING);
   try {
     const result = await api('document-manager/documents/create', { typeId });
@@ -205,24 +350,43 @@ watch(selectedDocument, (id) => {
   emit('select', id);
 });
 
+watch(() => props.foundDocument, (doc) => {
+  if (!doc?.id) {
+    return;
+  }
+  if (!documents.value.some(row => row.id === doc.id)) {
+    documents.value = [doc, ...documents.value];
+  }
+  selectedDocument.value = doc.id;
+});
+
 watch(selectedGroup, () => {
   selectedType.value = null;
-  selectedDocument.value = null;
-  documents.value = [];
   loadTypes();
 });
 
-watch(selectedType, () => {
-  loadDocuments();
+watch(selectedType, (typeId) => {
+  if (typeId) {
+    loadDocuments();
+  }
 });
 
 watch(() => props.roleFilter, () => {
   loadDocuments();
 });
 
+watch(() => props.listRefresh, () => {
+  loadDocuments();
+});
+
+watch(() => props.countRefresh, () => {
+  loadPendingCount();
+});
+
 onMounted(async () => {
   await loadGroups();
   await loadTypes();
+  await loadPendingCount();
 });
 </script>
 
@@ -233,12 +397,6 @@ onMounted(async () => {
   flex: 1;
   height: 100%;
   min-height: 0;
-}
-
-.search-row {
-  flex: 0 0 34px;
-  height: 34px;
-  min-height: 34px;
 }
 
 .section {
@@ -276,8 +434,49 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-.section-equal {
+.section-types {
   flex: 1 1 0;
+}
+
+.section-documents {
+  flex: 7 1 0;
+}
+
+.section-actions {
+  flex: 0 0 auto;
+}
+
+.filter-checks {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.filter-check {
+  flex: 1 1 33%;
+  min-width: 0;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: normal;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+
+  input {
+    flex: 0 0 auto;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .flex {
@@ -285,7 +484,6 @@ onMounted(async () => {
   min-width: 0;
 }
 .row-border {
-  height: 34px;
   min-height: 34px;
   min-width: 0;
   border-bottom: 1px solid #b1b1b1;
@@ -294,20 +492,9 @@ onMounted(async () => {
   border-top: 1px solid #b1b1b1;
 }
 
-.search {
-  height: 34px;
-  border-radius: 0;
-  padding-left: 10px;
-}
-
-.search-row .btn {
-  height: 34px;
-  border-radius: 0;
-}
-
 .group-button-header {
   background-color: transparent;
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 0;
   height: 34px;
   line-height: 34px;
@@ -318,6 +505,17 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.review-check {
+  flex: 0 0 auto;
+  height: 34px;
+}
+
+.hidden-check {
+  flex: 0 0 auto;
+  height: 34px;
+  margin-left: auto;
 }
 
 .type-row {
@@ -368,14 +566,17 @@ onMounted(async () => {
   color: #434A54;
   flex: 1;
   min-width: 0;
-  height: 34px;
-  line-height: 22px;
+  min-height: 34px;
+  line-height: 16px;
   border: none;
-  padding: 0 5px 0 10px;
+  padding: 1px 5px 1px 10px;
   text-align: left;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .transparent-button:hover {
   background-color: #434a54;

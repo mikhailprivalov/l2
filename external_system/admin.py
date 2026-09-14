@@ -33,11 +33,17 @@ class ResCdaFields(admin.ModelAdmin):
         'is_doc_refferal',
         'is_treatment',
         'is_form',
+        'is_extract',
+        'is_indicator',
+        'is_template',
     )
     list_filter = (
         'is_doc_refferal',
         'is_treatment',
         'is_form',
+        'is_extract',
+        'is_indicator',
+        'is_template',
     )
     search_fields = (
         'code',

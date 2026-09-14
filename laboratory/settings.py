@@ -367,6 +367,7 @@ DOU_CONSTRUCTOR_NAV_BUTTONS = [
     {"id": "document_groups", "title": "Группа документов"},
     {"id": "document_types", "title": "Виды документов"},
     {"id": "document_templates", "title": "Шаблоны документов"},
+    {"id": "addressees", "title": "Адресаты"},
     {"id": "cases", "title": "Виды дел"},
     {"id": "element", "title": "Элементы"},
     {"id": "group_element", "title": "Группировка Элементов"},
@@ -376,6 +377,9 @@ DOU_CONSTRUCTOR_NAV_BUTTONS = [
     {"id": "skeleton", "title": "Структура документа"},
     {"id": "autofill_templates", "title": "Шаблоны заполнения"},
 ]
+
+SHOW_LABORANT_RENTGEN_AFTER_DATE = None
+
 USE_COMBO_ROLE = {}
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
 OFFSET_HOURS_PLAN_OPERATIONS = 0
@@ -552,6 +556,8 @@ TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
 WORK_DAYS_PER_WEEK_DEFAULT = 5
 CDA_ID_FOR_DATE_CLOSE_CASE = [-1]
 CDA_ID_FOR_DATE_IS_EXTRACT = -1
+# pk CdaFields: тема документа в списке /ui/document-manager (сохранён/подтверждён). -1 — вид документа.
+CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER = -1
 # Начало рабочего дня для работников и подразделений (Employees, Department) HH:MM
 EMPLOYEE_START_WORK_TIME_DEFAULT = "08:00"
 CDA_ID_FOR_WHERE_SERVICE_DONE = -1
