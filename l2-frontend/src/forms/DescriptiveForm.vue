@@ -525,6 +525,15 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 45"
+                class="field-value"
+              >
+                <AddresseeField
+                  v-model="field.value"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -549,6 +558,7 @@
 import LPress from '@/ui-cards/LPress.vue';
 import FileResultField from '@/forms/Fields/FileResultField.vue';
 import ParagraphResultField from '@/forms/Fields/ParagraphResultField.vue';
+import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
@@ -576,6 +586,15 @@ function isFieldValueEmpty(field: { value: string; field_type: number }): boolea
     }
   }
 
+  if (field.field_type === 45) {
+    try {
+      const arr = JSON.parse(field.value);
+      return !Array.isArray(arr) || arr.length === 0 || arr.every(it => !it?.id);
+    } catch {
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -584,6 +603,7 @@ export default {
   components: {
     FileResultField,
     ParagraphResultField,
+    AddresseeField,
     FastTemplates,
     InputTemplates,
     VisibilityGroupWrapper,
@@ -725,7 +745,7 @@ export default {
       if (field.field_type === 29) {
         // eslint-disable-next-line no-param-reassign
         field.value = JSON.stringify({ address: '', fias: null });
-      } else if (field.field_type === 44) {
+      } else if (field.field_type === 44 || field.field_type === 45) {
         // eslint-disable-next-line no-param-reassign
         field.value = '[]';
       } else {

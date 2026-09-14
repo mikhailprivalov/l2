@@ -97,24 +97,27 @@ class CdaFields(models.Model):
     is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления", db_index=True)
     is_extract = models.BooleanField(default=False, blank=True, help_text="Это выписка", db_index=True)
     is_indicator = models.BooleanField(default=False, blank=True, help_text="Это показатель для Куратора", db_index=True)
+    is_template = models.BooleanField(default=False, blank=True, help_text="Это поле для шаблона документа ДОУ", db_index=True)
 
     def __str__(self):
         return f"{self.code} - {self.title} - {self.pk}"
 
     @staticmethod
-    def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract):
-        if is_doc_refferal:
-            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
+    def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract, is_layout_template=False):
+        if is_layout_template:
+            qs = CdaFields.objects.filter(models.Q(is_template=True) | models.Q(is_doc_refferal=True)).order_by("title").distinct()
+        elif is_doc_refferal:
+            qs = CdaFields.objects.filter(is_doc_refferal=True).order_by("title")
         elif is_treatment:
-            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_treatment=True).order_by("title")]]
+            qs = CdaFields.objects.filter(is_treatment=True).order_by("title")
         elif is_form:
-            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_form=True).order_by("title")]]
+            qs = CdaFields.objects.filter(is_form=True).order_by("title")
         elif is_extract:
-            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_extract=True).order_by("title")]]
+            qs = CdaFields.objects.filter(is_extract=True).order_by("title")
         else:
-            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
+            qs = CdaFields.objects.filter(is_doc_refferal=True).order_by("title")
 
-        return result
+        return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in qs]]
 
     @staticmethod
     def get_cda_id_by_titles(cda_titles):

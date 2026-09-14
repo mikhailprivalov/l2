@@ -2751,7 +2751,7 @@ class IssledovaniyaResultLaborant(models.Model):
             f_result = IssledovaniyaResultLaborant.objects.filter(issledovaniye=iss, field=field)[0]
         f_result.value = value
         f_result.field_type = field_type
-        if field_type in [27, 28, 29, 32, 33, 34, 35]:
+        if field_type in [27, 28, 29, 32, 33, 34, 35, 45]:
             try:
                 val = json.loads(value)
             except:
