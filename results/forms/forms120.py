@@ -7,7 +7,7 @@ from copy import deepcopy
 from reportlab.lib.enums import TA_JUSTIFY
 from directions.models import Issledovaniya, Napravleniya
 from integration_framework.models import EquipmentReceive
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, SHOW_LABORANT_RENTGEN_AFTER_DATE
 import os.path
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -121,6 +121,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph(f"{iss.research.title}", style),
         ],
         [
+            Paragraph("Анатомическая область", style),
+            Paragraph('', style),
+        ],
+        [
             Paragraph("Наименование медицинского оборудования", style),
             Paragraph(equipment_title, style),
         ],
@@ -196,6 +200,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         tbl = gen_table(iss.doc_confirmation)
         objs.append(Spacer(1, 3 * mm))
         objs.append(tbl)
+
+    if SHOW_LABORANT_RENTGEN_AFTER_DATE:
+        date_obj = datetime.datetime.strptime(SHOW_LABORANT_RENTGEN_AFTER_DATE, "%Y-%m-%d")
+        if iss.time_confirmation > date_obj:
+            objs.append(Spacer(1, 5 * mm))
+            objs.append(Paragraph(f"Рентгенлаборант: {direction.doc_who_create.get_fio()}", styleJustifiedDoctor))
 
     fwb.extend(objs)
     return fwb

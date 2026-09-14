@@ -126,6 +126,7 @@
             class="research-select"
             :class="{ active: research_selected(row.pk) }"
             :research="row"
+            :use-hospital-synonym="useHospitalSynonym"
             @click.native="select_research(row.pk)"
           />
         </template>
@@ -137,6 +138,7 @@
           class="research-select"
           :class="[{ active: research_selected(row.pk) }, l2_research_col ? `research-select-col--${l2_research_col}` : '']"
           :research="row"
+          :use-hospital-synonym="useHospitalSynonym"
           @click.native="select_research(row.pk)"
         />
       </template>
@@ -377,6 +379,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    useHospitalSynonym: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -521,8 +527,9 @@ export default {
         const researchTitle = research.full_title?.toLowerCase();
         const researchShortTitle = research.title?.toLowerCase();
         const researchInternalCode = research.internal_code?.toLowerCase();
+        const hospitalTitle = this.useHospitalSynonym ? (research.hospitalTitle || '').toLowerCase() : '';
         return researchTitle.includes(searchTerm) || researchShortTitle.includes(searchTerm)
-          || researchInternalCode.includes(searchTerm);
+          || researchInternalCode.includes(searchTerm) || hospitalTitle?.includes(searchTerm);
       });
     },
     founded_n() {
@@ -610,7 +617,14 @@ export default {
     this.$root.$on(`researches-picker:deselect_all${this.kk}`, this.clear);
     this.$root.$on(`researches-picker:add_research${this.kk}`, this.select_research_ignore);
 
-    if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
+    if (this.useHospitalSynonym) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await Promise.all([
+        this.$store.dispatch(actions.GET_RESEARCHES, { withHospitalSynonym: true }),
+        this.$store.dispatch(actions.GET_TEMPLATES),
+      ]);
+      await this.$store.dispatch(actions.DEC_LOADING);
+    } else if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
       await this.$store.dispatch(actions.INC_LOADING);
 
       await Promise.all([this.$store.dispatch(actions.GET_RESEARCHES), this.$store.dispatch(actions.GET_TEMPLATES)]);
@@ -881,8 +895,10 @@ export default {
       const t = row.title.toLowerCase().trim();
       const ft = row.full_title.toLowerCase().trim();
       const c = row.code.toLowerCase().trim().replace('а', 'a').replace('в', 'b');
+      const ht = this.useHospitalSynonym ? (row.hospitalTitle || '').toLowerCase().trim() : '';
       const s = this.search.toLowerCase().trim();
-      return s !== '' && (t.includes(s) || ft.includes(s) || c.startsWith(s.replace('а', 'a').replace('в', 'b')));
+      const codeSearch = s.replace('а', 'a').replace('в', 'b');
+      return s !== '' && (t.includes(s) || ft.includes(s) || ht?.includes(s) || c.startsWith(codeSearch));
     },
     research_data(pk) {
       if (pk in this.$store.getters.researches_obj) {

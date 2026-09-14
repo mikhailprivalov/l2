@@ -35,6 +35,7 @@ from directions.sql_func import (
     get_directions_by_complex_id,
 )
 from directions.tasks import send_result
+from document_management.models import Documents
 from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import (
     PERINATAL_DEATH_RESEARCH_PK,
@@ -2006,10 +2007,13 @@ class Napravleniya(models.Model):
         if SettingManager.l2("send_patients_email_results") and self.is_all_confirm() and self.client.send_to_email and self.client.email:
             rt = SettingManager.get("lab_reset_confirm_time_min") * 60 + 1
             task_id = str(uuid.uuid4())
-            send_result.apply_async(args=(self.pk,), countdown=rt, task_id=task_id)
-            self.celery_send_task_ids = (self.celery_send_task_ids or []) + [task_id]
-            self.save(update_fields=['celery_send_task_ids'])
-            slog.Log.log(key=self.pk, type=180000, body={"task_id": task_id})
+            try:
+                send_result.apply_async(args=(self.pk,), countdown=rt, task_id=task_id)
+                self.celery_send_task_ids = (self.celery_send_task_ids or []) + [task_id]
+                self.save(update_fields=['celery_send_task_ids'])
+                slog.Log.log(key=self.pk, type=180000, body={"task_id": task_id})
+            except Exception as exc:
+                slog.Log.log(key=self.pk, type=180016, body={"error": str(exc), "task_id": task_id})
 
         if self.external_order:
             totally_confirmed_all_directions_in_order = True
@@ -2037,7 +2041,10 @@ class Napravleniya(models.Model):
     def post_reset_confirmation(self):
         if self.celery_send_task_ids:
             task_ids = self.celery_send_task_ids
-            celeryapp.control.revoke(task_ids, terminate=True)
+            try:
+                celeryapp.control.revoke(task_ids, terminate=True)
+            except Exception as exc:
+                slog.Log.log(key=self.pk, type=180017, body={"error": str(exc), "task_ids": task_ids})
             self.celery_send_task_ids = []
             self.save(update_fields=['celery_send_task_ids'])
             slog.Log.log(key=self.pk, type=180003, body={"task_ids": task_ids})
@@ -2434,6 +2441,7 @@ class Issledovaniya(models.Model):
     """
 
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    document = models.ForeignKey(Documents, null=True, default=None, blank=True, help_text='Документ из ДОУ', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
     tubes = models.ManyToManyField(TubesRegistration, help_text='Ёмкости, необходимые для исследования', db_index=True)
     doc_save = models.ForeignKey(
@@ -2743,7 +2751,7 @@ class IssledovaniyaResultLaborant(models.Model):
             f_result = IssledovaniyaResultLaborant.objects.filter(issledovaniye=iss, field=field)[0]
         f_result.value = value
         f_result.field_type = field_type
-        if field_type in [27, 28, 29, 32, 33, 34, 35]:
+        if field_type in [27, 28, 29, 32, 33, 34, 35, 45]:
             try:
                 val = json.loads(value)
             except:

@@ -273,6 +273,7 @@ def menu(request):
                 {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
                 {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
+                {"url": "/ui/document-history", "title": "История документов", "nt": False, "access": ["История документа"]},
                 {"url": "/ui/gardening", "title": "Садоводство", "nt": False, "access": ["Бухгалтер садоводства"]},
             ]
 

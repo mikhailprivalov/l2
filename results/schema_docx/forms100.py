@@ -3,7 +3,8 @@ from io import BytesIO
 import pytz
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya
-from docxtpl import DocxTemplate
+from docx.shared import Mm
+from docxtpl import DocxTemplate, InlineImage
 import os
 import datetime
 from pdfrw import PdfReader, PdfWriter
@@ -12,8 +13,26 @@ from integration_framework.models import EquipmentReceive
 from laboratory.settings import COMMAND_DOCX_2_PDF
 from results.sql_func import get_paraclinic_result_by_iss
 from slog.models import Log
+from hospitals.models import TitleResearchHospital
 from utils.dates import normalize_date
 import simplejson as json
+
+
+def get_stamp_doctor_image(doc, doctor):
+    if not doctor:
+        return ""
+    stamp_path = doctor.get_signature_stamp_pdf()
+    if not stamp_path or not os.path.exists(stamp_path):
+        return ""
+    width = doctor.width_stamp_jpg if doctor.width_stamp_jpg else 35
+    height = doctor.height_stamp_jpg if doctor.height_stamp_jpg else 35
+    return InlineImage(doc, stamp_path, width=Mm(width), height=Mm(height))
+
+
+def _research_title_for_user(iss, user):
+    fallback = iss.research.title if iss.research else ""
+    hospital_id = TitleResearchHospital.hospital_id_from_user(user)
+    return TitleResearchHospital.get_display_title(hospital_id, iss.research, fallback)
 
 
 def transform_value(field_value, type_field):
@@ -84,12 +103,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "sex": individula.get('sex'),
             "born": individula.get('born'),
             "protocol_number": direction.pk,
-            "research": iss.research.title,
+            "research": _research_title_for_user(iss, user),
             "hosp_confirmation": iss.doc_confirmation.hospital.title if iss.doc_confirmation else "",
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
         }
-        context = {**meta_info, **result_data}
+        context = {**meta_info, **result_data, "stamp_doctor": get_stamp_doctor_image(doc, iss.doc_confirmation)}
         doc.render(context)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
         today = datetime.datetime.now()
@@ -165,14 +184,14 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "sex": individula.get('sex'),
             "born": individula.get('born'),
             "protocol_number": direction.pk,
-            "research": iss.research.title,
+            "research": _research_title_for_user(iss, user),
             "hosp_confirmation": iss.doc_confirmation.hospital.title if iss.doc_confirmation else "",
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
             "doc_confirm": iss.doc_confirmation.get_full_fio(),
             "time_confirm": iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S") if iss.time_confirmation else "XX:XX:XX:XX:XX",
         }
-        context = {**meta_info, **result_data}
+        context = {**meta_info, **result_data, "stamp_doctor": get_stamp_doctor_image(doc, iss.doc_confirmation)}
         doc.render(context)
 
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')

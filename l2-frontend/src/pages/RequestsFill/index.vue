@@ -1,6 +1,10 @@
 <template>
   <PageInnerLayout>
-    <TwoSidedLayout :left-width-px="340">
+    <TwoSidedLayout
+      :left-width-px="leftWidthPx"
+      resizable
+      @update:left-width-px="onLeftWidthChange"
+    >
       <template #left>
         <TopBottomLayout
           :top-height-px="69"
@@ -47,8 +51,11 @@
               no-border
             >
               <template #top>
-                <div class="requests-toolbar">
-                  <div class="requests-toolbar__row">
+                <div
+                  ref="toolbarEl"
+                  class="requests-toolbar"
+                >
+                  <div class="requests-toolbar__row requests-toolbar__row--main">
                     <DateRange
                       :key="dateRangeResetKey"
                       v-model="dateRange"
@@ -64,17 +71,31 @@
                     <div class="requests-toolbar__filter">
                       <button
                         class="filter-btn filter-btn--compact"
-                        :class="{ 'filter-btn--active': !showAccepted }"
-                        @click="showAccepted = false"
+                        :class="{ 'filter-btn--active': statusFilter === 'new' }"
+                        @click="statusFilter = 'new'"
                       >
-                        {{ `Все (${departmentFilteredWaitRequests.length})` }}
+                        {{ `Новые (${newRequestsCount})` }}
                       </button>
                       <button
                         class="filter-btn filter-btn--compact"
-                        :class="{ 'filter-btn--active': showAccepted }"
-                        @click="showAccepted = true"
+                        :class="{ 'filter-btn--active': statusFilter === 'accepted' }"
+                        @click="statusFilter = 'accepted'"
                       >
-                        {{ `Принято (${departmentFilteredWaitRequests.filter(request => request.accepted).length})` }}
+                        {{ `Приняты (${acceptedRequestsCount})` }}
+                      </button>
+                      <button
+                        class="filter-btn filter-btn--compact"
+                        :class="{ 'filter-btn--active': statusFilter === 'done' }"
+                        @click="statusFilter = 'done'"
+                      >
+                        {{ `Исполнены (${doneRequestsCount})` }}
+                      </button>
+                      <button
+                        class="filter-btn filter-btn--compact"
+                        :class="{ 'filter-btn--active': statusFilter === 'all' }"
+                        @click="statusFilter = 'all'"
+                      >
+                        {{ `Все (${allRequestsCount})` }}
                       </button>
                       <button
                         class="filter-btn filter-btn--compact filter-btn--icon"
@@ -117,68 +138,51 @@
                 </div>
               </template>
               <template #bottom>
-                <TopBottomLayout :top-height-percent="70">
-                  <template #top>
-                    <div class="requests-list">
+                <div class="requests-panel">
+                  <div class="requests-list">
+                    <div
+                      v-if="initialLoading"
+                      class="requests-list__loading"
+                    >
+                      Загрузка...
+                    </div>
+                    <div
+                      v-else
+                      class="requests-list__items"
+                    >
+                      <RequestCard
+                        v-for="request in filteredWaitRequests"
+                        :key="`wait-${request.id}`"
+                        :request="request"
+                        :hospital-id="selectedHospitalId"
+                        @request-accepted="handleRequestAccepted"
+                        @card-clicked="handleCardClick"
+                      />
+                      <RequestCard
+                        v-for="request in filteredDoneRequests"
+                        :key="`done-${request.id}`"
+                        :request="request"
+                        :hospital-id="selectedHospitalId"
+                        @card-clicked="handleCardClick"
+                      />
                       <div
-                        v-if="initialLoading"
-                        class="requests-list__loading"
+                        v-if="filteredWaitRequests.length === 0 && filteredDoneRequests.length === 0"
+                        class="requests-list__empty"
                       >
-                        Загрузка...
-                      </div>
-                      <div
-                        v-else
-                        class="requests-list__items"
-                      >
-                        <RequestCard
-                          v-for="request in filteredWaitRequests"
-                          :key="request.id"
-                          :request="request"
-                          :hospital-id="selectedHospitalId"
-                          @request-accepted="handleRequestAccepted"
-                          @card-clicked="handleCardClick"
-                        />
-                        <div
-                          v-if="filteredWaitRequests.length === 0"
-                          class="requests-list__empty"
-                        >
-                          {{ showAccepted ? 'Нет принятых заявок' : 'Нет ожидающих заявок' }}
-                        </div>
+                        Нет заявок
                       </div>
                     </div>
-                  </template>
-                  <template #bottom>
-                    <div class="requests-list">
-                      <div class="requests-list__header">
-                        Исполненные
-                      </div>
-                      <div
-                        v-if="initialLoading"
-                        class="requests-list__loading"
-                      >
-                        Загрузка...
-                      </div>
-                      <div
-                        v-else
-                        class="requests-list__items"
-                      >
-                        <RequestCard
-                          v-for="request in filteredDoneRequests"
-                          :key="request.id"
-                          :request="request"
-                          :hospital-id="selectedHospitalId"
-                          @card-clicked="handleCardClick"
-                        />
-                        <div
-                          v-if="filteredDoneRequests.length === 0"
-                          class="requests-list__empty"
-                        >
-                          Нет исполненных заявок
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                </TopBottomLayout>
+                  </div>
+                  <div class="requests-footer">
+                    <button
+                      class="btn btn-blue-nb"
+                      type="button"
+                      @click="openWorkloadReport"
+                    >
+                      Моя нагрузка
+                    </button>
+                  </div>
+                </div>
               </template>
             </TopBottomLayout>
           </template>
@@ -448,6 +452,7 @@
 <script setup lang="ts">
 import {
   computed,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
@@ -477,7 +482,37 @@ interface Hospital {
   label: string;
 }
 
+type StatusFilter = 'new' | 'accepted' | 'done' | 'all';
+
 const MAX_PERIOD_DAYS = 40;
+const DEFAULT_LEFT_WIDTH_PX = 588;
+const LEFT_WIDTH_STORAGE_KEY = 'requests-fill-left-width';
+
+const readStoredLeftWidth = (): number => {
+  try {
+    const value = Number(localStorage.getItem(LEFT_WIDTH_STORAGE_KEY));
+    if (Number.isFinite(value) && value >= 360) {
+      return value;
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return DEFAULT_LEFT_WIDTH_PX;
+};
+
+const leftWidthPx = ref(readStoredLeftWidth());
+
+const onLeftWidthChange = (value: number) => {
+  leftWidthPx.value = value;
+};
+
+watch(leftWidthPx, value => {
+  try {
+    localStorage.setItem(LEFT_WIDTH_STORAGE_KEY, String(value));
+  } catch {
+    // ignore storage errors
+  }
+});
 
 const getDefaultDateRange = (): [string, string] => [
   moment().subtract(10, 'days').format('DD.MM.YYYY'),
@@ -494,7 +529,7 @@ const requestsWait = ref<Request[]>([]);
 const filterDepartments = ref<string[]>([]);
 const selectedDepartments = ref<Set<string>>(new Set());
 const initialLoading = ref(false);
-const showAccepted = ref(false);
+const statusFilter = ref<StatusFilter>('new');
 const selectedRequest = ref<Request | null>(null);
 const formData = ref<any>(null);
 const formLoading = ref(false);
@@ -508,16 +543,35 @@ let refreshInterval: any = null;
 const loader = useLoader();
 const notify = useNotify();
 
-const toolbarHeightPx = computed(() => {
-  let height = 36;
-  if (filterDepartments.value.length) {
-    height += Math.max(22, Math.ceil(filterDepartments.value.length / 2) * 20);
+const toolbarEl = ref<HTMLElement | null>(null);
+const toolbarHeightPx = ref(36);
+let toolbarResizeObserver: ResizeObserver | null = null;
+
+const measureToolbarHeight = () => {
+  const el = toolbarEl.value;
+  if (!el) {
+    return;
   }
-  if (isSearchMode.value) {
-    height += 36;
+  const next = Math.max(36, Math.ceil(el.getBoundingClientRect().height));
+  if (next !== toolbarHeightPx.value) {
+    toolbarHeightPx.value = next;
   }
-  return height;
-});
+};
+
+const observeToolbar = () => {
+  if (typeof ResizeObserver === 'undefined' || !toolbarEl.value) {
+    measureToolbarHeight();
+    return;
+  }
+  if (toolbarResizeObserver) {
+    toolbarResizeObserver.disconnect();
+  }
+  toolbarResizeObserver = new ResizeObserver(() => {
+    measureToolbarHeight();
+  });
+  toolbarResizeObserver.observe(toolbarEl.value);
+  measureToolbarHeight();
+};
 
 const matchesDepartmentFilter = (request: Request) => {
   if (filterDepartments.value.length === 0) {
@@ -537,17 +591,57 @@ const departmentFilteredDoneRequests = computed(() => (
   requestsDone.value.filter(matchesDepartmentFilter)
 ));
 
+const newRequestsCount = computed(() => (
+  departmentFilteredWaitRequests.value.filter(request => !request.accepted).length
+));
+
+const acceptedRequestsCount = computed(() => (
+  departmentFilteredWaitRequests.value.filter(request => request.accepted).length
+));
+
+const doneRequestsCount = computed(() => departmentFilteredDoneRequests.value.length);
+
+const allRequestsCount = computed(() => (
+  departmentFilteredWaitRequests.value.length + departmentFilteredDoneRequests.value.length
+));
+
+const matchesPatientQuery = (request: Request, query: string) => (
+  !query || request.patient.toLowerCase().includes(query)
+);
+
 const filteredWaitRequests = computed(() => {
-  const base = showAccepted.value
-    ? departmentFilteredWaitRequests.value.filter(request => request.accepted)
-    : departmentFilteredWaitRequests.value;
+  if (statusFilter.value === 'done') {
+    return [];
+  }
 
   const query = patientQuery.value.trim().toLowerCase();
-  if (!query) return base;
-  return base.filter(request => request.patient.toLowerCase().includes(query));
+  return departmentFilteredWaitRequests.value.filter(request => {
+    if (statusFilter.value === 'new' && request.accepted) {
+      return false;
+    }
+    if (statusFilter.value === 'accepted' && !request.accepted) {
+      return false;
+    }
+    return matchesPatientQuery(request, query);
+  });
 });
 
-const filteredDoneRequests = computed(() => departmentFilteredDoneRequests.value);
+const filteredDoneRequests = computed(() => {
+  if (statusFilter.value === 'new' || statusFilter.value === 'accepted') {
+    return [];
+  }
+
+  const query = patientQuery.value.trim().toLowerCase();
+  return departmentFilteredDoneRequests.value.filter(request => matchesPatientQuery(request, query));
+});
+
+const openWorkloadReport = () => {
+  const [dateStart, dateEnd] = dateRange.value;
+  window.open(
+    `/statistic/xls?type=statistics-workload&date-start=${encodeURIComponent(dateStart)}&date-end=${encodeURIComponent(dateEnd)}`,
+    '_blank',
+  );
+};
 
 const isDepartmentSelected = (department: string) => selectedDepartments.value.has(department);
 
@@ -791,6 +885,12 @@ watch(isSearchMode, value => {
   }
 });
 
+watch([leftWidthPx, isSearchMode, filterDepartments], () => {
+  nextTick(() => {
+    measureToolbarHeight();
+  });
+});
+
 onMounted(() => {
   loadHospitals();
   initialLoading.value = true;
@@ -798,10 +898,17 @@ onMounted(() => {
     initialLoading.value = false;
   });
   startAutoRefresh();
+  nextTick(() => {
+    observeToolbar();
+  });
 });
 
 onBeforeUnmount(() => {
   stopAutoRefresh();
+  if (toolbarResizeObserver) {
+    toolbarResizeObserver.disconnect();
+    toolbarResizeObserver = null;
+  }
 });
 </script>
 
@@ -817,6 +924,7 @@ onBeforeUnmount(() => {
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  overflow-x: hidden;
 
   &__row {
     display: flex;
@@ -825,6 +933,11 @@ onBeforeUnmount(() => {
     width: 100%;
     max-width: 100%;
     min-width: 0;
+
+    &--main {
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
 
     &--search {
       min-height: var(--toolbar-control-height);
@@ -840,10 +953,12 @@ onBeforeUnmount(() => {
 
   &__filter {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 3px;
-    flex: 0 1 auto;
+    flex: 1 1 160px;
     min-width: 0;
+    padding-top: 4px;
   }
 
   &__search-input {
@@ -967,23 +1082,36 @@ onBeforeUnmount(() => {
   }
 }
 
-.requests-list {
+.requests-panel {
   height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.requests-list {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   background: #ffffff;
 }
 
-.requests-list__header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+.requests-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  height: 36px;
+  border-top: 1px solid #e0e0e0;
   background: #f5f5f7;
-  font-weight: 500;
-  font-size: 14px;
-  padding: 4px 6px;
-  border-radius: 6px;
+
+  .btn {
+    flex: 1;
+    border-radius: 0;
+    height: 100%;
+  }
 }
 
 .requests-list__items {
@@ -1005,7 +1133,7 @@ onBeforeUnmount(() => {
 .results-editor {
   height: 100%;
   width: 100%;
-  max-width: calc(100vw - 340px);
+  max-width: calc(100vw - 588px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px;

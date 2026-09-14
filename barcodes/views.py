@@ -18,7 +18,7 @@ import directory.models as directory
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration, NumberGenerator, NoGenerator, GeneratorValuesAreOver
 from laboratory.decorators import group_required
-from laboratory.settings import FONTS_FOLDER, BARCODE_SIZE, TUBE_MAX_RESEARCH_WITH_SHARE, TUBE_BARCODE_OFFSET_X, TUBE_BARCODE_WIDTH_MINDEX
+from laboratory.settings import FONTS_FOLDER, BARCODE_SIZE, TUBE_MAX_RESEARCH_WITH_SHARE, TUBE_BARCODE_OFFSET_X, TUBE_BARCODE_WIDTH_MINDEX, TUBE_BARCODE_WIDTH_MM
 from users.models import DoctorProfile
 from laboratory.utils import strdate
 from reportlab.graphics.shapes import Drawing
@@ -57,6 +57,11 @@ def tubes(request, direction_implict_id=None):
 
     barcode_size = [int(x) for x in request.GET.get("barcode_size", BARCODE_SIZE).strip().split("x")]
     barcode_type = request.GET.get("barcode_type", "std").strip()
+    barcode_width_param = request.GET.get("barcode_width")
+    try:
+        tube_barcode_width_mm = float(barcode_width_param) if barcode_width_param not in (None, "") else TUBE_BARCODE_WIDTH_MM
+    except (TypeError, ValueError):
+        tube_barcode_width_mm = TUBE_BARCODE_WIDTH_MM
 
     pw, ph = barcode_size[0], barcode_size[1]  # длина, ширина листа
 
@@ -242,11 +247,14 @@ def tubes(request, direction_implict_id=None):
                 m = 0.016
             if tube >= 10000000000:
                 m = TUBE_BARCODE_WIDTH_MINDEX
-            barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
-            if tube >= 10000000000:
-                barcode.drawOn(c, TUBE_BARCODE_OFFSET_X * mm, 4 * mm)
+            if tube_barcode_width_mm > 0:
+                probe = code128.Code128(str(tube), barWidth=1)
+                probe_width = getattr(probe, "width", None) or getattr(probe, "_width", 0)
+                bar_width = (tube_barcode_width_mm * mm) / probe_width if probe_width else 1
             else:
-                barcode.drawOn(c, -3 * mm, 4 * mm)
+                bar_width = pw / 43 * inch * m
+            barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=bar_width)
+            barcode.drawOn(c, TUBE_BARCODE_OFFSET_X * mm, 4 * mm)
 
             c.showPage()
     c.save()

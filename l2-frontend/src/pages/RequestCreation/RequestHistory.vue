@@ -288,6 +288,7 @@
                       just_search
                       :types-only="[3]"
                       hide-type-picker
+                      use-hospital-synonym
                     />
                   </div>
                 </template>
@@ -687,6 +688,9 @@ const getResearchTitle = (researchId: number | null) => {
   }
 
   const fromStore = store.getters.researches_obj?.[researchId];
+  if (fromStore?.hospitalTitle) {
+    return fromStore.hospitalTitle;
+  }
   if (fromStore?.title) {
     return fromStore.short_title || fromStore.title;
   }

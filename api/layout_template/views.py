@@ -5,7 +5,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.core.paginator import Paginator
 
-from directory.models import Researches
+from directory.models import ParaclinicInputField, Researches
+from document_management.models import LAYOUT_TEMPLATE_FIELD_TYPE
 from dynamic_directory.models import Directory, DirectoryRecord, DirectoryRecordValue, DirectoryRecordVersion
 from dynamic_directory.views import get_child_directories
 from utils.response import status_response
@@ -23,7 +24,15 @@ def list_directories(request):
 def list_layout_template_treeselect(request):
     request_data = json.loads(request.body)
     pk = request_data['pk']
-    return JsonResponse({'rows': [x.to_treeselect_json() for x in Researches.get_layaout_template_research(exclude_pk=pk)]})
+    nested_ids = set(ParaclinicInputField.objects.filter(field_type=LAYOUT_TEMPLATE_FIELD_TYPE, group__research__is_layout_template=True).values_list("group__research_id", flat=True))
+    rows = []
+    for research in Researches.get_layaout_template_research(exclude_pk=pk):
+        row = research.to_treeselect_json()
+        has_nested = research.pk in nested_ids
+        row["hasNested"] = has_nested
+        row["isDisabled"] = has_nested
+        rows.append(row)
+    return JsonResponse({'rows': rows})
 
 
 @login_required

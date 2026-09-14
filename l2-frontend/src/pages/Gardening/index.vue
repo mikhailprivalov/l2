@@ -1,5 +1,8 @@
 <template>
-  <div class="gardening-layout">
+  <div
+    class="gardening-layout"
+    :class="{ 'gardening-layout--page-scroll': showOwnerPanel }"
+  >
     <div class="header-row">
       <div class="header-row__nav">
         <div class="search">
@@ -44,6 +47,16 @@
               База
             </button>
             <button
+              v-if="settingsMode"
+              class="year-button nbr"
+              type="button"
+              title="Скачать SQL-дамп базы"
+              :disabled="backingUp"
+              @click="downloadSqlBackup"
+            >
+              Бэкап SQL
+            </button>
+            <button
               v-for="year in years"
               :key="year"
               class="year-button nbr"
@@ -80,9 +93,37 @@
             </button>
           </div>
         </div>
+        <div
+          v-if="showMonthsStrip"
+          class="header-row__years-bottom"
+        >
+          <div class="months-strip">
+            <button
+              v-for="month in months"
+              :key="month.id"
+              class="year-button nbr"
+              :class="{ 'active-button': !selectedDebts && selectedMonth === month.id }"
+              type="button"
+              @click="selectMonth(month.id)"
+            >
+              {{ month.label }}
+            </button>
+            <button
+              class="year-button nbr"
+              :class="{ 'active-button': selectedDebts }"
+              type="button"
+              @click="selectedDebts = true"
+            >
+              Долги
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="body-row">
+    <div
+      class="body-row"
+      :class="{ 'body-row--page-scroll': showOwnerPanel }"
+    >
       <div class="side-col side-col--nav">
         <div class="object-list">
           <div
@@ -126,8 +167,25 @@
             v-else-if="showYearPanel"
             :year="selectedYear"
           />
+          <GardeningDebtsList
+            v-else-if="showDebtsList"
+            :key="`debts-${selectedYear}-${selectedPaymentTypeId}-${electricityRefresh}`"
+            :year="selectedYear"
+            :payment-type-id="selectedPaymentTypeId"
+          />
+          <GardeningElectricityMonthList
+            v-else-if="showMonthsStrip && !selectedDebts"
+            :key="`month-${selectedYear}-${selectedMonth}-${electricityRefresh}`"
+            :year="selectedYear"
+            :month="selectedMonth"
+            :payment-type-id="selectedPaymentTypeId"
+            :importing="importing"
+            @readings-changed="electricityRefresh += 1"
+            @xlsx-selected="onXlsxSelected"
+          />
           <GardeningAccountingSummary
             v-else-if="showAllPanel"
+            :key="`summary-${selectedYear}-${selectedPaymentTypeId}-${electricityRefresh}`"
             :year="selectedYear"
             :payment-type-id="selectedPaymentTypeId"
           />
@@ -136,12 +194,31 @@
             class="accounting-main"
           >
             <div class="accounting-main__owner">
-              <GardeningObjectOwner :real-estate-id="selectedId" />
-            </div>
-            <div class="accounting-main__rest">
-              <GardeningBankReceipts
+              <GardeningObjectOwner
                 :real-estate-id="selectedId"
                 :year="selectedYear"
+                :meters-revision="ownerMetersRevision"
+                @meters-changed="onOwnerMetersChanged"
+              />
+            </div>
+            <div class="accounting-main__rest">
+              <div class="accounting-main__receipts">
+                <GardeningBankReceipts
+                  :real-estate-id="selectedId"
+                  :year="selectedYear"
+                  @changed="contributionsRefresh += 1"
+                />
+                <GardeningPlotContributions
+                  :key="`contrib-${selectedId}-${selectedYear}-${contributionsRefresh}`"
+                  :real-estate-id="selectedId"
+                  :year="selectedYear"
+                />
+              </div>
+              <GardeningElectricityReadings
+                :key="`elec-${selectedId}-${selectedYear}-${electricityRefresh}`"
+                :real-estate-id="selectedId"
+                :year="selectedYear"
+                @meters-changed="ownerMetersRevision += 1"
               />
             </div>
           </div>
@@ -174,8 +251,7 @@
               <input
                 v-model="newNumObject"
                 class="form-control"
-                type="number"
-                min="1"
+                type="text"
                 placeholder="Введите номер"
               >
             </div>
@@ -208,6 +284,68 @@
         </Modal>
       </transition>
     </MountingPortal>
+
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="GardeningImportElectricity"
+      append
+    >
+      <transition name="fade">
+        <Modal
+          v-if="importResult"
+          show-footer="true"
+          white-bg="true"
+          max-width="560px"
+          width="100%"
+          margin-left-right="auto"
+          @close="importResult = null"
+        >
+          <span slot="header">Загрузка показаний</span>
+          <div
+            slot="body"
+            class="modal-body-form"
+          >
+            <div class="import-summary">
+              <div>Период: {{ importPeriodLabel }}</div>
+              <div>Участков создано: {{ importResult.plots_created }}</div>
+              <div>Счётчиков создано: {{ importResult.meters_created }}</div>
+              <div>Владельцев создано: {{ importResult.owners_created }}</div>
+              <div>Показаний записано: {{ importResult.readings_created }}</div>
+              <div>Показаний обновлено: {{ importResult.readings_updated }}</div>
+              <div>Без показаний: {{ importResult.skipped_no_reading }}</div>
+              <div v-if="importResult.errors.length">
+                Ошибки: {{ importResult.errors.length }}
+              </div>
+            </div>
+            <div
+              v-if="importResult.errors.length"
+              class="import-errors"
+            >
+              <div
+                v-for="(item, index) in importResult.errors.slice(0, 20)"
+                :key="`${item.row}-${index}`"
+              >
+                Строка {{ item.row }}{{ item.plot ? ` (${item.plot})` : '' }}: {{ item.message }}
+              </div>
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-9" />
+              <div class="col-xs-3">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  @click="importResult = null"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
   </div>
 </template>
 
@@ -228,22 +366,47 @@ import Modal from '@/ui-cards/Modal.vue';
 import GardeningPaymentTypes from '@/pages/Gardening/GardeningPaymentTypes.vue';
 import GardeningYearRates from '@/pages/Gardening/GardeningYearRates.vue';
 import GardeningObjectOwner from '@/pages/Gardening/GardeningObjectOwner.vue';
+import GardeningPlotContributions from '@/pages/Gardening/GardeningPlotContributions.vue';
 import GardeningBankReceipts from '@/pages/Gardening/GardeningBankReceipts.vue';
+import GardeningElectricityReadings from '@/pages/Gardening/GardeningElectricityReadings.vue';
 import GardeningAccountingSummary from '@/pages/Gardening/GardeningAccountingSummary.vue';
+import GardeningElectricityMonthList from '@/pages/Gardening/GardeningElectricityMonthList.vue';
+import GardeningDebtsList from '@/pages/Gardening/GardeningDebtsList.vue';
+import { parseGardeningPlotQuery } from '@/pages/Gardening/plotUrl';
 
 interface RealEstateItem {
   id: number;
-  num_object: number | null;
+  num_object: string | number | null;
+}
+
+interface ImportErrorItem {
+  row: number;
+  plot: string;
+  message: string;
+}
+
+interface ImportResult {
+  year: number | null;
+  month: number | null;
+  plots_created: number;
+  meters_created: number;
+  owners_created: number;
+  readings_created: number;
+  readings_updated: number;
+  skipped_no_reading: number;
+  errors: ImportErrorItem[];
 }
 
 interface YearPaymentTypeOption {
   id: number;
   label: string;
   not_control?: boolean;
+  is_electricity?: boolean;
 }
 
 const store = useStore();
-const root = getCurrentInstance().proxy.$root;
+const vm = getCurrentInstance().proxy;
+const root = vm.$root;
 const currentYear = new Date().getFullYear();
 
 const realEstates = ref<RealEstateItem[]>([]);
@@ -256,9 +419,37 @@ const saving = ref(false);
 const yearMin = ref(2000);
 const yearMaxOffset = ref(2);
 const selectedYear = ref<number | null>(currentYear);
+const electricityRefresh = ref(0);
+const contributionsRefresh = ref(0);
+const ownerMetersRevision = ref(0);
 const settingsMode = ref(false);
 const yearPaymentTypes = ref<YearPaymentTypeOption[]>([]);
 const selectedPaymentTypeId = ref<number | null>(null);
+const selectedMonth = ref<number>(1);
+const selectedDebts = ref(false);
+const importing = ref(false);
+const backingUp = ref(false);
+const importResult = ref<ImportResult | null>(null);
+
+const months = [
+  { id: 1, label: 'Январь' },
+  { id: 2, label: 'Февраль' },
+  { id: 3, label: 'Март' },
+  { id: 4, label: 'Апрель' },
+  { id: 5, label: 'Май' },
+  { id: 6, label: 'Июнь' },
+  { id: 7, label: 'Июль' },
+  { id: 8, label: 'Август' },
+  { id: 9, label: 'Сентябрь' },
+  { id: 10, label: 'Октябрь' },
+  { id: 11, label: 'Ноябрь' },
+  { id: 12, label: 'Декабрь' },
+];
+
+const onOwnerMetersChanged = () => {
+  electricityRefresh.value += 1;
+  contributionsRefresh.value += 1;
+};
 
 const showBasePanel = computed(() => settingsMode.value && selectedYear.value === null);
 const showYearPanel = computed(() => settingsMode.value && selectedYear.value !== null);
@@ -269,11 +460,26 @@ const showAllPanel = computed(() => (
   && selectedYear.value !== null
 ));
 const showPaymentTypesStrip = computed(() => showAllPanel.value);
+const selectedPaymentType = computed(() => (
+  yearPaymentTypes.value.find((item) => item.id === selectedPaymentTypeId.value) || null
+));
+const showMonthsStrip = computed(() => (
+  showAllPanel.value
+  && selectedPaymentTypeId.value !== null
+  && Boolean(selectedPaymentType.value?.is_electricity)
+));
+const showDebtsList = computed(() => showMonthsStrip.value && selectedDebts.value);
+
+const selectMonth = (monthId: number) => {
+  selectedDebts.value = false;
+  selectedMonth.value = monthId;
+};
 
 watch(settingsMode, (isSettings) => {
   if (isSettings) {
     selectedYear.value = null;
     selectedPaymentTypeId.value = null;
+    selectedDebts.value = false;
     return;
   }
   if (selectedYear.value === null) {
@@ -283,6 +489,11 @@ watch(settingsMode, (isSettings) => {
 
 watch(selectedId, () => {
   selectedPaymentTypeId.value = null;
+  selectedDebts.value = false;
+});
+
+watch(selectedPaymentTypeId, () => {
+  selectedDebts.value = false;
 });
 
 const loadYearPaymentTypes = async () => {
@@ -362,10 +573,67 @@ const loadRealEstates = async () => {
   }
 };
 
+const applyRouteQuery = () => {
+  const { id, year } = parseGardeningPlotQuery(vm.$route?.query || {});
+  settingsMode.value = false;
+  if (year !== null) {
+    selectedYear.value = year;
+  }
+  if (id !== null && realEstates.value.some((item) => item.id === id)) {
+    selectedId.value = id;
+  }
+};
+
+onMounted(async () => {
+  await loadRealEstates();
+  applyRouteQuery();
+  await scrollToSelectedYear();
+});
+
 const openAddModal = () => {
   editingId.value = null;
   newNumObject.value = '';
   showAddModal.value = true;
+};
+
+const downloadSqlBackup = async () => {
+  if (backingUp.value) {
+    return;
+  }
+  backingUp.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const response = await fetch('/api/gardening/backup-sql', {
+      credentials: 'same-origin',
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      root.$emit('msg', 'error', data.message || 'Не удалось создать дамп');
+      return;
+    }
+    if (!response.ok || contentType.includes('text/html')) {
+      root.$emit('msg', 'error', 'Не удалось создать дамп');
+      return;
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get('content-disposition') || '';
+    const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^";]+)/i);
+    const filename = match ? decodeURIComponent(match[1].replace(/["']/g, '')) : 'l2.sql.gz';
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (_) {
+    root.$emit('msg', 'error', 'Не удалось создать дамп');
+  } finally {
+    backingUp.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
 };
 
 const openEditModal = (item: RealEstateItem) => {
@@ -410,9 +678,51 @@ const saveRealEstate = async () => {
   }
 };
 
-onMounted(() => {
-  loadRealEstates();
+const importPeriodLabel = computed(() => {
+  if (!importResult.value?.year || !importResult.value?.month) {
+    return '—';
+  }
+  const month = months.find((item) => item.id === importResult.value.month);
+  return `${month ? month.label : importResult.value.month} ${importResult.value.year}`;
 });
+
+const onXlsxSelected = async (file: File) => {
+  if (!file || importing.value) {
+    return;
+  }
+  importing.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { ok, message, result } = await api(
+      'gardening/import-electricity-xlsx',
+      null,
+      null,
+      {},
+      formData,
+    );
+    if (!ok || !result) {
+      root.$emit('msg', 'error', message || 'Не удалось загрузить файл');
+      return;
+    }
+    importResult.value = result;
+    if (result.year) {
+      selectedYear.value = result.year;
+    }
+    if (result.month) {
+      selectedMonth.value = result.month;
+      selectedDebts.value = false;
+    }
+    electricityRefresh.value += 1;
+    contributionsRefresh.value += 1;
+    await loadRealEstates();
+    root.$emit('msg', 'ok', 'Файл загружен');
+  } finally {
+    importing.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
 </script>
 
 <style scoped lang="scss">
@@ -422,6 +732,30 @@ onMounted(() => {
   height: 100%;
   margin-bottom: 5px;
   background-color: #f8f7f7;
+}
+
+.gardening-layout--page-scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  .side-col {
+    min-height: 0;
+  }
+
+  .side-col--nav,
+  .side-col--main {
+    overflow: visible;
+  }
+
+  .main-body {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .object-list {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
 }
 
 .header-row {
@@ -437,6 +771,7 @@ onMounted(() => {
   min-width: 0;
   border-right: 1px solid #b1b1b1;
   align-self: stretch;
+  align-items: flex-start;
 }
 
 .header-row__years {
@@ -502,6 +837,12 @@ onMounted(() => {
   min-height: 0;
 }
 
+.body-row--page-scroll {
+  flex: 1 0 auto;
+  min-height: min-content;
+  align-items: start;
+}
+
 .side-col {
   display: flex;
   flex-direction: column;
@@ -531,20 +872,34 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
   min-height: 0;
 }
 
 .accounting-main__owner {
   flex: 0 0 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .accounting-main__rest {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.accounting-main__receipts {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  padding-right: 10px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 .search {
@@ -554,7 +909,9 @@ onMounted(() => {
   flex-wrap: nowrap;
   flex: 1;
   min-width: 0;
-  height: 100%;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
 
   :deep(input.form-control),
   :deep(.btn) {
@@ -583,6 +940,19 @@ onMounted(() => {
   }
 }
 
+.import-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.import-errors {
+  margin-top: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+  color: #da4453;
+}
+
 .years-strip {
   display: flex;
   flex-direction: row;
@@ -593,7 +963,8 @@ onMounted(() => {
   height: 100%;
 }
 
-.payment-types-strip {
+.payment-types-strip,
+.months-strip {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -732,7 +1103,9 @@ onMounted(() => {
 .gardening-layout .years-strip .year-button,
 .gardening-layout .years-strip .year-button.active-button,
 .gardening-layout .payment-types-strip .year-button,
-.gardening-layout .payment-types-strip .year-button.active-button {
+.gardening-layout .payment-types-strip .year-button.active-button,
+.gardening-layout .months-strip .year-button,
+.gardening-layout .months-strip .year-button.active-button {
   border-radius: 0 !important;
   -webkit-border-radius: 0 !important;
   -moz-border-radius: 0 !important;

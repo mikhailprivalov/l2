@@ -30,7 +30,7 @@
           Файлы
         </div>
         <div class="file-result-field__hint">
-          Перетащите файлы сюда, вставьте через Ctrl/⌘ + V или выберите вручную
+          Перетащите файлы
         </div>
         <div
           v-if="settingsHint"

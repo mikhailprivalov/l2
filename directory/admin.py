@@ -382,6 +382,32 @@ class ResCGardeningPaymentType(admin.ModelAdmin):
     list_display_links = ('title',)
 
 
+class ResCGardeningElectricityMeter(admin.ModelAdmin):
+    list_display = (
+        'real_estate',
+        'title',
+        'date_start',
+        'date_end',
+        'sort_weight',
+        'hide',
+    )
+    list_display_links = ('title',)
+    list_filter = ('hide',)
+
+
+class ResCGardeningElectricityMeterReading(admin.ModelAdmin):
+    list_display = (
+        'real_estate',
+        'meter',
+        'year',
+        'month',
+        'reading',
+        'hide',
+    )
+    list_display_links = ('real_estate',)
+    list_filter = ('year', 'hide')
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -426,5 +452,7 @@ admin.site.register(models.SubGroupDirectory)
 admin.site.register(models.SubGroupPadrazdeleniye)
 admin.site.register(models.ConstructorEditAccessResearch, ResConstructorResearchAccessDepartment)
 admin.site.register(models.GardeningPaymentType, ResCGardeningPaymentType)
+admin.site.register(models.GardeningElectricityMeter, ResCGardeningElectricityMeter)
+admin.site.register(models.GardeningElectricityMeterReading, ResCGardeningElectricityMeterReading)
 admin.site.register(models.Contrasts, ResContrasts)
 admin.site.register(models.CategoryDirectory)

@@ -126,6 +126,9 @@ class PriceName(models.Model):
             return False
         return True
 
+    def is_customer_hospital_price(self):
+        return bool(self.subcontract and self.hospital_id and not self.external_performer and not self.doctor_id)
+
 
 class PriceCoast(models.Model):
     price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, db_index=True)
@@ -199,7 +202,14 @@ class PriceCoast(models.Model):
 
     @staticmethod
     def get_researches_and_coasts_by_price(price_id: int):
+        from hospitals.models import TitleResearchHospital
+
         coasts = get_researches_and_coasts_in_price(price_id)
+        price = PriceName.objects.filter(pk=price_id).first()
+        synonyms = {}
+        if price and price.is_customer_hospital_price():
+            research_ids = [coast.research_id for coast in coasts]
+            synonyms = TitleResearchHospital.get_titles_for_hospital(price.hospital_id, research_ids)
         result = [
             {
                 "id": coast.id,
@@ -207,6 +217,7 @@ class PriceCoast(models.Model):
                 "coastCito": coast.coast_cito,
                 "numberService": coast.number_services_by_contract,
                 "research": {"id": coast.research_id, "title": coast.research_title},
+                "hospitalSynonym": synonyms.get(coast.research_id, ""),
             }
             for coast in coasts
         ]

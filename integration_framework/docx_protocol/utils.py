@@ -401,6 +401,24 @@ def _format_field_display(field):
         except Exception:
             pass
 
+    if field_type == 45:
+        try:
+            items = json.loads(value) if isinstance(value, str) else value
+            if isinstance(items, list):
+                names = []
+                for item in items:
+                    if isinstance(item, dict):
+                        name = item.get("fio") or item.get("label") or ""
+                    else:
+                        name = str(item)
+                    name = (name or "").strip()
+                    if name:
+                        names.append(escape(name))
+                if names:
+                    return ", ".join(names), False
+        except Exception:
+            pass
+
     if field_type in (11, 13, 14) and isinstance(value, str) and "<" in value:
         return value, True
 

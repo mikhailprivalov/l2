@@ -362,9 +362,24 @@ DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK = []
 DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK = []
 HIDE_TITLE_BUTTONS_MAIN_MENU = {}
 DOU_CONSTRUCTOR_NAV_BUTTONS = [
+    {"id": "type_organization", "title": "Вид организации"},
+    {"id": "organization", "title": "Организации"},
     {"id": "document_groups", "title": "Группа документов"},
     {"id": "document_types", "title": "Виды документов"},
+    {"id": "document_templates", "title": "Шаблоны документов"},
+    {"id": "addressees", "title": "Адресаты"},
+    {"id": "cases", "title": "Виды дел"},
+    {"id": "element", "title": "Элементы"},
+    {"id": "group_element", "title": "Группировка Элементов"},
+    {"id": "type_section", "title": "Тип раздела"},
+    {"id": "place_section", "title": "Подраздел/место"},
+    {"id": "schema", "title": "Схемы (pdf, cda, docx)"},
+    {"id": "skeleton", "title": "Структура документа"},
+    {"id": "autofill_templates", "title": "Шаблоны заполнения"},
 ]
+
+SHOW_LABORANT_RENTGEN_AFTER_DATE = None
+
 USE_COMBO_ROLE = {}
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
 OFFSET_HOURS_PLAN_OPERATIONS = 0
@@ -419,8 +434,9 @@ ROUTE_LIST_ROW_HEIGHTS = 25
 OWN_SETUP_TO_SEND_FTP_EXECUTOR = False
 FORMS_LABORATORY_DIRECTION_DEFAULT = ""
 TUBE_MAX_RESEARCH_WITH_SHARE = False
-TUBE_BARCODE_OFFSET_X = 1
+TUBE_BARCODE_OFFSET_X = -3
 TUBE_BARCODE_WIDTH_MINDEX = 0.0125
+TUBE_BARCODE_WIDTH_MM = 0
 RELATED_AGREES_FORMS_TOGETHER = {}
 FTP_PATH_TO_SAVE = ""
 FTP_PATH_TO_SAVE_ERROR_FILE = ""
@@ -540,6 +556,8 @@ TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
 WORK_DAYS_PER_WEEK_DEFAULT = 5
 CDA_ID_FOR_DATE_CLOSE_CASE = [-1]
 CDA_ID_FOR_DATE_IS_EXTRACT = -1
+# pk CdaFields: тема документа в списке /ui/document-manager (сохранён/подтверждён). -1 — вид документа.
+CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER = -1
 # Начало рабочего дня для работников и подразделений (Employees, Department) HH:MM
 EMPLOYEE_START_WORK_TIME_DEFAULT = "08:00"
 CDA_ID_FOR_WHERE_SERVICE_DONE = -1

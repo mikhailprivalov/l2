@@ -82,7 +82,7 @@ def monitoring_sql_by_all_hospital(
                 directions_monitoringresult.period_param_month=%(period_param_month)s AND
                 directions_monitoringresult.period_param_year=%(period_param_year)s AND
                 directions_issledovaniya.time_confirmation is NOT NULL
-            WHEN %(type_period)s = 'PERIOD_QUARTER' THEN 
+            WHEN %(type_period)s = 'PERIOD_QURTER' THEN 
                 directions_monitoringresult.research_id=%(monitoring_research)s AND
                 directions_monitoringresult.period_param_quarter=%(period_param_quarter)s AND
                 directions_monitoringresult.period_param_year=%(period_param_year)s AND

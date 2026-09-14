@@ -10,35 +10,197 @@
           class="transparent-button"
           :class="{ 'active-button': selectedNavId === button.id }"
           type="button"
-          @click="selectedNavId = button.id"
+          @click="selectNav(button.id)"
         >
           {{ button.title }}
         </button>
       </div>
     </div>
-    <div class="panel panel-middle" />
-    <div class="panel panel-main" />
+    <div class="panel panel-middle">
+      <template v-if="isWorkingSection">
+        <div class="middle-search">
+          <input
+            v-model="titleFilter"
+            type="text"
+            class="form-control nbr"
+            placeholder="Фильтр по названию"
+          >
+          <button
+            v-if="canAdd"
+            class="btn btn-blue-nb nbr nba"
+            type="button"
+            @click="addItem"
+          >
+            Добавить
+          </button>
+        </div>
+        <div
+          class="item-list"
+          :class="{ 'item-list--empty': filteredItems.length === 0 }"
+        >
+          <div v-if="filteredItems.length === 0">
+            Не найдено
+          </div>
+          <div
+            v-for="row in filteredItems"
+            :key="row.id"
+            class="object-row"
+            :class="{ 'object-row--active': selectedId === row.id, 'object-row--hide': row.hide }"
+            role="button"
+            tabindex="0"
+            @click="selectedId = row.id"
+            @keydown.enter.prevent="selectedId = row.id"
+            @keydown.space.prevent="selectedId = row.id"
+          >
+            <span class="object-row__label">{{ row.title }}</span>
+            <span
+              v-if="row.code"
+              class="object-row__code"
+              :title="row.code"
+            >
+              {{ row.code }}
+            </span>
+            <span
+              v-if="row.groupTitle"
+              class="object-row__sub"
+            >
+              {{ row.groupTitle }}
+            </span>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div class="panel panel-main">
+      <DouCatalogEditor
+        v-if="showCatalogEditor"
+        :key="`${selectedNavId}-${selectedId}`"
+        :kind="catalogKind"
+        :item-id="selectedId"
+        :title-value="selectedItem?.title"
+        :code-value="selectedItem?.code"
+        :group-id-value="selectedItem?.groupId"
+        :layout-template-id-value="selectedItem?.layoutTemplateId"
+        :layout-template-ids-value="selectedItem?.layoutTemplateIds"
+        :layout-templates-value="selectedItem?.layoutTemplates"
+        :groups="groups"
+        @saved="onCatalogSaved"
+        @cancel="selectedId = null"
+      />
+      <DouDocumentStructureEditor
+        v-else-if="showStructureEditor"
+        :key="selectedId"
+        :type-document-id="selectedId"
+        @saved="onStructureSaved"
+        @cancel="selectedId = null"
+      />
+      <DouAddresseeEditor
+        v-else-if="showAddresseeEditor"
+        :key="`addressee-${selectedId}`"
+        :item-id="selectedId"
+        @saved="onCatalogSaved"
+        @cancel="selectedId = null"
+      />
+      <ParaclinicResearchEditor
+        v-else-if="showTemplateEditor"
+        :key="selectedId"
+        style="position: absolute; top: 0; right: 0; bottom: 0; left: 0"
+        :pk="selectedId"
+        :department="LAYOUT_TEMPLATE_DEPARTMENT"
+        :direction_forms="directionForms"
+        :result_forms="resultForms"
+        :specialities="specialities"
+        :permanent_directories="permanentDirectories"
+        :period_types="periodTypes"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  onMounted,
-  ref,
+  computed, getCurrentInstance, onMounted, onUnmounted, ref, watch,
 } from 'vue';
 
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import DouCatalogEditor from '@/construct/DouCatalogEditor.vue';
+import DouDocumentStructureEditor from '@/construct/DouDocumentStructureEditor.vue';
+import DouAddresseeEditor from '@/construct/DouAddresseeEditor.vue';
+import ParaclinicResearchEditor from '@/construct/ParaclinicResearchEditor.vue';
 
 interface NavButton {
   id: string;
   title: string;
 }
 
+interface CatalogItem {
+  id: number;
+  title: string;
+  code?: string;
+  groupId?: number | null;
+  groupTitle?: string;
+  layoutTemplateId?: number | null;
+  layoutTemplateIds?: number[];
+  layoutTemplates?: { id: number; label: string }[];
+  hide?: boolean;
+}
+
+const LAYOUT_TEMPLATE_DEPARTMENT = -17;
+const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'skeleton', 'addressees'];
+
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 const navButtons = ref<NavButton[]>([]);
 const selectedNavId = ref<string | null>(null);
+const titleFilter = ref('');
+const items = ref<CatalogItem[]>([]);
+const groups = ref<CatalogItem[]>([]);
+const selectedId = ref<number | null>(null);
+const directionForms = ref([]);
+const resultForms = ref([]);
+const specialities = ref([]);
+const permanentDirectories = ref<Record<string, unknown>>({});
+const periodTypes = ref([]);
+
+const isWorkingSection = computed(() => WORKING_NAV.includes(selectedNavId.value || ''));
+const canAdd = computed(() => (
+  selectedNavId.value === 'document_groups'
+  || selectedNavId.value === 'document_types'
+  || selectedNavId.value === 'document_templates'
+  || selectedNavId.value === 'addressees'
+));
+const catalogKind = computed<'group' | 'type'>(() => (selectedNavId.value === 'document_groups' ? 'group' : 'type'));
+
+const filteredItems = computed(() => {
+  const search = titleFilter.value.trim().toLowerCase();
+  if (!search) {
+    return items.value;
+  }
+  return items.value.filter(row => (
+    (row.title || '').toLowerCase().includes(search)
+    || (row.code || '').toLowerCase().includes(search)
+  ));
+});
+
+const selectedItem = computed(() => items.value.find(row => row.id === selectedId.value) || null);
+
+const showCatalogEditor = computed(
+  () => (selectedNavId.value === 'document_groups' || selectedNavId.value === 'document_types')
+    && selectedId.value !== null,
+);
+
+const showStructureEditor = computed(
+  () => selectedNavId.value === 'skeleton' && selectedId.value !== null && selectedId.value > 0,
+);
+
+const showTemplateEditor = computed(
+  () => selectedNavId.value === 'document_templates' && selectedId.value !== null,
+);
+
+const showAddresseeEditor = computed(
+  () => selectedNavId.value === 'addressees' && selectedId.value !== null,
+);
 
 const loadNavButtons = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -53,15 +215,94 @@ const loadNavButtons = async () => {
   }
 };
 
+const loadGroups = async () => {
+  const { result } = await api('document-manager/groups/list');
+  groups.value = result || [];
+};
+
+const loadItems = async () => {
+  selectedId.value = null;
+  items.value = [];
+  if (!isWorkingSection.value) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    if (selectedNavId.value === 'document_groups') {
+      const { result } = await api('document-manager/groups/list');
+      items.value = result || [];
+    } else if (selectedNavId.value === 'document_templates') {
+      const data = await api('researches/by-department', { department: LAYOUT_TEMPLATE_DEPARTMENT, isConstructor: true });
+      items.value = (data.researches || []).map((row: { pk: number; title: string; hide?: boolean }) => ({
+        id: row.pk,
+        title: row.title,
+        hide: row.hide,
+      }));
+      directionForms.value = data.direction_forms || [];
+      resultForms.value = data.result_forms || [];
+      specialities.value = data.specialities || [];
+      permanentDirectories.value = data.permanent_directories || {};
+      periodTypes.value = data.period_types || [];
+    } else if (selectedNavId.value === 'addressees') {
+      const { result } = await api('document-manager/addressees/groups/list', {
+        includeAll: false,
+        includeHidden: true,
+        globalOnly: true,
+      });
+      items.value = result || [];
+    } else {
+      await loadGroups();
+      const { result } = await api('document-manager/types/list');
+      items.value = result || [];
+    }
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+const selectNav = (id: string) => {
+  selectedNavId.value = id;
+};
+
+const addItem = () => {
+  selectedId.value = -1;
+};
+
+const onCatalogSaved = async (payload: { id: number }) => {
+  await loadItems();
+  selectedId.value = payload.id;
+};
+
+const onStructureSaved = async () => {
+  await loadItems();
+};
+
+const onTemplateCancel = async () => {
+  if (selectedNavId.value !== 'document_templates') {
+    return;
+  }
+  await loadItems();
+};
+
+watch(selectedNavId, () => {
+  titleFilter.value = '';
+  loadItems();
+});
+
 onMounted(() => {
   loadNavButtons();
+  root.$on('research-editor:cancel', onTemplateCancel);
+});
+
+onUnmounted(() => {
+  root.$off('research-editor:cancel', onTemplateCancel);
 });
 </script>
 
 <style scoped lang="scss">
 .three-col {
   display: grid;
-  grid-template-columns: 1fr 1fr 5.56fr;
+  grid-template-columns: 1fr 1.17fr 5.39fr;
   height: calc(100vh - 36px);
   margin-bottom: 5px;
 }
@@ -71,20 +312,150 @@ onMounted(() => {
   flex-direction: column;
   background-color: #f8f7f7;
   border-right: 1px solid #b1b1b1;
+}
+
+.panel-nav {
   overflow-y: auto;
 }
 
+.panel-middle {
+  overflow: hidden;
+}
+
+.middle-search {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  flex: 0 0 34px;
+  min-width: 0;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  border-bottom: 1px solid #b1b1b1;
+
+  :deep(input.form-control),
+  :deep(.btn) {
+    align-self: stretch;
+    height: 34px;
+    min-height: 34px;
+    padding: 0 10px;
+    line-height: 22px;
+    font-size: 14px;
+    border-radius: 0 !important;
+    -webkit-border-radius: 0 !important;
+    -moz-border-radius: 0 !important;
+  }
+
+  :deep(input.form-control) {
+    border: none;
+    box-shadow: none;
+    width: auto !important;
+    flex: 2 166px;
+    min-width: 0;
+  }
+
+  :deep(.btn) {
+    flex: 3 94px;
+    width: 94px;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: none !important;
+    margin: 0;
+  }
+}
+
+.item-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.item-list--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.object-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  line-height: 22px;
+  border: none;
+  border-bottom: 1px solid #b1b1b1;
+  border-radius: 0;
+  background-color: transparent;
+  color: #434A54;
+  padding: 0 6px 0 10px;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+}
+
+.object-row__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.object-row__code {
+  flex-shrink: 0;
+  max-width: 30%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.object-row__sub {
+  flex-shrink: 1;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.object-row:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+}
+
+.object-row--active,
+.object-row--active:hover {
+  background-color: #049372;
+  color: #FFFFFF;
+}
+
+.object-row--hide {
+  opacity: 0.65;
+}
+
 .panel-main {
+  position: relative;
   border-right: none;
+  overflow: hidden;
+  background-color: #f8f7f7;
 }
 
 .row-border {
   border-bottom: 1px solid #b1b1b1;
   display: flex;
-}
-
-.row-border:first-child {
-  border-top: 1px solid #b1b1b1;
+  flex: 0 0 34px;
+  height: 34px;
+  min-height: 34px;
 }
 
 .transparent-button {
@@ -92,7 +463,11 @@ onMounted(() => {
   color: #434A54;
   flex: 1;
   border: none;
-  padding: 6px 10px;
+  border-radius: 0;
+  height: 34px;
+  padding: 0 10px;
+  line-height: 22px;
+  font-size: 14px;
   text-align: left;
   cursor: pointer;
 }
@@ -110,5 +485,14 @@ onMounted(() => {
 .active-button {
   background-color: #049372;
   color: #FFFFFF;
+}
+</style>
+
+<style lang="scss">
+.three-col,
+.three-col * {
+  border-radius: 0 !important;
+  -webkit-border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
 }
 </style>

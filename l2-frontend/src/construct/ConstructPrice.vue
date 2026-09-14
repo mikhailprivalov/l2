@@ -282,6 +282,7 @@
         <table class="table">
           <colgroup>
             <col>
+            <col>
             <col width="100">
             <col width="100">
             <col width="100">
@@ -291,6 +292,9 @@
             <tr class="border-no-top">
               <th class="text-center border-right">
                 <strong>Название</strong>
+              </th>
+              <th class="text-center border-right">
+                <strong>Синоним для больницы</strong>
               </th>
               <th class="text-center border-right">
                 <strong>Кол-во</strong>
@@ -323,7 +327,7 @@
             class="text-center"
           >
             <td
-              colspan="4"
+              colspan="6"
               class="border-top"
             >
               Нет данных
@@ -337,6 +341,13 @@
               class="research border padding-left"
               :text="coastResearch.research.title"
             />
+            <td class="border">
+              <input
+                v-model.trim="coastResearch.hospitalSynonym"
+                :disabled="!priceIsActive || searchTypesObject !== 'Заказчик'"
+                class="form-control"
+              >
+            </td>
             <td class="border">
               <input
                 v-model="coastResearch.numberService"
@@ -512,8 +523,9 @@ export default {
     filteredRows() {
       return this.coastResearches.filter(coastResearch => {
         const research = coastResearch.research.title.toLowerCase();
+        const synonym = (coastResearch.hospitalSynonym || '').toLowerCase();
         const searchTerm = this.search.toLowerCase();
-        return research.includes(searchTerm);
+        return research.includes(searchTerm) || synonym.includes(searchTerm);
       });
     },
     priceIsActive() {
@@ -706,6 +718,7 @@ export default {
           coast: coastResearch.coast,
           coastCito: coastResearch.coastCito,
           numberService: coastResearch.numberService,
+          hospitalSynonym: coastResearch.hospitalSynonym,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {

@@ -24,6 +24,7 @@
                   just_search
                   :types-only="[3]"
                   hide-type-picker
+                  use-hospital-synonym
                 />
               </template>
               <template #bottom>

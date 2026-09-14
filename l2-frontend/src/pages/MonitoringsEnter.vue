@@ -64,6 +64,15 @@
               Закрыть
             </button>
           </div>
+          <div class="col-xs-4 col-xs-offset-4 text-right">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="printResults"
+            >
+              Печать
+            </button>
+          </div>
         </div>
       </div>
     </Modal>
@@ -134,6 +143,12 @@ export default {
       }
       this.$root.$emit('embedded-form:hide', this.toEnter);
       this.toEnter = null;
+    },
+    printResults() {
+      if (!this.toEnter) {
+        return;
+      }
+      this.$root.$emit('print:results', [this.toEnter]);
     },
   },
 };

@@ -431,7 +431,8 @@ def apply_result_from_res_payload(payload, hospitals=None):
             iss.time_confirmation = time_confirmation
             iss.time_save = timezone.now()
             iss.doc_confirmation_string = doctor_fio
-            iss.save(update_fields=["time_confirmation", "time_save", "doc_confirmation_string"])
+            iss.link_file = iss_file.uploaded_file.path
+            iss.save(update_fields=["time_confirmation", "time_save", "doc_confirmation_string", "link_file"])
 
         direction.sync_confirmed_fields(skip_post=True)
         Log.log(source_id, 190014, direction.doc, {"direction": direction.pk, "doctor_fio": doctor_fio, "time_confirmation": str(time_confirmation)})

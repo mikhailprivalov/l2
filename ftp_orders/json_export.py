@@ -188,12 +188,14 @@ def spool_study_link_json(direction, equipment_receive):
     return spool_json(filename, build_direction_payload(direction, FILE_TYPE_STUDY, extra=_study_extra_fields(direction, equipment_receive)))
 
 
-def should_spool_result(direction):
-    if not getattr(direction, "is_request", False):
-        return False
+def _result_source_id(direction):
     source_id = str(getattr(direction, "id_in_hospital", None) or "").strip()
-    if not source_id:
-        return False
+    if source_id:
+        return source_id
+    return str(direction.pk)
+
+
+def should_spool_result(direction):
     hospital = getattr(direction, "hospital", None)
     return bool(hospital and hospital.json_result_auto_export)
 
@@ -208,7 +210,6 @@ def _result_issledovaniye(direction):
 def build_result_json(direction):
     from integration_framework.common_func import direction_pdf_content
 
-    source_id = str(direction.id_in_hospital or "").strip()
     iss = _result_issledovaniye(direction)
     time_confirmation = None
     if iss and iss.time_confirmation:
@@ -218,7 +219,7 @@ def build_result_json(direction):
     pdf_bytes = direction_pdf_content(direction.pk)
     return {
         "_l2_file_type": FILE_TYPE_RESULT,
-        "id": source_id,
+        "id": _result_source_id(direction),
         "pdf": base64.b64encode(pdf_bytes).decode("utf-8"),
         "time_confirmation": _serialize_value(time_confirmation),
         "doctor_fio": (iss.doc_confirmation_fio if iss else "") or "",
@@ -228,8 +229,7 @@ def build_result_json(direction):
 def spool_result_json(direction):
     if not should_spool_result(direction):
         return None
-    source_id = str(direction.id_in_hospital).strip()
-    filename = build_filename(source_id, FILE_TYPE_RESULT)
+    filename = build_filename(_result_source_id(direction), FILE_TYPE_RESULT)
     return spool_json(filename, build_result_json(direction), spool_dir=get_results_spool_dir())
 
 
@@ -282,20 +282,35 @@ def process_push_json_orders():
 
 
 def process_push_json_results():
+    spool_dir = get_results_spool_dir()
+    spool_dir_abs = os.path.abspath(spool_dir)
+    stdout.write(f"ftp_json_results: 1) spool_dir={spool_dir_abs}\n")
+
+    if not os.path.isdir(spool_dir):
+        stdout.write("ftp_json_results: 2) files=[] (directory does not exist)\n")
+    else:
+        all_files = sorted(os.listdir(spool_dir))
+        stdout.write(f"ftp_json_results: 2) files={all_files}\n")
+
+    stdout.write(f"ftp_json_results: 3) FTP_JSON_RESULTS_URL={FTP_JSON_RESULTS_URL}\n")
+
     if not FTP_JSON_RESULTS_URL:
+        stdout.write("ftp_json_results: 4) skip (FTP_JSON_RESULTS_URL is empty)\n")
         return
 
-    spool_dir = get_results_spool_dir()
     if not os.path.isdir(spool_dir):
+        stdout.write("ftp_json_results: 4) skip (directory does not exist)\n")
         return
 
     files = sorted(f for f in os.listdir(spool_dir) if f.endswith(".json"))
     if not files:
+        stdout.write("ftp_json_results: 4) skip (no .json files)\n")
         return
 
     ftp = None
     try:
         ftp = connect_ftp(FTP_JSON_RESULTS_URL)
+        stdout.write("ftp_json_results: 4) ftp connected\n")
         for filename in files:
             path = os.path.join(spool_dir, filename)
             with open(path, "rb") as f:
@@ -303,10 +318,12 @@ def process_push_json_results():
             ftp.storbinary(f"STOR {filename}", BytesIO(content))
             try:
                 archived = _archive_sent_file(path, filename, archive_dir=get_results_archive_dir())
-                stdout.write(f"ftp_json_results: sent {filename} -> {archived}\n")
-            except OSError:
+                stdout.write(f"ftp_json_results: 4) sent {filename} -> {archived}\n")
+            except OSError as e:
+                stdout.write(f"ftp_json_results: 4) sent {filename} but archive failed: {e}\n")
                 logger.exception("ftp_json_results: failed to archive %s", filename)
-    except ftplib.all_errors:
+    except ftplib.all_errors as e:
+        stdout.write(f"ftp_json_results: 4) ftp error: {e}\n")
         logger.exception("ftp_json_results: ftp error")
     finally:
         if ftp:
