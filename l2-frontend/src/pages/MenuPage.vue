@@ -506,12 +506,14 @@
                         <option value="unset">
                           Не установлено
                         </option>
-                        <option value="emergency"
+                        <option
+                          value="emergency"
                           :disabled="isTypeMedicalFormTaken('emergency', row.id)"
                         >
                           Экстренная служба
                         </option>
-                        <option value="stationary"
+                        <option
+                          value="stationary"
                           :disabled="isTypeMedicalFormTaken('stationary', row.id)"
                         >
                           Стационар
