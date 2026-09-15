@@ -558,6 +558,9 @@ CDA_ID_FOR_DATE_CLOSE_CASE = [-1]
 CDA_ID_FOR_DATE_IS_EXTRACT = -1
 # pk CdaFields: тема документа в списке /ui/document-manager (сохранён/подтверждён). -1 — вид документа.
 CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER = -1
+# Кнопка и страница ДОУ доступны всем авторизованным. Переопределение в laboratory/local_settings.py
+DOCUMENT_MANAGER_VIEW_GROUP = "ДОУ: просмотр документов"
+DOCUMENT_MANAGER_FOR_ALL = False
 # Начало рабочего дня для работников и подразделений (Employees, Department) HH:MM
 EMPLOYEE_START_WORK_TIME_DEFAULT = "08:00"
 CDA_ID_FOR_WHERE_SERVICE_DONE = -1

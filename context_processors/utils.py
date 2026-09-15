@@ -6,7 +6,15 @@ import clients.models as Clients
 import hospitals.models as Hospitals
 from appconf.manager import SettingManager
 from laboratory import settings
-from laboratory.settings import PROTOCOL_PLAIN_TEXT, SPLIT_PRINT_RESULT, HIDE_TITLE_BUTTONS_MAIN_MENU, USE_COMBO_ROLE, ALLOW_DIGITS_IN_FAMILY
+from laboratory.settings import (
+    PROTOCOL_PLAIN_TEXT,
+    SPLIT_PRINT_RESULT,
+    HIDE_TITLE_BUTTONS_MAIN_MENU,
+    USE_COMBO_ROLE,
+    ALLOW_DIGITS_IN_FAMILY,
+    DOCUMENT_MANAGER_FOR_ALL,
+    DOCUMENT_MANAGER_VIEW_GROUP,
+)
 from rmis_integration.client import get_md5
 from utils.common import get_system_name
 
@@ -272,7 +280,7 @@ def menu(request):
                 },
                 {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
-                {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
+                {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["*"] if DOCUMENT_MANAGER_FOR_ALL else [DOCUMENT_MANAGER_VIEW_GROUP]},
                 {"url": "/ui/document-history", "title": "История документов", "nt": False, "access": ["История документа"]},
                 {"url": "/ui/gardening", "title": "Садоводство", "nt": False, "access": ["Бухгалтер садоводства"]},
             ]

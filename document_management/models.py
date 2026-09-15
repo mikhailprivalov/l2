@@ -868,7 +868,7 @@ class Documents(models.Model):
     )
     is_hidden = models.BooleanField(default=False, blank=True, db_index=True, help_text="Скрыт из списков")
 
-    HIDDEN_DOCS_GROUP = "Скрытые документы"
+    HIDDEN_DOCS_GROUP = "Скрытие документа"
     RESET_GROUP = "Сброс документов"
     HISTORY_GROUP = "История документа"
     LOG_CREATE = 260000
@@ -1018,22 +1018,34 @@ class Documents(models.Model):
         return who.has_group(cls.HIDDEN_DOCS_GROUP)
 
     @classmethod
+    def document_is_confirmed(cls, obj, iss=None):
+        if obj.time_confirm:
+            return True
+        if iss is not None:
+            return bool(iss.time_confirmation)
+        from directions.models import Issledovaniya
+
+        return Issledovaniya.objects.filter(document=obj, time_confirmation__isnull=False).exists()
+
+    @classmethod
     def can_see_document(cls, obj, who):
         if not obj.is_hidden:
-            return True
-        if not who:
-            return False
-        if obj.who_create_id == getattr(who, "pk", None):
             return True
         return cls.can_view_all_hidden(who)
 
     @classmethod
-    def can_set_hidden(cls, obj, who):
+    def can_set_hidden(cls, obj, who, confirmed=None):
         if not who:
             return False
-        if obj.who_create_id == getattr(who, "pk", None):
+        user = getattr(who, "user", None)
+        if user and getattr(user, "is_superuser", False):
             return True
-        return cls.can_view_all_hidden(who)
+        if obj.who_create_id == getattr(who, "pk", None):
+            if confirmed is None:
+                confirmed = cls.document_is_confirmed(obj)
+            if not confirmed:
+                return True
+        return who.has_group(cls.HIDDEN_DOCS_GROUP)
 
     @classmethod
     def can_reset_confirm(cls, who):
@@ -1082,11 +1094,9 @@ class Documents(models.Model):
             if role_filter == "created" and who:
                 qs = qs.filter(who_create=who)
         if hidden:
-            qs = qs.filter(is_hidden=True)
             if not Documents.can_view_all_hidden(who):
-                if not who:
-                    return []
-                qs = qs.filter(who_create=who)
+                return []
+            qs = qs.filter(is_hidden=True)
         else:
             qs = qs.filter(is_hidden=False)
         docs = list(qs)
@@ -1251,7 +1261,7 @@ class Documents(models.Model):
 
     @staticmethod
     def get_details(pk, who=None):
-        obj = Documents.objects.select_related("schema", "type_document", "type_document__layout_template").filter(pk=pk).first()
+        obj = Documents.objects.select_related("schema", "type_document", "type_document__layout_template", "type_document__group_document").filter(pk=pk).first()
         if not obj:
             return {"ok": False, "message": "Документ не найден"}
         if not Documents.can_see_document(obj, who):
@@ -1263,9 +1273,9 @@ class Documents(models.Model):
         payload["issPk"] = iss.pk if iss else None
         payload["research"] = research
         payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
-        payload["canHide"] = Documents.can_set_hidden(obj, who)
+        payload["canHide"] = Documents.can_set_hidden(obj, who, confirmed=payload["confirmed"])
         payload["canReset"] = Documents.can_reset_confirm(who)
-        payload["reviewedNow"] = DocumentReview.mark_opened(obj, who) if payload["confirmed"] else False
+        payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
         type_doc = obj.type_document.title if obj.type_document else ""
         DocumentRecent.remember(who, obj, topic=obj.topic_value(iss, research=research), type_doc=type_doc)
         return payload
@@ -1564,7 +1574,7 @@ class DocumentReview(models.Model):
 
     @classmethod
     def pending_qs(cls, who):
-        qs = cls.objects.filter(time_review__isnull=True)
+        qs = cls.objects.filter(time_review__isnull=True, document__is_hidden=False)
         if who:
             qs = qs.filter(doctor_review=who)
         else:
@@ -1582,11 +1592,12 @@ class DocumentReview(models.Model):
         return cls.pending_qs(who).values("document_id").distinct().count()
 
     @classmethod
-    def mark_opened(cls, document, who):
+    def mark_opened(cls, document, who, iss=None):
         if not document or not who:
             return False
         if not document.time_confirm:
-            iss = document.get_issledovaniye()
+            if iss is None:
+                iss = document.get_issledovaniye()
             if not iss or not iss.time_confirmation:
                 return False
         from django.utils import timezone
@@ -1681,7 +1692,7 @@ class DocumentRecent(models.Model):
             return
         from django.utils import timezone
 
-        cls.objects.update_or_create(
+        _, created = cls.objects.update_or_create(
             doctor=who,
             document=document,
             defaults={
@@ -1690,6 +1701,8 @@ class DocumentRecent(models.Model):
                 "opened_at": timezone.now(),
             },
         )
+        if not created:
+            return
         extra_ids = list(cls.objects.filter(doctor=who).order_by("-opened_at", "-pk").values_list("pk", flat=True)[cls.MAX_ITEMS :])
         if extra_ids:
             cls.objects.filter(pk__in=extra_ids).delete()
@@ -1708,7 +1721,7 @@ class DocumentRecent(models.Model):
             page_size = cls.PAGE_SIZE
         qs = cls.objects.filter(doctor=who).select_related("document", "document__type_document", "document__schema").order_by("-opened_at", "-pk")
         if not Documents.can_view_all_hidden(who):
-            qs = qs.filter(models.Q(document__is_hidden=False) | models.Q(document__who_create=who))
+            qs = qs.filter(document__is_hidden=False)
         offset = (page - 1) * page_size
         rows = list(qs[offset : offset + page_size + 1])
         has_more = len(rows) > page_size

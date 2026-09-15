@@ -846,6 +846,7 @@ const router = new Router({
         title: 'ДОУ',
         fullPageLayout: true,
         groups: ['ДОУ: просмотр документов'],
+        openIfModule: 'document_manager_for_all',
       },
     },
     {
@@ -1031,6 +1032,7 @@ router.beforeEach(async (to, from, next) => {
       toMatched.some((r) => r.meta.groups)
       && toMatched.every((r) => !r.meta.groups?.find((g) => getters.user_groups.includes(g)))
       && !getters.user_groups.includes('Admin')
+      && !toMatched.some((r) => r.meta.openIfModule && getters.modules[r.meta.openIfModule])
     ) {
       router.app.$toast.warning('Нет доступа.', {
         position: POSITION.BOTTOM_RIGHT,
