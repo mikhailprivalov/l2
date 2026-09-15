@@ -202,10 +202,15 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         objs.append(tbl)
 
     if SHOW_LABORANT_RENTGEN_AFTER_DATE:
-        date_obj = datetime.datetime.strptime(SHOW_LABORANT_RENTGEN_AFTER_DATE, "%Y-%m-%d")
-        if iss.time_confirmation > date_obj:
-            objs.append(Spacer(1, 5 * mm))
-            objs.append(Paragraph(f"Рентгенлаборант: {direction.doc_who_create.get_fio()}", styleJustifiedDoctor))
+        threshold_date = datetime.datetime.strptime(SHOW_LABORANT_RENTGEN_AFTER_DATE, "%Y-%m-%d").date()
+        confirmation_date = iss.time_confirmation.astimezone(pytz.timezone("Europe/Moscow")).date()
+        if confirmation_date > threshold_date:
+            objs.append(Spacer(1, 2 * mm))
+            if direction.doc_who_create:
+                laborant = direction.doc_who_create.get_fio()
+            else:
+                laborant = direction.doc.get_fio()
+            objs.append(Paragraph(f"Рентгенлаборант: {laborant}", styleJustifiedDoctor))
 
     fwb.extend(objs)
     return fwb
