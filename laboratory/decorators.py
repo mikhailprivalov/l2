@@ -4,13 +4,15 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponseRedirect
 from urllib.parse import quote
 
-from laboratory.settings import USE_COMBO_ROLE
+from laboratory.settings import DOCUMENT_MANAGER_FOR_ALL, DOCUMENT_MANAGER_VIEW_GROUP, USE_COMBO_ROLE
 
 
 def group_required(*group_names):
     def in_group(u):
         if "admin" in group_names:
             return u.is_active and u.is_superuser
+        if DOCUMENT_MANAGER_FOR_ALL and DOCUMENT_MANAGER_VIEW_GROUP in group_names:
+            return u.is_active
 
         groups_user = [str(x) for x in u.groups.all()]
         detail_user_group = []

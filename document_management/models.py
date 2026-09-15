@@ -1564,7 +1564,7 @@ class DocumentReview(models.Model):
 
     @classmethod
     def pending_qs(cls, who):
-        qs = cls.objects.filter(time_review__isnull=True)
+        qs = cls.objects.filter(time_review__isnull=True, document__is_hidden=False)
         if who:
             qs = qs.filter(doctor_review=who)
         else:

@@ -6,7 +6,15 @@ import clients.models as Clients
 import hospitals.models as Hospitals
 from appconf.manager import SettingManager
 from laboratory import settings
-from laboratory.settings import PROTOCOL_PLAIN_TEXT, SPLIT_PRINT_RESULT, HIDE_TITLE_BUTTONS_MAIN_MENU, USE_COMBO_ROLE, ALLOW_DIGITS_IN_FAMILY
+from laboratory.settings import (
+    PROTOCOL_PLAIN_TEXT,
+    SPLIT_PRINT_RESULT,
+    HIDE_TITLE_BUTTONS_MAIN_MENU,
+    USE_COMBO_ROLE,
+    ALLOW_DIGITS_IN_FAMILY,
+    DOCUMENT_MANAGER_FOR_ALL,
+    DOCUMENT_MANAGER_VIEW_GROUP,
+)
 from rmis_integration.client import get_md5
 from utils.common import get_system_name
 
@@ -34,6 +42,8 @@ def menu(request):
     data = []
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
+        if DOCUMENT_MANAGER_FOR_ALL and DOCUMENT_MANAGER_VIEW_GROUP not in groups:
+            groups.append(DOCUMENT_MANAGER_VIEW_GROUP)
 
         k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:8'
         data = cache.get(k)
