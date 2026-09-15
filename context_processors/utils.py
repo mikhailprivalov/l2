@@ -42,8 +42,6 @@ def menu(request):
     data = []
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
-        if DOCUMENT_MANAGER_FOR_ALL and DOCUMENT_MANAGER_VIEW_GROUP not in groups:
-            groups.append(DOCUMENT_MANAGER_VIEW_GROUP)
 
         k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:8'
         data = cache.get(k)
@@ -282,7 +280,7 @@ def menu(request):
                 },
                 {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
-                {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
+                {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["*"] if DOCUMENT_MANAGER_FOR_ALL else [DOCUMENT_MANAGER_VIEW_GROUP]},
                 {"url": "/ui/document-history", "title": "История документов", "nt": False, "access": ["История документа"]},
                 {"url": "/ui/gardening", "title": "Садоводство", "nt": False, "access": ["Бухгалтер садоводства"]},
             ]

@@ -70,6 +70,7 @@
           <span>Последние</span>
         </label>
         <label
+          v-if="canViewHidden"
           class="filter-check hidden-check"
           @click.prevent="toggleHidden"
         >
@@ -169,6 +170,7 @@ const emit = defineEmits<{
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const userGroups = computed(() => store.getters.user_groups || []);
+const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
 const actionButtons = computed(() => {
   const items = [];
   if (userGroups.value.includes('Согласование')) {
@@ -298,7 +300,7 @@ const loadDocuments = async () => {
       typeId: selectedType.value,
       groupId: selectedGroup.value,
       filter: props.roleFilter,
-      hidden: showHidden.value,
+      hidden: Boolean(canViewHidden.value && showHidden.value),
     });
     if (loadId !== documentsLoadId) {
       return;
@@ -314,6 +316,9 @@ const loadDocuments = async () => {
 };
 
 const toggleHidden = () => {
+  if (!canViewHidden.value) {
+    return;
+  }
   showHidden.value = !showHidden.value;
   selectedDocument.value = null;
   loadDocuments();

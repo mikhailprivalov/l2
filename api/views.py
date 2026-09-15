@@ -31,8 +31,6 @@ from laboratory.settings import (
     MEDEXAM_FIN_SOURCE_TITLE,
     MAGAZINE_REPORT,
     USE_COMBO_ROLE,
-    DOCUMENT_MANAGER_FOR_ALL,
-    DOCUMENT_MANAGER_VIEW_GROUP,
 )
 from statistic.models import TypeReport
 from utils.response import status_response
@@ -714,8 +712,6 @@ def current_user_info(request):
                         ret["groups"][i] = "Картотека"
             if user.is_superuser:
                 ret["groups"].append("Admin")
-            if DOCUMENT_MANAGER_FOR_ALL and DOCUMENT_MANAGER_VIEW_GROUP not in ret["groups"]:
-                ret["groups"].append(DOCUMENT_MANAGER_VIEW_GROUP)
             ret["eds_allowed_sign"] = doctorprofile.get_eds_allowed_sign() if ret["modules"].get("l2_eds") else []
             ret["can_edit_all_department"] = doctorprofile.all_hospitals_users_control
             shift_data = Shift.get_open_shift_by_operator(request.user.doctorprofile.id)
