@@ -1271,7 +1271,9 @@ def get_hospitalization_calendar(request):
     total_direction_list = []
 
     for i in extract_proto_for_period:
-        patient_name = f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"
+        patient_n = i.patient_name[0] if i.patient_name else ""
+        patient_p = i.patient_patronymic[0] if i.patient_patronymic else ""
+        patient_name = f"{i.patient_family} {patient_n}.{patient_p}"
         patient_extract_add = {
             "directionPk": i.hosp_direction,
             "name": patient_name,
