@@ -3,7 +3,18 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
+def as_master_research_tuple(master_research):
+    if isinstance(master_research, (list, tuple, set)):
+        return tuple(x for x in master_research if x)
+    if master_research:
+        return (master_research,)
+    return ()
+
+
 def extra_notification_sql(master_research, slave_research, date_start, date_end, hospital_id, status):
+    master_research = as_master_research_tuple(master_research)
+    if not master_research:
+        return []
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -64,27 +75,27 @@ def extra_notification_sql(master_research, slave_research, date_start, date_end
                 ON directions_napravleniya.client_id=individual.cl_card
                 WHERE CASE 
                 WHEN  %(hospital_id)s > -1 and %(status)s = 2 THEN 
-                directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id = %(master_research)s and
+                directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id in %(master_research)s and
                 directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
                 
                 WHEN  %(hospital_id)s > -1 and %(status)s = 1 THEN 
-                directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id = %(master_research)s and
+                directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id in %(master_research)s and
                 directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and dirslave.r_confirm is not null
                 
                 WHEN  %(hospital_id)s > -1 and %(status)s = 0 THEN 
-                directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id = %(master_research)s and
+                directions_napravleniya.hospital_id = %(hospital_id)s and directions_issledovaniya.research_id in %(master_research)s and
                 directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and dirslave.r_confirm is null
                 
                 WHEN  %(hospital_id)s = -2 and %(status)s = 0 THEN 
-                directions_issledovaniya.research_id = %(master_research)s and
+                directions_issledovaniya.research_id in %(master_research)s and
                 directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
                 
                 WHEN  %(hospital_id)s = -2 and %(status)s = 2 THEN 
-                directions_issledovaniya.research_id = %(master_research)s and
+                directions_issledovaniya.research_id in %(master_research)s and
                 directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and dirslave.r_confirm is not null
                 
                 WHEN  %(hospital_id)s = -2 and %(status)s = 1 THEN 
-                directions_issledovaniya.research_id = %(master_research)s and
+                directions_issledovaniya.research_id in %(master_research)s and
                 directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and dirslave.r_confirm is null
                 END
                 ORDER BY directions_napravleniya.client_id

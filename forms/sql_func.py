@@ -1,10 +1,14 @@
 from django.db import connection
 
+from api.extra_notification.sql_func import as_master_research_tuple
 from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
 def get_extra_notification_data_for_pdf(directions, extra_master_research_id, extra_slave_research_id, with_confirm):
+    extra_master_research_id = as_master_research_tuple(extra_master_research_id)
+    if not extra_master_research_id:
+        return []
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -64,7 +68,7 @@ def get_extra_notification_data_for_pdf(directions, extra_master_research_id, ex
                   WHEN  %(with_confirm)s < 1 THEN
                     directions_issledovaniya.time_confirmation is null
                 END
-                AND directions_issledovaniya.research_id = %(slave_research_id)s and master_direction.master_research_id = %(master_research_id)s
+                AND directions_issledovaniya.research_id = %(slave_research_id)s and master_direction.master_research_id in %(master_research_id)s
                 ORDER BY master_dir, master_field_sort
         """,
             params={'num_dirs': directions, 'master_research_id': extra_master_research_id, 'slave_research_id': extra_slave_research_id, 'with_confirm': with_confirm},

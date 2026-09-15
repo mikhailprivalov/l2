@@ -11,6 +11,7 @@ from io import BytesIO
 from pdf2docx import Converter
 from docx import Document
 from appconf.manager import SettingManager
+from api.extra_notification.sql_func import as_master_research_tuple
 from forms.sql_func import get_covid_to_json, get_extra_notification_data_for_pdf
 from laboratory.settings import (
     COVID_RESEARCHES_PK,
@@ -250,7 +251,10 @@ def json_nofication(request):
 
 
 def get_epid_data(directions, with_confirm):
-    result = get_extra_notification_data_for_pdf(directions, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, with_confirm)
+    master_research = as_master_research_tuple(EXTRA_MASTER_RESEARCH_PK)
+    if not master_research:
+        return {}
+    result = get_extra_notification_data_for_pdf(directions, master_research, EXTRA_SLAVE_RESEARCH_PK, with_confirm)
     data = {}
     for i in result:
         if i.master_field == 1:

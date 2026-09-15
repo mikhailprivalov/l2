@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import timezone
 
-from api.extra_notification.sql_func import extra_notification_sql
+from api.extra_notification.sql_func import as_master_research_tuple, extra_notification_sql
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
 from directory.models import ParaclinicInputGroups, ParaclinicInputField
 from laboratory.decorators import group_required
@@ -39,7 +39,11 @@ def search(request):
             }
         )
 
-    result_extra = extra_notification_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
+    master_research = as_master_research_tuple(EXTRA_MASTER_RESEARCH_PK)
+    if not master_research:
+        return JsonResponse({'rows': []})
+
+    result_extra = extra_notification_sql(master_research, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
     result = []
     for i in result_extra:
         title = i.title
