@@ -15,6 +15,7 @@ from openpyxl.reader.excel import load_workbook
 import directory.models as directory
 import slog.models as slog
 from api.directions.sql_func import get_lab_podr
+from api.extra_notification.sql_func import as_master_research_tuple
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from contracts.models import PriceName, PriceCoast, Company
@@ -2529,7 +2530,7 @@ def statistic_xls(request):
         ws = epid_numbers.epid_numbers_base(ws, d_s, d_e)
 
         rows = []
-        if EXTRA_SLAVE_RESEARCH_PK and EXTRA_MASTER_RESEARCH_PK:
+        if EXTRA_SLAVE_RESEARCH_PK and as_master_research_tuple(EXTRA_MASTER_RESEARCH_PK):
             slave_rows = get_epid_slave_directions_by_period(start_date, end_date, EXTRA_SLAVE_RESEARCH_PK)
             dir_ids = [i.dir_id for i in slave_rows]
             confirm_dates = {i.dir_id: i.date_confirm for i in slave_rows}
