@@ -252,4 +252,3 @@ def download_dicom_study_archive(napravleniye, filename):
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
     return None
-
