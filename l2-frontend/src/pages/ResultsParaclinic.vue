@@ -730,7 +730,7 @@
                   &nbsp;<i class="fa fa-camera" />&nbsp;
                 </a>
                 <a
-                  v-if="forcedResultsTop && !!row.pacs"
+                  v-if="forcedResultsTop && !!row.pacs && showRequestsFillDicomDownload"
                   v-tippy
                   :href="`/api/dicom-download?pk=${data.direction.pk}`"
                   class="btn btn-blue-nb"
@@ -2063,6 +2063,9 @@ export default {
     },
     stat_btn() {
       return this.$store.getters.modules.l2_stat_btn;
+    },
+    showRequestsFillDicomDownload() {
+      return !!this.$store.getters.modules.show_requests_fill_dicom_download;
     },
     stat_btn_d() {
       return this.stat_btn && this.directions_history.length;

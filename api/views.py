@@ -31,6 +31,7 @@ from laboratory.settings import (
     MEDEXAM_FIN_SOURCE_TITLE,
     MAGAZINE_REPORT,
     USE_COMBO_ROLE,
+    SHOW_REQUESTS_FILL_DICOM_DOWNLOAD,
 )
 from statistic.models import TypeReport
 from utils.response import status_response
@@ -1092,6 +1093,8 @@ def _dicom_download_filename(napravleniye):
 
 @login_required
 def dicom_download(request):
+    if not SHOW_REQUESTS_FILL_DICOM_DOWNLOAD:
+        return HttpResponse("Скачивание серий отключено", status=403, content_type="text/plain; charset=utf-8")
     try:
         pk = int(request.GET.get("pk"))
     except (TypeError, ValueError):
