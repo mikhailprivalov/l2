@@ -896,6 +896,17 @@ class Documents(models.Model):
         return fallback
 
     @staticmethod
+    def title_with_id(pk, title):
+        marker = str(pk)
+        text = (title or "").strip()
+        suffix = f"№{marker}"
+        if text.endswith(suffix):
+            text = text[: -len(suffix)].rstrip()
+        if text.startswith(f"{marker} ") or text == marker:
+            return text
+        return f"{marker} {text}" if text else marker
+
+    @staticmethod
     def topic_cda_id():
         from laboratory.settings import CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER
 
@@ -1124,7 +1135,10 @@ class Documents(models.Model):
         result = []
         for doc in docs:
             payload = doc.json
-            payload["title"] = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
+            title = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
+            if role_filter == "toReview":
+                title = Documents.title_with_id(doc.pk, title)
+            payload["title"] = title
             result.append(payload)
         return result
 
@@ -1797,11 +1811,11 @@ class DocumentRecent(models.Model):
             type_doc = (row.type_doc or "").strip()
             if not type_doc and row.document.type_document:
                 type_doc = row.document.type_document.title
-            title = " ".join(part for part in (topic, type_doc) if part) or f"Документ №{row.document_id}"
+            title = " ".join(part for part in (topic, type_doc) if part)
             result.append(
                 {
                     "id": row.document_id,
-                    "title": title,
+                    "title": Documents.title_with_id(row.document_id, title),
                     "topic": topic,
                     "typeDoc": type_doc,
                 }
