@@ -223,7 +223,7 @@ const loadGroups = async () => {
 const loadTypes = async () => {
   await store.dispatch(actions.INC_LOADING);
   try {
-    const { result } = await api('document-manager/types/list', { groupId: selectedGroup.value });
+    const { result } = await api('document-manager/types/list', { groupId: selectedGroup.value, availableOnly: true });
     documentTypes.value = result || [];
   } finally {
     await store.dispatch(actions.DEC_LOADING);

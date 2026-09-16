@@ -8,6 +8,7 @@ from document_management.models import (
     DocumentRecent,
     DocumentReview,
     GroupDocuments,
+    TypeDocumentCreator,
     TypeDocumentLayoutTemplate,
     TypeDocuments,
     TypeDocumentsSchema,
@@ -26,12 +27,18 @@ class TypeDocumentLayoutTemplateInline(admin.TabularInline):
     ordering = ("order", "pk")
 
 
+class TypeDocumentCreatorInline(admin.TabularInline):
+    model = TypeDocumentCreator
+    extra = 0
+    raw_id_fields = ("doctor",)
+
+
 @admin.register(TypeDocuments)
 class TypeDocumentsAdmin(admin.ModelAdmin):
     list_display = ("pk", "title", "code", "group_document", "layout_template")
     search_fields = ("title", "code")
     list_filter = ("group_document",)
-    inlines = (TypeDocumentLayoutTemplateInline,)
+    inlines = (TypeDocumentLayoutTemplateInline, TypeDocumentCreatorInline)
 
 
 @admin.register(DocumentFieldGroups)

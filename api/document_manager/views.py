@@ -72,7 +72,9 @@ def groups_update(request):
 @group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def types_list(request):
     data = _request_data(request)
-    return JsonResponse({"result": TypeDocuments.get_list(data.get("groupId"))})
+    available_only = bool(data.get("availableOnly"))
+    doctor = getattr(request.user, "doctorprofile", None) if available_only else None
+    return JsonResponse({"result": TypeDocuments.get_list(data.get("groupId"), doctor, available_only)})
 
 
 @login_required
@@ -86,6 +88,7 @@ def types_update(request):
         data.get("code", ""),
         data.get("layoutTemplateId"),
         data.get("layoutTemplateIds"),
+        data.get("creatorIds"),
     )
     if result.get("ok"):
         return status_response(True, data=result)

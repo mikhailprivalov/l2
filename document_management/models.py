@@ -315,6 +315,22 @@ class TypeDocuments(models.Model):
             return [self.layout_template]
         return []
 
+    def get_creators(self):
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("creators")
+        if prefetched is not None:
+            rows = prefetched
+        else:
+            rows = self.creators.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk")
+        return [AddresseeGroup._employee_json(row.doctor) for row in rows if row.doctor_id]
+
+    def can_create(self, doctor):
+        if not doctor:
+            return False
+        creator_ids = list(self.creators.values_list("doctor_id", flat=True))
+        if not creator_ids:
+            return True
+        return doctor.pk in creator_ids
+
     @property
     def json(self):
         templates = self.get_layout_templates()
@@ -328,17 +344,22 @@ class TypeDocuments(models.Model):
             "layoutTemplateId": template_ids[0] if template_ids else self.layout_template_id,
             "layoutTemplateIds": template_ids,
             "layoutTemplates": [{"id": row.pk, "label": row.title} for row in templates],
+            "creators": self.get_creators(),
         }
 
     @staticmethod
-    def get_list(group_id=None):
+    def get_list(group_id=None, doctor=None, available_only=False):
         qs = (
             TypeDocuments.objects.select_related("group_document", "layout_template")
             .prefetch_related(
                 models.Prefetch(
                     "layout_template_links",
                     queryset=TypeDocumentLayoutTemplate.objects.select_related("layout_template").order_by("order", "pk"),
-                )
+                ),
+                models.Prefetch(
+                    "creators",
+                    queryset=TypeDocumentCreator.objects.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk"),
+                ),
             )
             .order_by("title", "pk")
         )
@@ -346,6 +367,12 @@ class TypeDocuments(models.Model):
             qs = qs.filter(group_document__isnull=True)
         elif group_id not in (None, "", 0, "0"):
             qs = qs.filter(group_document_id=group_id)
+        if available_only:
+            if not doctor:
+                return []
+            has_creators = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"))
+            is_creator = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"), doctor=doctor)
+            qs = qs.filter(~models.Exists(has_creators) | models.Exists(is_creator))
         return [row.json for row in qs]
 
     @staticmethod
@@ -371,7 +398,37 @@ class TypeDocuments(models.Model):
         return result
 
     @staticmethod
-    def save_type(pk, title, group_id=None, code="", layout_template_id=None, layout_template_ids=None):
+    def _parse_creator_ids(creator_ids):
+        if not isinstance(creator_ids, (list, tuple)):
+            creator_ids = [] if creator_ids in (None, "", -1, "-1") else [creator_ids]
+        seen = set()
+        result = []
+        for item in creator_ids:
+            if isinstance(item, dict):
+                item = item.get("id")
+            if item in (None, "", -1, "-1"):
+                continue
+            try:
+                value = int(item)
+            except (TypeError, ValueError):
+                continue
+            if value <= 0 or value in seen:
+                continue
+            seen.add(value)
+            result.append(value)
+        return result
+
+    @staticmethod
+    def _set_creators(obj, creator_ids):
+        ids = TypeDocuments._parse_creator_ids(creator_ids)
+        valid = set(DoctorProfile.objects.filter(pk__in=ids).values_list("pk", flat=True))
+        ids = [doctor_id for doctor_id in ids if doctor_id in valid]
+        TypeDocumentCreator.objects.filter(type_document=obj).delete()
+        TypeDocumentCreator.objects.bulk_create([TypeDocumentCreator(type_document=obj, doctor_id=doctor_id) for doctor_id in ids])
+        return ids
+
+    @staticmethod
+    def save_type(pk, title, group_id=None, code="", layout_template_id=None, layout_template_ids=None, creator_ids=None):
         from directory.models import Researches
 
         title = (title or "").strip()
@@ -405,9 +462,9 @@ class TypeDocuments(models.Model):
                 obj.layout_template = first_template
             obj.save()
             TypeDocumentLayoutTemplate.objects.filter(type_document=obj).delete()
-            TypeDocumentLayoutTemplate.objects.bulk_create(
-                [TypeDocumentLayoutTemplate(type_document=obj, layout_template=row, order=index) for index, row in enumerate(templates)]
-            )
+            TypeDocumentLayoutTemplate.objects.bulk_create([TypeDocumentLayoutTemplate(type_document=obj, layout_template=row, order=index) for index, row in enumerate(templates)])
+            if creator_ids is not None:
+                TypeDocuments._set_creators(obj, creator_ids)
             if templates:
                 TypeDocumentsSchema.get_or_create_for_type(obj)
         return {"ok": True, "id": obj.pk, "title": obj.title}
@@ -426,6 +483,19 @@ class TypeDocumentLayoutTemplate(models.Model):
 
     def __str__(self):
         return f"{self.type_document} – {self.layout_template} ({self.order})"
+
+
+class TypeDocumentCreator(models.Model):
+    type_document = models.ForeignKey(TypeDocuments, related_name="creators", on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, related_name="type_document_creators", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Создатель вида документа"
+        verbose_name_plural = "Создатели видов документов"
+        unique_together = ("type_document", "doctor")
+
+    def __str__(self):
+        return f"{self.type_document} {self.doctor}"
 
 
 class DocumentFieldGroups(models.Model):
@@ -1126,6 +1196,8 @@ class Documents(models.Model):
         type_doc = TypeDocuments.objects.filter(pk=type_id).first()
         if not type_doc:
             return {"ok": False, "message": "Вид документа не найден"}
+        if not type_doc.can_create(who_create):
+            return {"ok": False, "message": "Нет прав на создание этого вида документа"}
         with transaction.atomic():
             schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
             obj = Documents.objects.create(type_document=type_doc, who_create=who_create, body_values={}, schema=schema)

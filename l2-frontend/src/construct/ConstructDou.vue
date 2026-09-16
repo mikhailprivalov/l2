@@ -82,6 +82,7 @@
         :layout-template-id-value="selectedItem?.layoutTemplateId"
         :layout-template-ids-value="selectedItem?.layoutTemplateIds"
         :layout-templates-value="selectedItem?.layoutTemplates"
+        :creators-value="selectedItem?.creators"
         :groups="groups"
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
@@ -143,6 +144,7 @@ interface CatalogItem {
   layoutTemplateId?: number | null;
   layoutTemplateIds?: number[];
   layoutTemplates?: { id: number; label: string }[];
+  creators?: { id: number; fio: string; department?: string }[];
   hide?: boolean;
 }
 
