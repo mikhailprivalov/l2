@@ -151,7 +151,7 @@ Result (Result)
 - **Component-Based Architecture** - Reusable Vue.js components, isolated logic, props for data passing
 - **State Management** - Vuex for global state, local component state
 - **Progressive Enhancement** - Basic functionality without JS, enhanced with JS
-- **TwoSidedLayout** - fixed left width (`leftWidthPx`); `resizable` adds a col-resize gutter, emits `update:left-width-px`, clamps min left/right. Other pages keep a static split unless they opt in.
+- **TwoSidedLayout** - fixed left width (`leftWidthPx`); `resizable` adds a col-resize gutter, emits `update:left-width-px`, clamps min left/right. `/ui/requests-fill` and `/ui/document-manager` persist the width in `localStorage`. Other pages keep a static split unless they opt in.
 
 ## Testing Patterns
 
