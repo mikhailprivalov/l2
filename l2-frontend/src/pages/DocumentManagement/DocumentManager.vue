@@ -1,42 +1,81 @@
 <template>
-  <div>
-    <DocumentsFilters
-      class="two-col-filters"
-      :filter="roleFilter"
-      @update:filter="roleFilter = $event"
-      @search="onSearch"
-    />
-    <div class="two-col">
-      <div class="sidebar">
-        <DocumentsExplorer
-          :role-filter="roleFilter"
-          :list-refresh="listRefresh"
-          :count-refresh="countRefresh"
-          :found-document="foundDocument"
-          @select="selectedDocumentId = $event"
-          @update:filter="roleFilter = $event"
-        />
-      </div>
-      <div class="viewer">
-        <DocumentViewer
-          :document-id="selectedDocumentId"
-          @visibility-change="onVisibilityChange"
-          @reviewed="onReviewed"
-        />
-      </div>
-    </div>
-  </div>
+  <PageInnerLayout>
+    <TwoSidedLayout
+      :left-width-px="leftWidthPx"
+      :min-left-width-px="MIN_LEFT_WIDTH_PX"
+      :min-right-width-px="MIN_RIGHT_WIDTH_PX"
+      resizable
+      @update:left-width-px="onLeftWidthChange"
+    >
+      <template #left>
+        <div class="pane">
+          <DocumentsFilters
+            class="filters-top"
+            part="search"
+            :filter="roleFilter"
+            @update:filter="roleFilter = $event"
+            @search="onSearch"
+          />
+          <DocumentsExplorer
+            class="explorer-fill"
+            :role-filter="roleFilter"
+            :list-refresh="listRefresh"
+            :count-refresh="countRefresh"
+            :found-document="foundDocument"
+            @select="selectedDocumentId = $event"
+            @update:filter="roleFilter = $event"
+          />
+        </div>
+      </template>
+      <template #right>
+        <div class="pane pane-right">
+          <DocumentsFilters
+            class="filters-top"
+            part="filters"
+            :filter="roleFilter"
+            @update:filter="roleFilter = $event"
+          />
+          <div class="viewer">
+            <DocumentViewer
+              :document-id="selectedDocumentId"
+              @visibility-change="onVisibilityChange"
+              @reviewed="onReviewed"
+            />
+          </div>
+        </div>
+      </template>
+    </TwoSidedLayout>
+  </PageInnerLayout>
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, ref } from 'vue';
+import { getCurrentInstance, ref, watch } from 'vue';
 
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
+import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import DocumentsExplorer from '@/pages/DocumentManagement/DocumentsExplorer.vue';
 import DocumentsFilters from '@/pages/DocumentManagement/DocumentsFilters.vue';
 import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
+
+const DEFAULT_LEFT_WIDTH_PX = 380;
+const MIN_LEFT_WIDTH_PX = 200;
+const MIN_RIGHT_WIDTH_PX = 150;
+const LEFT_WIDTH_STORAGE_KEY = 'document-manager-left-width';
+
+const readStoredLeftWidth = (): number => {
+  try {
+    const value = Number(localStorage.getItem(LEFT_WIDTH_STORAGE_KEY));
+    if (Number.isFinite(value) && value >= MIN_LEFT_WIDTH_PX) {
+      return value;
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return DEFAULT_LEFT_WIDTH_PX;
+};
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -45,6 +84,19 @@ const roleFilter = ref<string | null>(null);
 const listRefresh = ref(0);
 const countRefresh = ref(0);
 const foundDocument = ref<{ id: number; title: string } | null>(null);
+const leftWidthPx = ref(readStoredLeftWidth());
+
+const onLeftWidthChange = (value: number) => {
+  leftWidthPx.value = value;
+};
+
+watch(leftWidthPx, value => {
+  try {
+    localStorage.setItem(LEFT_WIDTH_STORAGE_KEY, String(value));
+  } catch {
+    // ignore storage errors
+  }
+});
 
 const onVisibilityChange = () => {
   listRefresh.value += 1;
@@ -72,26 +124,32 @@ const onSearch = async (q: string) => {
 </script>
 
 <style scoped lang="scss">
-.two-col {
-  display: grid;
-  grid-template-columns: minmax(200px, 380px) minmax(150px, auto);
-  height: calc(100vh - 70px);
-}
-.sidebar {
+.pane {
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
   background-color: #f8f7f7;
-  border-right: 1px solid #b1b1b1;
 }
-.viewer {
+
+.pane-right {
+  background-color: #fff;
+}
+
+.filters-top {
+  flex: 0 0 auto;
+}
+
+.explorer-fill {
+  flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
 }
-.two-col-filters {
-  display: grid;
-  grid-template-columns: minmax(200px, 380px) minmax(150px, auto);
-  height: 34px;
+
+.viewer {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
 }
 </style>

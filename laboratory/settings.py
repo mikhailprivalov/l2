@@ -568,6 +568,8 @@ CDA_ID_FOR_TYPE_MEDICAL_INSPECTION = -1
 RESEARCH_ID_CLOSE_CASE = (-1,)
 RESEARCH_ID_FINAL_REPORT = (-1,)
 WEB_PLUGIN_LINK_STUDY = None
+# Кнопка скачивания всех серий DICOM на /ui/requests-fill. Переопределение в laboratory/local_settings.py
+SHOW_REQUESTS_FILL_DICOM_DOWNLOAD = False
 MAGAZINE_REPORT = {}
 COMMAND_DOCX_2_PDF = ""
 GROUP_USER_FOR_FILTER = []

@@ -22,11 +22,9 @@
           class="type-row"
         >
           <button
-            v-tippy="{ placement: 'right' }"
             class="btn btn-blue-nb type-btn"
             :class="{ 'active-button': selectedType === type.id}"
             type="button"
-            :title="type.title"
             @click="selectType(type.id)"
           >
             {{ type.title }}
@@ -113,11 +111,9 @@
           class="flex row-border"
         >
           <button
-            v-tippy="{ placement: 'right' }"
             class="transparent-button"
             :class="{ 'active-button': selectedDocument === document.id}"
             type="button"
-            :title="document.title"
             @click="selectDocument(document.id)"
           >
             {{ document.title }}

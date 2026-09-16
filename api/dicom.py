@@ -16,7 +16,7 @@ from laboratory.settings import (
 )
 import requests
 import simplejson as json
-
+from django.http import StreamingHttpResponse
 
 logger = logging.getLogger(__name__)
 
@@ -154,3 +154,100 @@ def check_dicom_study_instance_uid(servers_addr, data):
         except Exception as e:
             logger.error(e)
     return ''
+
+
+def orthanc_servers_for_direction(napravleniye):
+    hospital = napravleniye.hospital if napravleniye else None
+    if hospital and hospital.remote_dicom_server:
+        return [hospital.remote_dicom_server.rstrip('/')]
+    servers = []
+    if DICOM_SERVERS:
+        servers.extend(server.rstrip('/') for server in DICOM_SERVERS if server)
+    if DICOM_SERVER:
+        server = DICOM_SERVER.rstrip('/')
+        if server not in servers:
+            servers.append(server)
+    return servers
+
+
+def find_orthanc_study_id(server, uid):
+    if not server or not uid:
+        return None
+    try:
+        dicom_study = requests.get(f'{server}/studies/{uid}', timeout=10)
+        if dicom_study.ok and dicom_study.content:
+            result = dicom_study.json()
+            if result:
+                return uid
+    except Exception as e:
+        logger.error(e)
+    try:
+        lookup = requests.post(f'{server}/tools/lookup', data=uid.encode('utf-8'), timeout=10)
+        if lookup.ok:
+            for item in lookup.json() or []:
+                if item.get('Type') == 'Study' and item.get('ID'):
+                    return item['ID']
+    except Exception as e:
+        logger.error(e)
+    try:
+        found = check_dicom_study([server], {'Level': 'Study', 'Query': {'StudyInstanceUID': uid}, 'Expand': True})
+        dicom = found.get('dicom')
+        if dicom:
+            return dicom[0]
+    except Exception as e:
+        logger.error(e)
+    return None
+
+
+def study_uids_for_direction(napravleniye):
+    iss = Issledovaniya.objects.filter(napravleniye=napravleniye).select_related('research', 'research__podrazdeleniye').first()
+    if not iss or not iss.research or not iss.research.podrazdeleniye or not iss.research.podrazdeleniye.can_has_pacs:
+        return []
+    uids = []
+    if iss.study_instance_uid:
+        uids.append(iss.study_instance_uid)
+    if iss.study_instance_uid_tag and iss.study_instance_uid_tag not in uids:
+        uids.append(iss.study_instance_uid_tag)
+    if uids:
+        return uids
+    search_dicom_study(napravleniye.pk)
+    iss = Issledovaniya.objects.filter(napravleniye=napravleniye).only('study_instance_uid', 'study_instance_uid_tag').first()
+    if not iss:
+        return []
+    if iss.study_instance_uid:
+        uids.append(iss.study_instance_uid)
+    if iss.study_instance_uid_tag and iss.study_instance_uid_tag not in uids:
+        uids.append(iss.study_instance_uid_tag)
+    return uids
+
+
+def download_dicom_study_archive(napravleniye, filename):
+    uids = study_uids_for_direction(napravleniye)
+    if not uids:
+        return None
+    for server in orthanc_servers_for_direction(napravleniye):
+        for uid in uids:
+            study_id = find_orthanc_study_id(server, uid)
+            if not study_id:
+                continue
+            try:
+                remote = requests.get(f'{server}/studies/{study_id}/archive', stream=True, timeout=(15, 600))
+            except Exception as e:
+                logger.error(e)
+                continue
+            if not remote.ok:
+                remote.close()
+                continue
+
+            def generate(resp=remote):
+                try:
+                    for chunk in resp.iter_content(chunk_size=64 * 1024):
+                        if chunk:
+                            yield chunk
+                finally:
+                    resp.close()
+
+            response = StreamingHttpResponse(generate(), content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+    return None

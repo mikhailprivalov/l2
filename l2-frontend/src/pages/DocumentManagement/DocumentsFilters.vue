@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div class="sidebar">
+    <div
+      v-if="showSearch"
+      class="sidebar"
+    >
       <div class="flex search-row">
         <input
           v-model="query"
@@ -20,7 +23,10 @@
         </button>
       </div>
     </div>
-    <div class="filters-panel">
+    <div
+      v-if="showFilters"
+      class="filters-panel"
+    >
       <div class="filter-checks">
         <label
           v-for="item in filterButtons"
@@ -41,11 +47,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   filter?: string | null;
-}>();
+  part?: 'search' | 'filters' | 'all';
+}>(), {
+  part: 'all',
+});
 
 const filterButtons = [
   { id: 'created', label: 'Создал' },
@@ -55,6 +64,8 @@ const filterButtons = [
 ];
 
 const query = ref('');
+const showSearch = computed(() => props.part === 'all' || props.part === 'search');
+const showFilters = computed(() => props.part === 'all' || props.part === 'filters');
 
 watch(query, (value) => {
   const digits = String(value || '').replace(/[^0-9]/g, '');
@@ -86,7 +97,6 @@ const search = () => {
   display: flex;
   flex-direction: column;
   background-color: #f8f7f7;
-  border-right: 1px solid #b1b1b1;
 }
 
 .search-row {
@@ -147,5 +157,7 @@ const search = () => {
   flex-direction: row;
   align-items: center;
   background-color: #f8f7f7;
+  height: 34px;
+  min-height: 34px;
 }
 </style>
