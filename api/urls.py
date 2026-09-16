@@ -30,6 +30,7 @@ urlpatterns = [
     path('company-departments-find', views.company_departments_find),
     path('load-room-locations', views.load_room_locations),
     path('search-dicom', views.search_dicom),
+    path('dicom-download', views.dicom_download),
     path('doctorprofile-search', views.doctorprofile_search),
     path('employee-positions-search', views.employee_positions_search),
     path('methods-of-taking', views.methods_of_taking),
