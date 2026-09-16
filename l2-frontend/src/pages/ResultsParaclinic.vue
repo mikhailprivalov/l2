@@ -729,6 +729,15 @@
                 >
                   &nbsp;<i class="fa fa-camera" />&nbsp;
                 </a>
+                <a
+                  v-if="forcedResultsTop && !!row.pacs"
+                  v-tippy
+                  :href="`/api/dicom-download?pk=${data.direction.pk}`"
+                  class="btn btn-blue-nb"
+                  title="Скачать все серии"
+                >
+                  &nbsp;<i class="fa-regular fa-floppy-disk" />&nbsp;
+                </a>
                 <template v-if="!row.confirmed">
                   <button
                     v-if="!row.confirmed"

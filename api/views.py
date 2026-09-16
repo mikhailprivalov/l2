@@ -45,7 +45,7 @@ from django.contrib.auth.models import Group, User
 from django.core.cache import cache
 from django.db import connections, transaction
 from django.db.models import Prefetch, Q, Exists, OuterRef
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
@@ -85,7 +85,7 @@ from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals, simple_join_two_pdf_files, simple_save_pdf_file, correspondence_set_file_hash
-from .dicom import search_dicom_study
+from .dicom import download_dicom_study_archive, search_dicom_study
 from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
@@ -1073,6 +1073,36 @@ def search_dicom(request):
     pk = request_data.get("pk")
     link_study = search_dicom_study(int(pk))
     return JsonResponse({"url": link_study})
+
+
+def _dicom_download_filename(napravleniye):
+    fio = ""
+    try:
+        individual = napravleniye.client.individual if napravleniye.client_id else None
+        if individual:
+            fio = individual.fio() or ""
+    except Exception:
+        fio = ""
+    name = re.sub(r"\s+", "_", translit(fio).strip())
+    name = re.sub(r"[^A-Za-z0-9._-]", "", name)
+    if not name:
+        name = str(napravleniye.pk)
+    return f"{name}.zip"
+
+
+@login_required
+def dicom_download(request):
+    try:
+        pk = int(request.GET.get("pk"))
+    except (TypeError, ValueError):
+        return HttpResponse("Некорректный номер направления", status=400, content_type="text/plain; charset=utf-8")
+    napravleniye = directions.Napravleniya.objects.filter(pk=pk).select_related("client", "client__individual", "hospital").first()
+    if not napravleniye:
+        return HttpResponse("Направление не найдено", status=404, content_type="text/plain; charset=utf-8")
+    response = download_dicom_study_archive(napravleniye, _dicom_download_filename(napravleniye))
+    if response is None:
+        return HttpResponse("Исследование не найдено в PACS", status=404, content_type="text/plain; charset=utf-8")
+    return response
 
 
 def doctorprofile_search(request):
