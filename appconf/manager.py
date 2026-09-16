@@ -7,11 +7,11 @@ from django.db.models.signals import post_save
 
 import laboratory
 import appconf.models as appconf
-from laboratory.settings import DOCUMENT_MANAGER_FOR_ALL, SHOW_RMIS_CHANGE_PASSWORD
+from laboratory.settings import DOCUMENT_MANAGER_FOR_ALL, SHOW_REQUESTS_FILL_DICOM_DOWNLOAD, SHOW_RMIS_CHANGE_PASSWORD
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-16"
+    VERSION = f"{laboratory.VERSION}-17"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -226,6 +226,7 @@ class SettingManager:
             "change_password": SettingManager.get("change_password", default='false', default_type='b'),
             "show_rmis_change_password": SHOW_RMIS_CHANGE_PASSWORD,
             "document_manager_for_all": DOCUMENT_MANAGER_FOR_ALL,
+            "show_requests_fill_dicom_download": SHOW_REQUESTS_FILL_DICOM_DOWNLOAD,
             "limit_age_patient_registration": SettingManager.get("limit_age_patient_registration", default='false', default_type='b'),
             "days_subtract": SettingManager.get("days_subtract", default='90', default_type='i'),
             "show_cancel_button": SettingManager.get("show_cancel_button", default='true', default_type='b'),

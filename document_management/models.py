@@ -3,7 +3,7 @@ import uuid
 
 import simplejson as json
 from django.contrib.postgres.fields import ArrayField
-from django.db import models, transaction
+from django.db import IntegrityError, models, transaction
 
 from hospitals.models import Hospitals
 from podrazdeleniya.models import Podrazdeleniya
@@ -896,6 +896,17 @@ class Documents(models.Model):
         return fallback
 
     @staticmethod
+    def title_with_id(pk, title):
+        marker = str(pk)
+        text = (title or "").strip()
+        suffix = f"№{marker}"
+        if text.endswith(suffix):
+            text = text[: -len(suffix)].rstrip()
+        if text.startswith(f"{marker} ") or text == marker:
+            return text
+        return f"{marker} {text}" if text else marker
+
+    @staticmethod
     def topic_cda_id():
         from laboratory.settings import CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER
 
@@ -987,9 +998,8 @@ class Documents(models.Model):
         return topic_by_doc
 
     def topic_value(self, iss=None, research=None):
-        from_research = Documents.topic_from_research(research)
-        if from_research:
-            return from_research
+        if research is not None:
+            return Documents.topic_from_research(research)
         iss_by_doc = {self.pk: iss} if iss else {}
         return Documents.topics_for_documents([self], iss_by_doc).get(self.pk, "")
 
@@ -1007,6 +1017,18 @@ class Documents(models.Model):
             "confirmed": bool(self.time_confirm),
             "isHidden": self.is_hidden,
         }
+
+    @classmethod
+    def _who_group_names(cls, who, *group_names):
+        names = [name for name in group_names if name]
+        if not who or not names:
+            return set()
+        user = getattr(who, "user", None)
+        if user and getattr(user, "is_superuser", False):
+            return set(names)
+        if not user:
+            return set()
+        return set(user.groups.filter(name__in=names).values_list("name", flat=True))
 
     @classmethod
     def can_view_all_hidden(cls, who):
@@ -1113,7 +1135,10 @@ class Documents(models.Model):
         result = []
         for doc in docs:
             payload = doc.json
-            payload["title"] = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
+            title = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
+            if role_filter == "toReview":
+                title = Documents.title_with_id(doc.pk, title)
+            payload["title"] = title
             result.append(payload)
         return result
 
@@ -1146,7 +1171,11 @@ class Documents(models.Model):
     def get_issledovaniye(self):
         from directions.models import Issledovaniya
 
-        iss = Issledovaniya.objects.filter(document=self).order_by("pk").first()
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("issledovaniya_set")
+        if prefetched is not None:
+            iss = prefetched[0] if prefetched else None
+        else:
+            iss = Issledovaniya.objects.filter(document=self).only("pk", "time_confirmation", "document_id", "research_id").order_by("pk").first()
         if iss:
             return iss
         type_doc = self.type_document
@@ -1157,12 +1186,23 @@ class Documents(models.Model):
             creator=self.who_create,
         )
 
+    def _schema_snapshot(self):
+        if self.schema_id:
+            snapshot = getattr(self.schema, "schema", None)
+            if isinstance(snapshot, dict) and snapshot.get("groups") is not None:
+                return snapshot
+        if not self.type_document_id:
+            return None
+        latest = TypeDocumentsSchema.objects.filter(type_document_id=self.type_document_id).order_by("-created_at", "-pk").only("pk", "schema").first()
+        if latest and isinstance(latest.schema, dict) and latest.schema.get("groups") is not None:
+            if not self.schema_id:
+                Documents.objects.filter(pk=self.pk, schema_id__isnull=True).update(schema_id=latest.pk)
+                self.schema_id = latest.pk
+            return latest.schema
+        return TypeDocumentsSchema.dump_from_type(self.type_document)
+
     def build_research(self, iss=None):
-        snapshot = None
-        if self.schema_id and isinstance(getattr(self.schema, "schema", None), dict) and self.schema.schema.get("groups") is not None:
-            snapshot = self.schema.schema
-        else:
-            snapshot = TypeDocumentsSchema.dump_from_type(self.type_document)
+        snapshot = self._schema_snapshot()
         if not snapshot:
             return None
         return self._research_from_schema(snapshot, iss)
@@ -1171,9 +1211,20 @@ class Documents(models.Model):
         from directions.models import ParaclinicResult, ParaclinicResultFile
 
         saved = self.body_values if isinstance(self.body_values, dict) else {}
-        result_fields = {}
+        result_by_field = {}
+        files_by_result = {}
         if iss:
-            result_fields = {row.field_id: row for row in ParaclinicResult.objects.filter(issledovaniye=iss).select_related("field").prefetch_related("files")}
+            rows = list(ParaclinicResult.objects.filter(issledovaniye_id=iss.pk).only("pk", "field_id", "value", "field_type"))
+            result_by_field = {row.field_id: row for row in rows}
+            type42_ids = set()
+            for group in snapshot.get("groups") or []:
+                for field in group.get("fields") or []:
+                    if field.get("field_type") == 42:
+                        type42_ids.add(field.get("pk"))
+            result_pks = [result_by_field[field_id].pk for field_id in type42_ids if field_id in result_by_field]
+            if result_pks:
+                for row in ParaclinicResultFile.objects.filter(result_id__in=result_pks).order_by("pk"):
+                    files_by_result.setdefault(row.result_id, []).append(row)
         confirmed = bool(iss.time_confirmation) if iss else False
         groups = []
         for group in snapshot.get("groups") or []:
@@ -1197,10 +1248,10 @@ class Documents(models.Model):
                 values_to_input = field.get("values_to_input") or []
                 if not isinstance(values_to_input, list):
                     values_to_input = []
-                result_field = result_fields.get(field_pk)
+                result_field = result_by_field.get(field_pk)
                 field_type = field.get("field_type") or 0
-                if result_field:
-                    field_type = result_field.get_field_type(default_field_type=field_type, is_confirmed_strict=confirmed)
+                if confirmed and result_field is not None and result_field.field_type is not None:
+                    field_type = result_field.field_type
                 if field.get("required") and field_type in [10, 12] and "- Не выбрано" not in values_to_input:
                     values_to_input = ["- Не выбрано", *values_to_input]
                 default_value = field.get("default_value") or ""
@@ -1220,7 +1271,7 @@ class Documents(models.Model):
                 if field_type == 42:
                     value = ""
                     if result_field:
-                        files = [ParaclinicResultFile.serialize(row) for row in result_field.files.all()]
+                        files = [ParaclinicResultFile.serialize(row) for row in files_by_result.get(result_field.pk, [])]
                 g["fields"].append(
                     {
                         "pk": field_pk,
@@ -1261,10 +1312,24 @@ class Documents(models.Model):
 
     @staticmethod
     def get_details(pk, who=None):
-        obj = Documents.objects.select_related("schema", "type_document", "type_document__layout_template", "type_document__group_document").filter(pk=pk).first()
+        from django.db.models import Prefetch
+        from directions.models import Issledovaniya
+
+        obj = (
+            Documents.objects.select_related("schema", "type_document", "type_document__layout_template", "type_document__group_document")
+            .prefetch_related(
+                Prefetch(
+                    "issledovaniya_set",
+                    queryset=Issledovaniya.objects.only("pk", "time_confirmation", "document_id", "research_id").order_by("pk"),
+                )
+            )
+            .filter(pk=pk)
+            .first()
+        )
         if not obj:
             return {"ok": False, "message": "Документ не найден"}
-        if not Documents.can_see_document(obj, who):
+        group_names = Documents._who_group_names(who, Documents.HIDDEN_DOCS_GROUP, Documents.RESET_GROUP)
+        if obj.is_hidden and Documents.HIDDEN_DOCS_GROUP not in group_names:
             return {"ok": False, "message": "Документ не найден"}
         iss = obj.get_issledovaniye()
         research = obj.build_research(iss)
@@ -1273,8 +1338,11 @@ class Documents(models.Model):
         payload["issPk"] = iss.pk if iss else None
         payload["research"] = research
         payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
-        payload["canHide"] = Documents.can_set_hidden(obj, who, confirmed=payload["confirmed"])
-        payload["canReset"] = Documents.can_reset_confirm(who)
+        can_hide = Documents.HIDDEN_DOCS_GROUP in group_names
+        if not can_hide and who and obj.who_create_id == getattr(who, "pk", None) and not payload["confirmed"]:
+            can_hide = True
+        payload["canHide"] = can_hide
+        payload["canReset"] = Documents.RESET_GROUP in group_names
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
         type_doc = obj.type_document.title if obj.type_document else ""
         DocumentRecent.remember(who, obj, topic=obj.topic_value(iss, research=research), type_doc=type_doc)
@@ -1692,16 +1760,17 @@ class DocumentRecent(models.Model):
             return
         from django.utils import timezone
 
-        _, created = cls.objects.update_or_create(
-            doctor=who,
-            document=document,
-            defaults={
-                "topic": topic or "",
-                "type_doc": type_doc or "",
-                "opened_at": timezone.now(),
-            },
-        )
-        if not created:
+        defaults = {
+            "topic": topic or "",
+            "type_doc": type_doc or "",
+            "opened_at": timezone.now(),
+        }
+        if cls.objects.filter(doctor=who, document=document).update(**defaults):
+            return
+        try:
+            cls.objects.create(doctor=who, document=document, **defaults)
+        except IntegrityError:
+            cls.objects.filter(doctor=who, document=document).update(**defaults)
             return
         extra_ids = list(cls.objects.filter(doctor=who).order_by("-opened_at", "-pk").values_list("pk", flat=True)[cls.MAX_ITEMS :])
         if extra_ids:
@@ -1719,9 +1788,11 @@ class DocumentRecent(models.Model):
             page_size = max(int(page_size or cls.PAGE_SIZE), 1)
         except (TypeError, ValueError):
             page_size = cls.PAGE_SIZE
-        qs = cls.objects.filter(doctor=who).select_related("document", "document__type_document", "document__schema").order_by("-opened_at", "-pk")
-        if not Documents.can_view_all_hidden(who):
-            qs = qs.filter(document__is_hidden=False)
+        qs = (
+            cls.objects.filter(doctor=who, document__is_hidden=False, document__time_confirm__isnull=False)
+            .select_related("document", "document__type_document", "document__schema")
+            .order_by("-opened_at", "-pk")
+        )
         offset = (page - 1) * page_size
         rows = list(qs[offset : offset + page_size + 1])
         has_more = len(rows) > page_size
@@ -1740,11 +1811,11 @@ class DocumentRecent(models.Model):
             type_doc = (row.type_doc or "").strip()
             if not type_doc and row.document.type_document:
                 type_doc = row.document.type_document.title
-            title = " ".join(part for part in (topic, type_doc) if part) or f"Документ №{row.document_id}"
+            title = " ".join(part for part in (topic, type_doc) if part)
             result.append(
                 {
                     "id": row.document_id,
-                    "title": title,
+                    "title": Documents.title_with_id(row.document_id, title),
                     "topic": topic,
                     "typeDoc": type_doc,
                 }
