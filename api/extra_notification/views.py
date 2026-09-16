@@ -9,10 +9,21 @@ from django.utils import timezone
 
 from api.extra_notification.sql_func import as_master_research_tuple, extra_notification_sql
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
-from directory.models import ParaclinicInputGroups, ParaclinicInputField
+from directory.models import ParaclinicInputField, ParaclinicInputGroups, Researches
 from laboratory.decorators import group_required
 from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
 from laboratory.utils import strdate
+
+
+def master_researches_payload(master_research):
+    by_id = {r.pk: r for r in Researches.objects.filter(pk__in=master_research).only("pk", "title", "short_title")}
+    payload = []
+    for pk in master_research:
+        research = by_id.get(pk)
+        if not research:
+            continue
+        payload.append({"id": research.pk, "title": research.title, "shortTitle": research.short_title or research.title})
+    return payload
 
 
 @login_required
@@ -27,6 +38,9 @@ def search(request):
     datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
     datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
 
+    master_research = as_master_research_tuple(EXTRA_MASTER_RESEARCH_PK)
+    researches = master_researches_payload(master_research)
+
     user_hospital = request.user.doctorprofile.get_hospital_id() or -1
 
     if user_hospital != hospital and "Заполнение экстренных извещений" not in [str(x) for x in request.user.groups.all()]:
@@ -36,12 +50,13 @@ def search(request):
         return JsonResponse(
             {
                 'result': [],
+                'rows': [],
+                'researches': researches,
             }
         )
 
-    master_research = as_master_research_tuple(EXTRA_MASTER_RESEARCH_PK)
     if not master_research:
-        return JsonResponse({'rows': []})
+        return JsonResponse({'rows': [], 'researches': researches})
 
     result_extra = extra_notification_sql(master_research, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
     result = []
@@ -61,10 +76,12 @@ def search(request):
                 'born': i.birthday,
                 'value': i.num_value,
                 'issPk': i.r_iss_id,
+                'researchId': i.research_id,
+                'researchTitle': i.research_title or '',
             }
         )
 
-    return JsonResponse({'rows': result})
+    return JsonResponse({'rows': result, 'researches': researches})
 
 
 @login_required
