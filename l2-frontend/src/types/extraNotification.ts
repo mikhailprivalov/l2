@@ -1,3 +1,9 @@
+export interface ExtraNotificationResearch {
+  id: number,
+  title: string,
+  shortTitle: string,
+}
+
 export interface ExtraNotificationData {
   hospital: string,
   issPk: number,
@@ -8,4 +14,6 @@ export interface ExtraNotificationData {
   slaveConfirm: string | null,
   slaveDir: number,
   value: string | null,
+  researchId: number,
+  researchTitle: string,
 }

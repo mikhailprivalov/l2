@@ -92,8 +92,26 @@
       v-else
       class="data"
     >
+      <div
+        v-if="researches.length > 1"
+        class="research-filters"
+      >
+        <label
+          v-for="s in researches"
+          :key="s.id"
+          class="checkbox-inline"
+        >
+          <input
+            :checked="!!researchFilter[s.id]"
+            type="checkbox"
+            @change="toggleResearch(s.id)"
+          >
+          {{ s.shortTitle }}
+        </label>
+      </div>
       <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
+          <col>
           <col>
           <col>
           <col style="width: 120px">
@@ -106,6 +124,7 @@
         <thead>
           <tr>
             <th>Медицинская организация</th>
+            <th>Услуга</th>
             <th>Пациент</th>
             <th>№ заявки</th>
             <th>Дата заявки</th>
@@ -138,11 +157,14 @@
         </thead>
         <tbody>
           <tr
-            v-for="r in rows"
+            v-for="r in filteredRows"
             :key="r.mainDirection"
           >
             <td>
               {{ r.hospital }}
+            </td>
+            <td>
+              {{ r.researchTitle }}
             </td>
             <td>{{ r.patient }} {{ r.born }}</td>
             <td>
@@ -186,9 +208,9 @@
               >
             </td>
           </tr>
-          <tr v-if="rows.length === 0">
+          <tr v-if="filteredRows.length === 0">
             <td
-              colspan="8"
+              colspan="9"
               class="text-center"
             >
               не найдено
@@ -212,7 +234,7 @@ import * as actions from '@/store/action-types';
 import DocCallRow from '@/pages/DocCallRow.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import ExtraNotificationFastEditor from '@/ui-cards/ExtraNotificationFastEditor.vue';
-import { ExtraNotificationData } from '@/types/extraNotification';
+import { ExtraNotificationData, ExtraNotificationResearch } from '@/types/extraNotification';
 
 interface Params {
   date: string;
@@ -221,6 +243,7 @@ interface Params {
 }
 
 const EMPTY_ROWS: ExtraNotificationData[] = [];
+const EMPTY_RESEARCHES: ExtraNotificationResearch[] = [];
 
 @Component({
   components: {
@@ -233,6 +256,8 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
     return {
       hospitals: [],
       rows: EMPTY_ROWS,
+      researches: EMPTY_RESEARCHES,
+      researchFilter: {},
       loaded: false,
       params: {
         date: moment().format('YYYY-MM-DD'),
@@ -280,6 +305,10 @@ export default class ExtraNotification extends Vue {
 
   rows: ExtraNotificationData[];
 
+  researches: ExtraNotificationResearch[];
+
+  researchFilter: Record<number, boolean>;
+
   loaded: boolean;
 
   hospitals: any[];
@@ -307,6 +336,21 @@ export default class ExtraNotification extends Vue {
     return Object.keys(this.toPrint).filter(k => this.toPrint[k]);
   }
 
+  get filteredRows() {
+    if (this.researches.length <= 1) {
+      return this.rows;
+    }
+    const selected = new Set(this.researches.filter(s => this.researchFilter[s.id]).map(s => s.id));
+    if (selected.size === this.researches.length) {
+      return this.rows;
+    }
+    return this.rows.filter(r => selected.has(r.researchId));
+  }
+
+  toggleResearch(id: number) {
+    this.$set(this.researchFilter, id, !this.researchFilter[id]);
+  }
+
   print() {
     const ids = this.toPrintNumbers;
     window.open(`/forms/extra-nofication?pk=[${ids}]`);
@@ -326,8 +370,16 @@ export default class ExtraNotification extends Vue {
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await this.$api('extra-notification/search', this.params);
-    this.rows = data.rows;
-    this.toPrint = data.rows.reduce((a, r) => ({ ...a, [r.slaveDir]: false }), {});
+    const rows = data.rows || EMPTY_ROWS;
+    const researches = data.researches || EMPTY_RESEARCHES;
+    this.rows = rows;
+    this.researches = researches;
+    const nextFilter: Record<number, boolean> = {};
+    for (const s of researches) {
+      nextFilter[s.id] = this.researchFilter[s.id] !== undefined ? this.researchFilter[s.id] : true;
+    }
+    this.researchFilter = nextFilter;
+    this.toPrint = rows.reduce((a, r) => ({ ...a, [r.slaveDir]: false }), {});
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
   }
@@ -352,6 +404,15 @@ export default class ExtraNotification extends Vue {
 
 .data {
   padding: 0 20px;
+}
+
+.research-filters {
+  margin-bottom: 8px;
+}
+
+.research-filters .checkbox-inline {
+  margin-right: 16px;
+  margin-left: 0;
 }
 
 .founded {

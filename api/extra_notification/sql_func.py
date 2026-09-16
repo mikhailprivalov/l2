@@ -35,12 +35,15 @@ def extra_notification_sql(master_research, slave_research, date_start, date_end
                     dirslave.num_value,
                     hospitals_hospitals.title,
                     directions_napravleniya.hospital_id,
-                    hospitals_hospitals.short_title
+                    hospitals_hospitals.short_title,
+                    directory_researches.title as research_title
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
                 LEFT JOIN hospitals_hospitals
                 ON hospitals_hospitals.id=directions_napravleniya.hospital_id
+                LEFT JOIN directory_researches
+                ON directory_researches.id = directions_issledovaniya.research_id
                 LEFT JOIN( 
                     SELECT
                     directions_issledovaniya.id as r_iss_id, 
