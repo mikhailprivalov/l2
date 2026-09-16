@@ -18,7 +18,6 @@ import requests
 import simplejson as json
 from django.http import StreamingHttpResponse
 
-
 logger = logging.getLogger(__name__)
 
 
