@@ -1,6 +1,12 @@
 <template>
-  <div class="addressee-field">
-    <div class="addressee-field__preview">
+  <div
+    class="addressee-field"
+    :class="{ 'addressee-field--button-only': hidePreview }"
+  >
+    <div
+      v-if="!hidePreview"
+      class="addressee-field__preview"
+    >
       {{ preview || 'Не выбрано' }}
     </div>
     <button
@@ -21,7 +27,7 @@
       margin-left-right="auto"
       @close="opened = false"
     >
-      <span slot="header">Адресаты</span>
+      <span slot="header">{{ header }}</span>
       <div
         slot="body"
         class="addressee-modal"
@@ -192,10 +198,15 @@ type Group = {
   own?: boolean;
 };
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   value?: string;
   disabled?: boolean;
-}>();
+  header?: string;
+  hidePreview?: boolean;
+}>(), {
+  header: 'Адресаты',
+  hidePreview: false,
+});
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
@@ -468,6 +479,16 @@ watch([allLoadedSelected, someLoadedSelected, employees, draft], async () => {
 .addressee-field__btn {
   border-radius: 0;
   flex: 0 0 auto;
+}
+
+.addressee-field--button-only {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.addressee-field--button-only .addressee-field__btn {
+  flex: 1 1 0;
+  height: 34px;
 }
 
 .addressee-modal {

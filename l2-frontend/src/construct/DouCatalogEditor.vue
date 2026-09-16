@@ -100,6 +100,37 @@
             <i class="glyphicon glyphicon-remove" />
           </button>
         </div>
+        <div class="template-row">
+          <span class="input-group-addon">Создатели</span>
+          <AddresseeField
+            class="creators-field"
+            header="Создатели"
+            hide-preview
+            :value="creatorsJson"
+            @input="onCreatorsInput"
+          />
+        </div>
+        <div
+          v-if="creators.length === 0"
+          class="empty-templates"
+        >
+          Создатели не указаны — доступен всем
+        </div>
+        <div
+          v-for="row in creators"
+          :key="row.id"
+          class="template-item"
+        >
+          <span class="template-item-title">{{ row.fio }}</span>
+          <button
+            class="btn btn-blue-nb template-item-btn"
+            type="button"
+            title="Удалить"
+            @click="removeCreator(row.id)"
+          >
+            <i class="glyphicon glyphicon-remove" />
+          </button>
+        </div>
       </div>
     </div>
     <div class="footer-editor">
@@ -131,6 +162,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
@@ -146,6 +178,12 @@ interface LayoutTemplateOption {
   isDisabled?: boolean;
 }
 
+interface CreatorPerson {
+  id: number;
+  fio: string;
+  department?: string;
+}
+
 const props = defineProps<{
   kind: 'group' | 'type';
   itemId: number;
@@ -155,6 +193,7 @@ const props = defineProps<{
   layoutTemplateIdValue?: number | null;
   layoutTemplateIdsValue?: number[];
   layoutTemplatesValue?: LayoutTemplateOption[];
+  creatorsValue?: CreatorPerson[];
   groups?: CatalogGroup[];
 }>();
 
@@ -173,6 +212,12 @@ const groupId = ref<number>(-1);
 const templateToAdd = ref<number | null>(null);
 const layoutTemplates = ref<LayoutTemplateOption[]>([]);
 const selectedTemplates = ref<LayoutTemplateOption[]>([]);
+const creators = ref<CreatorPerson[]>([]);
+
+const creatorsJson = computed(() => JSON.stringify(creators.value.map(row => ({
+  id: row.id,
+  fio: row.fio,
+}))));
 
 const availableTemplates = computed(() => {
   const selected = new Set(selectedTemplates.value.map(row => row.id));
@@ -207,6 +252,11 @@ const fill = () => {
   code.value = props.codeValue || '';
   groupId.value = props.groupIdValue ?? -1;
   applySelectedTemplates();
+  creators.value = (props.creatorsValue || []).map(row => ({
+    id: row.id,
+    fio: row.fio || '',
+    department: row.department || '',
+  }));
 };
 
 watch(
@@ -218,6 +268,7 @@ watch(
     props.layoutTemplateIdValue,
     props.layoutTemplateIdsValue,
     props.layoutTemplatesValue,
+    props.creatorsValue,
   ],
   fill,
   { immediate: true },
@@ -267,6 +318,35 @@ const removeTemplate = (index: number) => {
   selectedTemplates.value = selectedTemplates.value.filter((_, current) => current !== index);
 };
 
+const onCreatorsInput = (value: string) => {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    if (!Array.isArray(parsed)) {
+      creators.value = [];
+      return;
+    }
+    creators.value = parsed
+      .map((item) => {
+        const id = Number(item?.id);
+        if (!id) {
+          return null;
+        }
+        return {
+          id,
+          fio: item.fio || '',
+          department: item.department || '',
+        };
+      })
+      .filter(Boolean) as CreatorPerson[];
+  } catch {
+    creators.value = [];
+  }
+};
+
+const removeCreator = (id: number) => {
+  creators.value = creators.value.filter(row => row.id !== id);
+};
+
 const loadLayoutTemplates = async () => {
   if (props.kind !== 'type') {
     return;
@@ -289,6 +369,7 @@ const save = async () => {
       groupId: groupId.value,
       layoutTemplateId: selectedTemplates.value[0]?.id ?? null,
       layoutTemplateIds: selectedTemplates.value.map(row => row.id),
+      creatorIds: creators.value.map(row => row.id),
     });
     if (result?.ok) {
       root.$emit('msg', 'ok', 'Сохранено');
@@ -428,6 +509,22 @@ const save = async () => {
 .template-select {
   flex: 1 1 0;
   min-width: 0;
+}
+
+.creators-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+:deep(.creators-field.addressee-field) {
+  height: 34px;
+}
+
+:deep(.creators-field .addressee-field__btn) {
+  border-top: none !important;
+  border-bottom: none !important;
+  border-right: none !important;
+  border-left: 1px solid #96a0ad;
 }
 
 :deep(.template-select .vue-treeselect__control) {
