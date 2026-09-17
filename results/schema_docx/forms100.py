@@ -218,7 +218,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "limit_visual": limit_visual,
             "stage": stage,
             "peroral_amount": peroral_amount,
-            "allergy": allergy
+            "allergy": allergy,
         }
         context = {**meta_info, **result_data, "stamp_doctor": get_stamp_doctor_image(doc, iss.doc_confirmation)}
         doc.render(context)
