@@ -11,6 +11,7 @@ from pdfrw import PdfReader, PdfWriter
 
 from integration_framework.models import EquipmentReceive
 from laboratory.settings import COMMAND_DOCX_2_PDF
+from results.schema_docx.paraclinic_files import append_paraclinic_images_to_pdf, hospital_for_paraclinic_pdf_appendix
 from results.sql_func import get_paraclinic_result_by_iss
 from slog.models import Log
 from hospitals.models import TitleResearchHospital
@@ -48,6 +49,15 @@ def transform_value(field_value, type_field):
         except:
             result = ""
     return result
+
+
+def _read_docx_converted_pdf(temp_file_dir: str) -> bytes:
+    pdf_path = f"{temp_file_dir}.pdf"
+    writer = PdfWriter()
+    pdf_all = BytesIO()
+    writer.addpages(PdfReader(pdf_path).pages)
+    writer.write(pdf_all)
+    return pdf_all.getvalue()
 
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
@@ -118,18 +128,19 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         doc.save(f"{temp_file_dir}.docx")
 
         os.system(f"{COMMAND_DOCX_2_PDF} {temp_file_dir}.docx")
-        writer = PdfWriter()
-        pdf_all = BytesIO()
-        writer.addpages(PdfReader(f"{temp_file_dir}.pdf").pages)
-        writer.write(pdf_all)
-        pdf_out = pdf_all.getvalue()
+        pdf_out = _read_docx_converted_pdf(temp_file_dir)
+        pdf_out = append_paraclinic_images_to_pdf(
+            pdf_out,
+            iss,
+            hospital_for_paraclinic_pdf_appendix(direction, iss),
+        )
         os.remove(f"{temp_file_dir}.pdf")
         os.remove(f"{temp_file_dir}.docx")
         return pdf_out, name_pdf_file
     except AttributeError as e:
-        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk, "message": "Версии библиотек не те"}})
+        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": str(e), "protocolid": direction.pk, "message": "Версии библиотек не те"}})
     except Exception as e:
-        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk}})
+        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": str(e), "protocolid": direction.pk}})
 
     return fwb
 
@@ -207,17 +218,18 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         doc.save(f"{temp_file_dir}.docx")
 
         os.system(f"{COMMAND_DOCX_2_PDF} {temp_file_dir}.docx")
-        writer = PdfWriter()
-        pdf_all = BytesIO()
-        writer.addpages(PdfReader(f"{temp_file_dir}.pdf").pages)
-        writer.write(pdf_all)
-        pdf_out = pdf_all.getvalue()
+        pdf_out = _read_docx_converted_pdf(temp_file_dir)
+        pdf_out = append_paraclinic_images_to_pdf(
+            pdf_out,
+            iss,
+            hospital_for_paraclinic_pdf_appendix(direction, iss),
+        )
         os.remove(f"{temp_file_dir}.pdf")
         os.remove(f"{temp_file_dir}.docx")
         return pdf_out, name_pdf_file
     except AttributeError as e:
-        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk, "message": "Версии библиотек не те"}})
+        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": str(e), "protocolid": direction.pk, "message": "Версии библиотек не те"}})
     except Exception as e:
-        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk}})
+        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": str(e), "protocolid": direction.pk}})
 
     return fwb
