@@ -84,6 +84,12 @@ class Hospitals(models.Model):
     time_zone = models.CharField(max_length=100, blank=True, null=True, default="Asia/Irkutsk", help_text="Europe/Moscow")
     schema_docx = models.FileField(upload_to=get_file_path_to_schemas, default=None, null=True, blank=True)
     schema_docx_result_created_direction_hospital = models.FileField(upload_to=get_file_path_to_schemas, default=None, null=True, blank=True)
+    append_paraclinic_file_images_to_result_pdf = models.BooleanField(
+        default=False,
+        blank=True,
+        help_text="При печати PDF из DOCX-шаблона доклеивать JPEG/PNG из полей «Файл» протокола отдельными страницами A4 в конец PDF",
+        db_index=True,
+    )
     smtp_address = models.CharField(max_length=100, blank=True, null=True, default=None, help_text="SMTP=address")
     smtp_login = models.CharField(max_length=100, blank=True, null=True, default=None, help_text="SMTP_login")
     smtp_password = models.CharField(max_length=100, blank=True, null=True, default=None, help_text="SMTP_pass")
