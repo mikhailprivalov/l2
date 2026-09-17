@@ -571,6 +571,7 @@ WEB_PLUGIN_LINK_STUDY = None
 # Кнопка скачивания всех серий DICOM на /ui/requests-fill. Переопределение в laboratory/local_settings.py
 SHOW_REQUESTS_FILL_DICOM_DOWNLOAD = False
 MAGAZINE_REPORT = {}
+# Полный путь до бинарника LibreOffice который выполняет конвертацию DOCX в PDF Переопределение в laboratory/local_settings.py
 COMMAND_DOCX_2_PDF = ""
 GROUP_USER_FOR_FILTER = []
 PERIOD_DAYS_SEND_RESULT_ECP = -1
