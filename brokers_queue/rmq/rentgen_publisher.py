@@ -64,6 +64,7 @@ def build_dcm_order_create_payload(direction, doc_profile, research):
             'cito': direction.is_cito,
             'contrastAmount': direction.contrast_amount or '',
             'dose': direction.dose or '',
+            'requestCode': direction.request_code or '',
             'anamnesis': direction.anamnesis or '',
             'comment': direction.direction_comment or '',
             'isDynamic': direction.is_dynamic,

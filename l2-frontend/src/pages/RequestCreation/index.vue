@@ -113,6 +113,7 @@ const defaultRequestFields = () => ({
   side: '',
   contrast: '',
   contrastAmount: '',
+  requestCode: '',
   dose: '',
   cito: false,
   anamnesis: '',

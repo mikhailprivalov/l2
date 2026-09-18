@@ -62,6 +62,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
     contrast_amount = direction.contrast_amount
     dose = direction.dose
+    request_code = direction.request_code
     anamnesis = direction.anamnesis
     direction_comment = direction.direction_comment
     fact_research_date = direction.fact_research_date
@@ -147,6 +148,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         [
             Paragraph("Внутривенный контраст", style),
             Paragraph(f"{contrast_amount}", style),
+        ],
+        [
+            Paragraph("Код", style),
+            Paragraph(f"{request_code}", style),
         ],
         [
             Paragraph("Аллергическая реакция", style),

@@ -365,6 +365,11 @@ def create_request(request):
     if not request_fields.get('date') or not request_fields.get('time'):
         return status_response(False, "Не указана дата или время исследования")
 
+    try:
+        request_code = Napravleniya.normalize_request_code(request_fields.get('requestCode', ''))
+    except ValueError as e:
+        return status_response(False, str(e))
+
     card = Card.objects.get(pk=patient_id)
 
     fin_source = IstochnikiFinansirovaniya.objects.filter(base=card.base, title="ОМС", hide=False).first()
@@ -410,6 +415,7 @@ def create_request(request):
         direction.is_request = True
         direction.contrast_amount = request_fields.get('contrastAmount', '')
         direction.dose = request_fields.get('dose', '')
+        direction.request_code = request_code
         direction.anamnesis = request_fields.get('anamnesis', '')
         direction.direction_comment = request_fields.get('comment', '')
         current_contrast = request_fields.get('currentContrast', -1)
@@ -425,6 +431,7 @@ def create_request(request):
                 'is_request',
                 'contrast_amount',
                 'dose',
+                'request_code',
                 'anamnesis',
                 'direction_comment',
                 'fact_research_date',
@@ -555,6 +562,7 @@ def _build_request_edit_snapshot(direction, hospital_id=None):
         'isDynamic': direction.is_dynamic,
         'contrast': direction.text_contrast or '',
         'contrastAmount': direction.contrast_amount or '',
+        'requestCode': direction.request_code or '',
         'anamnesis': direction.anamnesis or '',
         'comment': direction.direction_comment or '',
         'files': files,
@@ -627,6 +635,7 @@ def get_request_details(request):
         "factResearchTime": direction.fact_research_time.strftime('%H:%M') if direction.fact_research_time else None,
         "contrastAmount": direction.contrast_amount or '',
         "dose": direction.dose or '',
+        "requestCode": direction.request_code or '',
         "anamnesis": direction.anamnesis or '',
         "comment": direction.direction_comment or '',
         "isCito": direction.is_cito,
@@ -661,6 +670,11 @@ def update_request(request):
 
     if not request_fields.get('date') or not request_fields.get('time'):
         return status_response(False, "Не указана дата или время исследования")
+
+    try:
+        request_code = Napravleniya.normalize_request_code(request_fields.get('requestCode', ''))
+    except ValueError as e:
+        return status_response(False, str(e))
 
     files = request_fields.get('files', [])
     for file_data in files:
@@ -708,6 +722,7 @@ def update_request(request):
         direction.is_dynamic = request_fields.get('isDynamic', False)
         direction.contrast_amount = request_fields.get('contrastAmount', '')
         direction.dose = request_fields.get('dose', '')
+        direction.request_code = request_code
         direction.anamnesis = request_fields.get('anamnesis', '')
         direction.direction_comment = request_fields.get('comment', '')
         current_contrast = request_fields.get('currentContrast', -1)
@@ -726,6 +741,7 @@ def update_request(request):
                 'is_dynamic',
                 'contrast_amount',
                 'dose',
+                'request_code',
                 'anamnesis',
                 'direction_comment',
                 'fact_research_date',
@@ -804,6 +820,9 @@ def get_request_params(request):
 
     if direction.contrast_amount:
         params["contrastAmount"] = direction.contrast_amount
+
+    if direction.request_code:
+        params["requestCode"] = direction.request_code
 
     params["isCito"] = direction.is_cito
 

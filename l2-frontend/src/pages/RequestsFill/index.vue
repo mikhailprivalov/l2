@@ -240,6 +240,13 @@
                     <span class="info-label">Контраст, объём </span>
                     <span class="info-value">{{ requestParams.textContrast }}, {{ requestParams.contrastAmount }} мл </span>
                   </div>
+                  <div
+                    v-if="requestParams.requestCode"
+                    class="info-row"
+                  >
+                    <span class="info-label">Код</span>
+                    <span class="info-value">{{ requestParams.requestCode }}</span>
+                  </div>
                   <div class="info-row">
                     <span class="info-label">Срочность</span>
                     <span class="info-value">

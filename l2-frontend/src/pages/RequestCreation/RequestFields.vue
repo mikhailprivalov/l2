@@ -47,7 +47,7 @@
           </div>
         </div>
         <div class="request-fields">
-          <div class="half-width">
+          <div :class="showCode ? 'third-width' : 'half-width'">
             <label class="formulate-input-label date-time-label">Контраст</label>
             <treeselect
               v-model="formValues.currentContrast"
@@ -59,11 +59,20 @@
             />
           </div>
           <FormulateInput
-            class="half-width"
+            :class="showCode ? 'third-width' : 'half-width'"
             type="number"
             name="contrastAmount"
             placeholder="Объём, мг"
             label="Объём"
+          />
+          <FormulateInput
+            v-if="showCode"
+            class="third-width"
+            type="text"
+            name="requestCode"
+            placeholder="Код"
+            label="Код"
+            maxlength="100"
           />
         </div>
 
@@ -158,13 +167,16 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import {
+  computed, onMounted, ref, watch,
+} from 'vue';
 import isEqual from 'lodash/isEqual';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import useNotify from '@/hooks/useNotify';
 import researchesPoint from '@/api/researches-point';
+import { useStore } from '@/store';
 
 const props = defineProps<{ value: Record<string, any> }>();
 
@@ -178,6 +190,8 @@ const formValues = ref({ ...props.value, currentContrast: props.value.currentCon
 const selectedFile = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement>();
 const notify = useNotify();
+const store = useStore();
+const showCode = computed(() => !!store.getters.modules.show_code_in_request_creation);
 
 const contrastOptions = ref([]);
 
@@ -295,6 +309,12 @@ watch(() => props.value, (val) => {
     selectedFile.value = null;
   }
 }, { deep: true });
+
+watch(() => formValues.value.requestCode, (val) => {
+  if (typeof val === 'string' && /[/\\]/.test(val)) {
+    formValues.value.requestCode = val.replace(/[/\\]/g, '');
+  }
+});
 </script>
 
 <style lang="scss" scoped>

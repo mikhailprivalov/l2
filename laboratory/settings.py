@@ -733,3 +733,5 @@ if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
 # db = DATABASES.get('default', {})
 # db['OPTIONS'] = db.get('OPTIONS', {})
 # db['OPTIONS']['options'] = f'-c statement_timeout={QUERY_TIMEOUT * 1000}'
+# Поле «Код» после «Объём» на /ui/request-creation. Переопределение в laboratory/local_settings.py
+SHOW_CODE_IN_REQUEST_CREATION = False
