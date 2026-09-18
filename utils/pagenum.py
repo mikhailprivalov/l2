@@ -93,9 +93,7 @@ class Colontitul(canvas.Canvas):
         if not SELF_WATERMARKS:
             pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
             self.setFont("PTAstraSerifReg", 8)
-            page = (
-                "Данное заключение не является окончательным диагнозом и должно быть интерпретировано лечащим врачом в совокупности с клинико-"
-            )
+            page = "Данное заключение не является окончательным диагнозом и должно быть интерпретировано лечащим врачом в совокупности с клинико-"
             self.drawString(20 * mm, 13 * mm, page)
 
             page = "лабораторными данными (Согласно федеральному закону №323-ФЗ от 21.11.2011 «Об основах охраны здоровья граждан в Российской Федерации»)."
