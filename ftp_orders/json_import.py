@@ -265,6 +265,7 @@ def create_request_from_ord_payload(payload):
         direction.is_dynamic = bool(payload.get("is_dynamic"))
         direction.contrast_amount = payload.get("contrast_amount") or ""
         direction.dose = payload.get("dose") or ""
+        direction.request_code = Napravleniya.normalize_request_code(payload.get("request_code") or payload.get("requestCode") or "", strict=False)
         direction.anamnesis = payload.get("anamnesis") or ""
         direction.direction_comment = payload.get("direction_comment") or ""
         direction.text_contrast = payload.get("text_contrast") or ""

@@ -198,6 +198,7 @@ def dcm_order_create(request):
         direction.is_request = True
         direction.contrast_amount = order_data.get('contrastAmount', '')
         direction.dose = order_data.get('dose', '')
+        direction.request_code = Napravleniya.normalize_request_code(order_data.get('requestCode', ''), strict=False)
         direction.anamnesis = order_data.get('anamnesis', '')
         direction.direction_comment = order_data.get('comment', '')
         direction.is_dynamic = order_data.get('isDynamic', False)

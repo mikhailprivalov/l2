@@ -606,6 +606,7 @@ class Napravleniya(models.Model):
     type_contrast = models.ForeignKey(directory.Contrasts, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Вид контраста')
     text_contrast = models.CharField(max_length=50, default='', blank=True, help_text='Вид контраста текстом')
     dose = models.CharField(max_length=50, default='', blank=True, help_text='Доза')
+    request_code = models.CharField(max_length=100, default='', blank=True, help_text='Код заявки (без / и \\)')
     anamnesis = models.TextField(default='', blank=True, help_text='Краткий анамнез')
     direction_comment = models.TextField(default='', blank=True, help_text='Комментарий к направлению')
     accept_who_doctor = models.ForeignKey(
@@ -615,6 +616,15 @@ class Napravleniya(models.Model):
     is_sent_to_work_place = models.BooleanField(null=True, blank=True, default=False, help_text='Отправлен протокол работодателю', db_index=True)
     dcm_study_link_status = models.CharField(max_length=32, blank=True, default='', help_text='Статус привязки DICOM исследования')
     dcm_study_link_message = models.TextField(blank=True, default='', help_text='Сообщение статуса привязки DICOM')
+
+    @staticmethod
+    def normalize_request_code(value, strict=True):
+        code = str(value or '').strip()
+        if '/' in code or '\\' in code:
+            if strict:
+                raise ValueError('Код не должен содержать / или \\')
+            code = code.replace('/', '').replace('\\', '')
+        return code[:100]
 
     def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()

@@ -470,6 +470,20 @@
                         placeholder="мг"
                       >
                     </div>
+                    <div
+                      v-if="showCode"
+                      class="detail-params-field detail-params-field--code"
+                    >
+                      <label class="detail-params-label">Код</label>
+                      <input
+                        v-model="editForm.requestCode"
+                        type="text"
+                        maxlength="100"
+                        class="form-control detail-edit-input detail-edit-input--code"
+                        placeholder="Код"
+                        @input="onRequestCodeInput"
+                      >
+                    </div>
                   </div>
                 </template>
                 <template v-else>
@@ -500,6 +514,16 @@
                       class="detail-value"
                       :class="{ 'empty-value': !requestDetails.contrastAmount }"
                     >{{ requestDetails.contrastAmount || '(не указан)' }}</span>
+                  </div>
+                  <div
+                    v-if="showCode"
+                    class="detail-row"
+                  >
+                    <span class="detail-label">Код:</span>
+                    <span
+                      class="detail-value"
+                      :class="{ 'empty-value': !requestDetails.requestCode }"
+                    >{{ requestDetails.requestCode || '(не указан)' }}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Контраст:</span>
@@ -617,6 +641,7 @@ const notify = useNotify();
 const loader = useLoader();
 const { printResults } = usePrint();
 const store = useStore();
+const showCode = computed(() => !!store.getters.modules.show_code_in_request_creation);
 
 const printResult = (id: number) => {
   printResults([id]);
@@ -660,6 +685,7 @@ type EditForm = {
   isDynamic: boolean;
   currentContrast: number;
   contrastAmount: string;
+  requestCode: string;
   anamnesis: string;
   comment: string;
   files: Array<{ url: string; name: string; type: string }>;
@@ -674,6 +700,7 @@ const defaultEditForm = (): EditForm => ({
   isDynamic: false,
   currentContrast: -1,
   contrastAmount: '',
+  requestCode: '',
   anamnesis: '',
   comment: '',
   files: [],
@@ -1011,6 +1038,7 @@ const populateEditForm = (details: any) => {
     isDynamic: details.isDynamic || false,
     currentContrast: details.currentContrast ?? -1,
     contrastAmount: details.contrastAmount || '',
+    requestCode: details.requestCode || '',
     anamnesis: details.anamnesis || '',
     comment: details.comment || '',
     files: [],
@@ -1019,6 +1047,15 @@ const populateEditForm = (details: any) => {
     || details.researches?.[0]?.title
     || '';
   selectedDetailFile.value = null;
+};
+
+const onRequestCodeInput = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const sanitized = (input.value || '').replace(/[/\\]/g, '');
+  editForm.value.requestCode = sanitized;
+  if (input.value !== sanitized) {
+    input.value = sanitized;
+  }
 };
 
 const loadContrastOptions = async () => {
@@ -1090,6 +1127,7 @@ const saveRequestDetails = async () => {
         isDynamic: editForm.value.isDynamic,
         currentContrast: editForm.value.currentContrast,
         contrastAmount: editForm.value.contrastAmount,
+        requestCode: editForm.value.requestCode,
         anamnesis: editForm.value.anamnesis,
         comment: editForm.value.comment,
         files: editForm.value.files,
@@ -1967,7 +2005,8 @@ defineExpose({
   }
 
   &--contrast,
-  &--volume {
+  &--volume,
+  &--code {
     flex: 1 1 0;
     min-width: 0;
   }
@@ -2009,7 +2048,8 @@ defineExpose({
     padding-right: 6px;
   }
 
-  &--volume {
+  &--volume,
+  &--code {
     padding-left: 6px;
     padding-right: 6px;
   }

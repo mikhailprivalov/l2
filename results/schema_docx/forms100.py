@@ -82,6 +82,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
         contrast_amount = direction.contrast_amount
         dose = direction.dose
+        request_code = direction.request_code
         anamnesis = direction.anamnesis
         direction_comment = direction.direction_comment
         fact_research_date = direction.fact_research_date
@@ -102,6 +103,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         meta_info = {
             "contrast_amount": contrast_amount,
             "dose": dose,
+            "request_code": request_code,
             "anamnesis": anamnesis,
             "direction_comment": direction_comment,
             "converted_dt": converted_dt,
@@ -163,6 +165,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
         contrast_amount = direction.contrast_amount
         dose = direction.dose
+        request_code = direction.request_code
         anamnesis = direction.anamnesis
         direction_comment = direction.direction_comment
         fact_research_date = direction.fact_research_date
@@ -196,6 +199,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         meta_info = {
             "contrast_amount": contrast_amount,
             "dose": dose,
+            "request_code": request_code,
             "anamnesis": anamnesis,
             "direction_comment": direction_comment,
             "converted_dt": converted_dt,
