@@ -118,7 +118,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph("Вид исследования", style),
-            Paragraph(f"{iss.research.title}", style),
+            Paragraph(f"{iss.research.code} {iss.research.title}", style),
         ],
         [
             Paragraph("Анатомическая область", style),
@@ -210,7 +210,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
                 laborant = direction.doc_who_create.get_fio()
             else:
                 laborant = direction.doc.get_fio()
-            objs.append(Paragraph(f"Рентгенлаборант: {laborant}", styleJustifiedDoctor))
+            objs.append(Paragraph(f"Рентгенолаборант: {laborant}", styleJustifiedDoctor))
 
     fwb.extend(objs)
     return fwb
