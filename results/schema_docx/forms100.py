@@ -113,7 +113,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "sex": individula.get('sex'),
             "born": individula.get('born'),
             "protocol_number": direction.pk,
-            "research": _research_title_for_user(iss, user),
+            "research": f"{iss.research.code} {_research_title_for_user(iss, user)}",
             "hosp_confirmation": iss.doc_confirmation.hospital.title if iss.doc_confirmation else "",
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
