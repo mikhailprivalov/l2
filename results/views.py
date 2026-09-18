@@ -122,6 +122,15 @@ def _research_title_for_request(research, request, fallback=None):
     return TitleResearchHospital.get_display_title(hospital_id, research, title)
 
 
+def _pdf_attachment_path(path) -> Optional[str]:
+    if not path:
+        return None
+    path_str = str(path)
+    if path_str.lower().endswith('.pdf'):
+        return path_str
+    return None
+
+
 @logged_in_or_token
 def result_print(request):
     """Печать результатов"""
@@ -478,18 +487,21 @@ def result_print(request):
                 has_paraclinic = True
             if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
                 has_paraclinic = True
-            if iss.link_file:
-                link_result.append(iss.link_file)
+            pdf_link = _pdf_attachment_path(iss.link_file)
+            if pdf_link:
+                link_result.append(pdf_link)
                 link_files = True
-            if IssledovaniyaFiles.objects.filter(issledovaniye=iss).first():
-                iss_uploaded_file = IssledovaniyaFiles.objects.filter(issledovaniye=iss).first()
-                link_result.append(iss_uploaded_file.uploaded_file.path)
+            for iss_uploaded_file in IssledovaniyaFiles.objects.filter(issledovaniye=iss):
+                uploaded = iss_uploaded_file.uploaded_file
+                if not uploaded or not _pdf_attachment_path(uploaded.name):
+                    continue
+                link_result.append(uploaded.path)
                 link_files = True
             if 'выпис' in iss.research.title.lower():
                 is_extract = True
             if iss.research.is_gistology:
                 is_gistology = True
-            if iss.research.has_own_form_result and not iss.link_file and not IssledovaniyaFiles.objects.filter(issledovaniye=iss).exists():
+            if iss.research.has_own_form_result:
                 has_own_form_result = True
             if iss.research.schema_pdf:
                 schema_pdf_form = True
@@ -848,7 +860,7 @@ def result_print(request):
             count_pages = 0
 
         if len(pk) == 1:
-            naprs.append(fwb)
+            naprs.extend(fwb)
             client_prev = direction.client.individual_id
             continue
         naprs.append(KeepTogether(fwb))
@@ -865,9 +877,9 @@ def result_print(request):
         doc.build(fwb, canvasmaker=Colontitul)
     elif len(pk) == 1 and has_own_form_result and not print_saved_pdf:
         doc.build(fwb)
-    elif len(pk) == 1 and not link_result and not hosp and fwb:
+    elif len(pk) == 1 and not print_saved_pdf and not hosp and fwb:
         doc.build(fwb, canvasmaker=PageNumCanvas)
-    elif len(pk) == 1 and not link_result and hosp:
+    elif len(pk) == 1 and not print_saved_pdf and hosp:
         doc.build(fwb, canvasmaker=PageNumCanvasPartitionAll)
     elif has_page_break or SELF_WATERMARKS:
         doc.build(naprs, canvasmaker=PageNumCanvasPartitionAll)
