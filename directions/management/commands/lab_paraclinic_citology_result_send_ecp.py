@@ -68,6 +68,8 @@ def sql_01(d_s):
                       AND
                       directions_napravleniya.ecp_direction_number is NULL 
                       AND
+                      directions_napravleniya.rmis_number is NULL
+                      AND
                       directions_napravleniya.rmis_resend_services=False
                       AND
                       directions_napravleniya.last_confirmed_at > %(d_start)s
