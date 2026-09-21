@@ -15,12 +15,15 @@ from directory.models import (
     CategoryDirectory,
 )
 from laboratory.decorators import group_required
+from appconf.manager import SettingManager
 from laboratory.settings import (
     PARACLINIC_FILE_HARD_LIMITS,
     PARACLINIC_FILE_DEFAULTS,
     PARACLINIC_FILE_ALLOWED_EXTENSIONS,
     PARAGRAPH_FIELD_ENABLED,
     DOU_CONSTRUCTOR_NAV_BUTTONS,
+    TUBE_BARCODE_OFFSET_X,
+    TUBE_BARCODE_WIDTH_MM,
 )
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
@@ -311,3 +314,29 @@ def get_descriptive_ref_books(request):
 @group_required("Конструктор: ДОУ")
 def get_dou_nav_buttons(request):
     return JsonResponse({"result": DOU_CONSTRUCTOR_NAV_BUTTONS})
+
+
+def _tube_barcode_float(value, fallback):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(fallback)
+
+
+@login_required
+@group_required("Конструктор: Ёмкости для биоматериала")
+def get_tube_barcode_settings(request):
+    width_mm = _tube_barcode_float(SettingManager.get("tube_barcode_width_mm", default=str(TUBE_BARCODE_WIDTH_MM), default_type="f"), TUBE_BARCODE_WIDTH_MM)
+    offset_x = _tube_barcode_float(SettingManager.get("tube_barcode_offset_x", default=str(TUBE_BARCODE_OFFSET_X), default_type="f"), TUBE_BARCODE_OFFSET_X)
+    return JsonResponse({"ok": True, "widthMm": width_mm, "offsetX": offset_x})
+
+
+@login_required
+@group_required("Конструктор: Ёмкости для биоматериала")
+def save_tube_barcode_settings(request):
+    request_data = json.loads(request.body)
+    width_mm = _tube_barcode_float(request_data.get("widthMm"), TUBE_BARCODE_WIDTH_MM)
+    offset_x = _tube_barcode_float(request_data.get("offsetX"), TUBE_BARCODE_OFFSET_X)
+    SettingManager.set_value("tube_barcode_width_mm", str(width_mm), default_type="f")
+    SettingManager.set_value("tube_barcode_offset_x", str(offset_x), default_type="f")
+    return status_response(True)

@@ -235,6 +235,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/tube-barcode',
+      name: 'construct_tube_barcode',
+      component: () => import('@/construct/ConstructTubeBarcode.vue'),
+      meta: {
+        title: 'Штрих-коды ёмкостей',
+        groups: ['Конструктор: Ёмкости для биоматериала'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/extra-notification',
       name: 'extra_notification',
       component: () => import('@/pages/ExtraNotification.vue'),

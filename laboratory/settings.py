@@ -437,6 +437,8 @@ TUBE_MAX_RESEARCH_WITH_SHARE = False
 TUBE_BARCODE_OFFSET_X = -3
 TUBE_BARCODE_WIDTH_MINDEX = 0.0125
 TUBE_BARCODE_WIDTH_MM = 0
+# Ширина и смещение штрих-кода ёмкости. Можно менять в конструкторе «Штрих-коды ёмкостей».
+# Значения выше — значения по умолчанию до первой записи в appconf. Переопределение в laboratory/local_settings.py
 RELATED_AGREES_FORMS_TOGETHER = {}
 FTP_PATH_TO_SAVE = ""
 FTP_PATH_TO_SAVE_ERROR_FILE = ""
@@ -577,6 +579,7 @@ GROUP_USER_FOR_FILTER = []
 PERIOD_DAYS_SEND_RESULT_ECP = -1
 # Дней госпитализации по умолчанию (календарь коек: plan_date_in … plan_date_out включительно)
 PERIOD_DAYS_DEFAULT_HOSPITALIZATION = 3
+URL_REQUEST_GET_DIRECTIONS_FROM_ECP = ""
 SHOW_RESTRICTIONS = False
 NOT_CONTROL_VISIT_RESEARCH_ID = []
 PERIOD_HAOURS_SEND_RESULT_ECP = -100

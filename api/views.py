@@ -2233,6 +2233,7 @@ def construct_menu_data(request):
     pages = [
         {"url": "/construct/tubes", "title": "Ёмкости для биоматериала", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
         {"url": "/ui/construct/tubes", "title": "Ёмкости для биоматериала (н)", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
+        {"url": "/ui/construct/tube-barcode", "title": "Штрих-коды ёмкостей", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
         {"url": "/construct/researches", "title": "Лабораторные исследования", "access": ["Конструктор: Лабораторные исследования"], "module": None},
         {"url": "/ui/construct/laboratory", "title": "Лабораторные исследования(н)", "access": ["Конструктор: Лабораторные исследования"], "module": None},
         {
