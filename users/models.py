@@ -610,47 +610,73 @@ class DoctorProfileEmployeePosition(models.Model):
         return list(DoctorProfileEmployeePosition.objects.filter(doctor_profile_id=doctor_profile.id).values_list("employee_position_id", flat=True))
 
     @staticmethod
+    def _employee_fio(employee):
+        return f"{employee.family} {employee.name} {employee.patronymic or ''}".strip()
+
+    @staticmethod
     def _employee_position_label(employee_position):
         return (
-            f"{employee_position.employee.family} {employee_position.employee.name} {employee_position.employee.patronymic or ''} — "
+            f"{DoctorProfileEmployeePosition._employee_fio(employee_position.employee)} — "
             f"{employee_position.position.name} ({employee_position.department.name})"
         ).strip()
 
     @staticmethod
-    def search_employee_positions(hospital_id: int, query: str, limit: int = 15):
+    def _active_employee_positions(hospital_id: int):
         from employees.models import EmployeePosition
 
+        return (
+            EmployeePosition.objects.filter(is_active=True, employee__is_active=True, employee__hospital_id=hospital_id, department__is_active=True)
+            .select_related("employee", "position", "department")
+            .order_by("department__name", "employee__family", "employee__name", "employee__patronymic", "position__name", "pk")
+        )
+
+    @staticmethod
+    def get_employee_positions_tree(hospital_id: int):
+        rows = list(DoctorProfileEmployeePosition._active_employee_positions(hospital_id))
+        pair_counts = {}
+        for row in rows:
+            key = (row.department_id, row.employee_id)
+            pair_counts[key] = pair_counts.get(key, 0) + 1
+
+        groups = []
+        groups_by_id = {}
+        for row in rows:
+            department = row.department
+            group = groups_by_id.get(department.pk)
+            if group is None:
+                group = {"id": f"dept-{department.pk}", "label": department.name or "", "children": []}
+                groups_by_id[department.pk] = group
+                groups.append(group)
+            fio = DoctorProfileEmployeePosition._employee_fio(row.employee)
+            if pair_counts.get((row.department_id, row.employee_id), 0) > 1 and row.position:
+                label = f"{fio} — {row.position.name}"
+            else:
+                label = fio
+            group["children"].append({"id": row.pk, "label": label})
+        return groups
+
+    @staticmethod
+    def search_employee_positions(hospital_id: int, query: str, limit: int = 15):
         query = (query or "").strip()
         if not query:
             return []
 
-        employee_positions = (
-            EmployeePosition.objects.filter(is_active=True, employee__hospital_id=hospital_id)
-            .select_related("employee", "position", "department")
-            .filter(
-                Q(employee__family__icontains=query)
-                | Q(employee__name__icontains=query)
-                | Q(employee__patronymic__icontains=query)
-                | Q(position__name__icontains=query)
-                | Q(department__name__icontains=query)
-                | Q(tabel_number__icontains=query)
-            )
-            .order_by("employee__family", "employee__name", "employee__patronymic", "position__name", "department__name")[:limit]
-        )
+        employee_positions = DoctorProfileEmployeePosition._active_employee_positions(hospital_id).filter(
+            Q(employee__family__icontains=query)
+            | Q(employee__name__icontains=query)
+            | Q(employee__patronymic__icontains=query)
+            | Q(position__name__icontains=query)
+            | Q(department__name__icontains=query)
+            | Q(tabel_number__icontains=query)
+        )[:limit]
         return [{"id": employee_position.pk, "label": DoctorProfileEmployeePosition._employee_position_label(employee_position)} for employee_position in employee_positions]
 
     @staticmethod
     def get_employee_positions_options(hospital_id: int, employee_position_ids: list):
-        from employees.models import EmployeePosition
-
         if not employee_position_ids:
             return []
 
-        employee_positions = (
-            EmployeePosition.objects.filter(is_active=True, employee__hospital_id=hospital_id, pk__in=employee_position_ids)
-            .select_related("employee", "position", "department")
-            .order_by("employee__family", "employee__name", "employee__patronymic", "position__name", "department__name")
-        )
+        employee_positions = DoctorProfileEmployeePosition._active_employee_positions(hospital_id).filter(pk__in=employee_position_ids)
         return [{"id": employee_position.pk, "label": DoctorProfileEmployeePosition._employee_position_label(employee_position)} for employee_position in employee_positions]
 
 

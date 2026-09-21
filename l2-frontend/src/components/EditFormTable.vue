@@ -2,13 +2,29 @@
   <div :class="$style.tableRoot">
     <Spinner v-if="!hasFirstLoading" />
     <template v-else>
-      <button
-        class="btn btn-primary-nb btn-blue-nb nbr"
-        type="button"
-        @click="addRecord"
-      >
-        <i class="fa fa-plus" /> Создать запись
-      </button>
+      <div :class="$style.toolbar">
+        <button
+          class="btn btn-primary-nb btn-blue-nb nbr"
+          type="button"
+          @click="addRecord"
+        >
+          <i class="fa fa-plus" /> Создать запись
+        </button>
+        <div :class="$style.filterWrapper">
+          <input
+            v-model.trim="filter"
+            type="text"
+            class="form-control nbr"
+            :class="$style.filterInput"
+            placeholder="Фильтр"
+          >
+          <span
+            v-if="filter"
+            :class="$style.clearButton"
+            @click="filter = ''"
+          ><i class="fa fa-times" /></span>
+        </div>
+      </div>
       <VeTable
         ref="table"
         :columns="columns"
@@ -72,6 +88,8 @@ const pageSize = ref(100);
 const page = ref(1);
 const hasFirstLoading = ref(false);
 const pageSizeOption = ref([30, 50, 100, 300]);
+const filter = ref('');
+const search = ref('');
 
 const apiParams = computed(() => ({
   path: 'edit-forms/objects/search',
@@ -80,6 +98,7 @@ const apiParams = computed(() => ({
     filters: props.filters,
     page: page.value,
     perPage: pageSize.value,
+    search: search.value || undefined,
   },
 }));
 
@@ -114,6 +133,17 @@ const {
   status,
   call,
 } = useApi<ApiType>(apiParams, { defaultData });
+
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+watch(filter, (value) => {
+  if (searchTimer) {
+    clearTimeout(searchTimer);
+  }
+  searchTimer = setTimeout(() => {
+    page.value = 1;
+    search.value = value;
+  }, 250);
+});
 
 const pageNumberChange = (number: number) => {
   page.value = number;
@@ -218,6 +248,40 @@ const addRecord = () => {
   bottom: 0;
   left: 0;
   background: #fff;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.filterWrapper {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+
+.filterInput {
+  padding-right: 34px;
+}
+
+.clearButton {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  cursor: pointer;
+  bottom: 3px;
+  width: 30px;
+  opacity: .5;
+  line-height: 29px;
+  text-align: center;
+
+  &:hover {
+    opacity: 1;
+    text-shadow: 0 0 2px #049372;
+  }
 }
 
 .tablePagination {

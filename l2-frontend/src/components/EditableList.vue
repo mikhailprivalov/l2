@@ -148,16 +148,17 @@ const rows = computed<ListElement[]>(() => {
   return [];
 });
 
+const nameProp = computed(() => props.viewParams?.listName || 'name');
+
+const getName = (e: ListElement) => e[nameProp.value];
+
 const filteredRows = computed<ListElement[]>(() => {
   if (filter.value === '') {
     return rows.value;
   }
-  return rows.value.filter(row => row.name.toLowerCase().includes(filter.value.toLowerCase()));
+  const q = filter.value.toLowerCase();
+  return rows.value.filter(row => String(getName(row) || '').toLowerCase().includes(q));
 });
-
-const nameProp = computed(() => props.viewParams?.listName || 'name');
-
-const getName = (e: ListElement) => e[nameProp.value];
 </script>
 
 <style lang="scss" module>

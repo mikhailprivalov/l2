@@ -1334,6 +1334,8 @@ class ParaclinicInputField(models.Model):
         (43, "Ссылка на документ(ы)"),
         (44, "Параграф"),
         (45, "Адресат"),
+        (46, "Наставляемый"),
+        (47, "Наставник"),
     )
 
     title = models.CharField(max_length=400, help_text="Название поля ввода")

@@ -2141,7 +2141,7 @@ def directions_paraclinic_form(request):
                                 values_to_input = json.loads(values_to_input_by_department)
 
                         value = (
-                            ((field.default_value if field_type not in [3, 11, 13, 14, 30, 42, 44, 45] else '') if not result_field else result_field.value)
+                            ((field.default_value if field_type not in [3, 11, 13, 14, 30, 42, 44, 45, 46, 47] else '') if not result_field else result_field.value)
                             if field_type not in [1, 20]
                             else (get_default_for_field(field_type, field.default_value) if not result_field else result_field.value)
                         )
@@ -2263,7 +2263,7 @@ def get_data_for_layout_template(research_layout, iss, result_fields, fields_tem
                     values_to_input = json.loads(values_to_input_by_department)
 
             value = (
-                ((field.default_value if field_type not in [3, 11, 13, 14, 30] else '') if not result_field else result_field.value)
+                ((field.default_value if field_type not in [3, 11, 13, 14, 30, 46, 47] else '') if not result_field else result_field.value)
                 if field_type not in [1, 20]
                 else (get_default_for_field(field_type, field.default_value) if not result_field else result_field.value)
             )
@@ -2611,7 +2611,7 @@ def directions_paraclinic_result(request):
                 else:
                     f_result.value = field["value"]
                 f_result.field_type = f.field_type
-                if f.field_type in [27, 28, 29, 32, 33, 34, 35, 44, 45]:
+                if f.field_type in [27, 28, 29, 32, 33, 34, 35, 44, 45, 46, 47]:
                     try:
                         val = json.loads(field["value"])
                     except:

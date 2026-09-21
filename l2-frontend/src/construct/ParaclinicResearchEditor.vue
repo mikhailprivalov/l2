@@ -1222,6 +1222,8 @@
                           value="44"
                         >Параграф</option>
                         <option value="45">Адресат</option>
+                        <option value="46">Наставляемый</option>
+                        <option value="47">Наставник</option>
                       </select>
                     </label>
                   </div>

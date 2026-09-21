@@ -11,7 +11,7 @@
               class="form-control"
             >
           </div>
-          <template v-if="kind === 'type'">
+          <template v-if="kind === 'type' || kind === 'case'">
             <div class="field-slot">
               <span class="input-group-addon">Код</span>
               <input
@@ -20,7 +20,10 @@
                 class="form-control"
               >
             </div>
-            <div class="field-slot">
+            <div
+              v-if="kind === 'type'"
+              class="field-slot"
+            >
               <span class="input-group-addon">Группа</span>
               <select
                 v-model.number="groupId"
@@ -132,6 +135,24 @@
           </button>
         </div>
       </div>
+      <div
+        v-else-if="kind === 'case'"
+        class="templates-block"
+      >
+        <div class="template-row">
+          <span class="input-group-addon">Документ по умолчанию</span>
+          <Treeselect
+            v-model="defaultTypeDocumentId"
+            class="treeselect-wide treeselect-34px template-select"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="documentTypeOptions"
+            placeholder="Выберите вид документа"
+            :append-to-body="true"
+            :clearable="true"
+          />
+        </div>
+      </div>
     </div>
     <div class="footer-editor">
       <button
@@ -144,7 +165,7 @@
       <button
         class="btn btn-blue-nb"
         type="button"
-        :disabled="!title.trim()"
+        :disabled="!canSave"
         @click="save"
       >
         Сохранить
@@ -185,7 +206,7 @@ interface CreatorPerson {
 }
 
 const props = defineProps<{
-  kind: 'group' | 'type';
+  kind: 'group' | 'type' | 'case';
   itemId: number;
   titleValue?: string;
   codeValue?: string;
@@ -194,6 +215,7 @@ const props = defineProps<{
   layoutTemplateIdsValue?: number[];
   layoutTemplatesValue?: LayoutTemplateOption[];
   creatorsValue?: CreatorPerson[];
+  defaultTypeDocumentIdValue?: number | null;
   groups?: CatalogGroup[];
 }>();
 
@@ -213,6 +235,18 @@ const templateToAdd = ref<number | null>(null);
 const layoutTemplates = ref<LayoutTemplateOption[]>([]);
 const selectedTemplates = ref<LayoutTemplateOption[]>([]);
 const creators = ref<CreatorPerson[]>([]);
+const defaultTypeDocumentId = ref<number | null>(null);
+const documentTypeOptions = ref<LayoutTemplateOption[]>([]);
+
+const canSave = computed(() => {
+  if (!title.value.trim()) {
+    return false;
+  }
+  if (props.kind === 'case' && !defaultTypeDocumentId.value) {
+    return false;
+  }
+  return true;
+});
 
 const creatorsJson = computed(() => JSON.stringify(creators.value.map(row => ({
   id: row.id,
@@ -257,6 +291,7 @@ const fill = () => {
     fio: row.fio || '',
     department: row.department || '',
   }));
+  defaultTypeDocumentId.value = props.defaultTypeDocumentIdValue || null;
 };
 
 watch(
@@ -269,6 +304,7 @@ watch(
     props.layoutTemplateIdsValue,
     props.layoutTemplatesValue,
     props.creatorsValue,
+    props.defaultTypeDocumentIdValue,
   ],
   fill,
   { immediate: true },
@@ -356,21 +392,48 @@ const loadLayoutTemplates = async () => {
   applySelectedTemplates();
 };
 
-onMounted(loadLayoutTemplates);
+const loadDocumentTypes = async () => {
+  if (props.kind !== 'case') {
+    return;
+  }
+  const { result } = await api('document-manager/types/list');
+  documentTypeOptions.value = (result || []).map((row: { id: number; title: string }) => ({
+    id: row.id,
+    label: row.title,
+  }));
+};
+
+onMounted(() => {
+  loadLayoutTemplates();
+  loadDocumentTypes();
+});
 
 const save = async () => {
-  const endpoint = props.kind === 'group' ? 'document-manager/groups/update' : 'document-manager/types/update';
+  let endpoint = 'document-manager/types/update';
+  if (props.kind === 'group') {
+    endpoint = 'document-manager/groups/update';
+  } else if (props.kind === 'case') {
+    endpoint = 'document-manager/cases/update';
+  }
   await store.dispatch(actions.INC_LOADING);
   try {
-    const result = await api(endpoint, {
-      id: props.itemId,
-      title: title.value,
-      code: code.value,
-      groupId: groupId.value,
-      layoutTemplateId: selectedTemplates.value[0]?.id ?? null,
-      layoutTemplateIds: selectedTemplates.value.map(row => row.id),
-      creatorIds: creators.value.map(row => row.id),
-    });
+    const payload = props.kind === 'case'
+      ? {
+        id: props.itemId,
+        title: title.value,
+        code: code.value,
+        defaultTypeDocumentId: defaultTypeDocumentId.value,
+      }
+      : {
+        id: props.itemId,
+        title: title.value,
+        code: code.value,
+        groupId: groupId.value,
+        layoutTemplateId: selectedTemplates.value[0]?.id ?? null,
+        layoutTemplateIds: selectedTemplates.value.map(row => row.id),
+        creatorIds: creators.value.map(row => row.id),
+      };
+    const result = await api(endpoint, payload);
     if (result?.ok) {
       root.$emit('msg', 'ok', 'Сохранено');
       emit('saved', { id: result.id });

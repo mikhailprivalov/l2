@@ -9,6 +9,7 @@ from document_management.models import (
     DocumentReview,
     Documents,
     GroupDocuments,
+    TypeCases,
     TypeDocuments,
 )
 from laboratory.decorators import group_required
@@ -89,6 +90,27 @@ def types_update(request):
         data.get("layoutTemplateId"),
         data.get("layoutTemplateIds"),
         data.get("creatorIds"),
+    )
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def cases_list(request):
+    return JsonResponse({"result": TypeCases.get_list()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def cases_update(request):
+    data = _request_data(request)
+    result = TypeCases.save_case(
+        data.get("id", -1),
+        data.get("title", ""),
+        data.get("code", ""),
+        data.get("defaultTypeDocumentId"),
     )
     if result.get("ok"):
         return status_response(True, data=result)

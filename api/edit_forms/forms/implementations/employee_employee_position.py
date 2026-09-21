@@ -49,6 +49,8 @@ class EmployeeEmployeePositionForm(BaseForm, HospitalObjectView[EmployeePosition
             'rate': object.rate,
             'fullName': str(object),
             'isActive': object.is_active,
+            'isMentee': object.is_mentee,
+            'isMentor': object.is_mentor,
             'isActiveText': 'да' if object.is_active else 'нет',
             'createdAt': strfdatetime(object.created_at, "%d.%m.%Y %X"),
             'whoCreate': object.doctorprofile_created.get_fio() if object.doctorprofile_created else None,
@@ -157,20 +159,18 @@ class EmployeeEmployeePositionForm(BaseForm, HospitalObjectView[EmployeePosition
                 {"label": "Недельная норма, мин", "validation-name": "Недельная норма", "name": "weeklyHoursNorm", "type": "number", "min": "0", "step": "1"},
                 {"label": "Рабочих дней в неделю", "validation-name": "Рабочих дней в неделю", "name": "workDaysPerWeek", "type": "number", "min": "1", "max": "7", "step": "1"},
             ),
+            _form_row(
+                {"label": "Активна", "name": "isActive", "type": "checkbox"},
+                {"label": "Наставляемый", "name": "isMentee", "type": "checkbox"},
+                {"label": "Наставник", "name": "isMentor", "type": "checkbox"},
+            ),
         ]
-
-        if employee_position:
-            schema.append(
-                {
-                    "label": "Должность сотрудника активна",
-                    "name": "isActive",
-                    "type": "checkbox",
-                }
-            )
 
         values = {
             "rate": employee_position.rate if employee_position else "1.0",
             "isActive": employee_position.is_active if employee_position else True,
+            "isMentee": employee_position.is_mentee if employee_position else False,
+            "isMentor": employee_position.is_mentor if employee_position else False,
             "employeeId": employee_position.employee_id if employee_position else None,
             "positionId": employee_position.position_id if employee_position else None,
             "tabelNumber": employee_position.tabel_number if employee_position else "",
@@ -236,6 +236,13 @@ class EmployeeEmployeePositionForm(BaseForm, HospitalObjectView[EmployeePosition
         rate = float(form_values.get('rate', -1))
         is_active = form_values.get('isActive', True)
         filters = form_data.get('filters') or {}
+
+        if form_values.get('isMentee') and form_values.get('isMentor'):
+            return {
+                "ok": False,
+                "message": "Можно выбрать только одно: Наставляемый или Наставник",
+                "result": {},
+            }
 
         department_id = filters.get('department_id')
         department: Department
