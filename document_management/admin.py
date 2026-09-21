@@ -8,6 +8,7 @@ from document_management.models import (
     DocumentRecent,
     DocumentReview,
     GroupDocuments,
+    TypeCases,
     TypeDocumentCreator,
     TypeDocumentLayoutTemplate,
     TypeDocuments,
@@ -39,6 +40,13 @@ class TypeDocumentsAdmin(admin.ModelAdmin):
     search_fields = ("title", "code")
     list_filter = ("group_document",)
     inlines = (TypeDocumentLayoutTemplateInline, TypeDocumentCreatorInline)
+
+
+@admin.register(TypeCases)
+class TypeCasesAdmin(admin.ModelAdmin):
+    list_display = ("pk", "title", "code", "default_type_document")
+    search_fields = ("title", "code")
+    list_filter = ("default_type_document",)
 
 
 @admin.register(DocumentFieldGroups)

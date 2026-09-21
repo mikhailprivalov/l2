@@ -45,3 +45,16 @@ def get_employees(request):
     employees = EmployeePosition.get_employee_position(organization_id, departments_ids, position_ids, employment_form_ids)
     result = employees
     return JsonResponse({"result": result})
+
+
+@login_required
+def mentees(request):
+    hospital_id = request.user.doctorprofile.get_hospital_id()
+    return JsonResponse({"result": EmployeePosition.get_mentees_tree(hospital_id)})
+
+
+@login_required
+def mentors(request):
+    request_data = json.loads(request.body) if request.body else {}
+    hospital_id = request.user.doctorprofile.get_hospital_id()
+    return JsonResponse({"result": EmployeePosition.get_mentors(hospital_id, request_data.get("departmentId"))})

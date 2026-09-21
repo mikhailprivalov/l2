@@ -86,6 +86,8 @@
                       39: 1,
                       42: 1,
                       43: 1,
+                      46: 1,
+                      47: 1,
                     }[field.field_type]
                 "
                 :pk="field.pk"
@@ -534,6 +536,27 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 46"
+                class="field-value"
+              >
+                <MenteeMentorField
+                  v-model="field.value"
+                  kind="mentee"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                />
+              </div>
+              <div
+                v-else-if="field.field_type === 47"
+                class="field-value"
+              >
+                <MenteeMentorField
+                  v-model="field.value"
+                  kind="mentor"
+                  :department-id="menteeDepartmentId"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -559,6 +582,7 @@ import LPress from '@/ui-cards/LPress.vue';
 import FileResultField from '@/forms/Fields/FileResultField.vue';
 import ParagraphResultField from '@/forms/Fields/ParagraphResultField.vue';
 import AddresseeField from '@/forms/Fields/AddresseeField.vue';
+import MenteeMentorField from '@/forms/Fields/MenteeMentorField.vue';
 
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
@@ -595,6 +619,15 @@ function isFieldValueEmpty(field: { value: string; field_type: number }): boolea
     }
   }
 
+  if (field.field_type === 46 || field.field_type === 47) {
+    try {
+      const data = JSON.parse(field.value);
+      return !data?.id;
+    } catch {
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -604,6 +637,7 @@ export default {
     FileResultField,
     ParagraphResultField,
     AddresseeField,
+    MenteeMentorField,
     FastTemplates,
     InputTemplates,
     VisibilityGroupWrapper,
@@ -708,6 +742,23 @@ export default {
     userGroups() {
       return this.$store.getters.user_data.groups || [];
     },
+    menteeDepartmentId() {
+      for (const group of this.research.groups || []) {
+        for (const field of group.fields || []) {
+          if (field.field_type === 46 && field.value) {
+            try {
+              const data = JSON.parse(field.value);
+              if (data?.departmentId) {
+                return data.departmentId;
+              }
+            } catch {
+              return null;
+            }
+          }
+        }
+      }
+      return null;
+    },
   },
   watch: {
     groups: {
@@ -748,6 +799,9 @@ export default {
       } else if (field.field_type === 44 || field.field_type === 45) {
         // eslint-disable-next-line no-param-reassign
         field.value = '[]';
+      } else if (field.field_type === 46 || field.field_type === 47) {
+        // eslint-disable-next-line no-param-reassign
+        field.value = '';
       } else {
         // eslint-disable-next-line no-param-reassign
         field.value = '';

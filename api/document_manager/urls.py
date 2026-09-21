@@ -7,6 +7,8 @@ urlpatterns = [
     path('groups/update', views.groups_update),
     path('types/list', views.types_list),
     path('types/update', views.types_update),
+    path('cases/list', views.cases_list),
+    path('cases/update', views.cases_update),
     path('structure/details', views.structure_details),
     path('structure/update', views.structure_update),
     path('documents/list', views.documents_list),

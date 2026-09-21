@@ -177,6 +177,18 @@ watch(data, () => {
   }, 100);
 });
 
+watch(() => formValues.value.isMentee, (now) => {
+  if (now && formValues.value.isMentor) {
+    formValues.value.isMentor = false;
+  }
+});
+
+watch(() => formValues.value.isMentor, (now) => {
+  if (now && formValues.value.isMentee) {
+    formValues.value.isMentee = false;
+  }
+});
+
 const apiSaveParams = computed(() => ({
   path: 'edit-forms/save',
   data: {

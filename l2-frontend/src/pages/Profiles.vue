@@ -964,16 +964,13 @@
                 class="treeselect-nbr treeselect-wide treeselect-34px"
                 :multiple="true"
                 :disable-branch-nodes="true"
-                :async="true"
-                :load-options="loadScheduleEmployeePositionsAsyncSearch"
-                :default-options="scheduleEmployeePositionsDefaultOptions"
+                :search-nested="true"
+                :options="employeePositionsTree"
                 placeholder="Выберите сотрудников"
                 :append-to-body="true"
                 :clearable="true"
-                :cache-options="false"
-                loading-text="Загрузка"
                 no-results-text="Не найдено"
-                search-prompt-text="Начните писать для поиска"
+                no-options-text="Нет активных сотрудников"
               />
             </div>
           </div>
@@ -1040,7 +1037,7 @@
 </template>
 
 <script setup lang="ts">
-import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
+import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { debounce } from 'lodash';
 import {
@@ -1135,8 +1132,8 @@ const resourceTemplatesList = ref([]);
 const currentResourcePk = ref(-1);
 const currentResourceTitle = ref('');
 const employeeDepartments = ref([]);
+const employeePositionsTree = ref([]);
 const equipmentOptions = ref([]);
-const scheduleEmployeePositionsDefaultOptions = ref(null);
 const user = ref({
   username: '',
   password: '',
@@ -1326,31 +1323,9 @@ const loadUsers = async (prevClr = false) => {
   districts.value = data.districts;
   doctorProfiles.value = data.doctorProfiles;
   employeeDepartments.value = data.employee_departments;
+  employeePositionsTree.value = data.employee_positions_tree || [];
   equipmentOptions.value = data.equipment_options || [];
   await store.dispatch(actions.DEC_LOADING);
-};
-
-const loadScheduleEmployeePositionsDefaultOptions = async (employeePositionIds) => {
-  if (!employeePositionIds?.length) {
-    scheduleEmployeePositionsDefaultOptions.value = null;
-    return;
-  }
-  const { data } = await api(
-    `/employee-positions-search?ids=${employeePositionIds.join(',')}&hospital_pk=${selectedHospital.value}`,
-  );
-  scheduleEmployeePositionsDefaultOptions.value = data.map((item) => ({ id: item.id, label: item.label }));
-};
-
-const loadScheduleEmployeePositionsAsyncSearch = async ({ action, searchQuery, callback }) => {
-  if (action === ASYNC_SEARCH) {
-    const { data } = await api(
-      `/employee-positions-search?query=${encodeURIComponent(searchQuery)}&hospital_pk=${selectedHospital.value}`,
-    );
-    callback(
-      null,
-      data.map((item) => ({ id: item.id, label: item.label })),
-    );
-  }
 };
 
 const reloadResources = async () => {
@@ -1449,7 +1424,6 @@ const close = async () => {
     hospital_protocol_hospitals: [],
     doctor_equipment: [],
   };
-  scheduleEmployeePositionsDefaultOptions.value = null;
   currentResourcePk.value = -1;
   currentResourceTitle.value = '';
   resourceResearches.value = [];
@@ -1473,7 +1447,6 @@ const open = async (pk, dep = null) => {
   currentResourceTitle.value = '';
   resourceResearches.value = [];
   resourceTemplatesList.value = user.value.resource_schedule;
-  await loadScheduleEmployeePositionsDefaultOptions(user.value.schedule_employee_positions);
   await store.dispatch(actions.DEC_LOADING);
   openPk.value = pk;
 };

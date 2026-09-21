@@ -36,6 +36,7 @@ class Employee(models.Model):
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_updated'
     )
     snils = models.CharField(max_length=11, verbose_name="СНИЛС", help_text='12345678912', default=None, blank=True, null=True)
+    date_birth = models.DateField(verbose_name="Дата рождения", blank=True, null=True, default=None)
 
     def __str__(self):
         return f'{self.family} {self.name} {self.patronymic} ({self.hospital})'.strip()
@@ -49,6 +50,8 @@ class Employee(models.Model):
             'patronymic': self.patronymic,
             'hospitalId': self.hospital_id,
             'isActive': self.is_active,
+            'snils': self.snils or "",
+            'dateBirth': self.date_birth.strftime("%Y-%m-%d") if self.date_birth else "",
             'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
             'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
@@ -75,10 +78,18 @@ class Employee(models.Model):
         return [employee.json for employee in paginator.get_page(page)]
 
     @staticmethod
-    def add(hospital_id, family, name, patronymic, who_created, as_object=False):
+    def add(hospital_id, family, name, patronymic, who_created, as_object=False, date_birth=None, snils=None):
         family, name, patronymic = Employee.normalize_values(family, name, patronymic)
         Employee.validate_values(hospital_id, family, name, patronymic)
-        employee = Employee(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic, doctorprofile_created=who_created)
+        employee = Employee(
+            hospital_id=hospital_id,
+            family=family,
+            name=name,
+            patronymic=patronymic,
+            doctorprofile_created=who_created,
+            date_birth=date_birth,
+            snils=snils,
+        )
         employee.save()
         Log.log(employee.pk, 121104, who_created, employee.json)
         if as_object:
@@ -86,7 +97,7 @@ class Employee(models.Model):
         return employee.json
 
     @staticmethod
-    def edit(hospital_id, employee_id, family, name, patronymic, is_active, who_updated, as_object=False):
+    def edit(hospital_id, employee_id, family, name, patronymic, is_active, who_updated, as_object=False, date_birth=None, snils=None):
         family, name, patronymic = Employee.normalize_values(family, name, patronymic)
         employee = Employee.objects.get(id=employee_id, hospital_id=hospital_id)
         Employee.validate_values(employee.hospital_id, family, name, patronymic, current_id=employee_id)
@@ -94,6 +105,8 @@ class Employee(models.Model):
         employee.name = name
         employee.patronymic = patronymic
         employee.is_active = is_active
+        employee.date_birth = date_birth
+        employee.snils = snils
         employee.doctorprofile_updated = who_updated
         employee.save()
         Log.log(employee.pk, 121105, who_updated, employee.json)
@@ -104,6 +117,22 @@ class Employee(models.Model):
     @staticmethod
     def normalize_values(family, name, patronymic):
         return family.strip(), name.strip(), patronymic.strip()
+
+    @staticmethod
+    def parse_date_birth(value):
+        if not value:
+            return None
+        parsed = try_strptime(value, formats=("%Y-%m-%d", "%d.%m.%Y"))
+        return parsed.date() if parsed else None
+
+    @staticmethod
+    def parse_snils(value):
+        snils = (value or "").strip()
+        if not snils:
+            return None
+        if len(snils) > 11:
+            raise ValueError("СНИЛС должен содержать не более 11 символов")
+        return snils
 
     @staticmethod
     def validate_values(hospital_id, family, name, patronymic, current_id=None):
@@ -455,6 +484,8 @@ class EmployeePosition(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Отдел')
     rate = models.FloatField(verbose_name='Ставка')
     is_active = models.BooleanField(default=True, verbose_name='Активна')
+    is_mentee = models.BooleanField(default=False, verbose_name='Наставляемый')
+    is_mentor = models.BooleanField(default=False, verbose_name='Наставник')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     doctorprofile_created = models.ForeignKey(
@@ -487,6 +518,8 @@ class EmployeePosition(models.Model):
             'departmentId': self.department_id,
             'rate': self.rate,
             'isActive': self.is_active,
+            'isMentee': self.is_mentee,
+            'isMentor': self.is_mentor,
             'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
             'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
@@ -513,6 +546,82 @@ class EmployeePosition(models.Model):
             )
         paginator = Paginator(employee_positions, per_page)
         return [employee_position.json for employee_position in paginator.get_page(page)]
+
+    @staticmethod
+    def _employee_fio(employee):
+        return f"{employee.family} {employee.name} {employee.patronymic or ''}".strip()
+
+    @staticmethod
+    def _format_date(value):
+        if not value:
+            return ""
+        return value.strftime("%d.%m.%Y")
+
+    @staticmethod
+    def _not_dismissed_q():
+        today = timezone.now().date()
+        return models.Q(date_dismissal__isnull=True) | models.Q(date_dismissal__gt=today)
+
+    @staticmethod
+    def _active_role_positions(hospital_id, role_field: str):
+        return (
+            EmployeePosition.objects.filter(
+                **{role_field: True},
+                is_active=True,
+                employee__is_active=True,
+                employee__hospital_id=hospital_id,
+                department__is_active=True,
+            )
+            .filter(EmployeePosition._not_dismissed_q())
+            .select_related("employee", "position", "department")
+            .order_by("department__name", "employee__family", "employee__name", "employee__patronymic", "pk")
+        )
+
+    @staticmethod
+    def get_mentees_tree(hospital_id):
+        rows = list(EmployeePosition._active_role_positions(hospital_id, "is_mentee"))
+        groups = []
+        groups_by_id = {}
+        for row in rows:
+            department = row.department
+            group = groups_by_id.get(department.pk)
+            if group is None:
+                group = {"id": f"dept-{department.pk}", "label": department.name or "", "children": []}
+                groups_by_id[department.pk] = group
+                groups.append(group)
+            fio = EmployeePosition._employee_fio(row.employee)
+            date_employment = EmployeePosition._format_date(row.date_employment)
+            label = f"{fio} {date_employment}".strip() if date_employment else fio
+            group["children"].append(
+                {
+                    "id": row.pk,
+                    "label": label,
+                    "fio": fio,
+                    "departmentId": department.pk,
+                    "dateBirth": EmployeePosition._format_date(row.employee.date_birth),
+                    "dateEmployment": date_employment,
+                }
+            )
+        return groups
+
+    @staticmethod
+    def get_mentors(hospital_id, department_id):
+        if department_id in (None, "", -1, "-1"):
+            return []
+        try:
+            department_id = int(department_id)
+        except (TypeError, ValueError):
+            return []
+        rows = EmployeePosition._active_role_positions(hospital_id, "is_mentor").filter(department_id=department_id)
+        return [
+            {
+                "id": row.pk,
+                "label": EmployeePosition._employee_fio(row.employee),
+                "fio": EmployeePosition._employee_fio(row.employee),
+                "departmentId": row.department_id,
+            }
+            for row in rows
+        ]
 
     @staticmethod
     def _parse_form_date(value):
@@ -554,6 +663,12 @@ class EmployeePosition(models.Model):
         employee_position.weekly_hours_norm = EmployeePosition._parse_form_int(form_values.get("weeklyHoursNorm"))
         employee_position.work_days_per_week = EmployeePosition._parse_form_int(form_values.get("workDaysPerWeek"))
         employee_position.work_start = EmployeePosition._parse_form_time(form_values.get("workStart"))
+        if "isActive" in form_values:
+            employee_position.is_active = bool(form_values.get("isActive"))
+        employee_position.is_mentee = bool(form_values.get("isMentee", False))
+        employee_position.is_mentor = bool(form_values.get("isMentor", False))
+        if employee_position.is_mentee and employee_position.is_mentor:
+            raise ValueError("Можно выбрать только одно: Наставляемый или Наставник")
 
     @staticmethod
     def _tabel_number_from_form(form_values):

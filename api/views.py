@@ -1495,6 +1495,7 @@ def users_view(request):
     districts = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in distrits_qs]]
 
     employee_departments = employees_models.Department.get_active(hospital_pk)
+    employee_positions_tree = users.DoctorProfileEmployeePosition.get_employee_positions_tree(hospital_pk)
 
     if request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control:
         equipment_hospital_ids = list(Hospitals.objects.filter(hide=False).values_list("pk", flat=True))
@@ -1510,6 +1511,7 @@ def users_view(request):
             "positions": positions,
             "districts": districts,
             "employee_departments": employee_departments,
+            "employee_positions_tree": employee_positions_tree,
             "equipment_options": equipment_options,
         }
     )

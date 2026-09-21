@@ -11,6 +11,8 @@ from users.models import DoctorProfile
 
 LAYOUT_TEMPLATE_FIELD_TYPE = 41
 ADDRESSEE_FIELD_TYPE = 45
+MENTEE_FIELD_TYPE = 46
+MENTOR_FIELD_TYPE = 47
 
 
 def layout_template_is_simple(research):
@@ -496,6 +498,65 @@ class TypeDocumentCreator(models.Model):
 
     def __str__(self):
         return f"{self.type_document} {self.doctor}"
+
+
+class TypeCases(models.Model):
+    title = models.CharField(max_length=128, blank=True, null=True)
+    code = models.CharField(max_length=55, blank=True, null=True)
+    default_type_document = models.ForeignKey(
+        TypeDocuments,
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Документ по умолчанию при создании дела",
+        on_delete=models.SET_NULL,
+    )
+
+    class Meta:
+        verbose_name = "Вид дела"
+        verbose_name_plural = "Виды дел"
+
+    def __str__(self):
+        return f"{self.title}"
+
+    @property
+    def json(self):
+        type_doc = self.default_type_document
+        return {
+            "id": self.id,
+            "title": self.title or "",
+            "code": self.code or "",
+            "defaultTypeDocumentId": self.default_type_document_id,
+            "defaultTypeDocumentTitle": type_doc.title if type_doc else "",
+        }
+
+    @staticmethod
+    def get_list():
+        qs = TypeCases.objects.select_related("default_type_document").order_by("title", "pk")
+        return [row.json for row in qs]
+
+    @staticmethod
+    def save_case(pk, title, code="", default_type_document_id=None):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        if default_type_document_id in (None, "", -1, "-1"):
+            return {"ok": False, "message": "Укажите документ по умолчанию"}
+        type_doc = TypeDocuments.objects.filter(pk=default_type_document_id).first()
+        if not type_doc:
+            return {"ok": False, "message": "Вид документа не найден"}
+        if pk in (None, -1, "-1"):
+            obj = TypeCases(title=title, code=code or "", default_type_document=type_doc)
+        else:
+            obj = TypeCases.objects.filter(pk=pk).first()
+            if not obj:
+                return {"ok": False, "message": "Вид дела не найден"}
+            obj.title = title
+            obj.code = code or ""
+            obj.default_type_document = type_doc
+        obj.save()
+        return {"ok": True, "id": obj.pk, "title": obj.title}
 
 
 class DocumentFieldGroups(models.Model):
@@ -1327,7 +1388,7 @@ class Documents(models.Model):
                 if field.get("required") and field_type in [10, 12] and "- Не выбрано" not in values_to_input:
                     values_to_input = ["- Не выбрано", *values_to_input]
                 default_value = field.get("default_value") or ""
-                if field_type in [3, 11, 13, 14, 30, 42, 44, ADDRESSEE_FIELD_TYPE]:
+                if field_type in [3, 11, 13, 14, 30, 42, 44, ADDRESSEE_FIELD_TYPE, MENTEE_FIELD_TYPE, MENTOR_FIELD_TYPE]:
                     default_value = ""
                 key = str(field_pk)
                 if result_field:
@@ -1486,7 +1547,7 @@ class Documents(models.Model):
                             if doctor_id not in addressee_seen:
                                 addressee_seen.add(doctor_id)
                                 addressee_ids.append(doctor_id)
-                    if field_type in [27, 28, 29, 32, 33, 34, 35, 44, ADDRESSEE_FIELD_TYPE]:
+                    if field_type in [27, 28, 29, 32, 33, 34, 35, 44, ADDRESSEE_FIELD_TYPE, MENTEE_FIELD_TYPE, MENTOR_FIELD_TYPE]:
                         if isinstance(value, (dict, list)):
                             val = value
                         else:

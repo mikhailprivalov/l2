@@ -26,7 +26,7 @@ from .models import (
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('hospital', 'family', 'name', 'patronymic', 'is_active')
+    list_display = ('hospital', 'family', 'name', 'patronymic', 'date_birth', 'snils', 'is_active')
     list_filter = ('hospital', 'is_active')
     search_fields = ('family', 'name', 'patronymic', 'snils', 'hospital__title')
     ordering = ('hospital', 'family', 'name', 'patronymic', 'is_active')
@@ -67,8 +67,8 @@ class TypeWorkTimeEmployeeAdmin(admin.ModelAdmin):
 
 @admin.register(EmployeePosition)
 class EmployeePositionAdmin(admin.ModelAdmin):
-    list_display = ('employee', 'department', 'position', 'is_active')
-    list_filter = ('department', 'position', 'is_active')
+    list_display = ('employee', 'department', 'position', 'is_active', 'is_mentee', 'is_mentor')
+    list_filter = ('department', 'position', 'is_active', 'is_mentee', 'is_mentor')
     search_fields = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'tabel_number')
     ordering = ('employee', 'department', 'position', 'is_active')
     list_select_related = ('employee', 'employee__hospital', 'department', 'position')

@@ -18,6 +18,8 @@ class EmployeeEmployeeForm(BaseForm, HospitalObjectView[Employee]):
             'patronymic': object.patronymic,
             'fullName': f"{object.family} {object.name} {object.patronymic}".strip(),
             'isActive': object.is_active,
+            'snils': object.snils or "",
+            'dateBirth': object.date_birth.strftime("%Y-%m-%d") if object.date_birth else "",
             'createdAt': strfdatetime(object.created_at, "%d.%m.%Y %X"),
             'whoCreate': object.doctorprofile_created.get_fio() if object.doctorprofile_created else None,
             'updatedAt': strfdatetime(object.updated_at, "%d.%m.%Y %X") if object.updated_at else None,
@@ -60,6 +62,8 @@ class EmployeeEmployeeForm(BaseForm, HospitalObjectView[Employee]):
             {"label": "Фамилия", "validation-name": "Фамилия", "name": "family", "validation": "required:trim"},
             {"label": "Имя", "validation-name": "Имя", "name": "name", "validation": "required:trim"},
             {"label": "Отчество", "validation-name": "Отчество", "name": "patronymic", "validation": ""},
+            {"label": "Дата рождения", "name": "dateBirth", "type": "date"},
+            {"label": "СНИЛС", "name": "snils", "type": "text"},
         ]
 
         if employee:
@@ -75,6 +79,8 @@ class EmployeeEmployeeForm(BaseForm, HospitalObjectView[Employee]):
             "family": employee.family if employee else "",
             "name": employee.name if employee else "",
             "patronymic": employee.patronymic if employee else "",
+            "dateBirth": employee.date_birth.strftime("%Y-%m-%d") if employee and employee.date_birth else "",
+            "snils": employee.snils if employee else "",
             "isActive": employee.is_active if employee else True,
         }
 
@@ -96,12 +102,14 @@ class EmployeeEmployeeForm(BaseForm, HospitalObjectView[Employee]):
         name = form_values.get('name')
         patronymic = form_values.get('patronymic')
         is_active = form_values.get('isActive', True)
+        date_birth = Employee.parse_date_birth(form_values.get('dateBirth'))
+        snils = Employee.parse_snils(form_values.get('snils'))
 
         try:
             if employee_id is None:
-                employee = Employee.add(hospital_id, family, name, patronymic, doctorprofile, as_object=True)
+                employee = Employee.add(hospital_id, family, name, patronymic, doctorprofile, as_object=True, date_birth=date_birth, snils=snils)
             else:
-                employee = Employee.edit(hospital_id, employee_id, family, name, patronymic, is_active, doctorprofile, as_object=True)
+                employee = Employee.edit(hospital_id, employee_id, family, name, patronymic, is_active, doctorprofile, as_object=True, date_birth=date_birth, snils=snils)
         except ValueError as e:
             return {
                 "ok": False,

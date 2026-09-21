@@ -61,10 +61,10 @@
               {{ row.code }}
             </span>
             <span
-              v-if="row.groupTitle"
+              v-if="row.groupTitle || row.defaultTypeDocumentTitle"
               class="object-row__sub"
             >
-              {{ row.groupTitle }}
+              {{ row.groupTitle || row.defaultTypeDocumentTitle }}
             </span>
           </div>
         </div>
@@ -83,6 +83,7 @@
         :layout-template-ids-value="selectedItem?.layoutTemplateIds"
         :layout-templates-value="selectedItem?.layoutTemplates"
         :creators-value="selectedItem?.creators"
+        :default-type-document-id-value="selectedItem?.defaultTypeDocumentId"
         :groups="groups"
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
@@ -145,11 +146,13 @@ interface CatalogItem {
   layoutTemplateIds?: number[];
   layoutTemplates?: { id: number; label: string }[];
   creators?: { id: number; fio: string; department?: string }[];
+  defaultTypeDocumentId?: number | null;
+  defaultTypeDocumentTitle?: string;
   hide?: boolean;
 }
 
 const LAYOUT_TEMPLATE_DEPARTMENT = -17;
-const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'skeleton', 'addressees'];
+const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'skeleton', 'addressees', 'cases'];
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -171,8 +174,17 @@ const canAdd = computed(() => (
   || selectedNavId.value === 'document_types'
   || selectedNavId.value === 'document_templates'
   || selectedNavId.value === 'addressees'
+  || selectedNavId.value === 'cases'
 ));
-const catalogKind = computed<'group' | 'type'>(() => (selectedNavId.value === 'document_groups' ? 'group' : 'type'));
+const catalogKind = computed<'group' | 'type' | 'case'>(() => {
+  if (selectedNavId.value === 'document_groups') {
+    return 'group';
+  }
+  if (selectedNavId.value === 'cases') {
+    return 'case';
+  }
+  return 'type';
+});
 
 const filteredItems = computed(() => {
   const search = titleFilter.value.trim().toLowerCase();
@@ -188,8 +200,11 @@ const filteredItems = computed(() => {
 const selectedItem = computed(() => items.value.find(row => row.id === selectedId.value) || null);
 
 const showCatalogEditor = computed(
-  () => (selectedNavId.value === 'document_groups' || selectedNavId.value === 'document_types')
-    && selectedId.value !== null,
+  () => (
+    selectedNavId.value === 'document_groups'
+    || selectedNavId.value === 'document_types'
+    || selectedNavId.value === 'cases'
+  ) && selectedId.value !== null,
 );
 
 const showStructureEditor = computed(
@@ -251,6 +266,9 @@ const loadItems = async () => {
         includeHidden: true,
         globalOnly: true,
       });
+      items.value = result || [];
+    } else if (selectedNavId.value === 'cases') {
+      const { result } = await api('document-manager/cases/list');
       items.value = result || [];
     } else {
       await loadGroups();
