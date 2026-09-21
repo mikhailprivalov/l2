@@ -1387,6 +1387,7 @@ class Napravleniya(models.Model):
         slot_fact_id=None,
         id_in_hospital=None,
         is_cito=False,
+        force_one_direction=False,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if slot_fact_id and not is_cito:
@@ -1592,7 +1593,10 @@ class Napravleniya(models.Model):
                         result["messageLimit"] = f"{result.get('messageLimit', '')} \n {limit_research_to_assign[v]}"
                         continue
 
-                    if external_order:
+                    if force_one_direction:
+                        dir_group = 888888888
+                        research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
+                    elif external_order:
                         dir_group = external_order.order_number
                         research_data_params = None
                     else:

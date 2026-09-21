@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlencode
 import requests
 
 from appconf.manager import SettingManager
-from laboratory.settings import API_SERVER_SEND_PARACLINIC_DIRECTION, API_SERVER_SEND_GISTOLOGY_RESULT, API_SERVER_SEND_STATIONAR_RESULT
+from laboratory.settings import API_SERVER_SEND_PARACLINIC_DIRECTION, API_SERVER_SEND_GISTOLOGY_RESULT, API_SERVER_SEND_STATIONAR_RESULT, URL_REQUEST_GET_DIRECTIONS_FROM_ECP
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,13 @@ def search_patient_to_ecp(data) -> dict:
 def send_paraclinic_direction_to_ecp(directions) -> dict:
     url = API_SERVER_SEND_PARACLINIC_DIRECTION
     return make_request(f"{url}/send-paraclinic-direction", data=json.dumps({"dirsToUpload": directions}), gen_url=False, auth_token="a-super-secret-key")
+
+
+def get_directions_from_ecp(data) -> dict:
+    url = URL_REQUEST_GET_DIRECTIONS_FROM_ECP
+    if not url:
+        return {}
+    return make_request(url, data=json.dumps(data), gen_url=False, auth_token="a-super-secret-key")
 
 
 def send_gistology_direction_to_ecp(directions) -> dict:

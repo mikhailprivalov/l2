@@ -26,6 +26,8 @@ urlpatterns = [
     path('tubes/get-tubes', views.get_tubes),
     path('tubes/update-tube', views.update_tube),
     path('tubes/create-tube', views.create_tube),
+    path('tubes/get-barcode-settings', views.get_tube_barcode_settings),
+    path('tubes/save-barcode-settings', views.save_tube_barcode_settings),
     path('descriptive/get-ref-books', views.get_descriptive_ref_books),
     path('dou/get-nav-buttons', views.get_dou_nav_buttons),
 ]

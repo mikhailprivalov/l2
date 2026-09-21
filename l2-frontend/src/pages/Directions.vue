@@ -98,13 +98,13 @@
             <span>Отчёт по результатам</span>
           </a>
 
-          <router-link
-            v-if="can_create_tickets"
-            :to="ticket_url"
+          <a
+            href="#"
             class="a-under"
+            @click.prevent="loadFromEcp"
           >
-            <span>Создать статталон</span>
-          </router-link>
+            <span>Загрузить из ЕЦП</span>
+          </a>
         </div>
       </PatientPicker>
     </div>
@@ -205,6 +205,11 @@
       v-if="show_rmis_directions && selected_card.is_rmis"
       :card="selected_card"
     />
+    <EcpDirectionsViewer
+      v-if="show_ecp_directions && ecpDirectionData"
+      :card="selected_card"
+      :data="ecpDirectionData"
+    />
   </div>
 </template>
 
@@ -217,6 +222,7 @@ import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 import DirectionsHistory from '@/ui-cards/DirectionsHistory/index.vue';
 import ResultsViewer from '@/modals/ResultsViewer.vue';
 import RmisDirectionsViewer from '@/modals/RmisDirectionsViewer.vue';
+import EcpDirectionsViewer from '@/modals/EcpDirectionsViewer.vue';
 import LastResult from '@/ui-cards/LastResult.vue';
 import DirectAndPlanSwitcher from '@/ui-cards/DirectAndPlanSwitcher.vue';
 import ServiceScheduleEcp from '@/ui-cards/ServiceScheduleEcp.vue';
@@ -230,6 +236,7 @@ import {
 import CallDoctor from '@/ui-cards/CallDoctor.vue';
 import ListWaitCreator from '@/ui-cards/ListWaitCreator.vue';
 import { valuesToString } from '@/utils';
+import * as actions from '@/store/action-types';
 
 export default {
   name: 'Directions',
@@ -243,6 +250,7 @@ export default {
     DirectionsHistory,
     ResultsViewer,
     RmisDirectionsViewer,
+    EcpDirectionsViewer,
     LastResult,
     ServiceScheduleEcp,
   },
@@ -282,6 +290,8 @@ export default {
       show_results_pk: -1,
       show_rmis_directions: false,
       show_rmis_send_directions: false,
+      show_ecp_directions: false,
+      ecpDirectionData: null,
       diagnos: '',
       fin: -1,
       hasGrid: window.Modernizr.cssgrid,
@@ -304,30 +314,9 @@ export default {
     patient_valid() {
       return this.selected_card.pk !== -1;
     },
-    ticket_url() {
-      return {
-        name: 'statistics-tickets',
-        query: {
-          base_pk: this.selected_card.base.pk,
-          card_pk: this.selected_card.pk,
-          ofname: this.selected_card.ofname,
-          ofname_dep: this.selected_card.ofname_dep,
-        },
-      };
-    },
     report_url() {
       // eslint-disable-next-line max-len
       return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}&base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`;
-    },
-    can_create_tickets() {
-      if ('groups' in this.$store.getters.user_data) {
-        for (const g of this.$store.getters.user_data.groups) {
-          if (g === 'Оформление статталонов' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
-            return true;
-          }
-        }
-      }
-      return false;
     },
     l2_list_wait() {
       return this.$store.getters.modules.l2_list_wait;
@@ -370,6 +359,11 @@ export default {
     this.$root.$on('hide_rmis_directions', () => {
       this.show_rmis_directions = false;
       this.show_rmis_send_directions = false;
+    });
+
+    this.$root.$on('hide_ecp_directions', () => {
+      this.show_ecp_directions = false;
+      this.ecpDirectionData = null;
     });
 
     this.$root.$on('update_diagnos', (diagnos) => {
@@ -438,6 +432,23 @@ export default {
     },
     do_show_rmis_directions() {
       this.show_rmis_directions = true;
+    },
+    async loadFromEcp() {
+      if (this.selected_card.pk < 0) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      try {
+        const { ok, message, data } = await this.$api('directions/get-from-ecp', { card_pk: this.selected_card.pk });
+        if (ok) {
+          this.ecpDirectionData = data;
+          this.show_ecp_directions = true;
+        } else {
+          this.$error(message || 'Ошибка загрузки из ЕЦП');
+        }
+      } finally {
+        await this.$store.dispatch(actions.DEC_LOADING);
+      }
     },
     do_show_rmis_send_directions() {
       this.show_rmis_send_directions = true;

@@ -30,6 +30,22 @@ pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.
 pdfmetrics.registerFont(TTFont('clacon', os.path.join(FONTS_FOLDER, 'clacon.ttf')))
 
 
+def tube_barcode_width_mm_setting():
+    value = SettingManager.get("tube_barcode_width_mm", default=str(TUBE_BARCODE_WIDTH_MM), default_type="f")
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(TUBE_BARCODE_WIDTH_MM or 0)
+
+
+def tube_barcode_offset_x_setting():
+    value = SettingManager.get("tube_barcode_offset_x", default=str(TUBE_BARCODE_OFFSET_X), default_type="f")
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(TUBE_BARCODE_OFFSET_X)
+
+
 @login_required
 def tubes(request, direction_implict_id=None):
     """
@@ -59,9 +75,10 @@ def tubes(request, direction_implict_id=None):
     barcode_type = request.GET.get("barcode_type", "std").strip()
     barcode_width_param = request.GET.get("barcode_width")
     try:
-        tube_barcode_width_mm = float(barcode_width_param) if barcode_width_param not in (None, "") else TUBE_BARCODE_WIDTH_MM
+        tube_barcode_width_mm = float(barcode_width_param) if barcode_width_param not in (None, "") else tube_barcode_width_mm_setting()
     except (TypeError, ValueError):
-        tube_barcode_width_mm = TUBE_BARCODE_WIDTH_MM
+        tube_barcode_width_mm = tube_barcode_width_mm_setting()
+    tube_barcode_offset_x = tube_barcode_offset_x_setting()
 
     pw, ph = barcode_size[0], barcode_size[1]  # длина, ширина листа
 
@@ -254,7 +271,7 @@ def tubes(request, direction_implict_id=None):
             else:
                 bar_width = pw / 43 * inch * m
             barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=bar_width)
-            barcode.drawOn(c, TUBE_BARCODE_OFFSET_X * mm, 4 * mm)
+            barcode.drawOn(c, tube_barcode_offset_x * mm, 4 * mm)
 
             c.showPage()
     c.save()

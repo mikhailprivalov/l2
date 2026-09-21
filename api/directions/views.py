@@ -17,7 +17,7 @@ from directions.sql_func import get_patient_result_by_main_research_for_dependen
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from external_system.models import ProfessionsWorkersPositionsRefbook, CdaFields
 from integration_framework.common_func import directions_pdf_result
-from l2vi.integration import gen_cda_xml, send_cda_xml, send_lab_direction_to_ecp
+from l2vi.integration import gen_cda_xml, send_cda_xml, send_lab_direction_to_ecp, get_directions_from_ecp
 import collections
 
 from integration_framework.views import get_cda_data
@@ -94,6 +94,7 @@ from laboratory.settings import (
     WEB_PLUGIN_LINK_STUDY,
     NOT_CONTROL_VISIT_RESEARCH_ID,
     IS_WITHOUT_LIMIT_PARALINIC_ALWAYS,
+    URL_REQUEST_GET_DIRECTIONS_FROM_ECP,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -4959,6 +4960,164 @@ def send_ecp(request):
         n.rmis_resend_services = True
         n.save()
     return JsonResponse({"ok": True, "data": res})
+
+
+def _ecp_value(data, *keys):
+    if not isinstance(data, dict):
+        return None
+    normalized = {str(k).strip(): v for k, v in data.items()}
+    for key in keys:
+        if key in normalized:
+            return normalized[key]
+    return None
+
+
+@login_required
+def directions_get_from_ecp(request):
+    data = json.loads(request.body)
+    card_pk = data.get("card_pk")
+    if not card_pk:
+        return JsonResponse({"ok": False, "message": "Не выбрана карта пациента"})
+
+    card = Card.objects.filter(pk=card_pk).select_related("individual").first()
+    if not card:
+        return JsonResponse({"ok": False, "message": "Карта пациента не найдена"})
+
+    if not URL_REQUEST_GET_DIRECTIONS_FROM_ECP:
+        return JsonResponse({"ok": False, "message": "URL_REQUEST_GET_DIRECTIONS_FROM_ECP не задан"})
+
+    individual = card.individual
+    today = current_time(only_date=True).strftime("%d.%m.%Y")
+    payload = {
+        "starDate": today,
+        "endDate": today,
+        "patient": {
+            "family": individual.family,
+            "name": individual.name,
+            "patronymic": individual.patronymic,
+            "birthday": individual.bd(),
+        },
+    }
+    res = get_directions_from_ecp(payload)
+    if not res:
+        return JsonResponse({"ok": False, "message": "Ошибка запроса в ЕЦП", "data": res})
+
+    ok_raw = _ecp_value(res, "ok")
+    ok_ecp = ok_raw is True or str(ok_raw).lower() == "true"
+    if not ok_ecp:
+        return JsonResponse({"ok": False, "message": "Направление в ЕЦП не найдено", "data": res})
+
+    evn_direction_id = str(_ecp_value(res, "EvnDirectionId") or "")
+    evn_lab_request_id = str(_ecp_value(res, "EvnLabRequest_id") or "")
+    person_id = str(_ecp_value(res, "Person_id") or "")
+    research_ids = _ecp_value(res, "researches") or []
+    if not isinstance(research_ids, list):
+        research_ids = []
+
+    parsed_ids = []
+    for pk in research_ids:
+        try:
+            parsed_ids.append(int(pk))
+        except (TypeError, ValueError):
+            continue
+
+    found = {r.pk: r for r in Researches.objects.filter(pk__in=parsed_ids)}
+    researches = []
+    for pk in parsed_ids:
+        research = found.get(pk)
+        researches.append(
+            {
+                "id": pk,
+                "title": research.title if research else None,
+                "missing": research is None,
+            }
+        )
+
+    already_exists = False
+    if evn_direction_id:
+        already_exists = Napravleniya.objects.filter(Q(ecp_direction_number=evn_direction_id) | Q(rmis_number=evn_direction_id)).exists()
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "data": {
+                "evnDirectionId": evn_direction_id,
+                "evnLabRequestId": evn_lab_request_id,
+                "personId": person_id,
+                "researches": researches,
+                "alreadyExists": already_exists,
+            },
+        }
+    )
+
+
+@login_required
+def directions_create_from_ecp(request):
+    data = json.loads(request.body)
+    card_pk = data.get("card_pk")
+    research_ids = data.get("researches") or []
+    evn_direction_id = str(data.get("EvnDirectionId") or data.get("evnDirectionId") or "")
+    evn_lab_request_id = str(data.get("EvnLabRequest_id") or data.get("evnLabRequestId") or "")
+
+    if not card_pk:
+        return JsonResponse({"ok": False, "message": "Не выбрана карта пациента"})
+    if not evn_direction_id:
+        return JsonResponse({"ok": False, "message": "Не указан EvnDirectionId"})
+
+    research_pks = []
+    for pk in research_ids:
+        try:
+            research_pks.append(int(pk))
+        except (TypeError, ValueError):
+            continue
+    found_ids = set(Researches.objects.filter(pk__in=research_pks).values_list("pk", flat=True))
+    research_pks = list(dict.fromkeys(pk for pk in research_pks if pk in found_ids))
+    if not research_pks:
+        return JsonResponse({"ok": False, "message": "Нет услуг для создания направления"})
+
+    if Napravleniya.objects.filter(Q(ecp_direction_number=evn_direction_id) | Q(rmis_number=evn_direction_id)).exists():
+        return JsonResponse({"ok": False, "message": "Направление уже зарегистрировано"})
+
+    card = Card.objects.filter(pk=card_pk).first()
+    if not card:
+        return JsonResponse({"ok": False, "message": "Карта пациента не найдена"})
+
+    fin_source = IstochnikiFinansirovaniya.objects.filter(base=card.base, title="ОМС", hide=False).first()
+    if not fin_source:
+        fin_source = IstochnikiFinansirovaniya.objects.filter(base=card.base, hide=False).order_by("-order_weight").first()
+    if not fin_source:
+        return JsonResponse({"ok": False, "message": "Не найден источник финансирования"})
+
+    try:
+        request_code = Napravleniya.normalize_request_code(evn_lab_request_id)
+    except ValueError as e:
+        return JsonResponse({"ok": False, "message": str(e)})
+
+    with transaction.atomic():
+        result = Napravleniya.gen_napravleniya_by_issledovaniya(
+            client_id=card_pk,
+            diagnos="",
+            finsource=fin_source.pk,
+            history_num="",
+            ofname_id=-1,
+            doc_current=request.user.doctorprofile,
+            researches={-1: research_pks},
+            comments={},
+            force_one_direction=True,
+        )
+        if not result.get("r"):
+            return JsonResponse({"ok": False, "message": result.get("message", "Ошибка создания направления")})
+        if not result.get("list_id"):
+            return JsonResponse({"ok": False, "message": "Не удалось получить ID направления"})
+
+        direction_id = result["list_id"][0]
+        direction = Napravleniya.objects.get(pk=direction_id)
+        direction.rmis_number = evn_direction_id[:20]
+        direction.ecp_direction_number = evn_direction_id[:64]
+        direction.request_code = request_code
+        direction.save(update_fields=["rmis_number", "ecp_direction_number", "request_code"])
+
+    return JsonResponse({"ok": True, "message": f"Направление создано: {direction_id}", "direction": direction_id, "directions": [direction_id]})
 
 
 @login_required
