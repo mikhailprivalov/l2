@@ -572,6 +572,8 @@ RESEARCH_ID_FINAL_REPORT = (-1,)
 WEB_PLUGIN_LINK_STUDY = None
 # Кнопка скачивания всех серий DICOM на /ui/requests-fill. Переопределение в laboratory/local_settings.py
 SHOW_REQUESTS_FILL_DICOM_DOWNLOAD = False
+# Поле «Код» после «Объём» на /ui/request-creation. Переопределение в laboratory/local_settings.py
+SHOW_CODE_IN_REQUEST_CREATION = False
 MAGAZINE_REPORT = {}
 # Полный путь до бинарника LibreOffice который выполняет конвертацию DOCX в PDF Переопределение в laboratory/local_settings.py
 COMMAND_DOCX_2_PDF = ""
@@ -731,10 +733,3 @@ if ENV_SECRET_KEY:
 
 if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
-
-
-# db = DATABASES.get('default', {})
-# db['OPTIONS'] = db.get('OPTIONS', {})
-# db['OPTIONS']['options'] = f'-c statement_timeout={QUERY_TIMEOUT * 1000}'
-# Поле «Код» после «Объём» на /ui/request-creation. Переопределение в laboratory/local_settings.py
-SHOW_CODE_IN_REQUEST_CREATION = False

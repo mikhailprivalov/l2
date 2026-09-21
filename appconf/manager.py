@@ -2,16 +2,16 @@ import hashlib
 from typing import Optional
 
 import simplejson
+from django.conf import settings as django_settings
 from django.core.cache import cache
 from django.db.models.signals import post_save
 
 import laboratory
 import appconf.models as appconf
-from laboratory.settings import DOCUMENT_MANAGER_FOR_ALL, SHOW_CODE_IN_REQUEST_CREATION, SHOW_REQUESTS_FILL_DICOM_DOWNLOAD, SHOW_RMIS_CHANGE_PASSWORD
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-18"
+    VERSION = f"{laboratory.VERSION}-19"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -129,7 +129,9 @@ class SettingManager:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
         if cv:
-            return simplejson.loads(cv)
+            result = simplejson.loads(cv)
+            result.update(SettingManager._settings_py_modules())
+            return result
         result = {
             **{
                 'l2_{}'.format(x): SettingManager.l2(x)
@@ -224,10 +226,6 @@ class SettingManager:
             "auto_clinical_examination_direct": SettingManager.get("auto_clinical_examination_direct", default='false', default_type='b'),
             "legal_authenticator": SettingManager.get("legal_authenticator", default='false', default_type='b'),
             "change_password": SettingManager.get("change_password", default='false', default_type='b'),
-            "show_rmis_change_password": SHOW_RMIS_CHANGE_PASSWORD,
-            "document_manager_for_all": DOCUMENT_MANAGER_FOR_ALL,
-            "show_requests_fill_dicom_download": SHOW_REQUESTS_FILL_DICOM_DOWNLOAD,
-            "show_code_in_request_creation": SHOW_CODE_IN_REQUEST_CREATION,
             "limit_age_patient_registration": SettingManager.get("limit_age_patient_registration", default='false', default_type='b'),
             "days_subtract": SettingManager.get("days_subtract", default='90', default_type='i'),
             "show_cancel_button": SettingManager.get("show_cancel_button", default='true', default_type='b'),
@@ -238,7 +236,17 @@ class SettingManager:
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
 
+        result.update(SettingManager._settings_py_modules())
         return result
+
+    @staticmethod
+    def _settings_py_modules() -> dict:
+        return {
+            "show_rmis_change_password": bool(getattr(django_settings, "SHOW_RMIS_CHANGE_PASSWORD", False)),
+            "document_manager_for_all": bool(getattr(django_settings, "DOCUMENT_MANAGER_FOR_ALL", False)),
+            "show_requests_fill_dicom_download": bool(getattr(django_settings, "SHOW_REQUESTS_FILL_DICOM_DOWNLOAD", False)),
+            "show_code_in_request_creation": bool(getattr(django_settings, "SHOW_CODE_IN_REQUEST_CREATION", False)),
+        }
 
     @staticmethod
     def l2_modules_md5_of_values():
