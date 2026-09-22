@@ -541,7 +541,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
     c.setFont('OpenSans', 20)
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height) + (h / 2) * yn - 57, "№ " + str(dir.pk) + dir.external_number_suffix())  # Номер направления
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height) + (h / 2) * yn - 57, "№" + dir.external_number_suffix() + " " + str(dir.pk))  # Номер направления
 
     c.setFont('OpenSans', 9)
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 70) + (h / 2) * yn, "Создано: " + strdate(dir.data_sozdaniya) + " " + strtime(dir.data_sozdaniya)[:5])

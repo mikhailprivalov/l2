@@ -820,7 +820,7 @@ class Napravleniya(models.Model):
 
     def external_number_suffix(self):
         if self.is_external and self.ecp_direction_number:
-            return "e"
+            return "-e"
         return ""
 
     @property
