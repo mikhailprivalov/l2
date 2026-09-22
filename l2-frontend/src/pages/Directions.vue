@@ -208,7 +208,7 @@
     <EcpDirectionsViewer
       v-if="show_ecp_directions && ecpDirectionData"
       :card="selected_card"
-      :data="ecpDirectionData"
+      :directions="ecpDirectionData.directions"
     />
   </div>
 </template>

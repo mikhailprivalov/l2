@@ -94,7 +94,7 @@ from laboratory.settings import (
     WEB_PLUGIN_LINK_STUDY,
     NOT_CONTROL_VISIT_RESEARCH_ID,
     IS_WITHOUT_LIMIT_PARALINIC_ALWAYS,
-    URL_REQUEST_GET_DIRECTIONS_FROM_ECP,
+    URL_REQUEST_GET_DIRECTIONS_FROM_ECP, LIPID_RESEARCHES, LIPID_RESEARCHES_DAYS_AGO_FIND,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -4962,16 +4962,6 @@ def send_ecp(request):
     return JsonResponse({"ok": True, "data": res})
 
 
-def _ecp_value(data, *keys):
-    if not isinstance(data, dict):
-        return None
-    normalized = {str(k).strip(): v for k, v in data.items()}
-    for key in keys:
-        if key in normalized:
-            return normalized[key]
-    return None
-
-
 @login_required
 def directions_get_from_ecp(request):
     data = json.loads(request.body)
@@ -4987,10 +4977,12 @@ def directions_get_from_ecp(request):
         return JsonResponse({"ok": False, "message": "URL_REQUEST_GET_DIRECTIONS_FROM_ECP не задан"})
 
     individual = card.individual
-    today = current_time(only_date=True).strftime("%d.%m.%Y")
+    today = current_time(only_date=True)
+    end_date = today.strftime("%d.%m.%Y")
+    start_date = (today + timedelta(days=LIPID_RESEARCHES_DAYS_AGO_FIND)).strftime("%d.%m.%Y")
     payload = {
-        "starDate": today,
-        "endDate": today,
+        "starDate": start_date,
+        "endDate": end_date,
         "patient": {
             "family": individual.family,
             "name": individual.name,
@@ -5002,53 +4994,76 @@ def directions_get_from_ecp(request):
     if not res:
         return JsonResponse({"ok": False, "message": "Ошибка запроса в ЕЦП", "data": res})
 
-    ok_raw = _ecp_value(res, "ok")
-    ok_ecp = ok_raw is True or str(ok_raw).lower() == "true"
-    if not ok_ecp:
+    rows = res["result"]
+    if not rows:
         return JsonResponse({"ok": False, "message": "Направление в ЕЦП не найдено", "data": res})
 
-    evn_direction_id = str(_ecp_value(res, "EvnDirectionId") or "")
-    evn_lab_request_id = str(_ecp_value(res, "EvnLabRequest_id") or "")
-    person_id = str(_ecp_value(res, "Person_id") or "")
-    research_ids = _ecp_value(res, "researches") or []
-    if not isinstance(research_ids, list):
-        research_ids = []
+    grouped = {}
+    for row in rows:
+        direction_id = row["direction"]
+        item = grouped.get(direction_id)
+        if item is None:
+            item = {
+                "direction_id": direction_id,
+                "evnLabRequestId": row["EvnLabRequest_id"],
+                "personId": row["Person_id"],
+                "parsed_ids": [],
+            }
+            grouped[direction_id] = item
+        raw_ids = LIPID_RESEARCHES.get(row["UslugaComplex_id"]) or []
+        if not isinstance(raw_ids, list):
+            raw_ids = [raw_ids]
+        seen = set(item["parsed_ids"])
+        for pk in raw_ids:
+            try:
+                research_id = int(pk)
+            except (TypeError, ValueError):
+                continue
+            if research_id not in seen:
+                item["parsed_ids"].append(research_id)
+                seen.add(research_id)
 
-    parsed_ids = []
-    for pk in research_ids:
-        try:
-            parsed_ids.append(int(pk))
-        except (TypeError, ValueError):
-            continue
+    all_ids = []
+    for item in grouped.values():
+        all_ids.extend(item["parsed_ids"])
+    found = {r.pk: r for r in Researches.objects.filter(pk__in=all_ids)}
 
-    found = {r.pk: r for r in Researches.objects.filter(pk__in=parsed_ids)}
-    researches = []
-    for pk in parsed_ids:
-        research = found.get(pk)
-        researches.append(
+    existing_by_number = {}
+    direction_ids = [direction_id for direction_id in grouped if direction_id]
+    if direction_ids:
+        for pk, ecp_number, rmis_number in Napravleniya.objects.filter(Q(ecp_direction_number__in=direction_ids) | Q(rmis_number__in=direction_ids)).values_list(
+            "pk", "ecp_direction_number", "rmis_number"
+        ):
+            if ecp_number:
+                existing_by_number[ecp_number] = pk
+            if rmis_number and rmis_number not in existing_by_number:
+                existing_by_number[rmis_number] = pk
+
+    directions = []
+    for item in grouped.values():
+        researches = []
+        for pk in item["parsed_ids"]:
+            research = found.get(pk)
+            researches.append(
+                {
+                    "id": pk,
+                    "title": research.title if research else None,
+                    "missing": research is None,
+                }
+            )
+        local_direction_id = existing_by_number.get(item["direction_id"])
+        directions.append(
             {
-                "id": pk,
-                "title": research.title if research else None,
-                "missing": research is None,
+                "direction_id": item["direction_id"],
+                "evnLabRequestId": item["evnLabRequestId"],
+                "personId": item["personId"],
+                "researches": researches,
+                "alreadyExists": local_direction_id is not None,
+                "localDirectionId": local_direction_id,
             }
         )
 
-    already_exists = False
-    if evn_direction_id:
-        already_exists = Napravleniya.objects.filter(Q(ecp_direction_number=evn_direction_id) | Q(rmis_number=evn_direction_id)).exists()
-
-    return JsonResponse(
-        {
-            "ok": True,
-            "data": {
-                "evnDirectionId": evn_direction_id,
-                "evnLabRequestId": evn_lab_request_id,
-                "personId": person_id,
-                "researches": researches,
-                "alreadyExists": already_exists,
-            },
-        }
-    )
+    return JsonResponse({"ok": True, "data": {"directions": directions}})
 
 
 @login_required
@@ -5115,7 +5130,8 @@ def directions_create_from_ecp(request):
         direction.rmis_number = evn_direction_id[:20]
         direction.ecp_direction_number = evn_direction_id[:64]
         direction.request_code = request_code
-        direction.save(update_fields=["rmis_number", "ecp_direction_number", "request_code"])
+        direction.is_external = True
+        direction.save(update_fields=["rmis_number", "ecp_direction_number", "request_code", "is_external"])
 
     return JsonResponse({"ok": True, "message": f"Направление создано: {direction_id}", "direction": direction_id, "directions": [direction_id]})
 

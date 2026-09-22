@@ -75,7 +75,7 @@ def form_01(c: Canvas, d: Napravleniya):
         c.drawString(px(18.5), py(43 + offset), "Отделение, палата")
         c.line(px(50), py(44.2 + offset), pxr(18), py(44.2 + offset))
         c.drawCentredString(w / 2, py(53 + offset), "НАПРАВЛЕНИЕ БИОЛОГИЧЕСКОГО МАТЕРИАЛА ДЛЯ ИССЛЕДОВАНИЯ")
-        c.drawCentredString(w / 2, py(58 + offset), "НА ВИЧ № {}".format(d.pk))
+        c.drawCentredString(w / 2, py(58 + offset), "НА ВИЧ №{} {}".format(d.external_number_suffix(), d.pk))
 
         c.drawString(px(18.5), py(68 + offset), "Фамилия: " + d.client.individual.family)
         c.line(px(34.8), py(69.2 + offset), pxr(97.5), py(69.2 + offset))
@@ -170,7 +170,7 @@ def form_02(c: Canvas, dir: Napravleniya):
         for i in range(0, 9):
             y_patient.append(y_coord - y)
             y += 5
-        c.drawString(x_coord * mm, 250 * mm, "№ " + str(dir.pk))  # Номер направления
+        c.drawString(x_coord * mm, 250 * mm, "№" + dir.external_number_suffix() + " " + str(dir.pk))  # Номер направления
 
         c.setFont('PTAstraSerifReg', 12)
         c.drawString(x_coord * mm, y_patient[0] * mm, "Дата: " + strdate(dir.data_sozdaniya))
@@ -307,7 +307,7 @@ def form_03(c: Canvas, dir: Napravleniya):
         dir_code = Drawing()
         dir_code.add(barcode)
         renderPDF.draw(dir_code, c, 150 * mm, 285 * mm)
-        c.drawString(100 * mm, 287 * mm, "№ - {}".format(dir.pk))
+        c.drawString(100 * mm, 287 * mm, "№{} {}".format(dir.external_number_suffix() or " -", dir.pk))
 
         c.drawCentredString((210 / 2) * mm, 281 * mm, "Контактные данные учреждения, направляющего материал")
         organization_data = [
@@ -500,7 +500,7 @@ def form_04(c: Canvas, dir: Napravleniya):
         history_num = ''
         if dir.parent and dir.parent.research.is_hospital:
             history_num = f"(cтационар-{str(dir.parent.napravleniye_id)})"
-        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} {history_num} ', styleCenterBold))
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ №{dir.external_number_suffix()} {dir.pk} {history_num} ', styleCenterBold))
         objs.append(Paragraph('на микробиологическое исследование', styleCenterBold))
         objs.append(Spacer(1, 3 * mm))
         space_symbol = '&nbsp;'
@@ -660,7 +660,7 @@ def form_05(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
 
         objs.append(tbl)
         objs.append(Spacer(1, 3 * mm))
-        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk}', styleCenterBold))
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ №{dir.external_number_suffix()} {dir.pk}', styleCenterBold))
         objs.append(Paragraph('в медицинские организации Иркутской области', styleCenterBold))
         objs.append(Spacer(1, 3 * mm))
         space_symbol = '&nbsp;'
@@ -1035,7 +1035,7 @@ def form_07(c: Canvas, dir: Napravleniya):
         history_num = ''
         if dir.parent and dir.parent.research.is_hospital:
             history_num = f"(cтационар-{str(dir.parent.napravleniye_id)})"
-        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} {history_num} ', styleCenterBold))
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ №{dir.external_number_suffix()} {dir.pk} {history_num} ', styleCenterBold))
         objs.append(Paragraph('патолого-анатомического вскрытия', styleCenterBold))
         objs.append(Spacer(1, 3 * mm))
         space_symbol = '&nbsp;'
@@ -1121,7 +1121,7 @@ def form_08(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
 
         objs = []
 
-        objs.append(Paragraph(f"Направление № {dir.pk}", style=styleCenterBold))
+        objs.append(Paragraph(f"Направление №{dir.external_number_suffix()} {dir.pk}", style=styleCenterBold))
         patient_data = dir.client.get_data_individual()
         if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
             patient_data['serial'] = patient_data['bc_serial']
@@ -1256,7 +1256,7 @@ def form_09(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
 
         objs = []
 
-        objs.append(Paragraph(f"Направление № {dir.pk}", style=styleCenterBold))
+        objs.append(Paragraph(f"Направление №{dir.external_number_suffix()} {dir.pk}", style=styleCenterBold))
         patient_data = dir.client.get_data_individual()
         if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
             patient_data['serial'] = patient_data['bc_serial']

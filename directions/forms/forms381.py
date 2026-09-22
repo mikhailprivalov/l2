@@ -924,7 +924,7 @@ def form_02(c: Canvas, dir: Napravleniya):
         except ObjectDoesNotExist:
             issledovaniye = None
         title_research = issledovaniye.research.title
-        objs.append(Paragraph(f"НАПРАВЛЕНИЕ № {dir.pk} ", styleCenterBold))
+        objs.append(Paragraph(f"НАПРАВЛЕНИЕ №{dir.external_number_suffix()} {dir.pk} ", styleCenterBold))
         objs.append(Paragraph("для получения  медицинских  услуг в областном  государственном  учреждении  здравоохранения.", styleCenterBold))
         objs.append(Spacer(1, 10 * mm))
         objs.append(Paragraph(f"От: {strdate(dir.data_sozdaniya)}", style))
@@ -1033,7 +1033,7 @@ def form_03_1(c: Canvas, dir: Napravleniya):
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph('Штамп учреждения', style))
         objs.append(Spacer(1, 3 * mm))
-        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} ', styleCenterBold))
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ №{dir.external_number_suffix()} {dir.pk} ', styleCenterBold))
         objs.append(Paragraph('На количественное определение РНК ВИЧ -1', styleCenter))
         objs.append(Paragraph('(Тест системы:Abbot Real Time ВИЧ-1,COBAS® AmpliPer/ COBAS® TagMan® HIV-1,', styleCenter))
         objs.append(Paragraph('АмплиСенс ВМЧ-Монитор –FRT, АмплиСенс ВИЧ Монитор –M-FL, РеалБест ВИЧ ПЦР)', styleCenter))
@@ -1126,7 +1126,7 @@ def form_03(c: Canvas, dir: Napravleniya):
         objs.append(Spacer(1, 2 * mm))
         objs.append(Paragraph("Штамп учреждения", style))
         objs.append(Spacer(1, 3 * mm))
-        objs.append(Paragraph(f"НАПРАВЛЕНИЕ № {dir.pk} ", styleCenterBold))
+        objs.append(Paragraph(f"НАПРАВЛЕНИЕ №{dir.external_number_suffix()} {dir.pk} ", styleCenterBold))
         objs.append(Paragraph("На количественное определение РНК ВИЧ -1", styleCenter))
         objs.append(Paragraph("(Тест системы:Abbot Real Time ВИЧ-1,COBAS® AmpliPer/ COBAS® TagMan® HIV-1,", styleCenter))
         objs.append(Paragraph("АмплиСенс ВМЧ-Монитор –FRT, АмплиСенс ВИЧ Монитор –M-FL, РеалБест ВИЧ ПЦР)", styleCenter))
@@ -1246,7 +1246,7 @@ def form_04(c: Canvas, dir: Napravleniya):
         objs.append(Paragraph("Направление<br/><br/> на химико-токсикологические исследования", styleCenter))
         objs.append(Spacer(1, 2 * mm))
         space_symbol = "&nbsp;"
-        objs.append(Paragraph(f"{strdate(dir.data_sozdaniya)} {space_symbol * 140} №{dir.pk}", styleCenter12))
+        objs.append(Paragraph(f"{strdate(dir.data_sozdaniya)} {space_symbol * 140} №{(dir.external_number_suffix() + ' ') if dir.external_number_suffix() else ''}{dir.pk}", styleCenter12))
         objs.append(Spacer(1, 3 * mm))
         objs.append(Paragraph(f" в ХТЛ {hospital_name}", styleCenter))
         objs.append(Spacer(1, 0.2 * mm))

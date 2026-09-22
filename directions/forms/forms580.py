@@ -123,7 +123,7 @@ def form_01(request_data):
         dir = Napravleniya.objects.filter(pk=direction).first()
         objs.append(Paragraph(f"{dir.hospital_short_title}", styleCenter))
         objs.append(Paragraph(f"({dir.hospital_address}, <br/>{dir.hospital_phones})", styleCenterHospital))
-        objs.append(Paragraph(f"Направление {dir.pk}", styleFL))
+        objs.append(Paragraph(f"Направление {dir.external_number_suffix() + ' ' if dir.external_number_suffix() else ''}{dir.pk}", styleFL))
         bcd = createBarcodeDrawing('EAN13', value=dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, width=60 * mm)
         bcd.hAlign = 'LEFT'
         objs.append(Spacer(1, 5 * mm))
