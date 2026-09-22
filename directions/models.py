@@ -818,6 +818,11 @@ class Napravleniya(models.Model):
     def get_ogrn_org_initiator(self):
         return self.ogrn_org_initiator or self.hospital_ogrn or ""
 
+    def external_number_suffix(self):
+        if self.is_external and self.ecp_direction_number:
+            return "e"
+        return ""
+
     @property
     def hospital_short_title(self):
         hosp = self.get_hospital()

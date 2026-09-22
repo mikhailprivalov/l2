@@ -16,64 +16,110 @@
       slot="body"
       class="ecp-body"
     >
-      <div class="ecp-meta">
-        <div v-if="data.evnDirectionId">
-          Направление ЕЦП №{{ data.evnDirectionId }}
-        </div>
-        <div v-if="data.evnLabRequestId">
-          Заявка: {{ data.evnLabRequestId }}
-        </div>
-      </div>
       <div
-        v-if="data.alreadyExists"
-        class="ecp-notice"
+        v-for="direction in directions"
+        :key="direction.direction_id"
+        class="ecp-direction"
       >
-        Направление уже зарегистрировано в системе
-      </div>
-      <div
-        v-else-if="validResearchIds.length === 0"
-        class="ecp-notice"
-      >
-        Нет услуг для создания направления
-      </div>
-      <ol class="ecp-services">
-        <li
-          v-for="research in data.researches"
-          :key="research.id"
-          :class="{ missing: research.missing }"
+        <div class="ecp-meta">
+          <div v-if="direction.direction_id">
+            Направление ЕЦП №{{ direction.direction_id }}
+          </div>
+          <div v-if="direction.evnLabRequestId">
+            Заявка: {{ direction.evnLabRequestId }}
+          </div>
+        </div>
+        <div
+          v-if="direction.alreadyExists"
+          class="ecp-notice"
         >
-          <template v-if="research.missing">
-            Услуга с id {{ research.id }} не найдена в L2
-          </template>
-          <template v-else>
-            {{ research.title }}
-          </template>
-        </li>
-      </ol>
+          Направление уже зарегистрировано в системе - {{ direction.localDirectionId }}
+        </div>
+        <div
+          v-else-if="validResearchIds(direction).length === 0"
+          class="ecp-notice"
+        >
+          Нет услуг для создания направления
+        </div>
+        <ol class="ecp-services">
+          <li
+            v-for="research in direction.researches"
+            :key="research.id"
+            :class="{ missing: research.missing }"
+          >
+            <template v-if="research.missing">
+              Услуга с id {{ research.id }} не найдена в L2
+            </template>
+            <template v-else>
+              {{ research.title }}
+            </template>
+          </li>
+        </ol>
+        <div
+          v-if="directions.length > 1 && canCreate(direction)"
+          class="row ecp-actions"
+        >
+          <div class="col-xs-6">
+            <button
+              type="button"
+              class="btn btn-primary-nb btn-blue-nb"
+              :disabled="saving"
+              @click="createDirection(direction, false)"
+            >
+              Сохранить
+            </button>
+          </div>
+          <div class="col-xs-6">
+            <button
+              type="button"
+              class="btn btn-primary-nb btn-blue-nb"
+              :disabled="saving"
+              @click="createDirection(direction, true)"
+            >
+              Сохранить и печать
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-8 text-left">
-          <button
-            v-if="canCreate"
-            type="button"
-            class="btn btn-primary-nb btn-blue-nb"
-            :disabled="saving"
-            @click="createDirection(false)"
-          >
-            Сохранить
-          </button>
-          <button
-            v-if="canCreate"
-            type="button"
-            class="btn btn-primary-nb btn-blue-nb"
-            :disabled="saving"
-            @click="createDirection(true)"
-          >
-            Сохранить и печать
-          </button>
-        </div>
-        <div class="col-xs-4">
+        <template v-if="singleDirection && canCreate(singleDirection)">
+          <div class="col-xs-4">
+            <button
+              type="button"
+              class="btn btn-primary-nb btn-blue-nb"
+              :disabled="saving"
+              @click="createDirection(singleDirection, false)"
+            >
+              Сохранить
+            </button>
+          </div>
+          <div class="col-xs-4">
+            <button
+              type="button"
+              class="btn btn-primary-nb btn-blue-nb"
+              :disabled="saving"
+              @click="createDirection(singleDirection, true)"
+            >
+              Сохранить и печать
+            </button>
+          </div>
+          <div class="col-xs-4">
+            <button
+              type="button"
+              class="btn btn-primary-nb btn-blue-nb"
+              :disabled="saving"
+              @click="hideModal"
+            >
+              Закрыть
+            </button>
+          </div>
+        </template>
+        <div
+          v-else
+          class="col-xs-12"
+        >
           <button
             type="button"
             class="btn btn-primary-nb btn-blue-nb"
@@ -102,16 +148,17 @@ interface EcpResearch {
 }
 
 interface EcpDirectionData {
-  evnDirectionId: string;
+  direction_id: string;
   evnLabRequestId: string;
   personId?: string;
   researches: EcpResearch[];
   alreadyExists: boolean;
+  localDirectionId?: number | null;
 }
 
 const props = defineProps<{
   card: Record<string, any>;
-  data: EcpDirectionData;
+  directions: EcpDirectionData[];
 }>();
 
 const instance = getCurrentInstance();
@@ -123,11 +170,13 @@ const notify = useNotify();
 
 const saving = ref(false);
 
-const validResearchIds = computed(() => (props.data.researches || [])
-  .filter(research => !research.missing)
-  .map(research => research.id));
+const singleDirection = computed(() => (props.directions.length === 1 ? props.directions[0] : null));
 
-const canCreate = computed(() => !props.data.alreadyExists && validResearchIds.value.length > 0);
+const validResearchIds = (direction: EcpDirectionData) => (direction.researches || [])
+  .filter(research => !research.missing)
+  .map(research => research.id);
+
+const canCreate = (direction: EcpDirectionData) => !direction.alreadyExists && validResearchIds(direction).length > 0;
 
 const hideModal = () => {
   root.$emit('hide_ecp_directions');
@@ -136,26 +185,26 @@ const hideModal = () => {
   }
 };
 
-const createDirection = async (printAfter: boolean) => {
-  if (saving.value || !canCreate.value) {
+const createDirection = async (direction: EcpDirectionData, printAfter: boolean) => {
+  if (saving.value || !canCreate(direction)) {
     return;
   }
   saving.value = true;
   await store.dispatch(actions.INC_LOADING);
   try {
     const {
-      ok, message, direction, directions,
+      ok, message, direction: createdId, directions,
     } = await api('directions/create-from-ecp', {
       card_pk: props.card.pk,
-      researches: validResearchIds.value,
-      EvnDirectionId: props.data.evnDirectionId,
-      EvnLabRequest_id: props.data.evnLabRequestId,
+      researches: validResearchIds(direction),
+      EvnDirectionId: direction.direction_id,
+      EvnLabRequest_id: direction.evnLabRequestId,
     });
     if (!ok) {
       notify.error(message || 'Не удалось создать направление');
       return;
     }
-    notify.ok(message || `Направление создано: ${direction}`);
+    notify.ok(message || `Направление создано: ${createdId}`);
     root.$emit('researches-picker:refresh');
     if (printAfter && directions?.length) {
       root.$emit('print:directions', directions);
@@ -174,9 +223,19 @@ const createDirection = async (printAfter: boolean) => {
   padding: 8px 4px;
 }
 
+.ecp-direction + .ecp-direction {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ddd;
+}
+
 .ecp-meta {
   margin-bottom: 10px;
   font-weight: 600;
+}
+
+.ecp-actions {
+  margin-top: 12px;
 }
 
 .ecp-notice {

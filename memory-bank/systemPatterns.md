@@ -87,6 +87,7 @@
 - `rmis_integration/` - RMIS
 - `external_system/` - external systems
 - `ecp_integration/` - digital signatures
+- **ECP lab directions import** (`directions/get-from-ecp`): `get_directions_from_ecp` returns `{"result": [{direction, EvnLabRequest_id, Person_id, UslugaComplex_id, ...}]}`. Request `endDate` is today; `starDate` is today plus `LIPID_RESEARCHES_DAYS_AGO_FIND` days (`0` keeps both dates equal, `-1` is yesterday). Rows that share `direction` become one card. `UslugaComplex_id` maps to L2 research pks via `LIPID_RESEARCHES`. The modal shows `direction_id` as the ECP direction number and `evnLabRequestId` as the request. An already registered card shows `Направление уже зарегистрировано в системе - {Napravleniya.pk}` (`localDirectionId`). Direction PDF blanks (`/ui/directions/preview`) append a lowercase `e` after the direction number when `is_external` and `ecp_direction_number` are set (`Napravleniya.external_number_suffix`). Each card creates a local direction through `directions/create-from-ecp` (`EvnDirectionId` → `ecp_direction_number` / `rmis_number`, `EvnLabRequest_id` → `request_code`, `is_external=True`).
 - `ftp_orders/` - FTP orders
 - `results_feed/` - result transmission
 

@@ -103,7 +103,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         short_title = issledovaniye.research.short_title
         if dir.parent and dir.parent.research.is_hospital:
             history_num = f"(cтационар-{str(dir.parent.napravleniye_id)})"
-        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk} {history_num} ', styleCenterBold))
+        objs.append(Paragraph(f'НАПРАВЛЕНИЕ № {dir.pk}{dir.external_number_suffix()} {history_num} ', styleCenterBold))
         objs.append(Paragraph('НА ПРИЖИЗНЕННОЕ ПАТОЛОГО-АНАТОМИЧЕСКОЕ<br/> ИССЛЕДОВАНИЕ БИОПСИЙНОГО (ОПЕРАЦИОННОГО) МАТЕРИАЛА', styleCenterBold))
         objs.append(Paragraph(f'{short_title.upper()}', styleCenterBold))
         objs.append(Spacer(1, 10 * mm))
