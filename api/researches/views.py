@@ -452,7 +452,7 @@ def researches_update(request):
         title = request_data.get("title", "").strip()
         short_title = request_data.get("short_title", "").strip()
         auto_register_on_rmis_location = request_data.get("autoRegisterRmisLocation", "")
-        schedule_title = request_data.get("schedule_title", "").strip()
+        schedule_title = request_data.get("schedule_title", "").strip() if request_data.get("schedule_title", "") else ""
         is_global_direction_params = request_data.get("is_global_direction_params", False)
         is_case_params = request_data.get("is_case_params", False)
         code = request_data.get("code", "").strip()
