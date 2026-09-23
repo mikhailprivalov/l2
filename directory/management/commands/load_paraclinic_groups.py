@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Max
 
-from directory.models import ParaclinicInputField, ParaclinicInputGroups, Researches
+from directory.models import ParaclinicInputField, ParaclinicInputFieldFileSettings, ParaclinicInputGroups, Researches
 
 
 def parse_research_pks(raw):
@@ -112,7 +112,7 @@ def _add_group(research, group_settings):
     for field in group_settings.get("fields") or []:
         if not isinstance(field, dict):
             raise CommandError(f"Поле группы «{new_group.title}» должно быть объектом")
-        ParaclinicInputField(
+        new_field = ParaclinicInputField(
             title=field.get("title") or "",
             short_title=field.get("short_title") or "",
             group=new_group,
@@ -138,7 +138,11 @@ def _add_group(research, group_settings):
             cda_option_id=_optional_id(field.get("cdaOption")),
             statistic_pattern_param_id=_optional_id(field.get("patternParam")),
             hide=bool(field.get("hide") or False),
-        ).save()
+        )
+        new_field.save()
+        file_settings = field.get("file_settings")
+        if new_field.field_type == 42 and isinstance(file_settings, dict):
+            ParaclinicInputFieldFileSettings.update_file_field_settings(new_field, file_settings)
         fields_created += 1
 
     return new_group, fields_created

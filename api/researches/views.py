@@ -1144,38 +1144,44 @@ def research_groups_by_laboratory(request):
     )
 
 
+def _paraclinic_field_export(field):
+    field_data = {
+        'title': field.title,
+        'short_title': field.short_title,
+        'order': field.order,
+        'default_value': field.default_value,
+        'lines': field.lines,
+        'field_type': field.field_type,
+        'for_extract_card': field.for_extract_card,
+        'for_talon': field.for_talon,
+        'operator_enter_param': field.operator_enter_param,
+        'is_diag_table': field.is_diag_table,
+        'for_med_certificate': field.for_med_certificate,
+        'visibility': field.visibility,
+        'not_edit': field.not_edit,
+        'can_edit': field.can_edit_computed,
+        'controlParam': field.control_param,
+        'helper': field.helper,
+        'sign_organization': field.sign_organization,
+        'input_templates': field.input_templates,
+        'patientControlParam': field.patient_control_param_id,
+        'cdaOption': field.cda_option_id,
+        'attached': field.attached,
+        'required': field.required,
+        'hide': field.hide,
+    }
+    if field.field_type == 42:
+        field_data['file_settings'] = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
+    return field_data
+
+
 def group_as_json(request):
     group_id = request.GET.get("groupId")
     fields_in_group = []
     groups_to_save = []
     group: ParaclinicInputGroups = ParaclinicInputGroups.objects.get(id=group_id)
-    for f in ParaclinicInputField.objects.filter(group=group).order_by('order'):
-        field_data = {
-            'title': f.title,
-            'short_title': f.short_title,
-            'order': f.order,
-            'default_value': f.default_value,
-            'lines': f.lines,
-            'field_type': f.field_type,
-            'for_extract_card': f.for_extract_card,
-            'for_talon': f.for_talon,
-            'operator_enter_param': f.operator_enter_param,
-            'is_diag_table': f.is_diag_table,
-            'for_med_certificate': f.for_med_certificate,
-            'visibility': f.visibility,
-            'not_edit': f.not_edit,
-            'can_edit': f.can_edit_computed,
-            'controlParam': f.control_param,
-            'helper': f.helper,
-            'sign_organization': f.sign_organization,
-            'input_templates': f.input_templates,
-            'patientControlParam': f.patient_control_param_id,
-            'cdaOption': f.cda_option_id,
-            'attached': f.attached,
-            'required': f.required,
-            'hide': f.hide,
-        }
-        fields_in_group.append(field_data)
+    for f in ParaclinicInputField.objects.filter(group=group).select_related('file_settings').order_by('order'):
+        fields_in_group.append(_paraclinic_field_export(f))
     groups_to_save.append(
         {
             'title': group.title,
@@ -1208,33 +1214,8 @@ def research_as_json(request):
     r = Researches.objects.get(pk=research_id)
     for group in groups:
         fields_in_group = []
-        for f in ParaclinicInputField.objects.filter(group=group).order_by('order'):
-            field_data = {
-                'title': f.title,
-                'short_title': f.short_title,
-                'order': f.order,
-                'default_value': f.default_value,
-                'lines': f.lines,
-                'field_type': f.field_type,
-                'for_extract_card': f.for_extract_card,
-                'for_talon': f.for_talon,
-                'operator_enter_param': f.operator_enter_param,
-                'is_diag_table': f.is_diag_table,
-                'for_med_certificate': f.for_med_certificate,
-                'visibility': f.visibility,
-                'not_edit': f.not_edit,
-                'can_edit': f.can_edit_computed,
-                'controlParam': f.control_param,
-                'helper': f.helper,
-                'sign_organization': f.sign_organization,
-                'input_templates': f.input_templates,
-                'patientControlParam': f.patient_control_param_id,
-                'cdaOption': f.cda_option_id,
-                'attached': f.attached,
-                'required': f.required,
-                'hide': f.hide,
-            }
-            fields_in_group.append(field_data)
+        for f in ParaclinicInputField.objects.filter(group=group).select_related('file_settings').order_by('order'):
+            fields_in_group.append(_paraclinic_field_export(f))
         groups_to_save.append(
             {
                 'title': group.title,
