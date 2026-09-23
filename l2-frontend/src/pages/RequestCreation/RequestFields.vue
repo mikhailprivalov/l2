@@ -94,16 +94,17 @@
             placeholder="Комментарий"
           />
           <div class="half-width">
-            <label class="formulate-input-label">Файл</label>
+            <label class="formulate-input-label">Файлы</label>
             <div class="file-upload-container">
               <input
                 ref="fileInput"
                 type="file"
+                multiple
+                :accept="fileAccept"
                 style="display: none"
                 @change="handleFileChange"
               >
               <div
-                v-if="!selectedFile"
                 class="file-drop-zone"
                 @click="openFileDialog"
                 @dragover.prevent
@@ -111,43 +112,41 @@
               >
                 <div class="file-drop-content">
                   <i class="fa fa-cloud-upload" />
-                  <span>Добавить файл (до 10 МБ)</span>
+                  <span>{{ fileUploadHint }}</span>
                 </div>
               </div>
               <div
-                v-else
-                class="selected-file"
+                v-if="selectedFiles.length"
+                class="selected-files"
               >
-                <div class="file-info">
-                  <div class="file-icon">
-                    <i class="fa fa-file" />
-                  </div>
-                  <div class="file-details">
-                    <div class="file-name">
-                      {{ selectedFile.name }}
+                <div
+                  v-for="(file, index) in selectedFiles"
+                  :key="`${file.name}-${file.size}-${index}`"
+                  class="selected-file"
+                >
+                  <div class="file-info">
+                    <div class="file-icon">
+                      <i class="fa fa-file" />
                     </div>
-                    <div class="file-size">
-                      {{ formatFileSize(selectedFile.size) }}
+                    <div class="file-details">
+                      <div class="file-name">
+                        {{ file.name }}
+                      </div>
+                      <div class="file-size">
+                        {{ formatFileSize(file.size) }}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="file-actions">
-                  <button
-                    type="button"
-                    class="btn-change"
-                    title="Заменить файл"
-                    @click="openFileDialog"
-                  >
-                    <i class="fa fa-refresh" />
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-remove"
-                    title="Удалить файл"
-                    @click="removeFile"
-                  >
-                    <i class="fa fa-times" />
-                  </button>
+                  <div class="file-actions">
+                    <button
+                      type="button"
+                      class="btn-remove"
+                      title="Удалить файл"
+                      @click="removeFile(index)"
+                    >
+                      <i class="fa fa-times" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -178,6 +177,13 @@ import useNotify from '@/hooks/useNotify';
 import researchesPoint from '@/api/researches-point';
 import { useStore } from '@/store';
 
+import {
+  requestFileAccept,
+  requestFileHint,
+  requestFileLimitsFromModules,
+  takeRequestFiles,
+} from './requestFiles';
+
 const props = defineProps<{ value: Record<string, any> }>();
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
@@ -187,11 +193,14 @@ const emit = defineEmits<{
 }>();
 
 const formValues = ref({ ...props.value, currentContrast: props.value.currentContrast || null });
-const selectedFile = ref<File | null>(null);
+const selectedFiles = ref<File[]>([]);
 const fileInput = ref<HTMLInputElement>();
 const notify = useNotify();
 const store = useStore();
 const showCode = computed(() => !!store.getters.modules.show_code_in_request_creation);
+const fileLimits = computed(() => requestFileLimitsFromModules(store.getters.modules));
+const fileUploadHint = computed(() => requestFileHint(fileLimits.value));
+const fileAccept = computed(() => requestFileAccept(fileLimits.value));
 
 const contrastOptions = ref([]);
 
@@ -231,60 +240,28 @@ function convertFileToBase64(file: File): Promise<{ url: string; name: string; t
 }
 
 async function updateFormFiles() {
-  if (selectedFile.value) {
-    const fileData = await convertFileToBase64(selectedFile.value);
-    formValues.value.files = [fileData];
-  } else {
-    formValues.value.files = [];
-  }
+  formValues.value.files = await Promise.all(selectedFiles.value.map((file) => convertFileToBase64(file)));
+}
+
+function addFiles(incoming: File[]) {
+  const { accepted, errors } = takeRequestFiles(incoming, selectedFiles.value, 0, fileLimits.value);
+  errors.forEach((message) => notify.error(message));
+  selectedFiles.value = accepted;
+  updateFormFiles();
 }
 
 function handleFileChange(event: Event) {
   const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-
-  if (!file) {
-    selectedFile.value = null;
-    updateFormFiles();
-    return;
-  }
-
-  const maxSize = 10 * 1024 * 1024;
-
-  if (file.size > maxSize) {
-    notify.error('Размер файла больше 10 МБ');
-    selectedFile.value = null;
-    updateFormFiles();
-    return;
-  }
-
-  selectedFile.value = file;
-  updateFormFiles();
+  addFiles(Array.from(input.files || []));
   input.value = '';
 }
 
 function handleFileDrop(event: DragEvent) {
-  const file = event.dataTransfer?.files?.[0];
-
-  if (!file) {
-    return;
-  }
-
-  const maxSize = 10 * 1024 * 1024;
-
-  if (file.size > maxSize) {
-    notify.error(`Размер файла "${file.name}" превышает установленный лимит в 10 МБ.`);
-    selectedFile.value = null;
-    updateFormFiles();
-    return;
-  }
-
-  selectedFile.value = file;
-  updateFormFiles();
+  addFiles(Array.from(event.dataTransfer?.files || []));
 }
 
-function removeFile() {
-  selectedFile.value = null;
+function removeFile(index: number) {
+  selectedFiles.value = selectedFiles.value.filter((_, fileIndex) => fileIndex !== index);
   updateFormFiles();
 }
 
@@ -306,7 +283,7 @@ watch(() => props.value, (val) => {
   }
 
   if (!val.files || val.files.length === 0) {
-    selectedFile.value = null;
+    selectedFiles.value = [];
   }
 }, { deep: true });
 
@@ -402,12 +379,18 @@ watch(() => formValues.value.requestCode, (val) => {
   color: #6c757d;
 }
 
+.selected-files {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 5px;
+}
+
 .selected-file {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  margin-top: 5px;
   background-color: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 4px;
@@ -417,6 +400,7 @@ watch(() => formValues.value.requestCode, (val) => {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .file-icon {
@@ -432,6 +416,7 @@ watch(() => formValues.value.requestCode, (val) => {
 .file-name {
   font-weight: 600;
   color: #333;
+  word-break: break-all;
 }
 
 .file-size {
@@ -442,24 +427,6 @@ watch(() => formValues.value.requestCode, (val) => {
 .file-actions {
   display: flex;
   gap: 5px;
-}
-
-.btn-change {
-  background: none;
-  border: none;
-  color: #049372;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-change:hover {
-  color: #037a5a;
 }
 
 .btn-remove {

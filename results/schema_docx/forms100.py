@@ -2,21 +2,120 @@ from io import BytesIO
 
 import pytz
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya
+from directions.models import DirectionDocument, DocumentSign, Napravleniya, Issledovaniya
 from docx.shared import Mm
 from docxtpl import DocxTemplate, InlineImage
 import os
 import datetime
 from pdfrw import PdfReader, PdfWriter
+from PIL import Image, ImageDraw, ImageFont
 
 from integration_framework.models import EquipmentReceive
-from laboratory.settings import COMMAND_DOCX_2_PDF
+from laboratory.settings import COMMAND_DOCX_2_PDF, FONTS_FOLDER
 from results.schema_docx.paraclinic_files import append_paraclinic_images_to_pdf, hospital_for_paraclinic_pdf_appendix
 from results.sql_func import get_paraclinic_result_by_iss, get_paraclinic_results_by_direction
 from slog.models import Log
 from hospitals.models import TitleResearchHospital
 from utils.dates import normalize_date
 import simplejson as json
+
+
+def _certificate_signs(direction):
+    last_time_confirm = direction.last_time_confirm()
+    document_for_sign = DirectionDocument.objects.filter(
+        direction=direction,
+        last_confirmed_at=last_time_confirm,
+        is_archive=False,
+        file_type=DirectionDocument.PDF,
+    ).first()
+    if not document_for_sign:
+        return []
+    signs = []
+    seen = set()
+    queryset = DocumentSign.objects.filter(document=document_for_sign, sign_certificate__isnull=False).select_related("sign_certificate")
+    for sign in queryset:
+        thumbprint = sign.sign_certificate.thumbprint
+        if thumbprint in seen:
+            continue
+        seen.add(thumbprint)
+        signs.append(sign)
+    return signs
+
+
+def _text_size(font, text):
+    bbox = font.getbbox(text)
+    return bbox[2] - bbox[0], bbox[3] - bbox[1]
+
+
+def _certificate_stamp_image(signs):
+    font_bold = ImageFont.truetype(os.path.join(FONTS_FOLDER, "FreeSansBold.ttf"), 28)
+    font = ImageFont.truetype(os.path.join(FONTS_FOLDER, "FreeSans.ttf"), 22)
+    padding = 18
+    line_gap = 8
+    block_gap = 16
+    blocks = []
+    max_width = 0
+    total_height = 0
+    for sign in signs:
+        certificate = sign.sign_certificate
+        valid_from = certificate.valid_from.strftime("%d.%m.%Y") if certificate.valid_from else ""
+        valid_to = certificate.valid_to.strftime("%d.%m.%Y") if certificate.valid_to else ""
+        lines = [
+            ("ДОКУМЕНТ ПОДПИСАН ЭЛЕКТРОННОЙ ПОДПИСЬЮ", font_bold),
+            (f"Сертификат: {certificate.thumbprint or ''}", font),
+            (f"Владелец: {certificate.owner or ''}", font),
+            (f"Действителен с {valid_from} по {valid_to}", font),
+        ]
+        measured = []
+        block_width = 0
+        block_height = padding * 2
+        for text, line_font in lines:
+            width, height = _text_size(line_font, text)
+            measured.append((text, line_font, height))
+            block_width = max(block_width, width)
+            block_height += height + line_gap
+        block_width += padding * 2
+        blocks.append((measured, block_width, block_height))
+        max_width = max(max_width, block_width)
+        total_height += block_height + block_gap
+    if not blocks:
+        return None
+    total_height -= block_gap
+    image = Image.new("RGB", (max_width, total_height), "white")
+    draw = ImageDraw.Draw(image)
+    top = 0
+    for measured, block_width, block_height in blocks:
+        box = (0, top, block_width - 1, top + block_height - 1)
+        if hasattr(draw, "rounded_rectangle"):
+            draw.rounded_rectangle(box, radius=12, outline="black", width=2)
+        else:
+            draw.rectangle(box, outline="black", width=2)
+        text_top = top + padding
+        for text, line_font, height in measured:
+            draw.text((padding, text_top), text, fill="black", font=line_font)
+            text_top += height + line_gap
+        top += block_height + block_gap
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    buffer.seek(0)
+    buffer.width_px = image.width
+    buffer.height_px = image.height
+    return buffer
+
+
+def stamp_doctor_value(doc, direction, doctor):
+    signs = _certificate_signs(direction) if direction else []
+    if signs:
+        try:
+            image = _certificate_stamp_image(signs)
+        except Exception as exc:
+            Log.log(key=getattr(direction, "pk", ""), type=997, body={getattr(direction, "pk", ""): {"error": str(exc), "message": "Штамп сертификата"}})
+            image = None
+        if image:
+            width_mm = 90
+            height_mm = width_mm * image.height_px / image.width_px
+            return InlineImage(doc, image, width=Mm(width_mm), height=Mm(height_mm))
+    return get_stamp_doctor_image(doc, doctor)
 
 
 def get_stamp_doctor_image(doc, doctor):
@@ -120,7 +219,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
         }
-        context = {**meta_info, **result_data, "stamp_doctor": get_stamp_doctor_image(doc, iss.doc_confirmation)}
+        context = {**meta_info, **result_data, "stamp_doctor": stamp_doctor_value(doc, direction, iss.doc_confirmation)}
         doc.render(context)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
         today = datetime.datetime.now()
@@ -224,7 +323,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "peroral_amount": peroral_amount,
             "allergy": allergy,
         }
-        context = {**meta_info, **result_data, "stamp_doctor": get_stamp_doctor_image(doc, iss.doc_confirmation)}
+        context = {**meta_info, **result_data, "stamp_doctor": stamp_doctor_value(doc, direction, iss.doc_confirmation)}
         doc.render(context)
 
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')

@@ -1015,6 +1015,79 @@
               />
             </div>
           </div>
+          <div class="row left-padding-10">
+            <div class="col-xs-4 left-padding right-padding">
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Штамп подписи</span>
+                <input
+                  ref="stampFileInput"
+                  class="form-control"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                  @change="onStampFile"
+                >
+              </div>
+            </div>
+            <div class="col-xs-4 left-padding right-padding">
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span
+                  class="input-group-addon"
+                  title="0 — при печати 35 мм"
+                >Ширина, мм</span>
+                <input
+                  v-model.number="user.width_stamp_jpg"
+                  class="form-control"
+                  type="number"
+                  min="0"
+                  max="500"
+                  step="1"
+                  placeholder="35"
+                >
+              </div>
+            </div>
+            <div class="col-xs-4 left-padding right-padding">
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span
+                  class="input-group-addon"
+                  title="0 — при печати 35 мм"
+                >Высота, мм</span>
+                <input
+                  v-model.number="user.height_stamp_jpg"
+                  class="form-control"
+                  type="number"
+                  min="0"
+                  max="500"
+                  step="1"
+                  placeholder="35"
+                >
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="stampFileLabel"
+            class="row left-padding-10"
+          >
+            <div class="col-xs-12 left-padding right-padding">
+              <span>{{ stampFileLabel }}</span>
+              <button
+                class="btn btn-blue-nb sidebar-btn"
+                style="font-size: 12px; margin-left: 8px"
+                type="button"
+                @click="clearStampFile"
+              >
+                Убрать файл
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="right-bottom">
@@ -1178,7 +1251,13 @@ const user = ref({
   schedule_employee_positions: [],
   hospital_protocol_hospitals: [],
   doctor_equipment: [],
+  signature_stamp_pdf: '',
+  signature_stamp_file: null,
+  signature_stamp_clear: false,
+  height_stamp_jpg: 0,
+  width_stamp_jpg: 0,
 });
+const stampFileInput = ref(null);
 const selectedHospital = ref(-1);
 const openPk = ref(-2);
 
@@ -1211,6 +1290,19 @@ const valid = computed(() => {
       && (user.value.password.length === 0 || user.value.password.length >= 3 || (user.value.sendPassword && validEmail.value)))
         || (openPk.value === -1 && (user.value.password.length >= 3 || (user.value.sendPassword && validEmail.value)));
   return p && user.value.username !== '' && user.value.family !== '' && user.value.name !== '' && snilsValid.value;
+});
+
+const stampFileLabel = computed(() => {
+  if (user.value.signature_stamp_file?.name) {
+    return `Новый файл: ${user.value.signature_stamp_file.name}`;
+  }
+  if (user.value.signature_stamp_clear) {
+    return 'Файл будет удалён';
+  }
+  if (user.value.signature_stamp_pdf) {
+    return user.value.signature_stamp_pdf;
+  }
+  return '';
 });
 
 const modules = computed(() => store.getters.modules);
@@ -1358,9 +1450,48 @@ const saveResource = async () => {
   }
 };
 
+const resetStampInput = () => {
+  if (stampFileInput.value) {
+    stampFileInput.value.value = '';
+  }
+};
+
+const onStampFile = (event) => {
+  const file = event.target.files?.[0];
+  if (!file) {
+    user.value.signature_stamp_file = null;
+    return;
+  }
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+    root.$emit('msg', 'error', 'Файл штампа: jpg, jpeg или png');
+    resetStampInput();
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    root.$emit('msg', 'error', 'Файл штампа больше 2 МБ');
+    resetStampInput();
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    user.value.signature_stamp_file = { name: file.name, content: reader.result };
+    user.value.signature_stamp_clear = false;
+  };
+  reader.readAsDataURL(file);
+};
+
+const clearStampFile = () => {
+  user.value.signature_stamp_file = null;
+  user.value.signature_stamp_clear = true;
+  resetStampInput();
+};
+
 const save = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { ok, npk, message } = await usersPoint.saveUser({
+  const {
+    ok, npk, message, signature_stamp_pdf: signatureStampPdf,
+  } = await usersPoint.saveUser({
     pk: openPk.value,
     user_data: {
       ...user.value,
@@ -1370,6 +1501,10 @@ const save = async () => {
     hospital_pk: selectedHospital.value,
   });
   if (ok) {
+    user.value.signature_stamp_pdf = signatureStampPdf || '';
+    user.value.signature_stamp_file = null;
+    user.value.signature_stamp_clear = false;
+    resetStampInput();
     root.$emit(
       'msg',
       'ok',
@@ -1423,7 +1558,13 @@ const close = async () => {
     schedule_employee_positions: [],
     hospital_protocol_hospitals: [],
     doctor_equipment: [],
+    signature_stamp_pdf: '',
+    signature_stamp_file: null,
+    signature_stamp_clear: false,
+    height_stamp_jpg: 0,
+    width_stamp_jpg: 0,
   };
+  resetStampInput();
   currentResourcePk.value = -1;
   currentResourceTitle.value = '';
   resourceResearches.value = [];
@@ -1438,6 +1579,10 @@ const open = async (pk, dep = null) => {
   await store.dispatch(actions.INC_LOADING);
   const data = await usersPoint.loadUser({ pk });
   user.value = data.user;
+  user.value.signature_stamp_file = null;
+  user.value.signature_stamp_clear = false;
+  user.value.height_stamp_jpg = data.user.height_stamp_jpg || 0;
+  user.value.width_stamp_jpg = data.user.width_stamp_jpg || 0;
   restrictedToDirect.value = [...(data.user.restricted_to_direct || [])];
   if (pk === -1) {
     user.value.department = dep;

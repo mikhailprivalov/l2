@@ -246,7 +246,27 @@ class SettingManager:
             "document_manager_for_all": bool(getattr(django_settings, "DOCUMENT_MANAGER_FOR_ALL", False)),
             "show_requests_fill_dicom_download": bool(getattr(django_settings, "SHOW_REQUESTS_FILL_DICOM_DOWNLOAD", False)),
             "show_code_in_request_creation": bool(getattr(django_settings, "SHOW_CODE_IN_REQUEST_CREATION", False)),
+            "request_creation_files_max_total_mb": SettingManager._request_creation_files_max_total_mb(),
+            "request_creation_file_extensions": SettingManager._request_creation_file_extensions(),
         }
+
+    @staticmethod
+    def _request_creation_files_max_total_mb() -> int:
+        raw = getattr(django_settings, "REQUEST_CREATION_FILES_MAX_TOTAL_MB", 10)
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            return 10
+        return value if value > 0 else 10
+
+    @staticmethod
+    def _request_creation_file_extensions() -> list:
+        raw = getattr(django_settings, "REQUEST_CREATION_FILE_EXTENSIONS", [])
+        if isinstance(raw, str):
+            raw = [part.strip() for part in raw.split(",")]
+        if not isinstance(raw, (list, tuple)):
+            return []
+        return [str(ext).strip().lower().lstrip(".") for ext in raw if str(ext).strip()]
 
     @staticmethod
     def l2_modules_md5_of_values():
