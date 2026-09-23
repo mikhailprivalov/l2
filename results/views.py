@@ -690,6 +690,8 @@ def result_print(request):
                                 response['Content-Disposition'] = f'inline; filename="{file_title}.pdf"'
                             else:
                                 response['Content-Disposition'] = f'attachment; filename="{file_title}.pdf"'
+                        if plain_response:
+                            return pdf_out
                         response.write(pdf_out)
                         return response
                 elif not protocol_plain_text or request.user.doctorprofile.is_structure_data_in_protocol or request.user.doctorprofile.podrazdeleniye.is_structure_data_in_protocol:
@@ -906,10 +908,12 @@ def result_print(request):
         writer.write(pdf_all)
         pdf_out = pdf_all.getvalue()
         pdf_all.close()
-        response.write(pdf_out)
         buffer.close()
         if file_dir_l2:
             os.remove(file_dir_l2)
+        if plain_response:
+            return pdf_out
+        response.write(pdf_out)
         return response
 
     pdf = buffer.getvalue()
