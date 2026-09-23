@@ -1,4 +1,6 @@
+import base64
 import logging
+import os
 import threading
 import time
 import re
@@ -1565,6 +1567,9 @@ def user_view(request):
             "schedule_employee_positions": [],
             "hospital_protocol_hospitals": [],
             "doctor_equipment": [],
+            "signature_stamp_pdf": "",
+            "height_stamp_jpg": 0,
+            "width_stamp_jpg": 0,
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1632,9 +1637,51 @@ def user_view(request):
             "schedule_employee_positions": schedule_employee_positions,
             "hospital_protocol_hospitals": hospital_protocol_hospitals,
             "doctor_equipment": doctor_equipment,
+            "signature_stamp_pdf": doc.signature_stamp_pdf or "",
+            "height_stamp_jpg": doc.height_stamp_jpg or 0,
+            "width_stamp_jpg": doc.width_stamp_jpg or 0,
         }
 
     return JsonResponse({"user": data})
+
+
+def _stamp_mm(value, label):
+    if value is None or value == "":
+        return 0, None
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return None, f"{label}: укажите целое число"
+    if number < 0 or number > 500:
+        return None, f"{label}: от 0 до 500 мм"
+    return number, None
+
+
+def _prepare_stamp_file(payload):
+    if not payload or not isinstance(payload, dict):
+        return None, None, None
+    name = str(payload.get("name") or "")
+    content = payload.get("content") or ""
+    if not name and not content:
+        return None, None, None
+    if isinstance(content, str) and content.strip().startswith("data:") and "," in content:
+        content = content.split(",", 1)[1]
+    content = "".join(str(content).split())
+    if not content:
+        return None, None, "Файл штампа пустой"
+    pad = (-len(content)) % 4
+    try:
+        raw = base64.b64decode(content + ("=" * pad), validate=True)
+    except Exception:
+        return None, None, "Файл штампа повреждён"
+    ext = os.path.splitext(os.path.basename(name))[1].lower()
+    if ext not in (".jpg", ".jpeg", ".png"):
+        return None, None, "Файл штампа: jpg, jpeg или png"
+    if not raw:
+        return None, None, "Файл штампа пустой"
+    if len(raw) > 2 * 1024 * 1024:
+        return None, None, "Файл штампа больше 2 МБ"
+    return raw, ext, None
 
 
 @login_required
@@ -1695,6 +1742,13 @@ def user_save_view(request):
 
     if not can_edit:
         return JsonResponse({"ok": False})
+
+    width_stamp, width_error = _stamp_mm(ud.get("width_stamp_jpg"), "Ширина штампа")
+    height_stamp, height_error = _stamp_mm(ud.get("height_stamp_jpg"), "Высота штампа")
+    stamp_bytes, stamp_ext, stamp_error = _prepare_stamp_file(ud.get("signature_stamp_file"))
+    stamp_message = width_error or height_error or stamp_error
+    if stamp_message:
+        return JsonResponse({"ok": False, "npk": pk, "message": stamp_message})
 
     npk = pk
     if pk == -1:
@@ -1796,6 +1850,12 @@ def user_save_view(request):
             else:
                 doc.rmis_login = None
                 doc.rmis_password = None
+            doc.width_stamp_jpg = width_stamp
+            doc.height_stamp_jpg = height_stamp
+            if stamp_bytes is not None:
+                doc.store_signature_stamp_file(stamp_ext, stamp_bytes)
+            elif ud.get("signature_stamp_clear"):
+                doc.delete_signature_stamp_file()
             doc.save()
             if doc.email and send_password:
                 doc.reset_password()
@@ -1808,7 +1868,7 @@ def user_save_view(request):
     data_doc_profile = {key: value for key, value in doc.dict_data.items()}
     data_doc_profile["id"] = doc.pk
     Log(key=doc.pk, type=120004, body=json.dumps(data_doc_profile), user=request.user.doctorprofile).save()
-    return JsonResponse({"ok": ok, "npk": npk, "message": message})
+    return JsonResponse({"ok": ok, "npk": npk, "message": message, "signature_stamp_pdf": (doc.signature_stamp_pdf or "") if doc else ""})
 
 
 def slot_status(x):

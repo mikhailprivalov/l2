@@ -287,6 +287,30 @@ class DoctorProfile(models.Model):
             return os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf', self.signature_stamp_pdf)
         return None
 
+    def delete_signature_stamp_file(self):
+        filename = self.signature_stamp_pdf
+        self.signature_stamp_pdf = None
+        if not filename:
+            return
+        directory = os.path.realpath(os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf'))
+        path = os.path.realpath(os.path.join(directory, os.path.basename(str(filename))))
+        try:
+            if os.path.commonpath([directory, path]) != directory:
+                return
+        except ValueError:
+            return
+        if os.path.isfile(path):
+            os.remove(path)
+
+    def store_signature_stamp_file(self, ext, content):
+        self.delete_signature_stamp_file()
+        directory = os.path.join(MEDIA_ROOT, 'docprofile_stamp_pdf')
+        os.makedirs(directory, exist_ok=True)
+        stored = f"{self.pk}_{uuid.uuid4().hex}{ext}"
+        with open(os.path.join(directory, stored), 'wb') as stamp_file:
+            stamp_file.write(content)
+        self.signature_stamp_pdf = stored
+
     def reset_password(self):
         if not self.user or not self.email or not EMAIL_HOST:
             return False
