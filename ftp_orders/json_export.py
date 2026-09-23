@@ -143,8 +143,42 @@ def spool_json(filename, payload, spool_dir=None):
     return path
 
 
+def _order_attached_files(direction):
+    from appconf.manager import SettingManager
+
+    max_bytes = SettingManager._request_creation_files_max_total_mb() * 1024 * 1024
+    allowed = set(SettingManager._request_creation_file_extensions())
+    files = []
+    total = 0
+    for file_obj in direction.napravleniyafiles_set.all():
+        uploaded = file_obj.uploaded_file
+        if not uploaded:
+            continue
+        name = os.path.basename(uploaded.name or "").strip()
+        if not name:
+            continue
+        extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        if allowed and extension not in allowed:
+            logger.warning("ftp order %s skip file %s: extension is not allowed", direction.pk, name)
+            continue
+        try:
+            with uploaded.open("rb") as stored:
+                content = stored.read()
+        except (OSError, ValueError):
+            logger.warning("ftp order %s skip file %s: cannot read", direction.pk, name)
+            continue
+        if total + len(content) > max_bytes:
+            logger.warning("ftp order %s skip file %s: total size limit", direction.pk, name)
+            continue
+        total += len(content)
+        files.append({"name": name, "content": base64.b64encode(content).decode("ascii")})
+    return files
+
+
 def build_order_json(direction):
-    return build_direction_payload(direction, FILE_TYPE_ORDER, extra=_order_extra_fields(direction))
+    extra = _order_extra_fields(direction)
+    extra["files"] = _order_attached_files(direction)
+    return build_direction_payload(direction, FILE_TYPE_ORDER, extra=extra)
 
 
 def spool_order_json(direction):

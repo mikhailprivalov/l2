@@ -2,6 +2,7 @@ import base64
 import datetime
 import ftplib
 import logging
+import os
 import time
 from sys import stdout
 from tempfile import NamedTemporaryFile
@@ -14,7 +15,7 @@ from django.utils.dateparse import parse_datetime
 
 from clients.models import Card, DocumentType, Individual
 from directory.models import Contrasts, Researches
-from directions.models import IssledovaniyaFiles, IstochnikiFinansirovaniya, Napravleniya
+from directions.models import IssledovaniyaFiles, IstochnikiFinansirovaniya, Napravleniya, NapravleniyaFiles
 from equipment.models import Equipment
 from ftp_orders.json_export import FILE_TYPE_ORDER, FILE_TYPE_RESULT, FILE_TYPE_STUDY, connect_ftp
 from ftp_orders.main import FailedCreatingDirectionsException
@@ -201,6 +202,68 @@ def _sync_documents(individual, documents):
         individual.add_or_update_doc(doc_type, doc.get("serial") or "", number)
 
 
+def _attached_file_name(raw_name):
+    name = raw_name if isinstance(raw_name, str) else ""
+    return name.replace("\\", "/").split("/")[-1].strip()
+
+
+def _payload_for_log(payload):
+    logged = dict(payload)
+    files = logged.get("files")
+    if isinstance(files, list):
+        logged["files"] = [_attached_file_name(item.get("name")) if isinstance(item, dict) else "" for item in files]
+    return logged
+
+
+def _attach_order_files(direction, payload):
+    from appconf.manager import SettingManager
+
+    raw_files = payload.get("files") or []
+    if not isinstance(raw_files, list):
+        return []
+
+    max_bytes = SettingManager._request_creation_files_max_total_mb() * 1024 * 1024
+    allowed = set(SettingManager._request_creation_file_extensions())
+    existing_names = set()
+    total = 0
+    for file_obj in direction.napravleniyafiles_set.all():
+        uploaded = file_obj.uploaded_file
+        if not uploaded:
+            continue
+        existing_names.add(os.path.basename(uploaded.name or ""))
+        try:
+            total += uploaded.size
+        except (OSError, ValueError):
+            continue
+
+    saved = []
+    for item in raw_files:
+        if not isinstance(item, dict):
+            continue
+        name = _attached_file_name(item.get("name"))
+        if not name or name in existing_names:
+            continue
+        extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        if allowed and extension not in allowed:
+            logger.warning("ftp order %s skip file %s: extension is not allowed", direction.pk, name)
+            continue
+        try:
+            content = base64.b64decode(item.get("content") or "")
+        except (ValueError, TypeError):
+            logger.warning("ftp order %s skip file %s: cannot decode", direction.pk, name)
+            continue
+        if not content:
+            continue
+        if total + len(content) > max_bytes:
+            logger.warning("ftp order %s skip file %s: total size limit", direction.pk, name)
+            continue
+        NapravleniyaFiles(napravleniye=direction, uploaded_file=ContentFile(content, name=name)).save()
+        existing_names.add(name)
+        total += len(content)
+        saved.append(name)
+    return saved
+
+
 def _source_order_id(payload):
     source_id = payload.get("id")
     if source_id is None:
@@ -217,6 +280,15 @@ def create_request_from_ord_payload(payload):
     if source_id:
         existing = Napravleniya.objects.filter(id_in_hospital=source_id, hospital=hospital, is_request=True).first()
         if existing:
+            saved_names = _attach_order_files(existing, payload)
+            if saved_names:
+                Log.log(
+                    source_id or existing.pk,
+                    190012,
+                    existing.doc,
+                    {"org": hospital.safe_short_title, "files": saved_names, "directions": [existing.pk]},
+                )
+                return _result(True, "Добавлены файлы", directions=[existing.pk])
             return _result(True, "Заявка уже существует", directions=[existing.pk], skipped=True)
 
     research, error = _find_research(payload)
@@ -281,12 +353,13 @@ def create_request_from_ord_payload(payload):
         if source_id:
             direction.id_in_hospital = source_id
         direction.save()
+        _attach_order_files(direction, payload)
 
         Log.log(
             source_id or direction.pk,
             190012,
             doctor,
-            {"org": hospital.safe_short_title, "content": payload, "directions": result["list_id"], "card": card.number_with_type()},
+            {"org": hospital.safe_short_title, "content": _payload_for_log(payload), "directions": result["list_id"], "card": card.number_with_type()},
         )
 
     return _result(True, "", directions=result["list_id"])

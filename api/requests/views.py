@@ -815,6 +815,12 @@ def update_request(request):
     research = Researches.objects.filter(pk=research_id).first()
     send_request_to_rentgen_rmq(direction, request.user.doctorprofile, research)
 
+    if decoded_files:
+        try:
+            spool_order_json(direction)
+        except Exception:
+            logger.exception('Failed to spool order json for request %s', direction.pk)
+
     return status_response(True, "Заявка успешно обновлена")
 
 
