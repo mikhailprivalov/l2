@@ -2270,9 +2270,7 @@ def get_data_for_layout_template(research_layout, iss, result_fields, fields_tem
             #     continue
             result_field: ParaclinicResult = result_fields.get(field.pk)
             field_type = field.field_type if not result_field else result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=bool(iss_obj.time_confirmation))
-            values_to_input = ([] if not field.required or field_type not in [10, 12] or research_layout.is_monitoring else ['- Не выбрано']) + _input_template_options(
-                field.input_templates
-            )
+            values_to_input = ([] if not field.required or field_type not in [10, 12] or research_layout.is_monitoring else ['- Не выбрано']) + _input_template_options(field.input_templates)
             if fields_templates_by_department_data:
                 values_to_input_by_department = fields_templates_by_department_data.get(field.pk)
                 if values_to_input_by_department:
