@@ -574,6 +574,12 @@ WEB_PLUGIN_LINK_STUDY = None
 SHOW_REQUESTS_FILL_DICOM_DOWNLOAD = False
 # Поле «Код» после «Объём» на /ui/request-creation. Переопределение в laboratory/local_settings.py
 SHOW_CODE_IN_REQUEST_CREATION = False
+# Суммарный размер файлов одной заявки на /ui/request-creation, МБ.
+# Переопределение в laboratory/local_settings.py
+REQUEST_CREATION_FILES_MAX_TOTAL_MB = 10
+# Допустимые расширения файлов заявки без точки. Пустой список — без ограничения.
+# Переопределение в laboratory/local_settings.py
+REQUEST_CREATION_FILE_EXTENSIONS = ["pdf", "jpg", "jpeg", "png", "doc", "docx", "xls", "xlsx", "dcm"]
 MAGAZINE_REPORT = {}
 # Полный путь до бинарника LibreOffice который выполняет конвертацию DOCX в PDF Переопределение в laboratory/local_settings.py
 COMMAND_DOCX_2_PDF = ""

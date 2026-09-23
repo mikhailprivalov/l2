@@ -1677,6 +1677,22 @@ def directions_results_report(request):
     return JsonResponse({"data": data})
 
 
+def _input_template_options(raw):
+    if isinstance(raw, list):
+        return raw
+    if not raw or raw == "[]":
+        return []
+    try:
+        parsed = json.loads(raw)
+    except (TypeError, ValueError):
+        return []
+    if isinstance(parsed, list):
+        return parsed
+    if isinstance(parsed, str):
+        return [parsed]
+    return []
+
+
 @group_required("Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_paraclinic_form(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
@@ -2132,13 +2148,13 @@ def directions_paraclinic_form(request):
                         result_field: ParaclinicResult = result_fields.get(field.pk)
                         field_type = field.field_type if not result_field else result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=bool(i.time_confirmation))
 
-                        values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + (
-                            [] if field.input_templates == '[]' or not field.input_templates else json.loads(field.input_templates)
+                        values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + _input_template_options(
+                            field.input_templates
                         )
                         if fields_templates_by_department_data:
                             values_to_input_by_department = fields_templates_by_department_data.get(field.pk)
                             if values_to_input_by_department:
-                                values_to_input = json.loads(values_to_input_by_department)
+                                values_to_input = _input_template_options(values_to_input_by_department)
 
                         value = (
                             ((field.default_value if field_type not in [3, 11, 13, 14, 30, 42, 44, 45, 46, 47] else '') if not result_field else result_field.value)
@@ -2254,13 +2270,13 @@ def get_data_for_layout_template(research_layout, iss, result_fields, fields_tem
             #     continue
             result_field: ParaclinicResult = result_fields.get(field.pk)
             field_type = field.field_type if not result_field else result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=bool(iss_obj.time_confirmation))
-            values_to_input = ([] if not field.required or field_type not in [10, 12] or research_layout.is_monitoring else ['- Не выбрано']) + (
-                [] if field.input_templates == '[]' or not field.input_templates else json.loads(field.input_templates)
+            values_to_input = ([] if not field.required or field_type not in [10, 12] or research_layout.is_monitoring else ['- Не выбрано']) + _input_template_options(
+                field.input_templates
             )
             if fields_templates_by_department_data:
                 values_to_input_by_department = fields_templates_by_department_data.get(field.pk)
                 if values_to_input_by_department:
-                    values_to_input = json.loads(values_to_input_by_department)
+                    values_to_input = _input_template_options(values_to_input_by_department)
 
             value = (
                 ((field.default_value if field_type not in [3, 11, 13, 14, 30, 46, 47] else '') if not result_field else result_field.value)
@@ -4114,7 +4130,7 @@ def get_research_for_direction_params(pk):
                     "lines": field.lines,
                     "title": field.title,
                     "hide": field.hide,
-                    "values_to_input": ([] if not field.required or field_type not in [10, 12] else ['- Не выбрано']) + json.loads(field.input_templates),
+                    "values_to_input": ([] if not field.required or field_type not in [10, 12] else ['- Не выбрано']) + _input_template_options(field.input_templates),
                     "value": (field.default_value if field_type not in [3, 11, 13, 14] else '') if field_type not in [1, 20] else (get_default_for_field(field_type, field.default_value)),
                     "field_type": field_type,
                     "default_value": field.default_value,

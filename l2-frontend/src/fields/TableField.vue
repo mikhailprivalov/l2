@@ -388,6 +388,9 @@ export default {
       } catch (e) {
         params = {};
       }
+      if (!params || typeof params !== 'object' || Array.isArray(params)) {
+        params = {};
+      }
       try {
         value = JSON.parse(value);
       } catch (e) {
@@ -402,6 +405,20 @@ export default {
 
       if (!Array.isArray(params.settings)) {
         params.settings = [];
+      }
+
+      if (!params.columns) {
+        params.columns = {
+          count: 0,
+          titles: [],
+          settings: [],
+        };
+      }
+      if (!Array.isArray(params.columns.settings)) {
+        params.columns.settings = [];
+      }
+      if (typeof params.columns.count !== 'number') {
+        params.columns.count = params.columns.settings.length;
       }
 
       for (let i = 0; i < Math.max(params.columns.count - params.columns.settings.length, 0); i++) {
@@ -434,6 +451,9 @@ export default {
         }
       }
 
+      if (!Array.isArray(value.rows)) {
+        value.rows = [];
+      }
       value.rows = value.rows.filter(r => Array.isArray(r) && r.every(v => _.isString(v)));
 
       this.params = params;

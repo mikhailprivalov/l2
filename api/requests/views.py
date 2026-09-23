@@ -351,6 +351,66 @@ def get_image_details(request):
     return JsonResponse({"success": True, "data": details})
 
 
+def _request_file_name(raw_name):
+    name = raw_name if isinstance(raw_name, str) else ""
+    name = name.replace("\\", "/").split("/")[-1].strip()
+    return name or f"{uuid.uuid4()}.bin"
+
+
+def _prepare_request_files(files, existing_bytes=0):
+    if files is None:
+        files = []
+    if not isinstance(files, list):
+        return "Некорректный список файлов", []
+
+    max_mb = SettingManager._request_creation_files_max_total_mb()
+    max_bytes = max_mb * 1024 * 1024
+    allowed = set(SettingManager._request_creation_file_extensions())
+    decoded = []
+    total = existing_bytes
+    for file_data in files:
+        if not isinstance(file_data, dict):
+            return "Некорректный список файлов", []
+        url = file_data.get("url") or ""
+        if not isinstance(url, str) or not url.startswith("data:"):
+            continue
+        if "," not in url:
+            return "Не удалось прочитать файл", []
+        _, data = url.split(",", 1)
+        try:
+            content = base64.b64decode(data)
+        except (ValueError, TypeError):
+            return "Не удалось прочитать файл", []
+        name = _request_file_name(file_data.get("name"))
+        extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        if allowed and extension not in allowed:
+            return f"Файл «{name}» имеет недопустимое расширение", []
+        total += len(content)
+        if total > max_bytes:
+            return f"Суммарный размер файлов превышает {max_mb} МБ", []
+        decoded.append((name, content))
+    return None, decoded
+
+
+def _stored_request_file_size(file_obj):
+    uploaded = file_obj.uploaded_file
+    if not uploaded:
+        return 0
+    try:
+        return uploaded.size
+    except (OSError, ValueError):
+        return 0
+
+
+def _existing_request_files_size(direction):
+    return sum(_stored_request_file_size(file_obj) for file_obj in direction.napravleniyafiles_set.all())
+
+
+def _save_request_files(direction, decoded_files):
+    for name, content in decoded_files:
+        NapravleniyaFiles(napravleniye=direction, uploaded_file=ContentFile(content, name=name)).save()
+
+
 @login_required
 @group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def create_request(request):
@@ -378,14 +438,9 @@ def create_request(request):
     if not fin_source:
         return status_response(False, "Не найден источник финансирования")
 
-    files = request_fields.get('files', [])
-    for file_data in files:
-        if 'url' in file_data and file_data['url'].startswith('data:'):
-            _, data = file_data['url'].split(',', 1)
-            file_content = base64.b64decode(data)
-            file_size = len(file_content)
-            if file_size > 10 * 1024 * 1024:
-                return status_response(False, "Размер файла превышает 10 МБ")
+    file_error, decoded_files = _prepare_request_files(request_fields.get('files', []))
+    if file_error:
+        return status_response(False, file_error)
 
     with transaction.atomic():
         is_cito = request_fields.get('cito', False)
@@ -442,16 +497,7 @@ def create_request(request):
             ]
         )
 
-        for file_data in files:
-            if 'url' in file_data and file_data['url'].startswith('data:'):
-                _, data = file_data['url'].split(',', 1)
-                file_content = base64.b64decode(data)
-                file_name = file_data.get('name', f'{uuid.uuid4()}.bin')
-
-                django_file = ContentFile(file_content, name=file_name)
-
-                napravleniya_file = NapravleniyaFiles(napravleniye=direction, uploaded_file=django_file)
-                napravleniya_file.save()
+        _save_request_files(direction, decoded_files)
 
     direction = Napravleniya.objects.select_related('client__individual', 'hospital', 'type_contrast').get(pk=direction_id)
     research = Researches.objects.filter(pk=research_id).first()
@@ -620,6 +666,7 @@ def get_request_details(request):
                 'id': file_obj.pk,
                 'name': file_obj.uploaded_file.name.split('/')[-1] if file_obj.uploaded_file else 'Файл',
                 'url': file_obj.uploaded_file.url if file_obj.uploaded_file else '',
+                'size': _stored_request_file_size(file_obj),
             }
         )
 
@@ -677,12 +724,6 @@ def update_request(request):
         return status_response(False, str(e))
 
     files = request_fields.get('files', [])
-    for file_data in files:
-        if 'url' in file_data and file_data['url'].startswith('data:'):
-            _, data = file_data['url'].split(',', 1)
-            file_content = base64.b64decode(data)
-            if len(file_content) > 10 * 1024 * 1024:
-                return status_response(False, "Размер файла превышает 10 МБ")
 
     try:
         direction = (
@@ -701,6 +742,10 @@ def update_request(request):
 
     if not Researches.objects.filter(pk=research_id).exists():
         return status_response(False, "Услуга не найдена")
+
+    file_error, decoded_files = _prepare_request_files(files, existing_bytes=_existing_request_files_size(direction))
+    if file_error:
+        return status_response(False, file_error)
 
     with transaction.atomic():
         hospital_id = request.user.doctorprofile.get_hospital_id()
@@ -758,13 +803,7 @@ def update_request(request):
             iss.coast = PriceCoast.get_coast_from_price(iss.research_id, price_modifier, is_cito=is_cito)
             iss.save(update_fields=['coast'])
 
-        for file_data in files:
-            if 'url' in file_data and file_data['url'].startswith('data:'):
-                _, data = file_data['url'].split(',', 1)
-                file_content = base64.b64decode(data)
-                file_name = file_data.get('name', f'{uuid.uuid4()}.bin')
-                django_file = ContentFile(file_content, name=file_name)
-                NapravleniyaFiles(napravleniye=direction, uploaded_file=django_file).save()
+        _save_request_files(direction, decoded_files)
 
         direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id)
         new_snapshot = _build_request_edit_snapshot(direction, hospital_id)
