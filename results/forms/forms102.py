@@ -1,5 +1,7 @@
+import pytz
 import pytils
 
+from laboratory.settings import TIME_ZONE
 from users.models import DoctorProfile
 from utils.dates import normalize_date
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, Indenter, Image
@@ -387,7 +389,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     tbl = gen_table("Врач-специалист, <br/>осуществляющий консультирование", data["Врач-консультант"], styleT, has_any_signature=has_any_signature)
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
-    date_str = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=iss.time_confirmation)
+    date_str = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=iss.time_confirmation.astimezone(pytz.timezone(TIME_ZONE)))
     fwb.append(Paragraph(f'{open_bold_tag}28. Дата проведения прижизненного патолого-анатомического исследования:{close_tag_bold} {date_str} г.', style_ml))
 
     return fwb
