@@ -1811,6 +1811,7 @@ def directions_paraclinic_form(request):
             card_documents = d.client.get_card_documents(check_has_type=['СНИЛС'])
 
             has_snils = bool(card_documents)
+            direction_hospital = d.get_hospital()
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
                 "fio": d.client.individual.fio(),
@@ -1828,6 +1829,7 @@ def directions_paraclinic_form(request):
                 "base": d.client.base_id,
                 "main_diagnosis": d.client.main_diagnosis,
                 "has_snils": has_snils,
+                "direction_hospital": direction_hospital.pk if direction_hospital else 0,
             }
             response["showExaminationDate"] = SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE
 

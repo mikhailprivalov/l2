@@ -1745,14 +1745,15 @@ export default {
         for (const f of g.fields) {
           n++;
           if (
-            ((f.required
+            (((f.required
               && f.field_type !== 3
               && (f.value === ''
                 || f.value === '- Не выбрано'
                 || !f.value
                 || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
               || this.tableFieldsErrors[f.pk])
-            && vField(g, research.research.groups, f.visibility, this.patient_form)
+            && vField(g, research.research.groups, f.visibility, this.patient_form))
+            || (f.controlParam && !vField(g, research.research.groups, f.controlParam, this.patient_form))
           ) {
             l.push((g.title !== '' ? `${g.title} ` : '') + (f.title === '' ? `поле ${n}` : f.title));
           }
