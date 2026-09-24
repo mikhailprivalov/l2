@@ -65,6 +65,16 @@ constructor_help_message = [
     {"label": "-", "param": "%sex_short", "value": "пол пациента М"},
     {"label": "-", "param": "%sex_full", "value": "пол пациента мужской"},
     {"label": "-", "param": "[_age_]", "value": "возраст пациента"},
+    {
+        "label": "-",
+        "param": "[_direction_hospital_]",
+        "value": "pk МО, создавшей направление. Контроль: [_direction_hospital_] != 123 || isFilled({id поля})",
+    },
+    {
+        "label": "-",
+        "param": "hasFiles({id поля})",
+        "value": "истина, если у поля типа Файл прикреплён хотя бы один файл. Контроль: hasFiles({id поля})",
+    },
     {"label": "-", "param": "%card_current_hosp", "value": "номер случа и/б"},
     {"label": "-", "param": "правила", "value": "{121212} - в фигурных скобках записываем ссылку на id-поля далее правила синтаксиса JAVASCRIPT. Аналогично для ВИДИМОСТИ и КОНТРОЛя"},
 ]

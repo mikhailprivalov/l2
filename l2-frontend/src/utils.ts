@@ -4,7 +4,7 @@ const DEBUG = false;
 
 const FUNCTION_CACHE = {};
 
-const patientProps = ['age', 'sex'];
+const patientProps = ['age', 'sex', 'direction_hospital'];
 
 export const LINK_FIELD = 'LINK_FIELD';
 export const LINK_PATIENT = 'LINK_PATIENT';
@@ -96,6 +96,7 @@ export const swapLayouts = (origStr: string): string => {
 
 interface Field {
   value: string | void;
+  files?: unknown[];
 }
 
 const reDigitBrackets = /{(\d+)}/g;
@@ -156,6 +157,12 @@ export const PrepareFormula = (
   returnLinks = false,
 ): string | Link[] => {
   let s = formula;
+  if (!returnLinks) {
+    s = s.replace(/hasFiles\(\s*\{(\d+)\}\s*\)/g, (_match, id) => {
+      const fieldFiles = fields[id]?.files;
+      return Array.isArray(fieldFiles) && fieldFiles.length > 0 ? 'true' : 'false';
+    });
+  }
   const necessary = s.match(reDigitBrackets);
   const links = [];
 
@@ -205,7 +212,15 @@ export const PrepareFormula = (
       }
     } else {
       const r = getRe(`\\[_${prop}_\\]`, 'g');
-      s = s.replace(r, patient[prop] || '');
+      let value = patient[prop];
+      if (prop === 'direction_hospital') {
+        if (value === undefined || value === null || value === '') {
+          value = 0;
+        }
+      } else {
+        value = value || '';
+      }
+      s = s.replace(r, String(value));
     }
   }
 
