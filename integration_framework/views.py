@@ -2829,7 +2829,7 @@ def results_by_direction(request):
                     "title": i["title_research"],
                     "fio": short_fio_dots(i["result"][0]["docConfirm"]),
                     "confirmedAt": datetime.datetime.strftime(iss.time_confirmation.astimezone(pytz.timezone(TIME_ZONE)), '%d.%m.%Y'),
-                    "confirmedTime": f"15:{minutes:02d}",
+                    "confirmedTime": iss.time_confirmation.astimezone(pytz.timezone(TIME_ZONE)).strftime("%H:%M"),
                     "fractions": [],
                     "directionId": i["result"][0]["direction_id"],
                     "additionalDataConfirmDirection": additional_data_confirm_direction,
