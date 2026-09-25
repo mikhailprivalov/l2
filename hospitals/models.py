@@ -49,6 +49,9 @@ class Hospitals(models.Model):
     json_result_auto_export = models.BooleanField(default=False, blank=True, db_index=True, help_text='Автоматически формировать JSON-результат для заявок этой организации')
     is_external_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
     not_has_price = models.BooleanField(default=False, blank=True, help_text='Без прайса - не выводить в картотеке при выборе услуг', db_index=True)
+    only_services_with_hospital_synonym = models.BooleanField(
+        default=False, blank=True, db_index=True, help_text='Создание заявки: показывать только услуги с синонимом'
+    )
     # добавить каталог для переноса заказа
     orders_pull_by_numbers = models.CharField(
         max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории получения заказов (ftp://user:password@host.example.com/path)'

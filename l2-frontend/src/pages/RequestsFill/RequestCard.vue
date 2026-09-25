@@ -47,11 +47,19 @@
       </div>
     </div>
     <div
-      v-if="props.request.research"
+      v-if="props.request.research || props.request.family"
       :class="$style.infoRow"
-      :title="props.request.research"
     >
-      {{ props.request.research }}
+      <span
+        v-if="props.request.research"
+        :class="$style.research"
+        :title="props.request.research"
+      >{{ props.request.research }}</span>
+      <span
+        v-if="props.request.family"
+        :class="$style.family"
+        :title="props.request.family"
+      >{{ props.request.family }}</span>
     </div>
   </div>
 </template>
@@ -65,6 +73,7 @@ import useNotify from '@/hooks/useNotify';
 export type Request = {
   id: number;
   patient: string;
+  family?: string;
   clinic: string;
   datetime: string;
   orderDate?: string;
@@ -183,11 +192,18 @@ const handleCardClick = (event: Event) => {
 
 .patient,
 .clinic {
-  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.patient {
+  flex: 1 1 1ch;
+}
+
+.clinic {
+  flex: 1 1 0;
 }
 
 .requestId {
@@ -217,11 +233,27 @@ const handleCardClick = (event: Event) => {
 }
 
 .infoRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 3px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
-  white-space: nowrap;
+  min-width: 0;
+}
+
+.research {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.family {
+  flex: 0 0 auto;
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .topPart {

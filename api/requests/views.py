@@ -422,6 +422,15 @@ def create_request(request):
     if not patient_id or not research_id:
         return status_response(False, "Не указаны обязательные поля")
 
+    hospital = request.user.doctorprofile.get_hospital()
+    if hospital and hospital.only_services_with_hospital_synonym:
+        try:
+            research_pk = int(research_id)
+        except (TypeError, ValueError):
+            research_pk = None
+        if not research_pk or not TitleResearchHospital.get_titles_for_hospital(hospital.pk, [research_pk]).get(research_pk):
+            return status_response(False, "Услуга недоступна: для больницы не задан синоним")
+
     if not request_fields.get('date') or not request_fields.get('time'):
         return status_response(False, "Не указана дата или время исследования")
 
@@ -950,12 +959,26 @@ def get_unlinked_requests(request):
     return JsonResponse({"rows": rows})
 
 
-def direction_to_request(direction, doctor_profile):
-    hospital_id = doctor_profile.get_hospital_id() if doctor_profile else None
+def _synonyms_by_direction_hospital(directions):
+    research_ids_by_hospital = {}
+    for direction in directions:
+        if not direction.hospital_id:
+            continue
+        ids = research_ids_by_hospital.setdefault(direction.hospital_id, [])
+        for iss in direction.issledovaniya_set.all():
+            if iss.research_id:
+                ids.append(iss.research_id)
+    return {
+        hospital_id: TitleResearchHospital.get_titles_for_hospital(hospital_id, research_ids) for hospital_id, research_ids in research_ids_by_hospital.items()
+    }
+
+
+def direction_to_request(direction, doctor_profile, synonyms=None):
+    hospital_id = direction.hospital_id
     research_titles = []
     podrzdeleniye_titles = []
     for iss in direction.issledovaniya_set.all():
-        title = _iss_display_title(iss, hospital_id)
+        title = _iss_display_title(iss, hospital_id, synonyms)
         if title:
             research_titles.append(title)
         podrzdeleniye_titles.append(iss.research.podrazdeleniye.title if iss.research and iss.research.podrazdeleniye else "-")
@@ -963,6 +986,7 @@ def direction_to_request(direction, doctor_profile):
     return {
         "id": direction.pk,
         "patient": direction.client.individual.fio(short=True),
+        "family": direction.client.individual.family or "",
         "clinic": direction.doc.get_hospital_title() if direction.doc else "Не указан",
         "datetime": strfdatetime(direction.data_sozdaniya, "%H:%M"),
         "orderDate": strfdatetime(direction.data_sozdaniya, "%d.%m"),
@@ -1353,10 +1377,11 @@ def get_requests_by_status(request):
     directions = directions.filter(cancel=False)
 
     directions_list = list(directions)
+    synonyms_by_hospital = _synonyms_by_direction_hospital(directions_list)
 
     rows = []
     for direction in directions_list:
-        rows.append(direction_to_request(direction, request.user.doctorprofile))
+        rows.append(direction_to_request(direction, request.user.doctorprofile, synonyms_by_hospital.get(direction.hospital_id)))
     filter_department = list(set([i.get("podrzdeleniye", "-") for i in rows]))
 
     if not is_done:

@@ -400,6 +400,9 @@ export default {
     hide_grouped_researches() {
       return Boolean(this.autoselect !== 'directions' || this.oneselect || this.hidetemplates);
     },
+    onlyServicesWithHospitalSynonym() {
+      return this.useHospitalSynonym && Boolean(this.$store.getters.onlyServicesWithHospitalSynonym);
+    },
     l2_only_doc_call() {
       return this.$store.getters.modules.l2_only_doc_call;
     },
@@ -506,7 +509,10 @@ export default {
           r.push(row);
         }
       }
-      return r;
+      if (!this.onlyServicesWithHospitalSynonym) {
+        return r;
+      }
+      return r.filter((row) => this.departmentHasSynonymResearch(row.pk));
     },
     dep_i() {
       let i = 0;
@@ -689,7 +695,7 @@ export default {
           r.push(row);
         }
       }
-      return r.filter((x) => !this.filter_researches.includes(x.pk) && (!this.hide_grouped_researches || !x.auto_deselect));
+      return r.filter((x) => this.passesResearchFilters(x));
     },
     researches_dep_display(dep = this.dep) {
       let r = [];
@@ -710,7 +716,23 @@ export default {
       } else if (this.dep in this.$store.getters.researches) {
         r = this.$store.getters.researches[dep];
       }
-      return r.filter((x) => !this.filter_researches.includes(x.pk) && (!this.hide_grouped_researches || !x.auto_deselect));
+      return r.filter((x) => this.passesResearchFilters(x));
+    },
+    passesResearchFilters(row) {
+      if (this.filter_researches.includes(row.pk)) {
+        return false;
+      }
+      if (this.hide_grouped_researches && row.auto_deselect) {
+        return false;
+      }
+      if (this.onlyServicesWithHospitalSynonym && !(row.hospitalTitle || '').trim()) {
+        return false;
+      }
+      return true;
+    },
+    departmentHasSynonymResearch(depPk) {
+      const rows = this.$store.getters.researches[depPk] || [];
+      return rows.some((row) => this.passesResearchFilters(row));
     },
     k(t) {
       let n = 0;

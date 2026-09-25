@@ -47,7 +47,7 @@ from slog.models import Log
 from users.models import AssignmentTemplates, Speciality
 from utils.nsi_directories import NSI
 from utils.response import status_response
-from hospitals.models import HospitalsGroup, TitleResearchHospital
+from hospitals.models import Hospitals, HospitalsGroup, TitleResearchHospital
 
 
 @login_required
@@ -272,7 +272,10 @@ def get_researches(request, last_used=False):
     get_params = getattr(request, "GET", None) or {}
     with_hospital_synonym = str(get_params.get("withHospitalSynonym") or "").lower() in ("1", "true")
     if with_hospital_synonym:
-        TitleResearchHospital.apply_to_researches_map(doctorprofile.get_hospital_id(), result.get("researches") or {})
+        hospital_id = doctorprofile.get_hospital_id()
+        TitleResearchHospital.apply_to_researches_map(hospital_id, result.get("researches") or {})
+        hospital = Hospitals.objects.filter(pk=hospital_id).only("only_services_with_hospital_synonym").first() if hospital_id else None
+        result["onlyServicesWithSynonym"] = bool(hospital and hospital.only_services_with_hospital_synonym)
     if hasattr(request, 'plain_response') and request.plain_response:
         return result
     return JsonResponse(result)
