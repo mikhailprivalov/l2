@@ -16,7 +16,13 @@ class RefHospitals(admin.ModelAdmin):
         'code_tfoms',
         'is_default',
     )
-    list_filter = ('json_result_auto_export', 'is_default', 'hide', 'append_paraclinic_file_images_to_result_pdf')
+    list_filter = (
+        'json_result_auto_export',
+        'is_default',
+        'hide',
+        'append_paraclinic_file_images_to_result_pdf',
+        'only_services_with_hospital_synonym',
+    )
     search_fields = ('title',)
     autocomplete_fields = ('client',)
 

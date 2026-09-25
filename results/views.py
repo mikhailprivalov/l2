@@ -131,6 +131,22 @@ def _pdf_attachment_path(path) -> Optional[str]:
     return None
 
 
+def _normalized_pdf_attachment_path(path) -> Optional[str]:
+    path_str = _pdf_attachment_path(path)
+    if not path_str:
+        return None
+    return os.path.normpath(os.path.abspath(path_str))
+
+
+def _add_unique_pdf_attachment(link_result, seen, path):
+    normalized = _normalized_pdf_attachment_path(path)
+    if not normalized or normalized in seen:
+        return False
+    seen.add(normalized)
+    link_result.append(normalized)
+    return True
+
+
 @logged_in_or_token
 def result_print(request):
     """Печать результатов"""
@@ -348,6 +364,7 @@ def result_print(request):
 
     client_prev = -1
     link_result = []
+    seen_pdf_paths = set()
     fwb = []
     hosp_nums_obj = hosp_get_hosp_direction(pk[0])
     hosp_nums = ''
@@ -487,16 +504,14 @@ def result_print(request):
                 has_paraclinic = True
             if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
                 has_paraclinic = True
-            pdf_link = _pdf_attachment_path(iss.link_file)
-            if pdf_link:
-                link_result.append(pdf_link)
+            if _add_unique_pdf_attachment(link_result, seen_pdf_paths, iss.link_file):
                 link_files = True
             for iss_uploaded_file in IssledovaniyaFiles.objects.filter(issledovaniye=iss):
                 uploaded = iss_uploaded_file.uploaded_file
-                if not uploaded or not _pdf_attachment_path(uploaded.name):
+                if not uploaded:
                     continue
-                link_result.append(uploaded.path)
-                link_files = True
+                if _add_unique_pdf_attachment(link_result, seen_pdf_paths, uploaded.path):
+                    link_files = True
             if 'выпис' in iss.research.title.lower():
                 is_extract = True
             if iss.research.is_gistology:
@@ -904,6 +919,8 @@ def result_print(request):
         writer = PdfWriter()
         pdf_all = BytesIO()
         for inpfn in file_dir:
+            if not inpfn or not os.path.exists(inpfn):
+                continue
             writer.addpages(PdfReader(inpfn).pages)
         writer.write(pdf_all)
         pdf_out = pdf_all.getvalue()

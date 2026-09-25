@@ -11,6 +11,7 @@ const stateInitial = {
   tubes: {},
   researches_loaded: false,
   researchesHospitalSynonymsLoaded: false,
+  onlyServicesWithHospitalSynonym: false,
   permanentDirectories: {},
   LayoutTemplate: {},
   requiredStattalonFields: {},
@@ -23,6 +24,7 @@ const getters = {
   templates: (state) => state.templates,
   researches: (state) => state.researches,
   tubes: (state) => state.tubes,
+  onlyServicesWithHospitalSynonym: (state) => state.onlyServicesWithHospitalSynonym,
   researches_obj(state) {
     const o = {};
     for (const k of Object.keys(state.researches)) {
@@ -64,7 +66,11 @@ const actions = {
     );
     const { researches } = answer;
     const { tubes } = answer;
-    commit(mutationTypes.UPDATE_RESEARCHES, { researches, hospitalSynonymsLoaded: withHospitalSynonym });
+    commit(mutationTypes.UPDATE_RESEARCHES, {
+      researches,
+      hospitalSynonymsLoaded: withHospitalSynonym,
+      onlyServicesWithSynonym: Boolean(answer.onlyServicesWithSynonym),
+    });
     commit(mutationTypes.UPDATE_TUBES, { tubes });
   },
   async [actionsTypes.GET_LAST_USED_RESEARCHES]({ commit }) {
@@ -102,11 +108,12 @@ const mutations = {
   [mutationTypes.SET_TEMPLATES_LOADED](state, { templates_loaded: tl }) {
     state.templates_loaded = tl;
   },
-  [mutationTypes.UPDATE_RESEARCHES](state, { researches, hospitalSynonymsLoaded }) {
+  [mutationTypes.UPDATE_RESEARCHES](state, { researches, hospitalSynonymsLoaded, onlyServicesWithSynonym }) {
     state.researches = researches;
     state.researches_loaded = true;
     if (hospitalSynonymsLoaded) {
       state.researchesHospitalSynonymsLoaded = true;
+      state.onlyServicesWithHospitalSynonym = Boolean(onlyServicesWithSynonym);
     }
   },
   [mutationTypes.ADD_RESEARCHES](state, { researches }) {

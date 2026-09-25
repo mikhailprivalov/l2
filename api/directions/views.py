@@ -23,7 +23,7 @@ import collections
 from integration_framework.views import get_cda_data
 from results.prepare_data import fields_result_only_title_fields
 from utils.response import status_response
-from hospitals.models import Hospitals, HospitalParams
+from hospitals.models import Hospitals, HospitalParams, TitleResearchHospital
 import operator
 import re
 import time
@@ -1858,6 +1858,12 @@ def directions_paraclinic_form(request):
             tube = None
             medical_certificates = []
             tmp_certificates = []
+            request_research_titles = {}
+            if d.is_request and d.hospital_id:
+                request_research_titles = TitleResearchHospital.get_titles_for_hospital(
+                    d.hospital_id,
+                    [row.research_id for row in df if row.research_id],
+                )
             i: Issledovaniya
             for i in df:
                 if i.research.is_doc_refferal:
@@ -1901,7 +1907,7 @@ def directions_paraclinic_form(request):
                     "direction_pk": d.pk,
                     "research": {
                         "pk": i.research_id,
-                        "title": i.research.title,
+                        "title": request_research_titles.get(i.research_id) or i.research.title,
                         "version": i.pk * 10000,
                         "is_paraclinic": i.research.is_paraclinic or i.research.is_citology or i.research.is_gistology,
                         "is_doc_refferal": i.research.is_doc_refferal,
@@ -5224,9 +5230,10 @@ def add_file(request):
             tb = traceback.format_exc()
             stdout.write(tb)
     else:
+        keep_only_latest = SettingManager.get("iss_keep_only_latest_file", default="false", default_type="b")
         iss_files = IssledovaniyaFiles.objects.filter(issledovaniye_id=pk)
 
-        if file and iss_files.count() >= 5:
+        if file and not keep_only_latest and iss_files.count() >= 5:
             return JsonResponse(
                 {
                     "ok": False,
@@ -5244,6 +5251,7 @@ def add_file(request):
 
         iss = IssledovaniyaFiles(issledovaniye_id=pk, uploaded_file=file, who_add_files=request.user.doctorprofile)
         iss.save()
+        IssledovaniyaFiles.keep_only_latest(pk, keep_pk=iss.pk)
 
     return JsonResponse(
         {
