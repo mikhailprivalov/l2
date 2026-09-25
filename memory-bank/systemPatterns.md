@@ -135,6 +135,7 @@ Result (Result)
 - **Builder** - Step-by-step complex document construction (PDF, DOCX via reportlab, python-docx)
 - **Form Constructor** - Dynamic form creation via `construct/`, JSON-based configuration
 - **Tube barcodes** (`/barcodes/tubes`): label size `BARCODE_SIZE` (`43x25`), left offset `tube_barcode_offset_x` (mm, default `TUBE_BARCODE_OFFSET_X` `-3`), long-number bar index `TUBE_BARCODE_WIDTH_MINDEX`. Overall Code128 width is `tube_barcode_width_mm` (mm; `0` keeps the digit-length formula). Override per request with `barcode_width`. Runtime values live in `appconf.Setting` and are edited under constructor **Штрих-коды ёмкостей** (`/ui/construct/tube-barcode`, group **Конструктор: Ёмкости для биоматериала**). `laboratory/settings.py` / `local_settings.py` are defaults until first save.
+- **ISS attached files:** `appconf.Setting` `iss_keep_only_latest_file` (boolean, default off). When on, `IssledovaniyaFiles.keep_only_latest` after `directions/add-file` deletes older files for that iss and keeps the newest. Frontend (`FileAddModal`) still shows upload so a new file can replace the old one. `result_print` deduplicates `Issledovaniya.link_file` and `IssledovaniyaFiles` PDF paths so the same attachment is not printed twice.
 
 ## Security Patterns
 

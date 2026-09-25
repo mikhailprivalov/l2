@@ -5230,9 +5230,10 @@ def add_file(request):
             tb = traceback.format_exc()
             stdout.write(tb)
     else:
+        keep_only_latest = SettingManager.get("iss_keep_only_latest_file", default="false", default_type="b")
         iss_files = IssledovaniyaFiles.objects.filter(issledovaniye_id=pk)
 
-        if file and iss_files.count() >= 5:
+        if file and not keep_only_latest and iss_files.count() >= 5:
             return JsonResponse(
                 {
                     "ok": False,
@@ -5250,6 +5251,7 @@ def add_file(request):
 
         iss = IssledovaniyaFiles(issledovaniye_id=pk, uploaded_file=file, who_add_files=request.user.doctorprofile)
         iss.save()
+        IssledovaniyaFiles.keep_only_latest(pk, keep_pk=iss.pk)
 
     return JsonResponse(
         {

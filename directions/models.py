@@ -2738,6 +2738,18 @@ class IssledovaniyaFiles(models.Model):
         verbose_name = 'Файлы на исследование'
         verbose_name_plural = 'Файлы на исследования'
 
+    @classmethod
+    def keep_only_latest(cls, issledovaniye_id, keep_pk=None):
+        if not SettingManager.get("iss_keep_only_latest_file", default="false", default_type="b"):
+            return
+        qs = cls.objects.filter(issledovaniye_id=issledovaniye_id).order_by("-created_at", "-pk")
+        keep = qs.filter(pk=keep_pk).first() if keep_pk else None
+        if not keep:
+            keep = qs.first()
+        if not keep:
+            return
+        qs.exclude(pk=keep.pk).delete()
+
 
 def get_file_path_napravleniya(instance: 'NapravleniyaFiles', filename):
     return os.path.join('napravleniya_files', str(instance.napravleniye.pk), str(uuid.uuid4()), filename)

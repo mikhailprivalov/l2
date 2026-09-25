@@ -17,7 +17,7 @@
       class="modal-body"
     >
       <div
-        v-if="rows.length < maxCountFiles"
+        v-if="canUpload"
         class="uploading-block"
       >
         <a
@@ -137,6 +137,14 @@ export default {
       uploading: false,
     };
   },
+  computed: {
+    keepOnlyLatestFile() {
+      return Boolean(this.$store.getters.modules.iss_keep_only_latest_file);
+    },
+    canUpload() {
+      return this.keepOnlyLatestFile || this.rows.length < this.maxCountFiles;
+    },
+  },
   mounted() {
     this.loadRows();
   },
@@ -201,7 +209,7 @@ export default {
         this.file = '';
         this.fileName = '';
         this.fileSize = '';
-        this.$emit('add-file');
+        this.$emit('add-file', this.rows.length);
       }
     },
     async loadRows() {
