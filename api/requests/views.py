@@ -968,9 +968,7 @@ def _synonyms_by_direction_hospital(directions):
         for iss in direction.issledovaniya_set.all():
             if iss.research_id:
                 ids.append(iss.research_id)
-    return {
-        hospital_id: TitleResearchHospital.get_titles_for_hospital(hospital_id, research_ids) for hospital_id, research_ids in research_ids_by_hospital.items()
-    }
+    return {hospital_id: TitleResearchHospital.get_titles_for_hospital(hospital_id, research_ids) for hospital_id, research_ids in research_ids_by_hospital.items()}
 
 
 def direction_to_request(direction, doctor_profile, synonyms=None):
