@@ -217,6 +217,15 @@ export const PrepareFormula = (
         if (value === undefined || value === null || value === '') {
           value = 0;
         }
+      } else if (prop === 'age') {
+        const raw = value == null ? '' : String(value).trim();
+        if (!raw) {
+          value = '';
+        } else if (/^-?\d+([.,]\d+)?$/.test(raw)) {
+          value = Number(raw.replace(',', '.'));
+        } else {
+          value = JSON.stringify(raw);
+        }
       } else {
         value = value || '';
       }
