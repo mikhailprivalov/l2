@@ -1813,7 +1813,7 @@ def directions_paraclinic_form(request):
             has_snils = bool(card_documents)
             direction_hospital = d.get_hospital()
             patient_age = d.client.individual.age()
-            if patient_age <= 0:
+            if patient_age < 1:
                 patient_age = d.client.individual.age_s(direction=d)
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
