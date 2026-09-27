@@ -369,6 +369,8 @@ DOU_CONSTRUCTOR_NAV_BUTTONS = [
     {"id": "document_templates", "title": "Шаблоны документов"},
     {"id": "addressees", "title": "Адресаты"},
     {"id": "cases", "title": "Виды дел"},
+    {"id": "plans", "title": "Планы"},
+    {"id": "indicators", "title": "Показатели"},
     {"id": "element", "title": "Элементы"},
     {"id": "group_element", "title": "Группировка Элементов"},
     {"id": "type_section", "title": "Тип раздела"},
