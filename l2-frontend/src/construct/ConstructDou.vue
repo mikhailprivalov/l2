@@ -103,11 +103,11 @@
         @cancel="selectedId = null"
       />
       <ParaclinicResearchEditor
-        v-else-if="showTemplateEditor"
-        :key="selectedId"
+        v-else-if="showResearchEditor"
+        :key="`${selectedNavId}-${selectedId}`"
         style="position: absolute; top: 0; right: 0; bottom: 0; left: 0"
         :pk="selectedId"
-        :department="LAYOUT_TEMPLATE_DEPARTMENT"
+        :department="researchDepartment"
         :direction_forms="directionForms"
         :result_forms="resultForms"
         :specialities="specialities"
@@ -152,7 +152,8 @@ interface CatalogItem {
 }
 
 const LAYOUT_TEMPLATE_DEPARTMENT = -17;
-const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'skeleton', 'addressees', 'cases'];
+const INDICATOR_DEPARTMENT = -18;
+const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'indicators', 'skeleton', 'addressees', 'cases'];
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -173,6 +174,7 @@ const canAdd = computed(() => (
   selectedNavId.value === 'document_groups'
   || selectedNavId.value === 'document_types'
   || selectedNavId.value === 'document_templates'
+  || selectedNavId.value === 'indicators'
   || selectedNavId.value === 'addressees'
   || selectedNavId.value === 'cases'
 ));
@@ -211,9 +213,16 @@ const showStructureEditor = computed(
   () => selectedNavId.value === 'skeleton' && selectedId.value !== null && selectedId.value > 0,
 );
 
-const showTemplateEditor = computed(
-  () => selectedNavId.value === 'document_templates' && selectedId.value !== null,
+const showResearchEditor = computed(
+  () => (
+    selectedNavId.value === 'document_templates'
+    || selectedNavId.value === 'indicators'
+  ) && selectedId.value !== null,
 );
+
+const researchDepartment = computed(() => (
+  selectedNavId.value === 'indicators' ? INDICATOR_DEPARTMENT : LAYOUT_TEMPLATE_DEPARTMENT
+));
 
 const showAddresseeEditor = computed(
   () => selectedNavId.value === 'addressees' && selectedId.value !== null,
@@ -248,8 +257,9 @@ const loadItems = async () => {
     if (selectedNavId.value === 'document_groups') {
       const { result } = await api('document-manager/groups/list');
       items.value = result || [];
-    } else if (selectedNavId.value === 'document_templates') {
-      const data = await api('researches/by-department', { department: LAYOUT_TEMPLATE_DEPARTMENT, isConstructor: true });
+    } else if (selectedNavId.value === 'document_templates' || selectedNavId.value === 'indicators') {
+      const department = selectedNavId.value === 'indicators' ? INDICATOR_DEPARTMENT : LAYOUT_TEMPLATE_DEPARTMENT;
+      const data = await api('researches/by-department', { department, isConstructor: true });
       items.value = (data.researches || []).map((row: { pk: number; title: string; hide?: boolean }) => ({
         id: row.pk,
         title: row.title,
@@ -298,7 +308,7 @@ const onStructureSaved = async () => {
 };
 
 const onTemplateCancel = async () => {
-  if (selectedNavId.value !== 'document_templates') {
+  if (selectedNavId.value !== 'document_templates' && selectedNavId.value !== 'indicators') {
     return;
   }
   await loadItems();

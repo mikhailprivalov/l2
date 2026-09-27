@@ -8,7 +8,6 @@ from document_management.models import (
     DocumentRecent,
     DocumentReview,
     GroupDocuments,
-    Indicators,
     Plans,
     TypeCases,
     TypeDocumentCreator,
@@ -53,12 +52,6 @@ class TypeCasesAdmin(admin.ModelAdmin):
 
 @admin.register(Plans)
 class PlansAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title")
-    search_fields = ("title",)
-
-
-@admin.register(Indicators)
-class IndicatorsAdmin(admin.ModelAdmin):
     list_display = ("pk", "title")
     search_fields = ("title",)
 

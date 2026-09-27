@@ -356,6 +356,7 @@ class Researches(models.Model):
     is_complex = models.BooleanField(default=False, blank=True, help_text="Это комплексная услуга", db_index=True)
     is_lab = models.BooleanField(default=False, blank=True, help_text="Это для лаборатории", db_index=True)
     is_layout_template = models.BooleanField(default=False, blank=True, help_text="Это шаблон для макета", db_index=True)
+    is_indicator = models.BooleanField(default=False, blank=True, help_text="Это показатель", db_index=True)
     is_extract_service = models.BooleanField(default=False, blank=True, help_text="Это документ выбытия выписка(посмертный, переводной)", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text="Место услуги", on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
@@ -496,6 +497,8 @@ class Researches(models.Model):
             # смотреть Researches.filter_type() complex=18 и SettingManager.en() complex=18
             # тип подразделения Podrazdeleniye.TYPES = 18,
             return -16
+        if self.is_indicator:
+            return -18
         if self.is_layout_template:
             # -16 потому что на фронт отдаётся тип подразделения 18, на фронте 2 - 18 = -16
             # смотреть Researches.filter_type() complex=18 и SettingManager.en() complex=18
@@ -522,6 +525,7 @@ class Researches(models.Model):
             or self.is_expertise
             or self.is_aux
             or self.is_layout_template
+            or self.is_indicator
         )
 
     def get_flag_types_n3(self):
@@ -974,7 +978,7 @@ class Researches(models.Model):
 
     @staticmethod
     def get_layaout_template_research(exclude_pk):
-        return Researches.objects.filter(is_layout_template=True).exclude(pk=exclude_pk)
+        return Researches.objects.filter(is_layout_template=True, is_indicator=False).exclude(pk=exclude_pk)
 
     def to_treeselect_json(self):
         return {

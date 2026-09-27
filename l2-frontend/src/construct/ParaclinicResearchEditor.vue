@@ -937,7 +937,7 @@
                       :permanent_directories_keys="permanent_directories_keys"
                       :permanent_directories="permanent_directories"
                     />
-                    <div v-else-if="row.field_type === 41 && Number(department) !== -17">
+                    <div v-else-if="row.field_type === 41 && !isLayoutLikeDepartment">
                       <strong>Шаблон-макет:</strong>
                       <br>
                       <Treeselect
@@ -1212,7 +1212,7 @@
                         <option value="35">Врач</option>
                         <option value="39">Динамический справочник</option>
                         <option
-                          v-if="Number(department) !== -17 || Number(row.field_type) === 41"
+                          v-if="!isLayoutLikeDepartment || Number(row.field_type) === 41"
                           value="41"
                         >Шаблон макет</option>
                         <option value="42">Файл</option>
@@ -1230,7 +1230,7 @@
                 </div>
               </div>
             </div>
-            <div>
+            <div v-if="!indicatorHasField">
               <button
                 class="btn btn-blue-nb"
                 @click="add_field(group)"
@@ -1245,12 +1245,14 @@
           class="add-buttons"
         >
           <button
+            v-if="!indicatorHasField"
             class="btn btn-blue-nb"
             @click="add_group()"
           >
             Добавить группу
           </button>
           <LoadFile
+            v-if="!isIndicator"
             is-load-group-for-protocol
             title-button="Загрузить группу"
             file-filter="application/JSON"
@@ -1259,7 +1261,7 @@
             @load-file="onLoadFileGroup"
           />
           <LoadFile
-            v-if="pk === -1"
+            v-if="pk === -1 && !isIndicator"
             is-load-group-for-protocol
             title-button="Загрузить услугу"
             file-filter="application/JSON"
@@ -1564,6 +1566,19 @@ export default {
     ex_deps() {
       return this.$store.getters.ex_dep[this.ex_dep] || [];
     },
+    isLayoutLikeDepartment() {
+      const department = Number(this.department);
+      return department === -17 || department === -18;
+    },
+    isIndicator() {
+      return Number(this.department) === -18;
+    },
+    indicatorHasField() {
+      if (!this.isIndicator) {
+        return false;
+      }
+      return this.groups.some(group => (group.fields || []).length > 0);
+    },
     rich_text_enabled() {
       return this.$store.getters.modules.descriptive_rich_text;
     },
@@ -1805,6 +1820,12 @@ export default {
       return row.order === this.min_max_order(group).max;
     },
     add_field(group, field: any = {}, ignoreOrder = false) {
+      if (this.isIndicator) {
+        const savedCount = this.groups.reduce((sum, row) => sum + (row.fields || []).length, 0);
+        if (savedCount + (group.fields || []).length > 0) {
+          return;
+        }
+      }
       let order = ignoreOrder ? field.order ?? null : 0;
 
       if (!ignoreOrder || order === null) {
@@ -1861,6 +1882,9 @@ export default {
       });
     },
     add_group(groupSettings: any = {}) {
+      if (this.indicatorHasField) {
+        return;
+      }
       let order = 0;
       for (const row of this.groups) {
         order = Math.max(order, row.order);
@@ -2005,7 +2029,11 @@ export default {
       }
       constructPoint
         .updateResearch(this, props, moreData)
-        .then(() => {
+        .then((data) => {
+          if (!data || data.ok === false) {
+            this.$root.$emit('msg', 'error', data?.message || 'Не сохранено');
+            return;
+          }
           this.has_unsaved = false;
           this.$root.$emit('msg', 'ok', 'Сохранено');
           this.cancel();

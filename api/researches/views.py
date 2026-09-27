@@ -400,7 +400,9 @@ def researches_by_department(request):
         elif department_pk == -14:
             q = DResearches.objects.filter(is_case=True).order_by("title")
         elif department_pk == -17:
-            q = DResearches.objects.filter(is_layout_template=True).order_by("title")
+            q = DResearches.objects.filter(is_layout_template=True, is_indicator=False).order_by("title")
+        elif department_pk == -18:
+            q = DResearches.objects.filter(is_indicator=True).order_by("title")
         else:
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
@@ -490,6 +492,10 @@ def researches_update(request):
         department_template_pk = request_data.get("departmentForTemplatesField")
         site_type = request_data.get("site_type", None)
         groups = request_data.get("groups", [])
+        if department_pk == -18:
+            field_count = sum(len(group.get("fields") or []) for group in groups)
+            if field_count > 1:
+                return JsonResponse({"ok": False, "message": "У показателя может быть только одно поле"})
         tube = request_data.get("tube", -1)
         is_simple = request_data.get("simple", False)
         main_service_pk = request_data.get("main_service_pk", -1)
@@ -509,14 +515,14 @@ def researches_update(request):
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
-        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -17, -16]
+        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -17, -18, -16]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
             if int(hospital_research_department_pk) > -1:
                 department = Podrazdeleniya.objects.filter(pk=int(hospital_research_department_pk))[0]
             can_create_research = "Конструктор: Параклинические (описательные) исследования" in user_groups
-            if not can_create_research and department_pk == -17 and "Конструктор: ДОУ" in user_groups:
+            if not can_create_research and department_pk in (-17, -18) and "Конструктор: ДОУ" in user_groups:
                 can_create_research = True
             if pk == -1 and can_create_research:
                 res = DResearches(
@@ -546,6 +552,7 @@ def researches_update(request):
                     is_complex=department_pk == -16,
                     is_slave_hospital=stationar_slave,
                     is_layout_template=department_pk == -17,
+                    is_indicator=department_pk == -18,
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
                     internal_code=internal_code,
@@ -601,6 +608,7 @@ def researches_update(request):
                 res.is_expertise = department_pk == -13
                 res.is_case = department_pk == -14
                 res.is_layout_template = department_pk == -17
+                res.is_indicator = department_pk == -18
                 res.is_complex = department_pk == -16
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
