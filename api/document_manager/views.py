@@ -9,6 +9,7 @@ from document_management.models import (
     DocumentReview,
     Documents,
     GroupDocuments,
+    Plans,
     TypeCases,
     TypeDocuments,
 )
@@ -112,6 +113,32 @@ def cases_update(request):
         data.get("code", ""),
         data.get("defaultTypeDocumentId"),
     )
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def plans_list(request):
+    return JsonResponse({"result": Plans.get_list()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def plans_details(request):
+    data = _request_data(request)
+    result = Plans.get_details(data.get("id"))
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def plans_update(request):
+    data = _request_data(request)
+    result = Plans.save_plan(data.get("id", -1), data.get("title", ""), data.get("groups"), data.get("indicators"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))

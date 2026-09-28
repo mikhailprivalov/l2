@@ -354,7 +354,7 @@
       </div>
     </div>
     <div class="content-editor">
-      <template v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 15">
+      <template v-if="!isIndicator && ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 15">
         <div
           v-if="!simple && ex_dep !== 14"
           class="input-group"

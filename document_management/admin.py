@@ -8,6 +8,8 @@ from document_management.models import (
     DocumentRecent,
     DocumentReview,
     GroupDocuments,
+    PlanIndicator,
+    PlanIndicatorGroup,
     Plans,
     TypeCases,
     TypeDocumentCreator,
@@ -54,6 +56,19 @@ class TypeCasesAdmin(admin.ModelAdmin):
 class PlansAdmin(admin.ModelAdmin):
     list_display = ("pk", "title")
     search_fields = ("title",)
+
+
+@admin.register(PlanIndicatorGroup)
+class PlanIndicatorGroupAdmin(admin.ModelAdmin):
+    list_display = ("pk", "plan", "title", "order")
+    search_fields = ("title",)
+    list_filter = ("plan",)
+
+
+@admin.register(PlanIndicator)
+class PlanIndicatorAdmin(admin.ModelAdmin):
+    list_display = ("pk", "plan", "group", "indicator", "due_kind", "due_date", "offset_value", "offset_unit", "order")
+    list_filter = ("plan", "due_kind")
 
 
 @admin.register(DocumentFieldGroups)

@@ -102,6 +102,13 @@
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
       />
+      <DouPlanEditor
+        v-else-if="showPlanEditor"
+        :key="`plan-${selectedId}`"
+        :plan-id="selectedId || -1"
+        @saved="onCatalogSaved"
+        @cancel="selectedId = null"
+      />
       <ParaclinicResearchEditor
         v-else-if="showResearchEditor"
         :key="`${selectedNavId}-${selectedId}`"
@@ -129,6 +136,7 @@ import api from '@/api';
 import DouCatalogEditor from '@/construct/DouCatalogEditor.vue';
 import DouDocumentStructureEditor from '@/construct/DouDocumentStructureEditor.vue';
 import DouAddresseeEditor from '@/construct/DouAddresseeEditor.vue';
+import DouPlanEditor from '@/construct/DouPlanEditor.vue';
 import ParaclinicResearchEditor from '@/construct/ParaclinicResearchEditor.vue';
 
 interface NavButton {
@@ -153,7 +161,10 @@ interface CatalogItem {
 
 const LAYOUT_TEMPLATE_DEPARTMENT = -17;
 const INDICATOR_DEPARTMENT = -18;
-const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'indicators', 'skeleton', 'addressees', 'cases'];
+const WORKING_NAV = [
+  'document_groups', 'document_types', 'document_templates', 'indicators',
+  'plans', 'skeleton', 'addressees', 'cases',
+];
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -175,6 +186,7 @@ const canAdd = computed(() => (
   || selectedNavId.value === 'document_types'
   || selectedNavId.value === 'document_templates'
   || selectedNavId.value === 'indicators'
+  || selectedNavId.value === 'plans'
   || selectedNavId.value === 'addressees'
   || selectedNavId.value === 'cases'
 ));
@@ -228,6 +240,10 @@ const showAddresseeEditor = computed(
   () => selectedNavId.value === 'addressees' && selectedId.value !== null,
 );
 
+const showPlanEditor = computed(
+  () => selectedNavId.value === 'plans' && selectedId.value !== null,
+);
+
 const loadNavButtons = async () => {
   await store.dispatch(actions.INC_LOADING);
   try {
@@ -279,6 +295,9 @@ const loadItems = async () => {
       items.value = result || [];
     } else if (selectedNavId.value === 'cases') {
       const { result } = await api('document-manager/cases/list');
+      items.value = result || [];
+    } else if (selectedNavId.value === 'plans') {
+      const { result } = await api('document-manager/plans/list');
       items.value = result || [];
     } else {
       await loadGroups();

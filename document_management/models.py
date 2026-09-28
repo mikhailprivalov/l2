@@ -569,6 +569,189 @@ class Plans(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+    @property
+    def json(self):
+        return {"id": self.id, "title": self.title or ""}
+
+    @staticmethod
+    def get_list():
+        return [row.json for row in Plans.objects.all().order_by("title", "pk")]
+
+    @staticmethod
+    def indicator_options():
+        from directory.models import Researches
+
+        rows = Researches.objects.filter(is_indicator=True).order_by("title", "pk")
+        return [{"id": row.pk, "label": row.title} for row in rows]
+
+    @staticmethod
+    def get_details(pk):
+        options = Plans.indicator_options()
+        if pk in (None, -1, "-1"):
+            return {"ok": True, "id": -1, "title": "", "groups": [], "indicators": [], "indicatorOptions": options}
+        plan = Plans.objects.filter(pk=pk).prefetch_related("indicator_groups__indicators", "indicators").first()
+        if not plan:
+            return {"ok": False, "message": "План не найден"}
+        groups = []
+        for group in plan.indicator_groups.all().order_by("order", "pk"):
+            groups.append(
+                {
+                    "id": group.pk,
+                    "title": group.title or "",
+                    "order": group.order,
+                    "indicators": [row.as_json() for row in group.indicators.all().order_by("order", "pk")],
+                }
+            )
+        loose = [row.as_json() for row in plan.indicators.filter(group__isnull=True).order_by("order", "pk")]
+        return {"ok": True, "id": plan.pk, "title": plan.title or "", "groups": groups, "indicators": loose, "indicatorOptions": options}
+
+    @staticmethod
+    def save_plan(pk, title, groups, indicators):
+        from django.db import transaction
+
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        groups = groups or []
+        indicators = indicators or []
+        cleaned_groups = []
+        for index, group in enumerate(groups):
+            group_title = (group.get("title") or "").strip()
+            if not group_title:
+                return {"ok": False, "message": "Укажите название группы"}
+            cleaned_rows = []
+            for row_index, row in enumerate(group.get("indicators") or []):
+                cleaned, error = PlanIndicator.clean_row(row, row_index)
+                if error:
+                    return {"ok": False, "message": error}
+                cleaned_rows.append(cleaned)
+            cleaned_groups.append({"title": group_title, "order": index, "indicators": cleaned_rows})
+        cleaned_loose = []
+        for row_index, row in enumerate(indicators):
+            cleaned, error = PlanIndicator.clean_row(row, row_index)
+            if error:
+                return {"ok": False, "message": error}
+            cleaned_loose.append(cleaned)
+        with transaction.atomic():
+            if pk in (None, -1, "-1"):
+                plan = Plans(title=title)
+            else:
+                plan = Plans.objects.filter(pk=pk).first()
+                if not plan:
+                    return {"ok": False, "message": "План не найден"}
+                plan.title = title
+            plan.save()
+            PlanIndicator.objects.filter(plan=plan).delete()
+            PlanIndicatorGroup.objects.filter(plan=plan).delete()
+            for group_row in cleaned_groups:
+                group = PlanIndicatorGroup.objects.create(plan=plan, title=group_row["title"], order=group_row["order"])
+                for row in group_row["indicators"]:
+                    PlanIndicator.objects.create(plan=plan, group=group, **row)
+            for row in cleaned_loose:
+                PlanIndicator.objects.create(plan=plan, group=None, **row)
+        return {"ok": True, "id": plan.pk, "title": plan.title}
+
+
+class PlanIndicatorGroup(models.Model):
+    plan = models.ForeignKey(Plans, related_name="indicator_groups", on_delete=models.CASCADE)
+    title = models.CharField(max_length=128, blank=True, null=True)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Группа показателей плана"
+        verbose_name_plural = "Группы показателей плана"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return f"{self.plan} – {self.title}"
+
+
+class PlanIndicator(models.Model):
+    DUE_ABSOLUTE = "absolute"
+    DUE_EMPLOYMENT = "employment"
+    UNIT_DAYS = "days"
+    UNIT_MONTHS = "months"
+    UNIT_YEARS = "years"
+
+    plan = models.ForeignKey(Plans, related_name="indicators", on_delete=models.CASCADE)
+    group = models.ForeignKey(PlanIndicatorGroup, related_name="indicators", null=True, blank=True, default=None, on_delete=models.CASCADE)
+    indicator = models.ForeignKey("directory.Researches", on_delete=models.PROTECT)
+    order = models.IntegerField(default=0)
+    due_kind = models.CharField(max_length=16, default=DUE_ABSOLUTE)
+    due_date = models.DateField(null=True, blank=True)
+    offset_value = models.IntegerField(null=True, blank=True)
+    offset_unit = models.CharField(max_length=16, default=UNIT_DAYS, blank=True)
+
+    class Meta:
+        verbose_name = "Показатель плана"
+        verbose_name_plural = "Показатели плана"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return f"{self.plan} – {self.indicator_id}"
+
+    def as_json(self):
+        return {
+            "id": self.pk,
+            "indicatorId": self.indicator_id,
+            "order": self.order,
+            "dueKind": self.due_kind,
+            "dueDate": self.due_date.strftime("%Y-%m-%d") if self.due_date else "",
+            "offsetValue": self.offset_value,
+            "offsetUnit": self.offset_unit or self.UNIT_DAYS,
+        }
+
+    @staticmethod
+    def _parse_date(value):
+        from datetime import datetime
+
+        text = str(value or "").strip()
+        if not text:
+            return None
+        for fmt in ("%Y-%m-%d", "%d.%m.%Y"):
+            try:
+                return datetime.strptime(text[:10], fmt).date()
+            except ValueError:
+                continue
+        return None
+
+    @staticmethod
+    def clean_row(row, order):
+        from directory.models import Researches
+
+        research = Researches.objects.filter(pk=row.get("indicatorId"), is_indicator=True).first()
+        if not research:
+            return None, "Выберите показатель"
+        due_kind = row.get("dueKind") or PlanIndicator.DUE_ABSOLUTE
+        if due_kind not in (PlanIndicator.DUE_ABSOLUTE, PlanIndicator.DUE_EMPLOYMENT):
+            return None, "Укажите вид срока"
+        due_date = None
+        offset_value = None
+        offset_unit = PlanIndicator.UNIT_DAYS
+        if due_kind == PlanIndicator.DUE_ABSOLUTE:
+            due_date = PlanIndicator._parse_date(row.get("dueDate"))
+            if not due_date:
+                return None, "Укажите дату выполнения"
+        else:
+            raw = row.get("offsetValue")
+            if raw in (None, ""):
+                return None, "Укажите сдвиг от даты приема на работу"
+            try:
+                offset_value = int(raw)
+            except (TypeError, ValueError):
+                return None, "Сдвиг должен быть числом"
+            offset_unit = row.get("offsetUnit") or PlanIndicator.UNIT_DAYS
+            if offset_unit not in (PlanIndicator.UNIT_DAYS, PlanIndicator.UNIT_MONTHS, PlanIndicator.UNIT_YEARS):
+                return None, "Укажите единицу сдвига"
+        return {
+            "indicator": research,
+            "order": order,
+            "due_kind": due_kind,
+            "due_date": due_date,
+            "offset_value": offset_value,
+            "offset_unit": offset_unit,
+        }, None
+
 
 class DocumentFieldGroups(models.Model):
     title = models.CharField(max_length=550, help_text="Название группы")
