@@ -167,16 +167,10 @@ const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const userGroups = computed(() => store.getters.user_groups || []);
 const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
-const actionButtons = computed(() => {
-  const items = [];
-  if (userGroups.value.includes('Согласование')) {
-    items.push({ id: 'toBeAgreed', label: 'Согласовать' });
-  }
-  if (userGroups.value.includes('Подписание')) {
-    items.push({ id: 'onSignature', label: 'Подписать' });
-  }
-  return items;
-});
+const actionButtons = [
+  { id: 'toBeAgreed', label: 'Согласовать' },
+  { id: 'onSignature', label: 'Подписать' },
+];
 
 const toggleRoleFilter = (id: string) => {
   emit('update:filter', props.roleFilter === id ? null : id);

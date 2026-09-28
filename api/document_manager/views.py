@@ -9,6 +9,7 @@ from document_management.models import (
     DocumentReview,
     Documents,
     GroupDocuments,
+    PlaceSection,
     Plans,
     TypeCases,
     TypeDocuments,
@@ -91,6 +92,7 @@ def types_update(request):
         data.get("layoutTemplateId"),
         data.get("layoutTemplateIds"),
         data.get("creatorIds"),
+        data.get("placeSectionId"),
     )
     if result.get("ok"):
         return status_response(True, data=result)
@@ -98,9 +100,25 @@ def types_update(request):
 
 
 @login_required
-@group_required("Конструктор: ДОУ")
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def cases_list(request):
     return JsonResponse({"result": TypeCases.get_list()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def places_list(request):
+    return JsonResponse({"result": PlaceSection.get_list()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def places_update(request):
+    data = _request_data(request)
+    result = PlaceSection.save_place(data.get("id", -1), data.get("title", ""), data.get("columnsCount"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
 
 
 @login_required
@@ -184,6 +202,23 @@ def documents_list(request):
 def documents_find(request):
     data = _request_data(request)
     result = Documents.find_by_id(data.get("id"), request.user.doctorprofile)
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_search(request):
+    data = _request_data(request)
+    result = Documents.search(
+        data.get("query"),
+        by_number=bool(data.get("byNumber")),
+        by_text=bool(data.get("byText")),
+        who=request.user.doctorprofile,
+        date_from=data.get("dateFrom"),
+        date_to=data.get("dateTo"),
+    )
     if result.get("ok"):
         return JsonResponse(result)
     return status_response(False, result.get("message"))

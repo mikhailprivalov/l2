@@ -497,13 +497,8 @@ class Researches(models.Model):
             # смотреть Researches.filter_type() complex=18 и SettingManager.en() complex=18
             # тип подразделения Podrazdeleniye.TYPES = 18,
             return -16
-        if self.is_indicator:
-            return -18
-        if self.is_layout_template:
-            # -16 потому что на фронт отдаётся тип подразделения 18, на фронте 2 - 18 = -16
-            # смотреть Researches.filter_type() complex=18 и SettingManager.en() complex=18
-            # тип подразделения Podrazdeleniye.TYPES = 18,
-            return -17
+        if self.is_layout_template or self.is_indicator:
+            return 2 - Podrazdeleniya.DOU
         return self.podrazdeleniye_id or -2
 
     @property
@@ -619,6 +614,10 @@ class Researches(models.Model):
             return Podrazdeleniya.MORFOLOGY + 2
         if self.is_gistology:
             return Podrazdeleniya.MORFOLOGY + 3
+        if self.is_layout_template:
+            return Podrazdeleniya.DOU + 1
+        if self.is_indicator:
+            return Podrazdeleniya.DOU + 2
         if self.is_application:
             return -13
         return self.site_type_id

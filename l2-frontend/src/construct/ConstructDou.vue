@@ -61,10 +61,10 @@
               {{ row.code }}
             </span>
             <span
-              v-if="row.groupTitle || row.defaultTypeDocumentTitle"
+              v-if="row.groupTitle || row.placeSectionTitle || row.defaultTypeDocumentTitle"
               class="object-row__sub"
             >
-              {{ row.groupTitle || row.defaultTypeDocumentTitle }}
+              {{ row.groupTitle || row.placeSectionTitle || row.defaultTypeDocumentTitle }}
             </span>
           </div>
         </div>
@@ -84,7 +84,10 @@
         :layout-templates-value="selectedItem?.layoutTemplates"
         :creators-value="selectedItem?.creators"
         :default-type-document-id-value="selectedItem?.defaultTypeDocumentId"
+        :place-section-id-value="selectedItem?.placeSectionId"
+        :columns-count-value="selectedItem?.columnsCount"
         :groups="groups"
+        :places="places"
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
       />
@@ -156,6 +159,9 @@ interface CatalogItem {
   creators?: { id: number; fio: string; department?: string }[];
   defaultTypeDocumentId?: number | null;
   defaultTypeDocumentTitle?: string;
+  placeSectionId?: number | null;
+  placeSectionTitle?: string;
+  columnsCount?: number;
   hide?: boolean;
 }
 
@@ -163,7 +169,7 @@ const LAYOUT_TEMPLATE_DEPARTMENT = -17;
 const INDICATOR_DEPARTMENT = -18;
 const WORKING_NAV = [
   'document_groups', 'document_types', 'document_templates', 'indicators',
-  'plans', 'skeleton', 'addressees', 'cases',
+  'plans', 'skeleton', 'addressees', 'cases', 'place_section',
 ];
 
 const store = useStore();
@@ -173,6 +179,7 @@ const selectedNavId = ref<string | null>(null);
 const titleFilter = ref('');
 const items = ref<CatalogItem[]>([]);
 const groups = ref<CatalogItem[]>([]);
+const places = ref<CatalogItem[]>([]);
 const selectedId = ref<number | null>(null);
 const directionForms = ref([]);
 const resultForms = ref([]);
@@ -189,13 +196,17 @@ const canAdd = computed(() => (
   || selectedNavId.value === 'plans'
   || selectedNavId.value === 'addressees'
   || selectedNavId.value === 'cases'
+  || selectedNavId.value === 'place_section'
 ));
-const catalogKind = computed<'group' | 'type' | 'case'>(() => {
+const catalogKind = computed<'group' | 'type' | 'case' | 'place'>(() => {
   if (selectedNavId.value === 'document_groups') {
     return 'group';
   }
   if (selectedNavId.value === 'cases') {
     return 'case';
+  }
+  if (selectedNavId.value === 'place_section') {
+    return 'place';
   }
   return 'type';
 });
@@ -218,6 +229,7 @@ const showCatalogEditor = computed(
     selectedNavId.value === 'document_groups'
     || selectedNavId.value === 'document_types'
     || selectedNavId.value === 'cases'
+    || selectedNavId.value === 'place_section'
   ) && selectedId.value !== null,
 );
 
@@ -262,6 +274,11 @@ const loadGroups = async () => {
   groups.value = result || [];
 };
 
+const loadPlaces = async () => {
+  const { result } = await api('document-manager/places/list');
+  places.value = result || [];
+};
+
 const loadItems = async () => {
   selectedId.value = null;
   items.value = [];
@@ -293,6 +310,10 @@ const loadItems = async () => {
         globalOnly: true,
       });
       items.value = result || [];
+    } else if (selectedNavId.value === 'place_section') {
+      const { result } = await api('document-manager/places/list');
+      items.value = result || [];
+      places.value = result || [];
     } else if (selectedNavId.value === 'cases') {
       const { result } = await api('document-manager/cases/list');
       items.value = result || [];
@@ -301,6 +322,7 @@ const loadItems = async () => {
       items.value = result || [];
     } else {
       await loadGroups();
+      await loadPlaces();
       const { result } = await api('document-manager/types/list');
       items.value = result || [];
     }

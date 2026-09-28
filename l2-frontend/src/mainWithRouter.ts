@@ -860,6 +860,17 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/document-manager-2',
+      name: 'document-manager-2',
+      component: () => import('@/pages/DocumentManagement/DocumentManager2.vue'),
+      meta: {
+        title: 'ДОУ-2',
+        fullPageLayout: true,
+        groups: ['ДОУ: просмотр документов'],
+        openIfModule: 'document_manager_for_all',
+      },
+    },
+    {
       path: '/ui/document-history',
       name: 'document-history',
       component: () => import('@/pages/DocumentManagement/DocumentHistory.vue'),

@@ -284,9 +284,127 @@ class AddresseeGroupMember(models.Model):
         return f"{self.group} {self.doctor}"
 
 
+class PlaceSection(models.Model):
+    COLUMNS_MIN = 1
+    COLUMNS_MAX = 12
+    COLUMNS_DEFAULT = 10
+
+    title = models.CharField(max_length=128, blank=True, null=True)
+    columns_count = models.PositiveSmallIntegerField(
+        default=COLUMNS_DEFAULT,
+        help_text="Количество колонок значений в ResearchesPicker",
+    )
+
+    class Meta:
+        verbose_name = "Подраздел/место"
+        verbose_name_plural = "Подразделы/места"
+
+    def __str__(self):
+        return f"{self.title}"
+
+    @property
+    def json(self):
+        return {
+            "id": self.id,
+            "title": self.title or "",
+            "columnsCount": self.columns_count or self.COLUMNS_DEFAULT,
+        }
+
+    @staticmethod
+    def get_list():
+        return [row.json for row in PlaceSection.objects.all().order_by("title", "pk")]
+
+    @classmethod
+    def normalize_columns_count(cls, value):
+        if value in (None, ""):
+            return None
+        try:
+            n = int(value)
+        except (TypeError, ValueError):
+            return None
+        if n < cls.COLUMNS_MIN or n > cls.COLUMNS_MAX:
+            return None
+        return n
+
+    def as_picker_department(self, dou):
+        return {
+            "pk": self.pk,
+            "title": self.title or "",
+            "type": dou,
+            "extended": True,
+            "e": dou,
+            "columnsCount": self.columns_count or self.COLUMNS_DEFAULT,
+        }
+
+    @staticmethod
+    def save_place(pk, title, columns_count=None):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        provided = columns_count not in (None, "")
+        n = PlaceSection.normalize_columns_count(columns_count)
+        if provided and n is None:
+            return {
+                "ok": False,
+                "message": f"Количество колонок от {PlaceSection.COLUMNS_MIN} до {PlaceSection.COLUMNS_MAX}",
+            }
+        if pk in (None, -1, "-1"):
+            obj = PlaceSection(
+                title=title,
+                columns_count=n if n is not None else PlaceSection.COLUMNS_DEFAULT,
+            )
+        else:
+            obj = PlaceSection.objects.filter(pk=pk).first()
+            if not obj:
+                return {"ok": False, "message": "Подраздел/место не найден"}
+            obj.title = title
+            if provided:
+                obj.columns_count = n
+        obj.save()
+        return {"ok": True, "id": obj.pk, "title": obj.title, "columnsCount": obj.columns_count}
+
+    @staticmethod
+    def picker_departments():
+        from podrazdeleniya.models import Podrazdeleniya
+
+        dou = Podrazdeleniya.DOU
+        rows = [TypeCases.picker_department(dou)]
+        if TypeDocuments.objects.filter(place_section__isnull=True).exists():
+            rows.append(
+                {
+                    "pk": -1,
+                    "title": "Общие",
+                    "type": dou,
+                    "extended": True,
+                    "e": dou,
+                    "columnsCount": PlaceSection.COLUMNS_DEFAULT,
+                }
+            )
+        for place in PlaceSection.objects.order_by("title", "pk"):
+            rows.append(place.as_picker_department(dou))
+        return rows
+
+    @staticmethod
+    def picker_researches(doctor=None, available_only=False):
+        docs = TypeDocuments.picker_researches(doctor=doctor, available_only=available_only)
+        return docs + TypeCases.picker_researches()
+
+
 class TypeDocuments(models.Model):
+    PICKER_PK_SHIFT = 1000000000
+
     title = models.CharField(max_length=128, blank=True, null=True)
     group_document = models.ForeignKey(GroupDocuments, default=None, blank=True, null=True, help_text="Группа документов", on_delete=models.SET_NULL)
+    place_section = models.ForeignKey(
+        PlaceSection,
+        related_name="type_documents",
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Подраздел/место в пикере ДОУ",
+        on_delete=models.SET_NULL,
+    )
     code = models.CharField(max_length=55, blank=True, null=True)
     layout_template = models.ForeignKey(
         "directory.Researches",
@@ -343,6 +461,8 @@ class TypeDocuments(models.Model):
             "code": self.code or "",
             "groupId": self.group_document_id,
             "groupTitle": self.group_document.title if self.group_document else "",
+            "placeSectionId": self.place_section_id,
+            "placeSectionTitle": self.place_section.title if self.place_section else "",
             "layoutTemplateId": template_ids[0] if template_ids else self.layout_template_id,
             "layoutTemplateIds": template_ids,
             "layoutTemplates": [{"id": row.pk, "label": row.title} for row in templates],
@@ -352,7 +472,7 @@ class TypeDocuments(models.Model):
     @staticmethod
     def get_list(group_id=None, doctor=None, available_only=False):
         qs = (
-            TypeDocuments.objects.select_related("group_document", "layout_template")
+            TypeDocuments.objects.select_related("group_document", "layout_template", "place_section")
             .prefetch_related(
                 models.Prefetch(
                     "layout_template_links",
@@ -429,8 +549,53 @@ class TypeDocuments(models.Model):
         TypeDocumentCreator.objects.bulk_create([TypeDocumentCreator(type_document=obj, doctor_id=doctor_id) for doctor_id in ids])
         return ids
 
+    def as_picker_research(self):
+        from podrazdeleniya.models import Podrazdeleniya
+
+        title = self.title or ""
+        code = self.code or ""
+        site = self.place_section_id
+        return {
+            "pk": TypeDocuments.PICKER_PK_SHIFT + self.pk,
+            "onlywith": -1,
+            "department_pk": 2 - Podrazdeleniya.DOU,
+            "title": title,
+            "full_title": title,
+            "doc_refferal": False,
+            "treatment": False,
+            "is_hospital": False,
+            "is_form": False,
+            "is_case": False,
+            "is_application": False,
+            "stom": False,
+            "need_vich_code": False,
+            "comment_variants": [],
+            "autoadd": [],
+            "addto": [],
+            "code": code,
+            "internal_code": code,
+            "type": str(Podrazdeleniya.DOU),
+            "site_type": site,
+            "site_type_raw": site,
+            "localizations": [],
+            "service_locations": [],
+            "direction_params": -1,
+            "is_dou_document_type": True,
+        }
+
     @staticmethod
-    def save_type(pk, title, group_id=None, code="", layout_template_id=None, layout_template_ids=None, creator_ids=None):
+    def picker_researches(doctor=None, available_only=False):
+        qs = TypeDocuments.objects.select_related("place_section").order_by("title", "pk")
+        if available_only:
+            if not doctor:
+                return []
+            has_creators = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"))
+            is_creator = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"), doctor=doctor)
+            qs = qs.filter(~models.Exists(has_creators) | models.Exists(is_creator))
+        return [row.as_picker_research() for row in qs]
+
+    @staticmethod
+    def save_type(pk, title, group_id=None, code="", layout_template_id=None, layout_template_ids=None, creator_ids=None, place_section_id=None):
         from directory.models import Researches
 
         title = (title or "").strip()
@@ -441,6 +606,11 @@ class TypeDocuments(models.Model):
             group = GroupDocuments.objects.filter(pk=group_id).first()
             if not group:
                 return {"ok": False, "message": "Группа не найдена"}
+        place = None
+        if place_section_id not in (None, "", -1, "-1"):
+            place = PlaceSection.objects.filter(pk=place_section_id).first()
+            if not place:
+                return {"ok": False, "message": "Подраздел/место не найден"}
         template_ids = TypeDocuments._parse_template_ids(layout_template_ids, layout_template_id)
         templates = []
         for template_id in template_ids:
@@ -453,13 +623,20 @@ class TypeDocuments(models.Model):
         first_template = templates[0] if templates else None
         with transaction.atomic():
             if pk in (None, -1, "-1"):
-                obj = TypeDocuments(title=title, group_document=group, code=code or "", layout_template=first_template)
+                obj = TypeDocuments(
+                    title=title,
+                    group_document=group,
+                    place_section=place,
+                    code=code or "",
+                    layout_template=first_template,
+                )
             else:
                 obj = TypeDocuments.objects.filter(pk=pk).first()
                 if not obj:
                     return {"ok": False, "message": "Вид документа не найден"}
                 obj.title = title
                 obj.group_document = group
+                obj.place_section = place
                 obj.code = code or ""
                 obj.layout_template = first_template
             obj.save()
@@ -501,6 +678,9 @@ class TypeDocumentCreator(models.Model):
 
 
 class TypeCases(models.Model):
+    PICKER_DEPARTMENT_PK = -2
+    PICKER_PK_SHIFT = 2000000000
+
     title = models.CharField(max_length=128, blank=True, null=True)
     code = models.CharField(max_length=55, blank=True, null=True)
     default_type_document = models.ForeignKey(
@@ -535,6 +715,57 @@ class TypeCases(models.Model):
     def get_list():
         qs = TypeCases.objects.select_related("default_type_document").order_by("title", "pk")
         return [row.json for row in qs]
+
+    @classmethod
+    def picker_department(cls, dou):
+        return {
+            "pk": cls.PICKER_DEPARTMENT_PK,
+            "title": "Виды дел",
+            "type": dou,
+            "extended": True,
+            "e": dou,
+            "columnsCount": PlaceSection.COLUMNS_DEFAULT,
+            "isCases": True,
+        }
+
+    def as_picker_research(self):
+        from podrazdeleniya.models import Podrazdeleniya
+
+        title = self.title or ""
+        code = self.code or ""
+        return {
+            "pk": TypeCases.PICKER_PK_SHIFT + self.pk,
+            "onlywith": -1,
+            "department_pk": 2 - Podrazdeleniya.DOU,
+            "title": title,
+            "full_title": title,
+            "doc_refferal": False,
+            "treatment": False,
+            "is_hospital": False,
+            "is_form": False,
+            "is_case": False,
+            "is_application": False,
+            "stom": False,
+            "need_vich_code": False,
+            "comment_variants": [],
+            "autoadd": [],
+            "addto": [],
+            "code": code,
+            "internal_code": code,
+            "type": str(Podrazdeleniya.DOU),
+            "site_type": TypeCases.PICKER_DEPARTMENT_PK,
+            "site_type_raw": TypeCases.PICKER_DEPARTMENT_PK,
+            "localizations": [],
+            "service_locations": [],
+            "direction_params": -1,
+            "is_dou_document_type": True,
+            "is_dou_case_type": True,
+            "defaultTypeDocumentId": self.default_type_document_id,
+        }
+
+    @staticmethod
+    def picker_researches():
+        return [row.as_picker_research() for row in TypeCases.objects.order_by("title", "pk")]
 
     @staticmethod
     def save_case(pk, title, code="", default_type_document_id=None):
@@ -1418,6 +1649,121 @@ class Documents(models.Model):
         payload["ok"] = True
         return payload
 
+    @staticmethod
+    def _search_dates(date_from, date_to):
+        from datetime import datetime
+
+        def parse(value):
+            if value in (None, ""):
+                return None
+            try:
+                return datetime.strptime(str(value)[:10], "%Y-%m-%d").date()
+            except ValueError:
+                return False
+
+        start = parse(date_from)
+        end = parse(date_to)
+        if start is False or end is False:
+            return None, None, "Некорректная дата"
+        if start and end and start > end:
+            return None, None, "Дата начала позже даты окончания"
+        return start, end, None
+
+    @staticmethod
+    def search(query, by_number=False, by_text=False, who=None, limit=50, date_from=None, date_to=None):
+        query = (query or "").strip()
+        if not query:
+            return {"ok": False, "message": "Введите запрос"}
+        if not by_number and not by_text:
+            return {"ok": False, "message": "Выберите способ поиска"}
+        start, end, date_error = Documents._search_dates(date_from, date_to)
+        if date_error:
+            return {"ok": False, "message": date_error}
+        found_ids = []
+        seen = set()
+
+        def in_period(qs, field="create_at"):
+            if start:
+                qs = qs.filter(**{f"{field}__date__gte": start})
+            if end:
+                qs = qs.filter(**{f"{field}__date__lte": end})
+            return qs
+
+        def add_ids(pks):
+            for pk in pks:
+                if not pk or pk in seen:
+                    continue
+                seen.add(pk)
+                found_ids.append(pk)
+                if len(found_ids) >= limit:
+                    return True
+            return False
+
+        if by_number:
+            digits = "".join(ch for ch in query if ch.isdigit())
+            if not digits:
+                if not by_text:
+                    return {"ok": False, "message": "Введите номер документа"}
+            else:
+                try:
+                    pk = int(digits)
+                except ValueError:
+                    pk = 0
+                if pk > 0:
+                    add_ids(in_period(Documents.objects.filter(pk=pk)).values_list("pk", flat=True))
+                if len(found_ids) < limit:
+                    numbered = in_period(Documents.objects.filter(number_registration=digits))
+                    add_ids(numbered.values_list("pk", flat=True)[:limit])
+        if by_text and len(found_ids) < limit:
+            from directory.models import ParaclinicInputField
+            from directions.models import Issledovaniya, ParaclinicResult
+
+            titled = in_period(Documents.objects.filter(type_document__title__icontains=query)).order_by("-pk")
+            add_ids(titled.values_list("pk", flat=True)[:limit])
+            if len(found_ids) < limit:
+                recent_ids = (
+                    in_period(DocumentRecent.objects.filter(topic__icontains=query), "document__create_at")
+                    .order_by("-opened_at")
+                    .values_list("document_id", flat=True)[:limit]
+                )
+                add_ids(recent_ids)
+            topic_id = Documents.topic_cda_id()
+            if topic_id and len(found_ids) < limit:
+                field_ids = list(ParaclinicInputField.objects.filter(cda_option_id=topic_id).values_list("pk", flat=True))
+                if field_ids:
+                    iss_ids = list(
+                        ParaclinicResult.objects.filter(field_id__in=field_ids, value__icontains=query).values_list(
+                            "issledovaniye_id",
+                            flat=True,
+                        )[:limit]
+                    )
+                    if iss_ids:
+                        doc_ids = in_period(
+                            Issledovaniya.objects.filter(pk__in=iss_ids, document_id__isnull=False),
+                            "document__create_at",
+                        ).values_list("document_id", flat=True)
+                        add_ids(doc_ids)
+        if not found_ids:
+            return {"ok": False, "message": "Документ не найден"}
+        visible = Documents.objects.select_related("type_document").filter(pk__in=found_ids[:limit])
+        docs = [doc for doc in visible if Documents.can_see_document(doc, who)]
+        order = {pk: index for index, pk in enumerate(found_ids)}
+        docs.sort(key=lambda doc: order.get(doc.pk, 0))
+        if not docs:
+            return {"ok": False, "message": "Документ не найден"}
+        from directions.models import Issledovaniya
+
+        iss_by_doc = {}
+        for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in docs]).order_by("pk"):
+            iss_by_doc.setdefault(iss.document_id, iss)
+        topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
+        rows = []
+        for doc in docs:
+            title = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
+            rows.append({"id": doc.pk, "title": Documents.title_with_id(doc.pk, title)})
+        message = rows[0]["title"] if len(rows) == 1 else f"Найдено {len(rows)}"
+        return {"ok": True, "result": rows, "message": message}
+
     @classmethod
     def log_action(cls, pk, log_type, who, extra=None):
         from slog.models import Log
@@ -1460,10 +1806,10 @@ class Documents(models.Model):
         result = []
         for doc in docs:
             payload = doc.json
-            title = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
-            if role_filter == "toReview":
-                title = Documents.title_with_id(doc.pk, title)
-            payload["title"] = title
+            topic = (topic_by_doc.get(doc.pk) or "").strip()
+            type_doc = doc.type_document.title if doc.type_document else ""
+            title = " ".join(part for part in (topic, type_doc) if part)
+            payload["title"] = Documents.title_with_id(doc.pk, title)
             result.append(payload)
         return result
 
@@ -1473,27 +1819,31 @@ class Documents(models.Model):
 
         if type_id in (None, "", -1, "-1"):
             return {"ok": False, "message": "Выберите вид документа"}
-        type_doc = TypeDocuments.objects.filter(pk=type_id).first()
+        type_doc = TypeDocuments.objects.select_related("layout_template").filter(pk=type_id).first()
         if not type_doc:
             return {"ok": False, "message": "Вид документа не найден"}
         if not type_doc.can_create(who_create):
             return {"ok": False, "message": "Нет прав на создание этого вида документа"}
-        with transaction.atomic():
+        schema = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
+        if schema is None:
             schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
+        templates = type_doc.get_layout_templates()
+        with transaction.atomic():
             obj = Documents.objects.create(type_document=type_doc, who_create=who_create, body_values={}, schema=schema)
-            templates = type_doc.get_layout_templates()
             Issledovaniya.objects.create(
                 document=obj,
                 research=templates[0] if templates else type_doc.layout_template,
                 creator=who_create,
             )
+        type_title = type_doc.title or "Документ"
+        title = f"{type_title} №{obj.pk}"
         Documents.log_action(
             obj.pk,
             Documents.LOG_CREATE,
             who_create,
-            {"title": obj.json["title"], "typeId": obj.type_document_id, "typeTitle": obj.type_document.title if obj.type_document else ""},
+            {"title": title, "typeId": type_doc.pk, "typeTitle": type_doc.title or ""},
         )
-        return {"ok": True, "id": obj.pk, "title": obj.json["title"]}
+        return {"ok": True, "id": obj.pk, "title": title}
 
     def get_issledovaniye(self):
         from directions.models import Issledovaniya

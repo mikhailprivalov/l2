@@ -74,6 +74,21 @@ def get_researches_templates(request):
 
 
 def get_researches(request, last_used=False):
+    get_params = getattr(request, "GET", None) or {}
+    if not last_used and str(get_params.get("dou") or "").lower() in ("1", "true"):
+        from document_management.models import PlaceSection
+
+        doctorprofile = request.user.doctorprofile
+        dou_key = str(2 - Podrazdeleniya.DOU)
+        result = {
+            "researches": {dou_key: PlaceSection.picker_researches(doctor=doctorprofile, available_only=True)},
+            "departments": PlaceSection.picker_departments(),
+            "tubes": [],
+        }
+        if hasattr(request, "plain_response") and request.plain_response:
+            return result
+        return JsonResponse(result)
+
     deps = defaultdict(list)
     doctorprofile = request.user.doctorprofile
     k = f'get_researches:restricted_to_direct:{doctorprofile.pk}'
@@ -166,6 +181,8 @@ def get_researches(request, last_used=False):
         has_templates = {}
 
         for r in res:
+            if r.is_layout_template or r.is_indicator:
+                continue
             k = f'get_researches:research:{r.pk}'
             research_data = cache.get(k)
 
@@ -193,7 +210,7 @@ def get_researches(request, last_used=False):
                     "addto": addto,
                     "code": r.code,
                     "internal_code": r.internal_code,
-                    "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
+                    "type": str(Podrazdeleniya.DOU) if r.is_layout_template or r.is_indicator else ("4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type)),
                     "site_type": r.get_site_type_id(),
                     "site_type_raw": r.site_type_id if not r.is_application else -13,
                     "localizations": [{"code": x.pk, "label": x.title} for x in r.localization_list],
@@ -276,6 +293,15 @@ def get_researches(request, last_used=False):
         TitleResearchHospital.apply_to_researches_map(hospital_id, result.get("researches") or {})
         hospital = Hospitals.objects.filter(pk=hospital_id).only("only_services_with_hospital_synonym").first() if hospital_id else None
         result["onlyServicesWithSynonym"] = bool(hospital and hospital.only_services_with_hospital_synonym)
+    if not last_used:
+        from document_management.models import PlaceSection
+
+        researches_map = result.get("researches") or {}
+        dou_key = 2 - Podrazdeleniya.DOU
+        dou_key_str = str(dou_key)
+        researches_map.pop(dou_key, None)
+        researches_map[dou_key_str] = PlaceSection.picker_researches(doctor=doctorprofile, available_only=True)
+        result["researches"] = researches_map
     if hasattr(request, 'plain_response') and request.plain_response:
         return result
     return JsonResponse(result)

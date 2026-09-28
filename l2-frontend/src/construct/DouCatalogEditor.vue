@@ -3,7 +3,7 @@
     <div class="top-editor oneLine">
       <div class="left">
         <div class="input-group">
-          <div class="field-slot">
+          <div class="field-slot field-slot--title">
             <span class="input-group-addon">Название</span>
             <input
               v-model="title"
@@ -11,8 +11,21 @@
               class="form-control"
             >
           </div>
+          <div
+            v-if="kind === 'place'"
+            class="field-slot field-slot--code"
+          >
+            <span class="input-group-addon">Колонки</span>
+            <input
+              v-model.number="columnsCount"
+              type="number"
+              min="1"
+              max="12"
+              class="form-control"
+            >
+          </div>
           <template v-if="kind === 'type' || kind === 'case'">
-            <div class="field-slot">
+            <div class="field-slot field-slot--code">
               <span class="input-group-addon">Код</span>
               <input
                 v-model="code"
@@ -22,7 +35,7 @@
             </div>
             <div
               v-if="kind === 'type'"
-              class="field-slot"
+              class="field-slot field-slot--group"
             >
               <span class="input-group-addon">Группа</span>
               <select
@@ -38,6 +51,27 @@
                   :value="group.id"
                 >
                   {{ group.title }}
+                </option>
+              </select>
+            </div>
+            <div
+              v-if="kind === 'type'"
+              class="field-slot field-slot--place"
+            >
+              <span class="input-group-addon">Подраздел/место</span>
+              <select
+                v-model.number="placeSectionId"
+                class="form-control"
+              >
+                <option :value="-1">
+                  Не выбран
+                </option>
+                <option
+                  v-for="place in places || []"
+                  :key="place.id"
+                  :value="place.id"
+                >
+                  {{ place.title }}
                 </option>
               </select>
             </div>
@@ -206,7 +240,7 @@ interface CreatorPerson {
 }
 
 const props = defineProps<{
-  kind: 'group' | 'type' | 'case';
+  kind: 'group' | 'type' | 'case' | 'place';
   itemId: number;
   titleValue?: string;
   codeValue?: string;
@@ -216,7 +250,10 @@ const props = defineProps<{
   layoutTemplatesValue?: LayoutTemplateOption[];
   creatorsValue?: CreatorPerson[];
   defaultTypeDocumentIdValue?: number | null;
+  placeSectionIdValue?: number | null;
+  columnsCountValue?: number | null;
   groups?: CatalogGroup[];
+  places?: CatalogGroup[];
 }>();
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
@@ -236,6 +273,8 @@ const layoutTemplates = ref<LayoutTemplateOption[]>([]);
 const selectedTemplates = ref<LayoutTemplateOption[]>([]);
 const creators = ref<CreatorPerson[]>([]);
 const defaultTypeDocumentId = ref<number | null>(null);
+const placeSectionId = ref<number>(-1);
+const columnsCount = ref<number>(10);
 const documentTypeOptions = ref<LayoutTemplateOption[]>([]);
 
 const canSave = computed(() => {
@@ -244,6 +283,12 @@ const canSave = computed(() => {
   }
   if (props.kind === 'case' && !defaultTypeDocumentId.value) {
     return false;
+  }
+  if (props.kind === 'place') {
+    const n = Number(columnsCount.value);
+    if (!Number.isFinite(n) || n < 1 || n > 12) {
+      return false;
+    }
   }
   return true;
 });
@@ -292,6 +337,9 @@ const fill = () => {
     department: row.department || '',
   }));
   defaultTypeDocumentId.value = props.defaultTypeDocumentIdValue || null;
+  placeSectionId.value = props.placeSectionIdValue || -1;
+  const n = Number(props.columnsCountValue);
+  columnsCount.value = Number.isFinite(n) && n >= 1 ? n : 10;
 };
 
 watch(
@@ -305,6 +353,8 @@ watch(
     props.layoutTemplatesValue,
     props.creatorsValue,
     props.defaultTypeDocumentIdValue,
+    props.placeSectionIdValue,
+    props.columnsCountValue,
   ],
   fill,
   { immediate: true },
@@ -412,27 +462,39 @@ const save = async () => {
   let endpoint = 'document-manager/types/update';
   if (props.kind === 'group') {
     endpoint = 'document-manager/groups/update';
+  } else if (props.kind === 'place') {
+    endpoint = 'document-manager/places/update';
   } else if (props.kind === 'case') {
     endpoint = 'document-manager/cases/update';
   }
   await store.dispatch(actions.INC_LOADING);
   try {
-    const payload = props.kind === 'case'
-      ? {
-        id: props.itemId,
-        title: title.value,
+    let payload: Record<string, unknown> = {
+      id: props.itemId,
+      title: title.value,
+    };
+    if (props.kind === 'place') {
+      payload = {
+        ...payload,
+        columnsCount: columnsCount.value,
+      };
+    } else if (props.kind === 'case') {
+      payload = {
+        ...payload,
         code: code.value,
         defaultTypeDocumentId: defaultTypeDocumentId.value,
-      }
-      : {
-        id: props.itemId,
-        title: title.value,
+      };
+    } else if (props.kind === 'type') {
+      payload = {
+        ...payload,
         code: code.value,
         groupId: groupId.value,
+        placeSectionId: placeSectionId.value,
         layoutTemplateId: selectedTemplates.value[0]?.id ?? null,
         layoutTemplateIds: selectedTemplates.value.map(row => row.id),
         creatorIds: creators.value.map(row => row.id),
       };
+    }
     const result = await api(endpoint, payload);
     if (result?.ok) {
       root.$emit('msg', 'ok', 'Сохранено');
@@ -523,6 +585,19 @@ const save = async () => {
     flex: 1 1 0;
     min-width: 0;
     align-items: stretch;
+  }
+
+  .field-slot--title,
+  .field-slot--place {
+    flex: 4 1 0;
+  }
+
+  .field-slot--code {
+    flex: 1 1 0;
+  }
+
+  .field-slot--group {
+    flex: 3 1 0;
   }
 
   .field-slot:last-child .form-control {

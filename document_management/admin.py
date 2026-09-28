@@ -8,6 +8,7 @@ from document_management.models import (
     DocumentRecent,
     DocumentReview,
     GroupDocuments,
+    PlaceSection,
     PlanIndicator,
     PlanIndicatorGroup,
     Plans,
@@ -25,6 +26,12 @@ class GroupDocumentsAdmin(admin.ModelAdmin):
     search_fields = ("title",)
 
 
+@admin.register(PlaceSection)
+class PlaceSectionAdmin(admin.ModelAdmin):
+    list_display = ("pk", "title", "columns_count")
+    search_fields = ("title",)
+
+
 class TypeDocumentLayoutTemplateInline(admin.TabularInline):
     model = TypeDocumentLayoutTemplate
     extra = 0
@@ -39,9 +46,9 @@ class TypeDocumentCreatorInline(admin.TabularInline):
 
 @admin.register(TypeDocuments)
 class TypeDocumentsAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "code", "group_document", "layout_template")
+    list_display = ("pk", "title", "code", "group_document", "place_section", "layout_template")
     search_fields = ("title", "code")
-    list_filter = ("group_document",)
+    list_filter = ("group_document", "place_section")
     inlines = (TypeDocumentLayoutTemplateInline, TypeDocumentCreatorInline)
 
 

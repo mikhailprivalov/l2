@@ -539,6 +539,7 @@ def departments(request):
         more_types = []
         if SettingManager.is_morfology_enabled(en):
             more_types.append({"pk": str(Podrazdeleniya.MORFOLOGY), "title": "Морфология"})
+        more_types.append({"pk": str(Podrazdeleniya.DOU), "title": "ДОУ"})
         data = {
             "departments": deps,
             "can_edit": can_edit,
@@ -788,6 +789,10 @@ def current_user_info(request):
                     ret["extended_departments"][Podrazdeleniya.MORFOLOGY].append(
                         {"pk": Podrazdeleniya.MORFOLOGY + 3, "title": "Гистология", "type": Podrazdeleniya.MORFOLOGY, "extended": True, "e": Podrazdeleniya.MORFOLOGY}
                     )
+
+            from document_management.models import PlaceSection
+
+            ret["extended_departments"][Podrazdeleniya.DOU] = PlaceSection.picker_departments()
 
             try:
                 connections.close_all()
