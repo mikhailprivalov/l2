@@ -60,7 +60,7 @@ const filterButtons = [
   { id: 'created', label: 'Создал' },
   { id: 'doing', label: 'Исполняю' },
   { id: 'wrote', label: 'Поручил' },
-  { id: 'onControl', label: 'Контролирую' },
+  { id: 'onControl', label: 'Контроль' },
 ];
 
 const query = ref('');

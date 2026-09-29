@@ -71,6 +71,7 @@
         </ul>
         <CardReader v-if="meta.showCardReader" />
         <Favorites v-if="meta.showHospFavorites" />
+        <DouDocumentFavorites v-if="meta.showDouFavorites" />
         <OperationPlans v-if="meta.showOperationPlans" />
         <LaboratoryHeader v-if="meta.showLaboratoryHeader" />
         <HelpLinkField v-if="meta.showHelpLinkField" />
@@ -215,6 +216,7 @@ import ShiftButton from '@/ui-cards/CashRegisters/ShiftButton.vue';
     ExpertiseStatus: () => import('@/ui-cards/ExpertiseStatus.vue'),
     RmisLink: () => import('@/ui-cards/RmisLink.vue'),
     Favorites: () => import('@/ui-cards/Favorites.vue'),
+    DouDocumentFavorites: () => import('@/ui-cards/DouDocumentFavorites.vue'),
     PrintQueue: () => import('@/ui-cards/PrintQueue.vue'),
     MoveHistoryDocs: () => import('@/ui-cards/MoveHistoryDocs.vue'),
     HelpLinkField: () => import('@/ui-cards/HelpLinkField.vue'),

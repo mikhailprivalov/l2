@@ -2,17 +2,23 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from document_management.models import (
+from document_management.models import (  # noqa: I001
+    list_record_favorites,
+    toggle_record_favorite,
+    toggle_case_favorite,
     AddresseeGroup,
     DocumentFieldGroups,
     DocumentRecent,
     DocumentReview,
+    DocumentPickerFavorite,
+    DocumentCase,
     Documents,
     GroupDocuments,
     PlaceSection,
     Plans,
     TypeCases,
     TypeDocuments,
+    TypeSection,
 )
 from laboratory.decorators import group_required
 from utils.response import status_response
@@ -52,6 +58,7 @@ def _save_from_request(request, with_confirm=None):
         rb.get("visibility_state") or {},
         request.user.doctorprofile,
         request_files,
+        rb.get("caseTopic"),
     )
 
 
@@ -106,6 +113,57 @@ def cases_list(request):
 
 
 @login_required
+@group_required("ДОУ: просмотр документов")
+def record_favorites_list(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    cases = bool(data.get("cases"))
+    return JsonResponse({"result": list_record_favorites(doctor, cases=cases)})
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def record_favorites_toggle(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    result = toggle_case_favorite(doctor, data.get("id")) if data.get("case") else toggle_record_favorite(doctor, data.get("id"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+def favorites_list(request):
+    doctor = getattr(request.user, "doctorprofile", None)
+    return JsonResponse({"result": DocumentPickerFavorite.picker_pks(doctor)})
+
+
+@login_required
+def favorites_toggle(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    result = DocumentPickerFavorite.toggle(doctor, data.get("pk"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+def section_types_list(request):
+    return JsonResponse({"result": TypeSection.get_list()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def section_types_update(request):
+    data = _request_data(request)
+    result = TypeSection.save_section(data.get("id", -1), data.get("title", ""), data.get("columnsCount"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
 @group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def places_list(request):
     return JsonResponse({"result": PlaceSection.get_list()})
@@ -115,7 +173,12 @@ def places_list(request):
 @group_required("Конструктор: ДОУ")
 def places_update(request):
     data = _request_data(request)
-    result = PlaceSection.save_place(data.get("id", -1), data.get("title", ""), data.get("columnsCount"))
+    result = PlaceSection.save_place(
+        data.get("id", -1),
+        data.get("title", ""),
+        data.get("columnsCount"),
+        data.get("typeSectionId"),
+    )
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -130,7 +193,64 @@ def cases_update(request):
         data.get("title", ""),
         data.get("code", ""),
         data.get("defaultTypeDocumentId"),
+        data.get("placeSectionId"),
     )
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def cases_access(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
+    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = document.document_case.set_access(doctor, data.get("members"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def cases_comment(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
+    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = document.document_case.set_comment(doctor, data.get("comment"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def cases_close(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
+    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = document.document_case.close_case(doctor)
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_case(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = DocumentCase.assign_document(document, doctor, data.get("caseId"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -191,7 +311,7 @@ def documents_list(request):
         return JsonResponse({"pendingReviewCount": DocumentReview.pending_count(doctor)})
     return JsonResponse(
         {
-            "result": Documents.get_list(data.get("typeId"), data.get("groupId"), data.get("filter"), doctor, data.get("hidden")),
+            "result": Documents.get_list(data.get("typeId"), data.get("groupId"), data.get("filter"), doctor, data.get("hidden"), data.get("myCases")),
             "pendingReviewCount": DocumentReview.pending_count(doctor),
         }
     )
@@ -235,7 +355,7 @@ def documents_recent(request):
 @group_required("ДОУ: просмотр документов")
 def documents_create(request):
     data = _request_data(request)
-    result = Documents.create_document(data.get("typeId"), request.user.doctorprofile)
+    result = Documents.create_document(data.get("typeId"), request.user.doctorprofile, data.get("caseId"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))

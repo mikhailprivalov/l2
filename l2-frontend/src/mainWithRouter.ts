@@ -857,6 +857,7 @@ const router = new Router({
         fullPageLayout: true,
         groups: ['ДОУ: просмотр документов'],
         openIfModule: 'document_manager_for_all',
+        showDouFavorites: true,
       },
     },
     {
@@ -868,6 +869,7 @@ const router = new Router({
         fullPageLayout: true,
         groups: ['ДОУ: просмотр документов'],
         openIfModule: 'document_manager_for_all',
+        showDouFavorites: true,
       },
     },
     {

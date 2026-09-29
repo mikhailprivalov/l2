@@ -72,18 +72,31 @@
             <span>Подписать</span>
           </label>
         </div>
-        <label
-          v-if="canViewHidden"
-          class="filter-check side-check side-check-hidden"
-          @click.prevent="toggleHidden"
-        >
-          <input
-            type="checkbox"
-            :checked="showHidden"
-            tabindex="-1"
+        <div class="side-check-line">
+          <label
+            class="filter-check side-check side-check-hidden"
+            @click.prevent="toggleMyCases"
           >
-          <span>Скрытые</span>
-        </label>
+            <input
+              type="checkbox"
+              :checked="showMyCases"
+              tabindex="-1"
+            >
+            <span>Мои дела</span>
+          </label>
+          <label
+            v-if="canViewHidden"
+            class="filter-check side-check side-check-hidden"
+            @click.prevent="toggleHidden"
+          >
+            <input
+              type="checkbox"
+              :checked="showHidden"
+              tabindex="-1"
+            >
+            <span>Скрытые</span>
+          </label>
+        </div>
       </div>
       <div
         ref="docsEl"
@@ -99,7 +112,7 @@
             class="doc-btn"
             :class="{ 'active-button': selectedDocument === document.id }"
             type="button"
-            @click="selectedDocument = document.id"
+            @click="selectDocument(document.id)"
           >
             <span class="doc-title">{{ document.title }}</span>
             <i
@@ -168,6 +181,7 @@
       <div class="viewer">
         <DocumentViewer
           :document-id="selectedDocument"
+          :show-case-documents="showCaseDocuments"
           @visibility-change="onVisibilityChange"
           @reviewed="onReviewed"
         />
@@ -181,6 +195,7 @@
     class="picker"
   >
       <ResearchesPicker
+        ref="picker"
         v-model="selectedResearches"
         :hidetemplates="true"
         :types-only="DOU_TYPE"
@@ -201,6 +216,14 @@
           >
             Создать
           </button>
+          <button
+            class="btn btn-blue-nb create-btn"
+            type="button"
+            :disabled="!canCreate"
+            @click="toggleFavorite"
+          >
+            В избранное
+          </button>
         </template>
       </ResearchesPicker>
     </div>
@@ -209,7 +232,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, ref, watch,
+  computed, getCurrentInstance, onMounted, onUnmounted, ref, watch,
 } from 'vue';
 import moment from 'moment';
 
@@ -230,6 +253,7 @@ const CASE_PK_SHIFT = 2000000000;
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const selectedResearches = ref<number[]>([]);
+const picker = ref<{ favoritePks: number[] } | null>(null);
 const overrideDepartments = ref<Record<string, unknown>[]>([]);
 const overrideResearches = ref<Record<string, unknown>[]>([]);
 const ready = ref(false);
@@ -241,20 +265,20 @@ const LEFT_WIDTH_STORAGE_KEY = 'document-manager-2-left-width';
 const DEFAULT_LEFT_WIDTH_PX = 448;
 const MIN_LEFT_WIDTH_PX = 448;
 const LIST_ROLE_FILTERS = ['created', 'doing', 'wrote', 'onControl', 'toReview', 'recent', 'toBeAgreed', 'onSignature'];
-const SIDE_LIST_FILTERS = ['toReview', 'recent', 'toBeAgreed', 'onSignature'];
 
-const readStoredListFilter = (): { role: string | null; hidden: boolean } => {
+const readStoredListFilter = (): { role: string | null; hidden: boolean; myCases: boolean } => {
   try {
     const raw = localStorage.getItem(LIST_FILTER_STORAGE_KEY);
     if (!raw) {
-      return { role: 'recent', hidden: false };
+      return { role: 'recent', hidden: false, myCases: false };
     }
     const data = JSON.parse(raw);
     const role = LIST_ROLE_FILTERS.includes(data?.role) ? data.role : null;
-    const hidden = Boolean(data?.hidden) && !(role && SIDE_LIST_FILTERS.includes(role));
-    return { role, hidden };
+    const hidden = Boolean(data?.hidden) && !role;
+    const myCases = Boolean(data?.myCases) && !hidden && !role;
+    return { role, hidden, myCases };
   } catch {
-    return { role: 'recent', hidden: false };
+    return { role: 'recent', hidden: false, myCases: false };
   }
 };
 
@@ -279,9 +303,12 @@ const onLeftWidthChange = (value: number) => {
 };
 const roleFilter = ref<string | null>(storedListFilter.role);
 const showHidden = ref(storedListFilter.hidden);
+const showMyCases = ref(storedListFilter.myCases);
 const pendingReviewCount = ref(0);
 const documents = ref<{ id: number; title: string; confirmed?: boolean }[]>([]);
 const selectedDocument = ref<number | null>(null);
+const openedFromCaseFavorite = ref(false);
+const showCaseDocuments = computed(() => showMyCases.value || openedFromCaseFavorite.value);
 const docsEl = ref<HTMLElement | null>(null);
 const recentPage = ref(1);
 const recentHasMore = ref(false);
@@ -293,7 +320,7 @@ const roleButtons = [
   { id: 'created', label: 'Создал' },
   { id: 'doing', label: 'Исполняю' },
   { id: 'wrote', label: 'Поручил' },
-  { id: 'onControl', label: 'Контролирую' },
+  { id: 'onControl', label: 'Контроль' },
 ];
 
 const dateRange = ref<[string, string]>([
@@ -323,10 +350,12 @@ if (!canViewHidden.value) {
 }
 
 const toggleRole = (id: string) => {
-  if (SIDE_LIST_FILTERS.includes(id)) {
+  const next = roleFilter.value === id ? null : id;
+  showMyCases.value = false;
+  if (next) {
     showHidden.value = false;
   }
-  roleFilter.value = roleFilter.value === id ? null : id;
+  roleFilter.value = next;
 };
 
 const loadPendingCount = async () => {
@@ -379,7 +408,7 @@ const loadDocuments = async () => {
   recentPage.value = 1;
   recentHasMore.value = false;
   const hasListFilter = roleFilter.value === 'created' || roleFilter.value === 'toReview' || roleFilter.value === 'recent';
-  if (!hasListFilter && !showHidden.value) {
+  if (!hasListFilter && !showHidden.value && !showMyCases.value) {
     await loadPendingCount();
     return;
   }
@@ -393,6 +422,7 @@ const loadDocuments = async () => {
     const { result, pendingReviewCount: count } = await api('document-manager/documents/list', {
       filter: roleFilter.value === 'created' || roleFilter.value === 'toReview' ? roleFilter.value : null,
       hidden: Boolean(canViewHidden.value && showHidden.value),
+      myCases: Boolean(showMyCases.value),
     });
     if (loadId !== documentsLoadId) {
       return;
@@ -414,9 +444,26 @@ const toggleHidden = () => {
   const next = !showHidden.value;
   showHidden.value = next;
   selectedDocument.value = null;
-  if (next && roleFilter.value && SIDE_LIST_FILTERS.includes(roleFilter.value)) {
+  if (next) {
+    showMyCases.value = false;
+  }
+  if (next && roleFilter.value) {
     roleFilter.value = null;
     return;
+  }
+  loadDocuments();
+};
+
+const toggleMyCases = () => {
+  const next = !showMyCases.value;
+  showMyCases.value = next;
+  selectedDocument.value = null;
+  if (next) {
+    showHidden.value = false;
+    if (roleFilter.value) {
+      roleFilter.value = null;
+      return;
+    }
   }
   loadDocuments();
 };
@@ -457,32 +504,57 @@ const searchDocuments = async () => {
 
 const canCreate = computed(() => selectedResearches.value.length === 1);
 
-const resolveTypeId = (pk: number): number | null => {
+const resolveCreate = (pk: number): { typeId: number | null; caseId: number | null } => {
   const row = overrideResearches.value.find(item => Number(item.pk) === Number(pk));
   if (row?.is_dou_case_type) {
     const typeId = Number(row.defaultTypeDocumentId);
-    return typeId > 0 ? typeId : null;
+    return {
+      typeId: typeId > 0 ? typeId : null,
+      caseId: pk - CASE_PK_SHIFT,
+    };
   }
   if (pk >= DOCUMENT_PK_SHIFT && pk < CASE_PK_SHIFT) {
-    return pk - DOCUMENT_PK_SHIFT;
+    return { typeId: pk - DOCUMENT_PK_SHIFT, caseId: null };
   }
-  return null;
+  return { typeId: null, caseId: null };
+};
+
+const toggleFavorite = async () => {
+  const pk = selectedResearches.value[0];
+  if (!pk) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/favorites/toggle', { pk });
+    if (result?.ok) {
+      if (picker.value) {
+        picker.value.favoritePks = result.pks || [];
+      }
+      root.$emit('msg', 'ok', result.favorite ? 'Добавлено в избранное' : 'Убрано из избранного');
+    } else {
+      root.$emit('msg', 'error', result?.message || 'Не удалось изменить избранное');
+    }
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
 };
 
 const createDocument = async () => {
   if (!canCreate.value) {
     return;
   }
-  const typeId = resolveTypeId(selectedResearches.value[0]);
+  const { typeId, caseId } = resolveCreate(selectedResearches.value[0]);
   if (!typeId) {
     root.$emit('msg', 'error', 'Не указан вид документа');
     return;
   }
   await store.dispatch(actions.INC_LOADING);
   try {
-    const result = await api('document-manager/documents/create', { typeId });
+    const result = await api('document-manager/documents/create', { typeId, caseId });
     if (result?.ok) {
       root.$emit('msg', 'ok', 'Документ создан');
+      openedFromCaseFavorite.value = false;
       selectedDocument.value = result.id;
     } else {
       root.$emit('msg', 'error', result?.message || 'Ошибка создания');
@@ -491,6 +563,36 @@ const createDocument = async () => {
     await store.dispatch(actions.DEC_LOADING);
   }
 };
+
+const selectDocument = (id: number) => {
+  openedFromCaseFavorite.value = false;
+  selectedDocument.value = id;
+};
+
+const openFavorite = (payload: number | { id?: number; cases?: boolean }) => {
+  const id = typeof payload === 'number' ? payload : Number(payload?.id);
+  openedFromCaseFavorite.value = typeof payload === 'object' && Boolean(payload?.cases);
+  if (id) {
+    selectedDocument.value = id;
+  }
+};
+
+const openDocumentFromQuery = () => {
+  const id = Number(new URLSearchParams(window.location.search).get('document'));
+  if (id > 0) {
+    openedFromCaseFavorite.value = false;
+    selectedDocument.value = id;
+  }
+};
+
+onMounted(() => {
+  openDocumentFromQuery();
+  root.$on('open-dou-document', openFavorite);
+});
+
+onUnmounted(() => {
+  root.$off('open-dou-document', openFavorite);
+});
 
 onMounted(async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -510,11 +612,12 @@ watch(roleFilter, () => {
   loadDocuments();
 });
 
-watch([roleFilter, showHidden], () => {
+watch([roleFilter, showHidden, showMyCases], () => {
   try {
     localStorage.setItem(LIST_FILTER_STORAGE_KEY, JSON.stringify({
       role: roleFilter.value,
       hidden: showHidden.value,
+      myCases: showMyCases.value,
     }));
   } catch {
     // ignore storage errors
@@ -688,6 +791,18 @@ const onReviewed = () => {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+
+.side-check-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.side-check-line .filter-check {
+  width: max-content;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 .doc-list {

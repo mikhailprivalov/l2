@@ -45,8 +45,18 @@
         class="top-inner"
         :class="departments_of_type.length > 7 ? 'top-inner-right' : '' "
       >
+        <Treeselect
+          v-if="showDouSectionTypeSelect"
+          v-model="sectionTypeId"
+          class="treeselect-wide treeselect-34px section-type-select"
+          :multiple="false"
+          :options="sectionTypeOptions"
+          placeholder="Тип раздела"
+          :append-to-body="true"
+          :clearable="true"
+        />
         <div
-          v-if="showAllDepartment"
+          v-else-if="showAllDepartment"
           class="top-inner-select all-dep"
           :class="{ active: dep === 'all' }"
           @click="select_dep('all')"
@@ -148,12 +158,14 @@
         />
       </template>
     </div>
-    <div
-      v-else
-      class="content-none"
-    >
-      Нет данных
-    </div>
+      <div
+        v-else
+        class="content-none"
+      >
+        <template v-if="!douPickerBlocked">
+          Нет данных
+        </template>
+      </div>
     <div
       v-if="!hidetemplates"
       class="bottom-picker"
@@ -327,15 +339,22 @@
 
 <script lang="ts">
 import { debounce } from 'lodash/function';
+import Treeselect from '@riophae/vue-treeselect';
 
+import api from '@/api';
 import * as actions from '@/store/action-types';
 import CategoryPick from '@/ui-cards/CategoryPick.vue';
 
 import ResearchPick from './ResearchPick.vue';
 
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
+const DOU_TYPE_PK = 10010;
+const FAVORITES_SECTION_ID = -100;
+
 export default {
   name: 'ResearchesPicker',
-  components: { CategoryPick, ResearchPick },
+  components: { CategoryPick, ResearchPick, Treeselect },
   props: {
     value: {},
     autoselect: {
@@ -433,6 +452,10 @@ export default {
       search: '',
       search_template: '',
       founded_templates: [],
+      sectionTypeId: null,
+      sectionTypeOptions: [],
+      sectionTypesLoaded: false,
+      favoritePks: [],
     };
   },
   computed: {
@@ -492,6 +515,34 @@ export default {
     },
     showAllDepartment() {
       return Boolean(this.l2_all_service || this.useOverrideCatalog);
+    },
+    showDouSectionTypeSelect() {
+      return Number(this.type) === DOU_TYPE_PK;
+    },
+    showDouFavorites() {
+      return this.showDouSectionTypeSelect && Number(this.sectionTypeId) === FAVORITES_SECTION_ID;
+    },
+    douPickerBlocked() {
+      return this.showDouSectionTypeSelect && !this.sectionTypeId;
+    },
+    favoritePkSet() {
+      return new Set((this.favoritePks || []).map((pk) => Number(pk)));
+    },
+    sectionPlaceIds() {
+      const sectionId = Number(this.sectionTypeId);
+      if (!this.showDouSectionTypeSelect || sectionId < 1) {
+        return null;
+      }
+      const source = this.useOverrideCatalog
+        ? this.overrideDepartments
+        : (this.$store.getters.ex_dep[this.type] || []);
+      const ids = new Set();
+      source.forEach((row) => {
+        if (Number(row.typeSectionId) === sectionId) {
+          ids.add(Number(row.pk));
+        }
+      });
+      return ids;
     },
     types() {
       let result = this.$store.getters.allTypes.filter(
@@ -578,29 +629,32 @@ export default {
       return this.overrideDepartments.length > 0;
     },
     departments_of_type() {
+      let rows;
       if (this.useOverrideCatalog) {
         if (this.filter_sub_types.length === 0) {
-          return this.overrideDepartments;
+          rows = this.overrideDepartments;
+        } else {
+          rows = this.overrideDepartments.filter((t) => this.filter_sub_types.includes(t.pk));
         }
-        return this.overrideDepartments.filter((t) => this.filter_sub_types.includes(t.pk));
-      }
-      if (this.is_doc_ref) {
-        const rows = this.$store.getters.ex_dep[this.type] || [];
+      } else if (this.is_doc_ref) {
+        const source = this.$store.getters.ex_dep[this.type] || [];
         if (this.filter_sub_types.length === 0) {
-          return rows;
+          rows = source;
+        } else {
+          rows = source.filter((t) => this.filter_sub_types.includes(t.pk));
         }
-        return rows.filter((t) => this.filter_sub_types.includes(t.pk));
-      }
-      const r = [];
-      for (const row of this.$store.getters.allDepartments) {
-        if (row.type === this.type && (this.filter_sub_types.length === 0 || this.filter_sub_types.includes(row.pk))) {
-          r.push(row);
+      } else {
+        const r = [];
+        for (const row of this.$store.getters.allDepartments) {
+          if (row.type === this.type && (this.filter_sub_types.length === 0 || this.filter_sub_types.includes(row.pk))) {
+            r.push(row);
+          }
         }
+        rows = this.onlyServicesWithHospitalSynonym
+          ? r.filter((row) => this.departmentHasSynonymResearch(row.pk))
+          : r;
       }
-      if (!this.onlyServicesWithHospitalSynonym) {
-        return r;
-      }
-      return r.filter((row) => this.departmentHasSynonymResearch(row.pk));
+      return this.filterDepartmentsBySection(rows);
     },
     dep_i() {
       let i = 0;
@@ -691,6 +745,15 @@ export default {
     search() {
       this.check_found_tip();
     },
+    type() {
+      this.loadDouSectionTypes();
+    },
+    sectionTypeId() {
+      if (!this.showDouSectionTypeSelect) {
+        return;
+      }
+      this.dep = 'all';
+    },
     search_template: debounce(function (nv) {
       this.do_search_template(nv);
     }, 80),
@@ -739,6 +802,7 @@ export default {
       } else {
         this.syncCheckedResearchesFromValue(this.value, true);
       }
+      this.loadDouSectionTypes();
       return;
     }
 
@@ -765,6 +829,7 @@ export default {
     } else {
       this.syncCheckedResearchesFromValue(this.value, true);
     }
+    this.loadDouSectionTypes();
   },
   methods: {
     researchesArraysEqual(a, b) {
@@ -817,6 +882,15 @@ export default {
       return r.filter((x) => this.passesResearchFilters(x));
     },
     researches_dep_display(dep = this.dep) {
+      if (this.douPickerBlocked) {
+        return [];
+      }
+      if (this.showDouFavorites) {
+        const source = this.useOverrideCatalog
+          ? (this.overrideResearches || [])
+          : (this.$store.getters.researches[this.rev_t] || []);
+        return source.filter((row) => this.favoritePkSet.has(Number(row.pk)) && this.passesResearchFilters(row));
+      }
       let r = [];
       const showAll = dep === 'all';
       if (this.useOverrideCatalog) {
@@ -846,11 +920,57 @@ export default {
       }
       return r.filter((x) => this.passesResearchFilters(x));
     },
+    filterDepartmentsBySection(rows) {
+      const visible = (rows || []).filter((row) => !row.isCases);
+      if (this.showDouSectionTypeSelect && (!this.sectionTypeId || this.showDouFavorites)) {
+        return [];
+      }
+      if (!this.showDouSectionTypeSelect) {
+        return visible;
+      }
+      const sectionId = Number(this.sectionTypeId);
+      return visible.filter((row) => row.pk === -1 || Number(row.typeSectionId) === sectionId);
+    },
     matchesDouPickerDep(row, dep, showAll) {
       if (showAll) {
-        return !row.is_dou_case_type;
+        if (row.is_dou_case_type) {
+          return false;
+        }
+        const placeIds = this.sectionPlaceIds;
+        if (placeIds) {
+          return placeIds.has(Number(row.site_type));
+        }
+        return true;
       }
       return row.site_type === dep || (dep === -1 && !row.site_type);
+    },
+    async loadDouSectionTypes() {
+      if (!this.showDouSectionTypeSelect || this.sectionTypesLoaded) {
+        return;
+      }
+      this.sectionTypesLoaded = true;
+      try {
+        const { result } = await api('document-manager/section-types/list');
+        this.sectionTypeOptions = [
+          { id: FAVORITES_SECTION_ID, label: 'Избранное' },
+          ...(result || []).map((row) => ({
+            id: row.id,
+            label: row.title,
+          })),
+        ];
+        await this.reloadFavorites();
+      } catch (e) {
+        this.sectionTypesLoaded = false;
+        this.sectionTypeOptions = [];
+      }
+    },
+    async reloadFavorites() {
+      try {
+        const { result } = await api('document-manager/favorites/list');
+        this.favoritePks = result || [];
+      } catch (e) {
+        this.favoritePks = [];
+      }
     },
     passesResearchFilters(row) {
       if (this.filter_researches.includes(row.pk)) {
@@ -926,7 +1046,7 @@ export default {
       if (this.types.length > 0 && !this.types.map((t) => Number(t.pk)).includes(Number(this.type))) {
         this.type = JSON.parse(JSON.stringify(this.types[0].pk));
       }
-      if (this.dep === 'all' && this.showAllDepartment) {
+      if (this.dep === 'all' && (this.showAllDepartment || this.showDouSectionTypeSelect)) {
         return;
       }
       for (const row of this.departments_of_type) {
@@ -1380,6 +1500,39 @@ export default {
 .all-dep {
   width: 30px;
   flex: none;
+}
+.section-type-select {
+  flex: 0 0 127px;
+  width: 127px;
+  min-width: 127px;
+  align-self: stretch;
+}
+:deep(.section-type-select .vue-treeselect__control),
+:deep(.section-type-select:not(.vue-treeselect--disabled) .vue-treeselect__control:hover),
+:deep(.section-type-select.vue-treeselect--focused:not(.vue-treeselect--open) .vue-treeselect__control),
+:deep(.section-type-select.vue-treeselect--open .vue-treeselect__control) {
+  height: 34px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #aab2bd;
+  color: #fff;
+}
+:deep(.section-type-select .vue-treeselect__control:hover),
+:deep(.section-type-select.vue-treeselect--open .vue-treeselect__control) {
+  background: #434a54;
+}
+:deep(.section-type-select .vue-treeselect__placeholder),
+:deep(.section-type-select .vue-treeselect__single-value) {
+  line-height: 34px;
+  color: #fff;
+  font-size: 12px;
+}
+:deep(.section-type-select .vue-treeselect__x-container),
+:deep(.section-type-select .vue-treeselect__x-container:hover),
+:deep(.section-type-select .vue-treeselect__control-arrow),
+:deep(.section-type-select .vue-treeselect__control-arrow-container:hover .vue-treeselect__control-arrow) {
+  color: #fff;
 }
 .research-select-col {
   @for $i from 1 through 12 {

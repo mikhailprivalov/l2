@@ -61,10 +61,10 @@
               {{ row.code }}
             </span>
             <span
-              v-if="row.groupTitle || row.placeSectionTitle || row.defaultTypeDocumentTitle"
+              v-if="row.groupTitle || row.placeSectionTitle || row.typeSectionTitle || row.defaultTypeDocumentTitle"
               class="object-row__sub"
             >
-              {{ row.groupTitle || row.placeSectionTitle || row.defaultTypeDocumentTitle }}
+              {{ row.groupTitle || row.placeSectionTitle || row.typeSectionTitle || row.defaultTypeDocumentTitle }}
             </span>
           </div>
         </div>
@@ -86,8 +86,10 @@
         :default-type-document-id-value="selectedItem?.defaultTypeDocumentId"
         :place-section-id-value="selectedItem?.placeSectionId"
         :columns-count-value="selectedItem?.columnsCount"
+        :type-section-id-value="selectedItem?.typeSectionId"
         :groups="groups"
         :places="places"
+        :section-types="sectionTypes"
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
       />
@@ -161,6 +163,8 @@ interface CatalogItem {
   defaultTypeDocumentTitle?: string;
   placeSectionId?: number | null;
   placeSectionTitle?: string;
+  typeSectionId?: number | null;
+  typeSectionTitle?: string;
   columnsCount?: number;
   hide?: boolean;
 }
@@ -169,7 +173,7 @@ const LAYOUT_TEMPLATE_DEPARTMENT = -17;
 const INDICATOR_DEPARTMENT = -18;
 const WORKING_NAV = [
   'document_groups', 'document_types', 'document_templates', 'indicators',
-  'plans', 'skeleton', 'addressees', 'cases', 'place_section',
+  'plans', 'skeleton', 'addressees', 'cases', 'place_section', 'type_section',
 ];
 
 const store = useStore();
@@ -180,6 +184,7 @@ const titleFilter = ref('');
 const items = ref<CatalogItem[]>([]);
 const groups = ref<CatalogItem[]>([]);
 const places = ref<CatalogItem[]>([]);
+const sectionTypes = ref<CatalogItem[]>([]);
 const selectedId = ref<number | null>(null);
 const directionForms = ref([]);
 const resultForms = ref([]);
@@ -197,8 +202,9 @@ const canAdd = computed(() => (
   || selectedNavId.value === 'addressees'
   || selectedNavId.value === 'cases'
   || selectedNavId.value === 'place_section'
+  || selectedNavId.value === 'type_section'
 ));
-const catalogKind = computed<'group' | 'type' | 'case' | 'place'>(() => {
+const catalogKind = computed<'group' | 'type' | 'case' | 'place' | 'section'>(() => {
   if (selectedNavId.value === 'document_groups') {
     return 'group';
   }
@@ -207,6 +213,9 @@ const catalogKind = computed<'group' | 'type' | 'case' | 'place'>(() => {
   }
   if (selectedNavId.value === 'place_section') {
     return 'place';
+  }
+  if (selectedNavId.value === 'type_section') {
+    return 'section';
   }
   return 'type';
 });
@@ -230,6 +239,7 @@ const showCatalogEditor = computed(
     || selectedNavId.value === 'document_types'
     || selectedNavId.value === 'cases'
     || selectedNavId.value === 'place_section'
+    || selectedNavId.value === 'type_section'
   ) && selectedId.value !== null,
 );
 
@@ -279,6 +289,11 @@ const loadPlaces = async () => {
   places.value = result || [];
 };
 
+const loadSectionTypes = async () => {
+  const { result } = await api('document-manager/section-types/list');
+  sectionTypes.value = result || [];
+};
+
 const loadItems = async () => {
   selectedId.value = null;
   items.value = [];
@@ -314,7 +329,13 @@ const loadItems = async () => {
       const { result } = await api('document-manager/places/list');
       items.value = result || [];
       places.value = result || [];
+      await loadSectionTypes();
+    } else if (selectedNavId.value === 'type_section') {
+      const { result } = await api('document-manager/section-types/list');
+      items.value = result || [];
+      sectionTypes.value = result || [];
     } else if (selectedNavId.value === 'cases') {
+      await loadPlaces();
       const { result } = await api('document-manager/cases/list');
       items.value = result || [];
     } else if (selectedNavId.value === 'plans') {

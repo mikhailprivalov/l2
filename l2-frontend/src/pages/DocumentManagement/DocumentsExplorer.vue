@@ -68,8 +68,19 @@
           <span>Последние</span>
         </label>
         <label
-          v-if="canViewHidden"
           class="filter-check hidden-check"
+          @click.prevent="toggleMyCases"
+        >
+          <input
+            type="checkbox"
+            :checked="showMyCases"
+            tabindex="-1"
+          >
+          <span>Мои дела</span>
+        </label>
+        <label
+          v-if="canViewHidden"
+          class="filter-check hidden-check my-cases-check"
           @click.prevent="toggleHidden"
         >
           <input
@@ -161,6 +172,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'select', documentId: number | null): void;
   (e: 'update:filter', value: string | null): void;
+  (e: 'update:myCases', value: boolean): void;
 }>();
 
 const store = useStore();
@@ -193,6 +205,8 @@ const documentTypes = ref<CatalogItem[]>([]);
 const selectedDocument = ref<number | null>(null);
 const documents = ref<CatalogItem[]>([]);
 const showHidden = ref(false);
+const showMyCases = ref(false);
+watch(showMyCases, (value) => emit('update:myCases', value), { immediate: true });
 const pendingReviewCount = ref(0);
 const docsEl = ref<HTMLElement | null>(null);
 const recentPage = ref(1);
@@ -272,6 +286,7 @@ const loadDocuments = async () => {
     && props.roleFilter !== 'created'
     && props.roleFilter !== 'toReview'
     && props.roleFilter !== 'recent'
+    && !showMyCases.value
   ) {
     await loadPendingCount();
     return;
@@ -289,8 +304,9 @@ const loadDocuments = async () => {
     const { result, pendingReviewCount: count } = await api('document-manager/documents/list', {
       typeId: selectedType.value,
       groupId: selectedGroup.value,
-      filter: props.roleFilter,
+      filter: showMyCases.value ? null : props.roleFilter,
       hidden: Boolean(canViewHidden.value && showHidden.value),
+      myCases: showMyCases.value,
     });
     if (loadId !== documentsLoadId) {
       return;
@@ -311,6 +327,26 @@ const toggleHidden = () => {
   }
   showHidden.value = !showHidden.value;
   selectedDocument.value = null;
+  if (showHidden.value) {
+    showMyCases.value = false;
+    if (props.roleFilter) {
+      emit('update:filter', null);
+      return;
+    }
+  }
+  loadDocuments();
+};
+
+const toggleMyCases = () => {
+  showMyCases.value = !showMyCases.value;
+  selectedDocument.value = null;
+  if (showMyCases.value) {
+    showHidden.value = false;
+    if (props.roleFilter) {
+      emit('update:filter', null);
+      return;
+    }
+  }
   loadDocuments();
 };
 
@@ -366,7 +402,11 @@ watch(selectedType, (typeId) => {
   }
 });
 
-watch(() => props.roleFilter, () => {
+watch(() => props.roleFilter, (role) => {
+  if (role) {
+    showMyCases.value = false;
+    showHidden.value = false;
+  }
   loadDocuments();
 });
 
@@ -511,6 +551,10 @@ onMounted(async () => {
   flex: 0 0 auto;
   height: 34px;
   margin-left: auto;
+}
+
+.my-cases-check {
+  margin-left: 8px;
 }
 
 .type-row {

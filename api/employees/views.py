@@ -55,6 +55,5 @@ def mentees(request):
 
 @login_required
 def mentors(request):
-    request_data = json.loads(request.body) if request.body else {}
     hospital_id = request.user.doctorprofile.get_hospital_id()
-    return JsonResponse({"result": EmployeePosition.get_mentors(hospital_id, request_data.get("departmentId"))})
+    return JsonResponse({"result": EmployeePosition.get_mentors(hospital_id)})

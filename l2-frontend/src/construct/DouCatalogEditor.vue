@@ -12,7 +12,7 @@
             >
           </div>
           <div
-            v-if="kind === 'place'"
+            v-if="kind === 'place' || kind === 'section'"
             class="field-slot field-slot--code"
           >
             <span class="input-group-addon">Колонки</span>
@@ -23,6 +23,21 @@
               max="12"
               class="form-control"
             >
+          </div>
+          <div
+            v-if="kind === 'place'"
+            class="field-slot field-slot--place"
+          >
+            <span class="input-group-addon">Тип раздела</span>
+            <Treeselect
+              v-model="typeSectionId"
+              class="treeselect-wide treeselect-34px template-select"
+              :multiple="false"
+              :options="sectionTypeOptions"
+              placeholder="Не выбран"
+              :append-to-body="true"
+              :clearable="true"
+            />
           </div>
           <template v-if="kind === 'type' || kind === 'case'">
             <div class="field-slot field-slot--code">
@@ -55,7 +70,7 @@
               </select>
             </div>
             <div
-              v-if="kind === 'type'"
+              v-if="kind === 'type' || kind === 'case'"
               class="field-slot field-slot--place"
             >
               <span class="input-group-addon">Подраздел/место</span>
@@ -240,7 +255,7 @@ interface CreatorPerson {
 }
 
 const props = defineProps<{
-  kind: 'group' | 'type' | 'case' | 'place';
+  kind: 'group' | 'type' | 'case' | 'place' | 'section';
   itemId: number;
   titleValue?: string;
   codeValue?: string;
@@ -252,8 +267,10 @@ const props = defineProps<{
   defaultTypeDocumentIdValue?: number | null;
   placeSectionIdValue?: number | null;
   columnsCountValue?: number | null;
+  typeSectionIdValue?: number | null;
   groups?: CatalogGroup[];
   places?: CatalogGroup[];
+  sectionTypes?: CatalogGroup[];
 }>();
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
@@ -274,6 +291,7 @@ const selectedTemplates = ref<LayoutTemplateOption[]>([]);
 const creators = ref<CreatorPerson[]>([]);
 const defaultTypeDocumentId = ref<number | null>(null);
 const placeSectionId = ref<number>(-1);
+const typeSectionId = ref<number | null>(null);
 const columnsCount = ref<number>(10);
 const documentTypeOptions = ref<LayoutTemplateOption[]>([]);
 
@@ -281,10 +299,10 @@ const canSave = computed(() => {
   if (!title.value.trim()) {
     return false;
   }
-  if (props.kind === 'case' && !defaultTypeDocumentId.value) {
+  if (props.kind === 'case' && (!defaultTypeDocumentId.value || Number(placeSectionId.value) <= 0)) {
     return false;
   }
-  if (props.kind === 'place') {
+  if (props.kind === 'place' || props.kind === 'section') {
     const n = Number(columnsCount.value);
     if (!Number.isFinite(n) || n < 1 || n > 12) {
       return false;
@@ -297,6 +315,11 @@ const creatorsJson = computed(() => JSON.stringify(creators.value.map(row => ({
   id: row.id,
   fio: row.fio,
 }))));
+
+const sectionTypeOptions = computed(() => (props.sectionTypes || []).map(row => ({
+  id: row.id,
+  label: row.title,
+})));
 
 const availableTemplates = computed(() => {
   const selected = new Set(selectedTemplates.value.map(row => row.id));
@@ -338,6 +361,7 @@ const fill = () => {
   }));
   defaultTypeDocumentId.value = props.defaultTypeDocumentIdValue || null;
   placeSectionId.value = props.placeSectionIdValue || -1;
+  typeSectionId.value = props.typeSectionIdValue || null;
   const n = Number(props.columnsCountValue);
   columnsCount.value = Number.isFinite(n) && n >= 1 ? n : 10;
 };
@@ -354,6 +378,7 @@ watch(
     props.creatorsValue,
     props.defaultTypeDocumentIdValue,
     props.placeSectionIdValue,
+    props.typeSectionIdValue,
     props.columnsCountValue,
   ],
   fill,
@@ -464,6 +489,8 @@ const save = async () => {
     endpoint = 'document-manager/groups/update';
   } else if (props.kind === 'place') {
     endpoint = 'document-manager/places/update';
+  } else if (props.kind === 'section') {
+    endpoint = 'document-manager/section-types/update';
   } else if (props.kind === 'case') {
     endpoint = 'document-manager/cases/update';
   }
@@ -473,16 +500,20 @@ const save = async () => {
       id: props.itemId,
       title: title.value,
     };
-    if (props.kind === 'place') {
+    if (props.kind === 'place' || props.kind === 'section') {
       payload = {
         ...payload,
         columnsCount: columnsCount.value,
       };
+      if (props.kind === 'place') {
+        payload.typeSectionId = typeSectionId.value ?? -1;
+      }
     } else if (props.kind === 'case') {
       payload = {
         ...payload,
         code: code.value,
         defaultTypeDocumentId: defaultTypeDocumentId.value,
+        placeSectionId: placeSectionId.value,
       };
     } else if (props.kind === 'type') {
       payload = {
