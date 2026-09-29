@@ -11,13 +11,13 @@
     </div>
     <div
       v-if="props.resizable"
-      :class="[$style.gutter, dragging && $style.gutterActive]"
+      :class="[$style.gutter, dragging && $style.gutterActive, props.coverGutter && $style.gutterEdge]"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="stopDrag"
       @pointercancel="stopDrag"
     />
-    <div :class="[$style.right, props.lightRight && $style.light]">
+    <div :class="[$style.right, props.lightRight && $style.light, props.coverGutter && $style.cover]">
       <slot name="right" />
     </div>
   </div>
@@ -32,6 +32,7 @@ const props = withDefaults(defineProps<{
   lightRight?: boolean;
   leftWidthPx?: number;
   resizable?: boolean;
+  coverGutter?: boolean;
   minLeftWidthPx?: number;
   minRightWidthPx?: number;
 }>(), {
@@ -183,6 +184,14 @@ onBeforeUnmount(() => {
   left: 1px;
   width: 3px;
   background: #049372;
+}
+
+.gutterEdge::after {
+  left: 0;
+}
+
+.cover {
+  margin-left: -5px;
 }
 
 .right {

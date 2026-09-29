@@ -6,6 +6,7 @@
       :min-left-width-px="MIN_LEFT_WIDTH_PX"
       :min-right-width-px="360"
       resizable
+      cover-gutter
       @update:left-width-px="onLeftWidthChange"
     >
       <template #left>
@@ -133,12 +134,29 @@
       <template #right>
         <div class="main">
       <div class="top-panel">
+        <button
+          class="clear-x"
+          type="button"
+          title="Очистить даты"
+          @click="clearDates"
+        >
+          ×
+        </button>
         <div class="search-dates">
           <DateRange
             v-model="dateRange"
             small
+            allow-empty
           />
         </div>
+        <button
+          class="clear-x"
+          type="button"
+          title="Очистить поиск"
+          @click="clearQuery"
+        >
+          ×
+        </button>
         <input
           v-model="query"
           class="form-control search"
@@ -478,6 +496,14 @@ watch([query, byNumber, byText], () => {
   }
 });
 
+const clearDates = () => {
+  dateRange.value = ['', ''];
+};
+
+const clearQuery = () => {
+  query.value = '';
+};
+
 const searchDocuments = async () => {
   const text = query.value.trim();
   if (!text) {
@@ -659,6 +685,8 @@ const onReviewed = () => {
   width: 100%;
   height: 34px;
   min-height: 34px;
+  margin-left: 0;
+  padding-left: 0;
   background-color: #f8f7f7;
 }
 
@@ -689,6 +717,27 @@ const onReviewed = () => {
 .top-panel .btn {
   height: 34px;
   border-radius: 0;
+}
+
+.clear-x {
+  box-sizing: border-box;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #aab2bd;
+  border-radius: 0;
+  background: #aab2bd;
+  color: #fff;
+  font-size: 16px;
+  line-height: 32px;
+
+  &:hover {
+    background: #434a54;
+    border-color: #434a54;
+    color: #fff;
+  }
 }
 
 .mode-check {
