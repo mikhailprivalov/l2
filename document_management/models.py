@@ -3096,7 +3096,8 @@ class DocumentRecent(models.Model):
         except (TypeError, ValueError):
             page_size = cls.PAGE_SIZE
         qs = (
-            cls.objects.filter(doctor=who, document__is_hidden=False, document__time_confirm__isnull=False).filter(Documents.case_access_q(who, "document__"))
+            cls.objects.filter(doctor=who, document__is_hidden=False, document__time_confirm__isnull=False)
+            .filter(Documents.case_access_q(who, "document__"))
             .select_related("document", "document__type_document", "document__schema")
             .order_by("-opened_at", "-pk")
         )
