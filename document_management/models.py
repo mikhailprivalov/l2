@@ -1011,11 +1011,7 @@ class DocumentCase(models.Model):
 
         from directions.models import Issledovaniya
 
-        docs = [
-            doc
-            for doc in self.documents.filter(is_hidden=False).select_related("type_document", "who_create").order_by("pk")
-            if Documents.can_see_document(doc, who)
-        ]
+        docs = [doc for doc in self.documents.filter(is_hidden=False).select_related("type_document", "who_create").order_by("pk") if Documents.can_see_document(doc, who)]
         if not docs:
             return []
         iss_by_doc = {}
