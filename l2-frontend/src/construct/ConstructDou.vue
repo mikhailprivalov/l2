@@ -61,10 +61,10 @@
               {{ row.code }}
             </span>
             <span
-              v-if="row.groupTitle || row.defaultTypeDocumentTitle"
+              v-if="row.groupTitle || row.placeSectionTitle || row.typeSectionTitle || row.defaultTypeDocumentTitle"
               class="object-row__sub"
             >
-              {{ row.groupTitle || row.defaultTypeDocumentTitle }}
+              {{ row.groupTitle || row.placeSectionTitle || row.typeSectionTitle || row.defaultTypeDocumentTitle }}
             </span>
           </div>
         </div>
@@ -84,7 +84,12 @@
         :layout-templates-value="selectedItem?.layoutTemplates"
         :creators-value="selectedItem?.creators"
         :default-type-document-id-value="selectedItem?.defaultTypeDocumentId"
+        :place-section-id-value="selectedItem?.placeSectionId"
+        :columns-count-value="selectedItem?.columnsCount"
+        :type-section-id-value="selectedItem?.typeSectionId"
         :groups="groups"
+        :places="places"
+        :section-types="sectionTypes"
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
       />
@@ -102,12 +107,19 @@
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
       />
+      <DouPlanEditor
+        v-else-if="showPlanEditor"
+        :key="`plan-${selectedId}`"
+        :plan-id="selectedId || -1"
+        @saved="onCatalogSaved"
+        @cancel="selectedId = null"
+      />
       <ParaclinicResearchEditor
-        v-else-if="showTemplateEditor"
-        :key="selectedId"
+        v-else-if="showResearchEditor"
+        :key="`${selectedNavId}-${selectedId}`"
         style="position: absolute; top: 0; right: 0; bottom: 0; left: 0"
         :pk="selectedId"
-        :department="LAYOUT_TEMPLATE_DEPARTMENT"
+        :department="researchDepartment"
         :direction_forms="directionForms"
         :result_forms="resultForms"
         :specialities="specialities"
@@ -129,6 +141,7 @@ import api from '@/api';
 import DouCatalogEditor from '@/construct/DouCatalogEditor.vue';
 import DouDocumentStructureEditor from '@/construct/DouDocumentStructureEditor.vue';
 import DouAddresseeEditor from '@/construct/DouAddresseeEditor.vue';
+import DouPlanEditor from '@/construct/DouPlanEditor.vue';
 import ParaclinicResearchEditor from '@/construct/ParaclinicResearchEditor.vue';
 
 interface NavButton {
@@ -148,11 +161,20 @@ interface CatalogItem {
   creators?: { id: number; fio: string; department?: string }[];
   defaultTypeDocumentId?: number | null;
   defaultTypeDocumentTitle?: string;
+  placeSectionId?: number | null;
+  placeSectionTitle?: string;
+  typeSectionId?: number | null;
+  typeSectionTitle?: string;
+  columnsCount?: number;
   hide?: boolean;
 }
 
 const LAYOUT_TEMPLATE_DEPARTMENT = -17;
-const WORKING_NAV = ['document_groups', 'document_types', 'document_templates', 'skeleton', 'addressees', 'cases'];
+const INDICATOR_DEPARTMENT = -18;
+const WORKING_NAV = [
+  'document_groups', 'document_types', 'document_templates', 'indicators',
+  'plans', 'skeleton', 'addressees', 'cases', 'place_section', 'type_section',
+];
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -161,6 +183,8 @@ const selectedNavId = ref<string | null>(null);
 const titleFilter = ref('');
 const items = ref<CatalogItem[]>([]);
 const groups = ref<CatalogItem[]>([]);
+const places = ref<CatalogItem[]>([]);
+const sectionTypes = ref<CatalogItem[]>([]);
 const selectedId = ref<number | null>(null);
 const directionForms = ref([]);
 const resultForms = ref([]);
@@ -173,15 +197,25 @@ const canAdd = computed(() => (
   selectedNavId.value === 'document_groups'
   || selectedNavId.value === 'document_types'
   || selectedNavId.value === 'document_templates'
+  || selectedNavId.value === 'indicators'
+  || selectedNavId.value === 'plans'
   || selectedNavId.value === 'addressees'
   || selectedNavId.value === 'cases'
+  || selectedNavId.value === 'place_section'
+  || selectedNavId.value === 'type_section'
 ));
-const catalogKind = computed<'group' | 'type' | 'case'>(() => {
+const catalogKind = computed<'group' | 'type' | 'case' | 'place' | 'section'>(() => {
   if (selectedNavId.value === 'document_groups') {
     return 'group';
   }
   if (selectedNavId.value === 'cases') {
     return 'case';
+  }
+  if (selectedNavId.value === 'place_section') {
+    return 'place';
+  }
+  if (selectedNavId.value === 'type_section') {
+    return 'section';
   }
   return 'type';
 });
@@ -204,6 +238,8 @@ const showCatalogEditor = computed(
     selectedNavId.value === 'document_groups'
     || selectedNavId.value === 'document_types'
     || selectedNavId.value === 'cases'
+    || selectedNavId.value === 'place_section'
+    || selectedNavId.value === 'type_section'
   ) && selectedId.value !== null,
 );
 
@@ -211,12 +247,23 @@ const showStructureEditor = computed(
   () => selectedNavId.value === 'skeleton' && selectedId.value !== null && selectedId.value > 0,
 );
 
-const showTemplateEditor = computed(
-  () => selectedNavId.value === 'document_templates' && selectedId.value !== null,
+const showResearchEditor = computed(
+  () => (
+    selectedNavId.value === 'document_templates'
+    || selectedNavId.value === 'indicators'
+  ) && selectedId.value !== null,
 );
+
+const researchDepartment = computed(() => (
+  selectedNavId.value === 'indicators' ? INDICATOR_DEPARTMENT : LAYOUT_TEMPLATE_DEPARTMENT
+));
 
 const showAddresseeEditor = computed(
   () => selectedNavId.value === 'addressees' && selectedId.value !== null,
+);
+
+const showPlanEditor = computed(
+  () => selectedNavId.value === 'plans' && selectedId.value !== null,
 );
 
 const loadNavButtons = async () => {
@@ -237,6 +284,16 @@ const loadGroups = async () => {
   groups.value = result || [];
 };
 
+const loadPlaces = async () => {
+  const { result } = await api('document-manager/places/list');
+  places.value = result || [];
+};
+
+const loadSectionTypes = async () => {
+  const { result } = await api('document-manager/section-types/list');
+  sectionTypes.value = result || [];
+};
+
 const loadItems = async () => {
   selectedId.value = null;
   items.value = [];
@@ -248,8 +305,9 @@ const loadItems = async () => {
     if (selectedNavId.value === 'document_groups') {
       const { result } = await api('document-manager/groups/list');
       items.value = result || [];
-    } else if (selectedNavId.value === 'document_templates') {
-      const data = await api('researches/by-department', { department: LAYOUT_TEMPLATE_DEPARTMENT, isConstructor: true });
+    } else if (selectedNavId.value === 'document_templates' || selectedNavId.value === 'indicators') {
+      const department = selectedNavId.value === 'indicators' ? INDICATOR_DEPARTMENT : LAYOUT_TEMPLATE_DEPARTMENT;
+      const data = await api('researches/by-department', { department, isConstructor: true });
       items.value = (data.researches || []).map((row: { pk: number; title: string; hide?: boolean }) => ({
         id: row.pk,
         title: row.title,
@@ -267,11 +325,25 @@ const loadItems = async () => {
         globalOnly: true,
       });
       items.value = result || [];
+    } else if (selectedNavId.value === 'place_section') {
+      const { result } = await api('document-manager/places/list');
+      items.value = result || [];
+      places.value = result || [];
+      await loadSectionTypes();
+    } else if (selectedNavId.value === 'type_section') {
+      const { result } = await api('document-manager/section-types/list');
+      items.value = result || [];
+      sectionTypes.value = result || [];
     } else if (selectedNavId.value === 'cases') {
+      await loadPlaces();
       const { result } = await api('document-manager/cases/list');
+      items.value = result || [];
+    } else if (selectedNavId.value === 'plans') {
+      const { result } = await api('document-manager/plans/list');
       items.value = result || [];
     } else {
       await loadGroups();
+      await loadPlaces();
       const { result } = await api('document-manager/types/list');
       items.value = result || [];
     }
@@ -298,7 +370,7 @@ const onStructureSaved = async () => {
 };
 
 const onTemplateCancel = async () => {
-  if (selectedNavId.value !== 'document_templates') {
+  if (selectedNavId.value !== 'document_templates' && selectedNavId.value !== 'indicators') {
     return;
   }
   await loadItems();

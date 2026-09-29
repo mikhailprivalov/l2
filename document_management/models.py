@@ -284,9 +284,227 @@ class AddresseeGroupMember(models.Model):
         return f"{self.group} {self.doctor}"
 
 
+class TypeSection(models.Model):
+    COLUMNS_MIN = 1
+    COLUMNS_MAX = 12
+    COLUMNS_DEFAULT = 10
+
+    title = models.CharField(max_length=128, blank=True, null=True)
+    columns_count = models.PositiveSmallIntegerField(
+        default=COLUMNS_DEFAULT,
+        help_text="Количество колонок значений в ResearchesPicker",
+    )
+
+    class Meta:
+        verbose_name = "Тип раздела"
+        verbose_name_plural = "Типы разделов"
+
+    def __str__(self):
+        return f"{self.title}"
+
+    @property
+    def json(self):
+        return {
+            "id": self.id,
+            "title": self.title or "",
+            "columnsCount": self.columns_count or self.COLUMNS_DEFAULT,
+        }
+
+    @staticmethod
+    def get_list():
+        return [row.json for row in TypeSection.objects.all().order_by("title", "pk")]
+
+    @classmethod
+    def normalize_columns_count(cls, value):
+        if value in (None, ""):
+            return None
+        try:
+            n = int(value)
+        except (TypeError, ValueError):
+            return None
+        if n < cls.COLUMNS_MIN or n > cls.COLUMNS_MAX:
+            return None
+        return n
+
+    @staticmethod
+    def save_section(pk, title, columns_count=None):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        provided = columns_count not in (None, "")
+        n = TypeSection.normalize_columns_count(columns_count)
+        if provided and n is None:
+            return {
+                "ok": False,
+                "message": f"Количество колонок от {TypeSection.COLUMNS_MIN} до {TypeSection.COLUMNS_MAX}",
+            }
+        if pk in (None, -1, "-1"):
+            obj = TypeSection(
+                title=title,
+                columns_count=n if n is not None else TypeSection.COLUMNS_DEFAULT,
+            )
+        else:
+            obj = TypeSection.objects.filter(pk=pk).first()
+            if not obj:
+                return {"ok": False, "message": "Тип раздела не найден"}
+            obj.title = title
+            if provided:
+                obj.columns_count = n
+        obj.save()
+        return {"ok": True, "id": obj.pk, "title": obj.title, "columnsCount": obj.columns_count}
+
+
+class PlaceSection(models.Model):
+    COLUMNS_MIN = 1
+    COLUMNS_MAX = 12
+    COLUMNS_DEFAULT = 10
+
+    title = models.CharField(max_length=128, blank=True, null=True)
+    columns_count = models.PositiveSmallIntegerField(
+        default=COLUMNS_DEFAULT,
+        help_text="Количество колонок значений в ResearchesPicker",
+    )
+    type_section = models.ForeignKey(
+        TypeSection,
+        related_name="places",
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Тип раздела",
+        on_delete=models.SET_NULL,
+    )
+
+    class Meta:
+        verbose_name = "Подраздел/место"
+        verbose_name_plural = "Подразделы/места"
+
+    def __str__(self):
+        return f"{self.title}"
+
+    @property
+    def json(self):
+        section = self.type_section if self.type_section_id else None
+        return {
+            "id": self.id,
+            "title": self.title or "",
+            "columnsCount": self.columns_count or self.COLUMNS_DEFAULT,
+            "typeSectionId": self.type_section_id,
+            "typeSectionTitle": section.title if section else "",
+        }
+
+    @staticmethod
+    def get_list():
+        qs = PlaceSection.objects.select_related("type_section").order_by("title", "pk")
+        return [row.json for row in qs]
+
+    @classmethod
+    def normalize_columns_count(cls, value):
+        if value in (None, ""):
+            return None
+        try:
+            n = int(value)
+        except (TypeError, ValueError):
+            return None
+        if n < cls.COLUMNS_MIN or n > cls.COLUMNS_MAX:
+            return None
+        return n
+
+    def as_picker_department(self, dou):
+        section = self.type_section if self.type_section_id else None
+        return {
+            "pk": self.pk,
+            "title": self.title or "",
+            "type": dou,
+            "extended": True,
+            "e": dou,
+            "columnsCount": self.columns_count or self.COLUMNS_DEFAULT,
+            "typeSectionId": self.type_section_id,
+            "typeSectionTitle": section.title if section else "",
+        }
+
+    @staticmethod
+    def save_place(pk, title, columns_count=None, type_section_id=None):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        provided = columns_count not in (None, "")
+        n = PlaceSection.normalize_columns_count(columns_count)
+        if provided and n is None:
+            return {
+                "ok": False,
+                "message": f"Количество колонок от {PlaceSection.COLUMNS_MIN} до {PlaceSection.COLUMNS_MAX}",
+            }
+        section = None
+        if type_section_id not in (None, "", -1, "-1"):
+            section = TypeSection.objects.filter(pk=type_section_id).first()
+            if not section:
+                return {"ok": False, "message": "Тип раздела не найден"}
+        if pk in (None, -1, "-1"):
+            obj = PlaceSection(
+                title=title,
+                columns_count=n if n is not None else PlaceSection.COLUMNS_DEFAULT,
+                type_section=section,
+            )
+        else:
+            obj = PlaceSection.objects.filter(pk=pk).first()
+            if not obj:
+                return {"ok": False, "message": "Подраздел/место не найден"}
+            obj.title = title
+            if provided:
+                obj.columns_count = n
+            obj.type_section = section
+        obj.save()
+        return {
+            "ok": True,
+            "id": obj.pk,
+            "title": obj.title,
+            "columnsCount": obj.columns_count,
+            "typeSectionId": obj.type_section_id,
+        }
+
+    @staticmethod
+    def picker_departments():
+        from podrazdeleniya.models import Podrazdeleniya
+
+        dou = Podrazdeleniya.DOU
+        rows = []
+        if TypeDocuments.objects.filter(place_section__isnull=True).exists():
+            rows.append(
+                {
+                    "pk": -1,
+                    "title": "Общие",
+                    "type": dou,
+                    "extended": True,
+                    "e": dou,
+                    "columnsCount": PlaceSection.COLUMNS_DEFAULT,
+                }
+            )
+        for place in PlaceSection.objects.select_related("type_section").order_by("title", "pk"):
+            rows.append(place.as_picker_department(dou))
+        return rows
+
+    @staticmethod
+    def picker_researches(doctor=None, available_only=False):
+        docs = TypeDocuments.picker_researches(doctor=doctor, available_only=available_only)
+        return docs + TypeCases.picker_researches()
+
+
 class TypeDocuments(models.Model):
+    PICKER_PK_SHIFT = 1000000000
+
     title = models.CharField(max_length=128, blank=True, null=True)
     group_document = models.ForeignKey(GroupDocuments, default=None, blank=True, null=True, help_text="Группа документов", on_delete=models.SET_NULL)
+    place_section = models.ForeignKey(
+        PlaceSection,
+        related_name="type_documents",
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Подраздел/место в пикере ДОУ",
+        on_delete=models.SET_NULL,
+    )
     code = models.CharField(max_length=55, blank=True, null=True)
     layout_template = models.ForeignKey(
         "directory.Researches",
@@ -343,6 +561,8 @@ class TypeDocuments(models.Model):
             "code": self.code or "",
             "groupId": self.group_document_id,
             "groupTitle": self.group_document.title if self.group_document else "",
+            "placeSectionId": self.place_section_id,
+            "placeSectionTitle": self.place_section.title if self.place_section else "",
             "layoutTemplateId": template_ids[0] if template_ids else self.layout_template_id,
             "layoutTemplateIds": template_ids,
             "layoutTemplates": [{"id": row.pk, "label": row.title} for row in templates],
@@ -352,7 +572,7 @@ class TypeDocuments(models.Model):
     @staticmethod
     def get_list(group_id=None, doctor=None, available_only=False):
         qs = (
-            TypeDocuments.objects.select_related("group_document", "layout_template")
+            TypeDocuments.objects.select_related("group_document", "layout_template", "place_section")
             .prefetch_related(
                 models.Prefetch(
                     "layout_template_links",
@@ -429,8 +649,53 @@ class TypeDocuments(models.Model):
         TypeDocumentCreator.objects.bulk_create([TypeDocumentCreator(type_document=obj, doctor_id=doctor_id) for doctor_id in ids])
         return ids
 
+    def as_picker_research(self):
+        from podrazdeleniya.models import Podrazdeleniya
+
+        title = self.title or ""
+        code = self.code or ""
+        site = self.place_section_id
+        return {
+            "pk": TypeDocuments.PICKER_PK_SHIFT + self.pk,
+            "onlywith": -1,
+            "department_pk": 2 - Podrazdeleniya.DOU,
+            "title": title,
+            "full_title": title,
+            "doc_refferal": False,
+            "treatment": False,
+            "is_hospital": False,
+            "is_form": False,
+            "is_case": False,
+            "is_application": False,
+            "stom": False,
+            "need_vich_code": False,
+            "comment_variants": [],
+            "autoadd": [],
+            "addto": [],
+            "code": code,
+            "internal_code": code,
+            "type": str(Podrazdeleniya.DOU),
+            "site_type": site,
+            "site_type_raw": site,
+            "localizations": [],
+            "service_locations": [],
+            "direction_params": -1,
+            "is_dou_document_type": True,
+        }
+
     @staticmethod
-    def save_type(pk, title, group_id=None, code="", layout_template_id=None, layout_template_ids=None, creator_ids=None):
+    def picker_researches(doctor=None, available_only=False):
+        qs = TypeDocuments.objects.select_related("place_section").order_by("title", "pk")
+        if available_only:
+            if not doctor:
+                return []
+            has_creators = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"))
+            is_creator = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"), doctor=doctor)
+            qs = qs.filter(~models.Exists(has_creators) | models.Exists(is_creator))
+        return [row.as_picker_research() for row in qs]
+
+    @staticmethod
+    def save_type(pk, title, group_id=None, code="", layout_template_id=None, layout_template_ids=None, creator_ids=None, place_section_id=None):
         from directory.models import Researches
 
         title = (title or "").strip()
@@ -441,6 +706,11 @@ class TypeDocuments(models.Model):
             group = GroupDocuments.objects.filter(pk=group_id).first()
             if not group:
                 return {"ok": False, "message": "Группа не найдена"}
+        place = None
+        if place_section_id not in (None, "", -1, "-1"):
+            place = PlaceSection.objects.filter(pk=place_section_id).first()
+            if not place:
+                return {"ok": False, "message": "Подраздел/место не найден"}
         template_ids = TypeDocuments._parse_template_ids(layout_template_ids, layout_template_id)
         templates = []
         for template_id in template_ids:
@@ -453,13 +723,20 @@ class TypeDocuments(models.Model):
         first_template = templates[0] if templates else None
         with transaction.atomic():
             if pk in (None, -1, "-1"):
-                obj = TypeDocuments(title=title, group_document=group, code=code or "", layout_template=first_template)
+                obj = TypeDocuments(
+                    title=title,
+                    group_document=group,
+                    place_section=place,
+                    code=code or "",
+                    layout_template=first_template,
+                )
             else:
                 obj = TypeDocuments.objects.filter(pk=pk).first()
                 if not obj:
                     return {"ok": False, "message": "Вид документа не найден"}
                 obj.title = title
                 obj.group_document = group
+                obj.place_section = place
                 obj.code = code or ""
                 obj.layout_template = first_template
             obj.save()
@@ -501,6 +778,8 @@ class TypeDocumentCreator(models.Model):
 
 
 class TypeCases(models.Model):
+    PICKER_PK_SHIFT = 2000000000
+
     title = models.CharField(max_length=128, blank=True, null=True)
     code = models.CharField(max_length=55, blank=True, null=True)
     default_type_document = models.ForeignKey(
@@ -510,6 +789,16 @@ class TypeCases(models.Model):
         null=True,
         db_index=True,
         help_text="Документ по умолчанию при создании дела",
+        on_delete=models.SET_NULL,
+    )
+    place_section = models.ForeignKey(
+        PlaceSection,
+        related_name="type_cases",
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Подраздел/место в пикере ДОУ",
         on_delete=models.SET_NULL,
     )
 
@@ -523,21 +812,72 @@ class TypeCases(models.Model):
     @property
     def json(self):
         type_doc = self.default_type_document
+        place = self.place_section if self.place_section_id else None
         return {
             "id": self.id,
             "title": self.title or "",
             "code": self.code or "",
             "defaultTypeDocumentId": self.default_type_document_id,
             "defaultTypeDocumentTitle": type_doc.title if type_doc else "",
+            "placeSectionId": self.place_section_id,
+            "placeSectionTitle": place.title if place else "",
         }
 
     @staticmethod
     def get_list():
-        qs = TypeCases.objects.select_related("default_type_document").order_by("title", "pk")
+        qs = TypeCases.objects.select_related("default_type_document", "place_section").order_by("title", "pk")
         return [row.json for row in qs]
 
+    def as_picker_research(self):
+        from podrazdeleniya.models import Podrazdeleniya
+
+        if not self.place_section_id:
+            return None
+        title = self.title or ""
+        code = self.code or ""
+        site = self.place_section_id
+        return {
+            "pk": TypeCases.PICKER_PK_SHIFT + self.pk,
+            "onlywith": -1,
+            "department_pk": 2 - Podrazdeleniya.DOU,
+            "title": title,
+            "full_title": title,
+            "doc_refferal": False,
+            "treatment": False,
+            "is_hospital": False,
+            "is_form": False,
+            "is_case": False,
+            "is_application": False,
+            "stom": False,
+            "need_vich_code": False,
+            "comment_variants": [],
+            "autoadd": [],
+            "addto": [],
+            "code": code,
+            "internal_code": code,
+            "type": str(Podrazdeleniya.DOU),
+            "site_type": site,
+            "site_type_raw": site,
+            "localizations": [],
+            "service_locations": [],
+            "direction_params": -1,
+            "is_dou_document_type": True,
+            "is_dou_case_type": True,
+            "defaultTypeDocumentId": self.default_type_document_id,
+        }
+
     @staticmethod
-    def save_case(pk, title, code="", default_type_document_id=None):
+    def picker_researches():
+        qs = TypeCases.objects.filter(place_section__isnull=False).order_by("title", "pk")
+        result = []
+        for row in qs:
+            item = row.as_picker_research()
+            if item:
+                result.append(item)
+        return result
+
+    @staticmethod
+    def save_case(pk, title, code="", default_type_document_id=None, place_section_id=None):
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
@@ -546,8 +886,18 @@ class TypeCases(models.Model):
         type_doc = TypeDocuments.objects.filter(pk=default_type_document_id).first()
         if not type_doc:
             return {"ok": False, "message": "Вид документа не найден"}
+        if place_section_id in (None, "", -1, "-1"):
+            return {"ok": False, "message": "Укажите подраздел/место"}
+        place = PlaceSection.objects.filter(pk=place_section_id).first()
+        if not place:
+            return {"ok": False, "message": "Подраздел/место не найден"}
         if pk in (None, -1, "-1"):
-            obj = TypeCases(title=title, code=code or "", default_type_document=type_doc)
+            obj = TypeCases(
+                title=title,
+                code=code or "",
+                default_type_document=type_doc,
+                place_section=place,
+            )
         else:
             obj = TypeCases.objects.filter(pk=pk).first()
             if not obj:
@@ -555,8 +905,607 @@ class TypeCases(models.Model):
             obj.title = title
             obj.code = code or ""
             obj.default_type_document = type_doc
+            obj.place_section = place
         obj.save()
-        return {"ok": True, "id": obj.pk, "title": obj.title}
+        return {"ok": True, "id": obj.pk, "title": obj.title, "placeSectionId": obj.place_section_id}
+
+
+class DocumentCase(models.Model):
+    type_case = models.ForeignKey(
+        TypeCases,
+        related_name="cases",
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Вид дела",
+        on_delete=models.SET_NULL,
+    )
+    topic = models.CharField(max_length=512, blank=True, default="", help_text="Тема дела")
+    who_create = models.ForeignKey(
+        DoctorProfile,
+        related_name="document_cases",
+        db_index=True,
+        blank=True,
+        null=True,
+        help_text="Создатель дела",
+        on_delete=models.SET_NULL,
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, help_text="Дата создания дела")
+    comment = models.TextField(blank=True, default="", help_text="Комментарий")
+    closed_at = models.DateTimeField(blank=True, null=True, db_index=True, help_text="Дата закрытия дела")
+    who_close = models.ForeignKey(
+        DoctorProfile,
+        related_name="closed_document_cases",
+        db_index=True,
+        blank=True,
+        null=True,
+        help_text="Кто закрыл дело",
+        on_delete=models.SET_NULL,
+    )
+
+    class Meta:
+        verbose_name = "Дело"
+        verbose_name_plural = "Дела"
+
+    def __str__(self):
+        return self.topic or f"Дело {self.pk}"
+
+    def as_json(self, who=None):
+        data = self._base_json()
+        data["access"] = self.access_json()
+        data["canEditAccess"] = self.can_edit_access(who)
+        data["canEdit"] = data["canEditAccess"]
+        data["canClose"] = data["canEditAccess"] and not self.closed_at
+        data["isFavorite"] = bool(who and UserFavoriteCase.objects.filter(doctor=who, document__document_case_id=self.pk).exists())
+        data["documents"] = self.documents_rows(who)
+        return data
+
+    def _base_json(self):
+        creator = self.who_create.get_full_fio() if self.who_create_id and self.who_create else ""
+        closed_by = self.who_close.get_full_fio() if self.who_close_id and self.who_close else ""
+        return {
+            "id": self.pk,
+            "topic": self.topic or "",
+            "createdAt": self._date_text(self.created_at),
+            "creator": creator,
+            "comment": self.comment or "",
+            "closedAt": self._date_text(self.closed_at),
+            "closedBy": closed_by,
+        }
+
+    @staticmethod
+    def _date_text(moment):
+        if not moment:
+            return ""
+        from django.utils import timezone
+
+        local = timezone.localtime(moment) if timezone.is_aware(moment) else moment
+        return local.strftime("%d.%m.%Y")
+
+    @staticmethod
+    def _is_superuser(who):
+        user = getattr(who, "user", None)
+        return bool(user and getattr(user, "is_superuser", False))
+
+    def can_edit_access(self, who):
+        if not who:
+            return False
+        if DocumentCase._is_superuser(who):
+            return True
+        return self.who_create_id == who.pk
+
+    def can_access(self, who):
+        if self.can_edit_access(who):
+            return True
+        if not who:
+            return False
+        return self.access_rows.filter(doctor_id=who.pk).exists()
+
+    def access_json(self):
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("access_rows")
+        rows = prefetched if prefetched is not None else self.access_rows.select_related("doctor", "doctor__podrazdeleniye")
+        return [AddresseeGroup._employee_json(row.doctor) for row in rows if row.doctor_id]
+
+    def documents_rows(self, who):
+        from django.utils import timezone
+
+        from directions.models import Issledovaniya
+
+        docs = [doc for doc in self.documents.filter(is_hidden=False).select_related("type_document", "who_create").order_by("pk") if Documents.can_see_document(doc, who)]
+        if not docs:
+            return []
+        iss_by_doc = {}
+        for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in docs]).order_by("pk"):
+            iss_by_doc.setdefault(iss.document_id, iss)
+        topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
+        rows = []
+        for doc in docs:
+            created = doc.create_at
+            date_text = ""
+            if created:
+                local = timezone.localtime(created) if timezone.is_aware(created) else created
+                date_text = local.strftime("%d.%m.%Y")
+            rows.append(
+                {
+                    "id": doc.pk,
+                    "topic": (topic_by_doc.get(doc.pk) or "").strip(),
+                    "typeTitle": doc.type_document.title if doc.type_document else "",
+                    "createdAt": date_text,
+                    "creator": doc.who_create.get_full_fio() if doc.who_create_id and doc.who_create else "",
+                }
+            )
+        return rows
+
+    def set_comment(self, who, comment):
+        if not self.can_edit_access(who):
+            return {"ok": False, "message": "Нет прав"}
+        self.comment = str(comment or "").strip()
+        self.save(update_fields=["comment"])
+        return {"ok": True, "comment": self.comment}
+
+    def close_case(self, who):
+        from django.utils import timezone
+
+        if not self.can_edit_access(who):
+            return {"ok": False, "message": "Нет прав"}
+        if self.closed_at:
+            return {"ok": False, "message": "Дело уже закрыто"}
+        self.closed_at = timezone.now()
+        self.who_close = who
+        self.save(update_fields=["closed_at", "who_close"])
+        return {"ok": True, "closedAt": self._date_text(self.closed_at), "closedBy": who.get_full_fio() if who else ""}
+
+    @classmethod
+    def available_options(cls, who):
+        qs = cls.objects.filter(closed_at__isnull=True)
+        if not cls._is_superuser(who):
+            if not who:
+                qs = cls.objects.none()
+            else:
+                qs = qs.filter(models.Q(who_create_id=who.pk) | models.Q(access_rows__doctor_id=who.pk)).distinct()
+        return [{"id": row.pk, "label": f"{row.pk} {row.topic}".strip() or f"Дело {row.pk}"} for row in qs.order_by("-pk")]
+
+    @staticmethod
+    def assign_document(document, who, case_id):
+        if not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if case_id in (None, "", 0, "0"):
+            document.document_case = None
+            document.save(update_fields=["document_case"])
+            return {"ok": True, "caseId": None, "case": None}
+        try:
+            case_pk = int(case_id)
+        except (TypeError, ValueError):
+            return {"ok": False, "message": "Дело недоступно"}
+        case = DocumentCase.objects.filter(pk=case_pk, closed_at__isnull=True).select_related("who_create", "who_close").first()
+        if not case or not case.can_access(who):
+            return {"ok": False, "message": "Дело недоступно"}
+        document.document_case = case
+        document.save(update_fields=["document_case"])
+        return {"ok": True, "caseId": case.pk, "case": case.as_json(who)}
+
+    def set_access(self, who, members):
+        if not self.can_edit_access(who):
+            return {"ok": False, "message": "Нет прав"}
+        if not isinstance(members, list):
+            return {"ok": False, "message": "Некорректный список доступа"}
+        ids = []
+        seen = set()
+        for item in members:
+            raw = item.get("id") if isinstance(item, dict) else item
+            try:
+                doctor_id = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if doctor_id > 0 and doctor_id not in seen:
+                seen.add(doctor_id)
+                ids.append(doctor_id)
+        valid_ids = list(DoctorProfile.objects.filter(pk__in=ids).values_list("pk", flat=True))
+        valid_set = set(valid_ids)
+        with transaction.atomic():
+            self.access_rows.exclude(doctor_id__in=valid_set).delete()
+            existing = set(self.access_rows.filter(doctor_id__in=valid_set).values_list("doctor_id", flat=True))
+            DocumentCaseAccess.objects.bulk_create([DocumentCaseAccess(document_case=self, doctor_id=doctor_id) for doctor_id in valid_ids if doctor_id not in existing])
+        cache = getattr(self, "_prefetched_objects_cache", None)
+        if cache is not None:
+            cache.pop("access_rows", None)
+        return {"ok": True, "access": self.access_json()}
+
+
+class DocumentCaseAccess(models.Model):
+    document_case = models.ForeignKey(DocumentCase, related_name="access_rows", on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, related_name="document_case_access", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Доступ к делу"
+        verbose_name_plural = "Доступ к делам"
+        unique_together = ("document_case", "doctor")
+
+    def __str__(self):
+        return f"{self.document_case_id} {self.doctor_id}"
+
+
+class DocumentPickerFavorite(models.Model):
+    doctor = models.ForeignKey(DoctorProfile, related_name="document_picker_favorites", on_delete=models.CASCADE)
+    type_document = models.ForeignKey(
+        TypeDocuments,
+        related_name="picker_favorites",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    type_case = models.ForeignKey(
+        TypeCases,
+        related_name="picker_favorites",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        verbose_name = "Избранный вид"
+        verbose_name_plural = "Избранные виды"
+        constraints = [
+            models.CheckConstraint(
+                check=(models.Q(type_document__isnull=False, type_case__isnull=True) | models.Q(type_document__isnull=True, type_case__isnull=False)),
+                name="document_picker_favorite_one_target",
+            ),
+            models.UniqueConstraint(
+                fields=("doctor", "type_document"),
+                condition=models.Q(type_document__isnull=False),
+                name="document_picker_favorite_doctor_type",
+            ),
+            models.UniqueConstraint(
+                fields=("doctor", "type_case"),
+                condition=models.Q(type_case__isnull=False),
+                name="document_picker_favorite_doctor_case",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.doctor_id} {self.type_document_id or self.type_case_id}"
+
+    @property
+    def picker_pk(self):
+        if self.type_document_id:
+            return TypeDocuments.PICKER_PK_SHIFT + self.type_document_id
+        if self.type_case_id:
+            return TypeCases.PICKER_PK_SHIFT + self.type_case_id
+        return None
+
+    @staticmethod
+    def picker_pks(doctor):
+        if not doctor:
+            return []
+        rows = DocumentPickerFavorite.objects.filter(doctor=doctor).order_by("pk")
+        return [row.picker_pk for row in rows if row.picker_pk]
+
+    @staticmethod
+    def _target(pk):
+        try:
+            value = int(pk)
+        except (TypeError, ValueError):
+            return None, None
+        if value >= TypeCases.PICKER_PK_SHIFT:
+            case = TypeCases.objects.filter(pk=value - TypeCases.PICKER_PK_SHIFT).first()
+            return ("case", case) if case else (None, None)
+        if value >= TypeDocuments.PICKER_PK_SHIFT:
+            doc = TypeDocuments.objects.filter(pk=value - TypeDocuments.PICKER_PK_SHIFT).first()
+            return ("document", doc) if doc else (None, None)
+        return None, None
+
+    @staticmethod
+    def toggle(doctor, pk):
+        if not doctor:
+            return {"ok": False, "message": "Пользователь не найден"}
+        kind, target = DocumentPickerFavorite._target(pk)
+        if not target:
+            return {"ok": False, "message": "Вид не найден"}
+        if kind == "case":
+            existing = DocumentPickerFavorite.objects.filter(doctor=doctor, type_case=target)
+        else:
+            existing = DocumentPickerFavorite.objects.filter(doctor=doctor, type_document=target)
+        if existing.exists():
+            existing.delete()
+            favorite = False
+        elif kind == "case":
+            DocumentPickerFavorite.objects.create(doctor=doctor, type_case=target)
+            favorite = True
+        else:
+            DocumentPickerFavorite.objects.create(doctor=doctor, type_document=target)
+            favorite = True
+        return {"ok": True, "favorite": favorite, "pks": DocumentPickerFavorite.picker_pks(doctor)}
+
+
+class UserFavoriteDocument(models.Model):
+    doctor = models.ForeignKey(DoctorProfile, related_name="favorite_documents", on_delete=models.CASCADE)
+    document = models.ForeignKey("Documents", related_name="user_favorites", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Избранный документ"
+        verbose_name_plural = "Избранные документы"
+        unique_together = ("doctor", "document")
+
+    def __str__(self):
+        return f"{self.doctor_id} {self.document_id}"
+
+
+class UserFavoriteCase(models.Model):
+    doctor = models.ForeignKey(DoctorProfile, related_name="favorite_cases", on_delete=models.CASCADE)
+    document = models.ForeignKey("Documents", related_name="user_case_favorites", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Избранное дело"
+        verbose_name_plural = "Избранные дела"
+        unique_together = ("doctor", "document")
+
+    def __str__(self):
+        return f"{self.doctor_id} {self.document_id}"
+
+
+def _record_favorite_model(document):
+    return UserFavoriteCase if document.type_case_id else UserFavoriteDocument
+
+
+def record_favorite_status(doctor, document):
+    if not doctor or not document:
+        return False
+    return _record_favorite_model(document).objects.filter(doctor=doctor, document=document).exists()
+
+
+def toggle_case_favorite(doctor, document_id):
+    if not doctor:
+        return {"ok": False, "message": "Пользователь не найден"}
+    document = Documents.objects.filter(pk=document_id).first()
+    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
+        return {"ok": False, "message": "Дело не найдено"}
+    existing = UserFavoriteCase.objects.filter(doctor=doctor, document__document_case_id=document.document_case_id)
+    if existing.exists():
+        existing.delete()
+        favorite = False
+    else:
+        UserFavoriteCase.objects.create(doctor=doctor, document=document)
+        favorite = True
+    return {"ok": True, "favorite": favorite, "isCase": True}
+
+
+def toggle_record_favorite(doctor, document_id):
+    if not doctor:
+        return {"ok": False, "message": "Пользователь не найден"}
+    document = Documents.objects.select_related("document_case").filter(pk=document_id).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return {"ok": False, "message": "Документ не найден"}
+    model = _record_favorite_model(document)
+    existing = model.objects.filter(doctor=doctor, document=document)
+    if existing.exists():
+        existing.delete()
+        favorite = False
+    else:
+        model.objects.create(doctor=doctor, document=document)
+        favorite = True
+    return {"ok": True, "favorite": favorite, "isCase": bool(document.type_case_id)}
+
+
+def list_record_favorites(doctor, cases=False):
+    if not doctor:
+        return []
+    model = UserFavoriteCase if cases else UserFavoriteDocument
+    rows = (
+        model.objects.filter(doctor=doctor)
+        .filter(Documents.case_access_q(doctor, "document__"))
+        .select_related("document", "document__type_document", "document__document_case")
+        .order_by("-pk")
+    )
+    documents = [row.document for row in rows if row.document_id]
+    if not documents:
+        return []
+    from directions.models import Issledovaniya
+
+    iss_by_doc = {}
+    for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in documents]).order_by("pk"):
+        iss_by_doc.setdefault(iss.document_id, iss)
+    topic_by_doc = Documents.topics_for_documents(documents, iss_by_doc)
+    result = []
+    for document in documents:
+        topic = (topic_by_doc.get(document.pk) or "").strip()
+        type_doc = document.type_document.title if document.type_document else ""
+        title = " ".join(part for part in (topic, type_doc) if part)
+        result.append({"id": document.pk, "title": Documents.title_with_id(document.pk, title)})
+    return result
+
+
+class Plans(models.Model):
+    title = models.CharField(max_length=128, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "План"
+        verbose_name_plural = "Планы"
+
+    def __str__(self):
+        return f"{self.title}"
+
+    @property
+    def json(self):
+        return {"id": self.id, "title": self.title or ""}
+
+    @staticmethod
+    def get_list():
+        return [row.json for row in Plans.objects.all().order_by("title", "pk")]
+
+    @staticmethod
+    def indicator_options():
+        from directory.models import Researches
+
+        rows = Researches.objects.filter(is_indicator=True).order_by("title", "pk")
+        return [{"id": row.pk, "label": row.title} for row in rows]
+
+    @staticmethod
+    def get_details(pk):
+        options = Plans.indicator_options()
+        if pk in (None, -1, "-1"):
+            return {"ok": True, "id": -1, "title": "", "groups": [], "indicators": [], "indicatorOptions": options}
+        plan = Plans.objects.filter(pk=pk).prefetch_related("indicator_groups__indicators", "indicators").first()
+        if not plan:
+            return {"ok": False, "message": "План не найден"}
+        groups = []
+        for group in plan.indicator_groups.all().order_by("order", "pk"):
+            groups.append(
+                {
+                    "id": group.pk,
+                    "title": group.title or "",
+                    "order": group.order,
+                    "indicators": [row.as_json() for row in group.indicators.all().order_by("order", "pk")],
+                }
+            )
+        loose = [row.as_json() for row in plan.indicators.filter(group__isnull=True).order_by("order", "pk")]
+        return {"ok": True, "id": plan.pk, "title": plan.title or "", "groups": groups, "indicators": loose, "indicatorOptions": options}
+
+    @staticmethod
+    def save_plan(pk, title, groups, indicators):
+        from django.db import transaction
+
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        groups = groups or []
+        indicators = indicators or []
+        cleaned_groups = []
+        for index, group in enumerate(groups):
+            group_title = (group.get("title") or "").strip()
+            if not group_title:
+                return {"ok": False, "message": "Укажите название группы"}
+            cleaned_rows = []
+            for row_index, row in enumerate(group.get("indicators") or []):
+                cleaned, error = PlanIndicator.clean_row(row, row_index)
+                if error:
+                    return {"ok": False, "message": error}
+                cleaned_rows.append(cleaned)
+            cleaned_groups.append({"title": group_title, "order": index, "indicators": cleaned_rows})
+        cleaned_loose = []
+        for row_index, row in enumerate(indicators):
+            cleaned, error = PlanIndicator.clean_row(row, row_index)
+            if error:
+                return {"ok": False, "message": error}
+            cleaned_loose.append(cleaned)
+        with transaction.atomic():
+            if pk in (None, -1, "-1"):
+                plan = Plans(title=title)
+            else:
+                plan = Plans.objects.filter(pk=pk).first()
+                if not plan:
+                    return {"ok": False, "message": "План не найден"}
+                plan.title = title
+            plan.save()
+            PlanIndicator.objects.filter(plan=plan).delete()
+            PlanIndicatorGroup.objects.filter(plan=plan).delete()
+            for group_row in cleaned_groups:
+                group = PlanIndicatorGroup.objects.create(plan=plan, title=group_row["title"], order=group_row["order"])
+                for row in group_row["indicators"]:
+                    PlanIndicator.objects.create(plan=plan, group=group, **row)
+            for row in cleaned_loose:
+                PlanIndicator.objects.create(plan=plan, group=None, **row)
+        return {"ok": True, "id": plan.pk, "title": plan.title}
+
+
+class PlanIndicatorGroup(models.Model):
+    plan = models.ForeignKey(Plans, related_name="indicator_groups", on_delete=models.CASCADE)
+    title = models.CharField(max_length=128, blank=True, null=True)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Группа показателей плана"
+        verbose_name_plural = "Группы показателей плана"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return f"{self.plan} – {self.title}"
+
+
+class PlanIndicator(models.Model):
+    DUE_ABSOLUTE = "absolute"
+    DUE_EMPLOYMENT = "employment"
+    UNIT_DAYS = "days"
+    UNIT_MONTHS = "months"
+    UNIT_YEARS = "years"
+
+    plan = models.ForeignKey(Plans, related_name="indicators", on_delete=models.CASCADE)
+    group = models.ForeignKey(PlanIndicatorGroup, related_name="indicators", null=True, blank=True, default=None, on_delete=models.CASCADE)
+    indicator = models.ForeignKey("directory.Researches", on_delete=models.PROTECT)
+    order = models.IntegerField(default=0)
+    due_kind = models.CharField(max_length=16, default=DUE_ABSOLUTE)
+    due_date = models.DateField(null=True, blank=True)
+    offset_value = models.IntegerField(null=True, blank=True)
+    offset_unit = models.CharField(max_length=16, default=UNIT_DAYS, blank=True)
+
+    class Meta:
+        verbose_name = "Показатель плана"
+        verbose_name_plural = "Показатели плана"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return f"{self.plan} – {self.indicator_id}"
+
+    def as_json(self):
+        return {
+            "id": self.pk,
+            "indicatorId": self.indicator_id,
+            "order": self.order,
+            "dueKind": self.due_kind,
+            "dueDate": self.due_date.strftime("%Y-%m-%d") if self.due_date else "",
+            "offsetValue": self.offset_value,
+            "offsetUnit": self.offset_unit or self.UNIT_DAYS,
+        }
+
+    @staticmethod
+    def _parse_date(value):
+        from datetime import datetime
+
+        text = str(value or "").strip()
+        if not text:
+            return None
+        for fmt in ("%Y-%m-%d", "%d.%m.%Y"):
+            try:
+                return datetime.strptime(text[:10], fmt).date()
+            except ValueError:
+                continue
+        return None
+
+    @staticmethod
+    def clean_row(row, order):
+        from directory.models import Researches
+
+        research = Researches.objects.filter(pk=row.get("indicatorId"), is_indicator=True).first()
+        if not research:
+            return None, "Выберите показатель"
+        due_kind = row.get("dueKind") or PlanIndicator.DUE_ABSOLUTE
+        if due_kind not in (PlanIndicator.DUE_ABSOLUTE, PlanIndicator.DUE_EMPLOYMENT):
+            return None, "Укажите вид срока"
+        due_date = None
+        offset_value = None
+        offset_unit = PlanIndicator.UNIT_DAYS
+        if due_kind == PlanIndicator.DUE_ABSOLUTE:
+            due_date = PlanIndicator._parse_date(row.get("dueDate"))
+            if not due_date:
+                return None, "Укажите дату выполнения"
+        else:
+            raw = row.get("offsetValue")
+            if raw in (None, ""):
+                return None, "Укажите сдвиг от даты приема на работу"
+            try:
+                offset_value = int(raw)
+            except (TypeError, ValueError):
+                return None, "Сдвиг должен быть числом"
+            offset_unit = row.get("offsetUnit") or PlanIndicator.UNIT_DAYS
+            if offset_unit not in (PlanIndicator.UNIT_DAYS, PlanIndicator.UNIT_MONTHS, PlanIndicator.UNIT_YEARS):
+                return None, "Укажите единицу сдвига"
+        return {
+            "indicator": research,
+            "order": order,
+            "due_kind": due_kind,
+            "due_date": due_date,
+            "offset_value": offset_value,
+            "offset_unit": offset_unit,
+        }, None
 
 
 class DocumentFieldGroups(models.Model):
@@ -998,6 +1947,25 @@ class Documents(models.Model):
         on_delete=models.SET_NULL,
     )
     is_hidden = models.BooleanField(default=False, blank=True, db_index=True, help_text="Скрыт из списков")
+    type_case = models.ForeignKey(
+        TypeCases,
+        related_name="created_documents",
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Вид дела, из которого создан документ",
+        on_delete=models.SET_NULL,
+    )
+    document_case = models.ForeignKey(
+        DocumentCase,
+        related_name="documents",
+        blank=True,
+        null=True,
+        default=None,
+        db_index=True,
+        help_text="Дело",
+        on_delete=models.SET_NULL,
+    )
 
     HIDDEN_DOCS_GROUP = "Скрытие документа"
     RESET_GROUP = "Сброс документов"
@@ -1180,11 +2148,42 @@ class Documents(models.Model):
 
         return Issledovaniya.objects.filter(document=obj, time_confirmation__isnull=False).exists()
 
+    @staticmethod
+    def confirmation_text(obj, iss=None):
+        from laboratory.utils import strdatetimeru
+
+        doctor = None
+        moment = None
+        if iss is not None and getattr(iss, "time_confirmation", None) and getattr(iss, "doc_confirmation_id", None):
+            doctor = iss.doc_confirmation
+            moment = iss.time_confirmation
+        elif obj.time_confirm and obj.who_confirm_id:
+            doctor = obj.who_confirm
+            moment = obj.time_confirm
+        if not doctor or not moment:
+            return ""
+        return f"{doctor}, {strdatetimeru(moment)}"
+
     @classmethod
     def can_see_document(cls, obj, who):
+        if obj.document_case_id:
+            case = obj.document_case if getattr(obj, "document_case", None) is not None else None
+            if case is None or case.pk != obj.document_case_id:
+                case = DocumentCase.objects.filter(pk=obj.document_case_id).first()
+            if not case or not case.can_access(who):
+                return False
         if not obj.is_hidden:
             return True
         return cls.can_view_all_hidden(who)
+
+    @staticmethod
+    def case_access_q(who, related=""):
+        base = f"{related}document_case" if related else "document_case"
+        if DocumentCase._is_superuser(who):
+            return models.Q()
+        if not who:
+            return models.Q(**{f"{base}__isnull": True})
+        return models.Q(**{f"{base}__isnull": True}) | models.Q(**{f"{base}__who_create_id": who.pk}) | models.Q(**{f"{base}__access_rows__doctor_id": who.pk})
 
     @classmethod
     def can_set_hidden(cls, obj, who, confirmed=None):
@@ -1217,12 +2216,123 @@ class Documents(models.Model):
             return {"ok": False, "message": "Введите номер документа"}
         if pk <= 0:
             return {"ok": False, "message": "Введите номер документа"}
-        obj = Documents.objects.select_related("type_document", "type_document__group_document").filter(pk=pk).first()
+        obj = Documents.objects.select_related("type_document", "type_document__group_document", "document_case").filter(pk=pk).first()
         if not obj or not Documents.can_see_document(obj, who):
             return {"ok": False, "message": "Документ не найден"}
         payload = obj.json
         payload["ok"] = True
         return payload
+
+    @staticmethod
+    def _search_dates(date_from, date_to):
+        from datetime import datetime
+
+        def parse(value):
+            if value in (None, ""):
+                return None
+            try:
+                return datetime.strptime(str(value)[:10], "%Y-%m-%d").date()
+            except ValueError:
+                return False
+
+        start = parse(date_from)
+        end = parse(date_to)
+        if start is False or end is False:
+            return None, None, "Некорректная дата"
+        if start and end and start > end:
+            return None, None, "Дата начала позже даты окончания"
+        return start, end, None
+
+    @staticmethod
+    def search(query, by_number=False, by_text=False, who=None, limit=50, date_from=None, date_to=None):
+        query = (query or "").strip()
+        if not query:
+            return {"ok": False, "message": "Введите запрос"}
+        if not by_number and not by_text:
+            return {"ok": False, "message": "Выберите способ поиска"}
+        start, end, date_error = Documents._search_dates(date_from, date_to)
+        if date_error:
+            return {"ok": False, "message": date_error}
+        found_ids = []
+        seen = set()
+
+        def in_period(qs, field="create_at"):
+            if start:
+                qs = qs.filter(**{f"{field}__date__gte": start})
+            if end:
+                qs = qs.filter(**{f"{field}__date__lte": end})
+            return qs
+
+        def add_ids(pks):
+            for pk in pks:
+                if not pk or pk in seen:
+                    continue
+                seen.add(pk)
+                found_ids.append(pk)
+                if len(found_ids) >= limit:
+                    return True
+            return False
+
+        if by_number:
+            digits = "".join(ch for ch in query if ch.isdigit())
+            if not digits:
+                if not by_text:
+                    return {"ok": False, "message": "Введите номер документа"}
+            else:
+                try:
+                    pk = int(digits)
+                except ValueError:
+                    pk = 0
+                if pk > 0:
+                    add_ids(in_period(Documents.objects.filter(pk=pk)).values_list("pk", flat=True))
+                if len(found_ids) < limit:
+                    numbered = in_period(Documents.objects.filter(number_registration=digits))
+                    add_ids(numbered.values_list("pk", flat=True)[:limit])
+        if by_text and len(found_ids) < limit:
+            from directory.models import ParaclinicInputField
+            from directions.models import Issledovaniya, ParaclinicResult
+
+            titled = in_period(Documents.objects.filter(type_document__title__icontains=query)).order_by("-pk")
+            add_ids(titled.values_list("pk", flat=True)[:limit])
+            if len(found_ids) < limit:
+                recent_ids = in_period(DocumentRecent.objects.filter(topic__icontains=query), "document__create_at").order_by("-opened_at").values_list("document_id", flat=True)[:limit]
+                add_ids(recent_ids)
+            topic_id = Documents.topic_cda_id()
+            if topic_id and len(found_ids) < limit:
+                field_ids = list(ParaclinicInputField.objects.filter(cda_option_id=topic_id).values_list("pk", flat=True))
+                if field_ids:
+                    iss_ids = list(
+                        ParaclinicResult.objects.filter(field_id__in=field_ids, value__icontains=query).values_list(
+                            "issledovaniye_id",
+                            flat=True,
+                        )[:limit]
+                    )
+                    if iss_ids:
+                        doc_ids = in_period(
+                            Issledovaniya.objects.filter(pk__in=iss_ids, document_id__isnull=False),
+                            "document__create_at",
+                        ).values_list("document_id", flat=True)
+                        add_ids(doc_ids)
+        if not found_ids:
+            return {"ok": False, "message": "Документ не найден"}
+        visible = Documents.objects.select_related("type_document", "document_case").filter(pk__in=found_ids[:limit])
+        docs = [doc for doc in visible if Documents.can_see_document(doc, who)]
+        order = {pk: index for index, pk in enumerate(found_ids)}
+        docs.sort(key=lambda doc: order.get(doc.pk, 0))
+        if not docs:
+            return {"ok": False, "message": "Документ не найден"}
+        from directions.models import Issledovaniya
+
+        iss_by_doc = {}
+        for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in docs]).order_by("pk"):
+            iss_by_doc.setdefault(iss.document_id, iss)
+        topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
+        rows = []
+        for doc in docs:
+            title = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
+            rows.append({"id": doc.pk, "title": Documents.title_with_id(doc.pk, title)})
+        message = rows[0]["title"] if len(rows) == 1 else f"Найдено {len(rows)}"
+        return {"ok": True, "result": rows, "message": message}
 
     @classmethod
     def log_action(cls, pk, log_type, who, extra=None):
@@ -1231,9 +2341,13 @@ class Documents(models.Model):
         Log.log(str(pk), log_type, who, extra or {})
 
     @staticmethod
-    def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False):
-        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema").order_by("-pk")
-        if role_filter == "toReview":
+    def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False):
+        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema").filter(Documents.case_access_q(who)).order_by("-pk")
+        if my_cases:
+            if not who:
+                return []
+            qs = qs.filter(models.Q(document_case__who_create_id=who.pk) | models.Q(document_case__access_rows__doctor_id=who.pk)).distinct()
+        elif role_filter == "toReview":
             if not who:
                 return []
             qs = qs.filter(pk__in=DocumentReview.pending_document_ids(who))
@@ -1266,40 +2380,65 @@ class Documents(models.Model):
         result = []
         for doc in docs:
             payload = doc.json
-            title = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
-            if role_filter == "toReview":
-                title = Documents.title_with_id(doc.pk, title)
-            payload["title"] = title
+            topic = (topic_by_doc.get(doc.pk) or "").strip()
+            type_doc = doc.type_document.title if doc.type_document else ""
+            title = " ".join(part for part in (topic, type_doc) if part)
+            payload["title"] = Documents.title_with_id(doc.pk, title)
             result.append(payload)
         return result
 
     @staticmethod
-    def create_document(type_id, who_create):
+    def create_document(type_id, who_create, case_id=None):
         from directions.models import Issledovaniya
 
         if type_id in (None, "", -1, "-1"):
             return {"ok": False, "message": "Выберите вид документа"}
-        type_doc = TypeDocuments.objects.filter(pk=type_id).first()
+        type_doc = TypeDocuments.objects.select_related("layout_template").filter(pk=type_id).first()
         if not type_doc:
             return {"ok": False, "message": "Вид документа не найден"}
         if not type_doc.can_create(who_create):
             return {"ok": False, "message": "Нет прав на создание этого вида документа"}
-        with transaction.atomic():
+        case = None
+        if case_id not in (None, "", -1, "-1"):
+            case = TypeCases.objects.filter(pk=case_id).select_related("default_type_document").first()
+            if not case:
+                return {"ok": False, "message": "Вид дела не найден"}
+            if case.default_type_document_id:
+                type_doc = case.default_type_document
+                if not type_doc:
+                    return {"ok": False, "message": "Вид документа не найден"}
+                if not type_doc.can_create(who_create):
+                    return {"ok": False, "message": "Нет прав на создание этого вида документа"}
+        schema = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
+        if schema is None:
             schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
-            obj = Documents.objects.create(type_document=type_doc, who_create=who_create, body_values={}, schema=schema)
-            templates = type_doc.get_layout_templates()
+        templates = type_doc.get_layout_templates()
+        with transaction.atomic():
+            document_case = None
+            if case is not None:
+                document_case = DocumentCase.objects.create(type_case=case, topic="", who_create=who_create)
+            obj = Documents.objects.create(
+                type_document=type_doc,
+                who_create=who_create,
+                body_values={},
+                schema=schema,
+                type_case=case,
+                document_case=document_case,
+            )
             Issledovaniya.objects.create(
                 document=obj,
                 research=templates[0] if templates else type_doc.layout_template,
                 creator=who_create,
             )
+        type_title = type_doc.title or "Документ"
+        title = f"{type_title} №{obj.pk}"
         Documents.log_action(
             obj.pk,
             Documents.LOG_CREATE,
             who_create,
-            {"title": obj.json["title"], "typeId": obj.type_document_id, "typeTitle": obj.type_document.title if obj.type_document else ""},
+            {"title": title, "typeId": type_doc.pk, "typeTitle": type_doc.title or ""},
         )
-        return {"ok": True, "id": obj.pk, "title": obj.json["title"]}
+        return {"ok": True, "id": obj.pk, "title": title}
 
     def get_issledovaniye(self):
         from directions.models import Issledovaniya
@@ -1449,21 +2588,35 @@ class Documents(models.Model):
         from directions.models import Issledovaniya
 
         obj = (
-            Documents.objects.select_related("schema", "type_document", "type_document__layout_template", "type_document__group_document")
+            Documents.objects.select_related(
+                "schema",
+                "type_document",
+                "type_document__layout_template",
+                "type_document__group_document",
+                "document_case",
+                "document_case__who_create",
+                "document_case__who_close",
+                "who_confirm",
+                "who_confirm__podrazdeleniye",
+            )
             .prefetch_related(
+                Prefetch(
+                    "document_case__access_rows",
+                    queryset=DocumentCaseAccess.objects.select_related("doctor", "doctor__podrazdeleniye"),
+                ),
                 Prefetch(
                     "issledovaniya_set",
                     queryset=Issledovaniya.objects.only("pk", "time_confirmation", "document_id", "research_id").order_by("pk"),
-                )
+                ),
             )
             .filter(pk=pk)
             .first()
         )
         if not obj:
             return {"ok": False, "message": "Документ не найден"}
-        group_names = Documents._who_group_names(who, Documents.HIDDEN_DOCS_GROUP, Documents.RESET_GROUP)
-        if obj.is_hidden and Documents.HIDDEN_DOCS_GROUP not in group_names:
+        if not Documents.can_see_document(obj, who):
             return {"ok": False, "message": "Документ не найден"}
+        group_names = Documents._who_group_names(who, Documents.HIDDEN_DOCS_GROUP, Documents.RESET_GROUP)
         iss = obj.get_issledovaniye()
         research = obj.build_research(iss)
         payload = obj.json
@@ -1471,40 +2624,56 @@ class Documents(models.Model):
         payload["issPk"] = iss.pk if iss else None
         payload["research"] = research
         payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
+        payload["whoConfirmed"] = Documents.confirmation_text(obj, iss) if payload["confirmed"] else ""
         can_hide = Documents.HIDDEN_DOCS_GROUP in group_names
         if not can_hide and who and obj.who_create_id == getattr(who, "pk", None) and not payload["confirmed"]:
             can_hide = True
         payload["canHide"] = can_hide
         payload["canReset"] = Documents.RESET_GROUP in group_names
+        payload["isCase"] = bool(obj.type_case_id)
+        payload["case"] = obj.document_case.as_json(who) if obj.document_case_id else None
+        payload["availableCases"] = DocumentCase.available_options(who)
+        payload["isFavorite"] = record_favorite_status(who, obj)
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
         type_doc = obj.type_document.title if obj.type_document else ""
         DocumentRecent.remember(who, obj, topic=obj.topic_value(iss, research=research), type_doc=type_doc)
         return payload
 
     @staticmethod
-    def save_paraclinic_result(iss_pk, research, with_confirm, visibility_state, who, request_files=None):
+    def save_paraclinic_result(iss_pk, research, with_confirm, visibility_state, who, request_files=None, case_topic=None):
         from django.utils import timezone
 
         from directory.models import ParaclinicInputField
         from directions.models import Issledovaniya, ParaclinicResult, ParaclinicResultFile
 
-        iss = Issledovaniya.objects.filter(pk=iss_pk, document__isnull=False).select_related("document", "research").first()
+        iss = Issledovaniya.objects.filter(pk=iss_pk, document__isnull=False).select_related("document", "document__document_case", "research").first()
         if not iss or not iss.document:
             return {"ok": False, "message": "Исследование не найдено"}
         if not Documents.can_see_document(iss.document, who):
             return {"ok": False, "message": "Документ не найден"}
         if iss.time_confirmation or iss.document.time_confirm:
             return {"ok": False, "message": "Документ подтверждён"}
+        document = iss.document
+        case_row = document.document_case if document.document_case_id else None
+        next_topic = None
+        if case_row is not None and case_topic is not None:
+            next_topic = str(case_topic).strip()
+        if with_confirm and case_row is not None:
+            topic = next_topic if next_topic is not None else (case_row.topic or "").strip()
+            if not topic:
+                return {"ok": False, "message": "Укажите тему дела"}
         v_g = (visibility_state or {}).get("groups") or {}
         v_f = (visibility_state or {}).get("fields") or {}
         groups = (research or {}).get("groups") or []
         files_by_field = {}
-        document = iss.document
         body_values = dict(document.body_values) if isinstance(document.body_values, dict) else {}
         addressee_ids = []
         addressee_seen = set()
         has_addressee_field = False
         with transaction.atomic():
+            if case_row is not None and next_topic is not None and case_row.topic != next_topic:
+                case_row.topic = next_topic
+                case_row.save(update_fields=["topic"])
             for group in groups:
                 group_pk = group.get("pk")
                 if not v_g.get(str(group_pk), True):
@@ -1597,6 +2766,7 @@ class Documents(models.Model):
             "id": iss.document_id,
             "issPk": iss.pk,
             "confirmed": bool(iss.time_confirmation),
+            "whoConfirmed": Documents.confirmation_text(document, iss) if iss.time_confirmation else "",
             "files_by_field": files_by_field,
         }
 
@@ -1638,6 +2808,8 @@ class Documents(models.Model):
     def set_hidden(pk, hidden, who):
         obj = Documents.objects.filter(pk=pk).first()
         if not obj:
+            return {"ok": False, "message": "Документ не найден"}
+        if not Documents.can_see_document(obj, who):
             return {"ok": False, "message": "Документ не найден"}
         if not Documents.can_set_hidden(obj, who):
             return {"ok": False, "message": "Нет прав"}
@@ -1775,7 +2947,7 @@ class DocumentReview(models.Model):
 
     @classmethod
     def pending_qs(cls, who):
-        qs = cls.objects.filter(time_review__isnull=True, document__is_hidden=False)
+        qs = cls.objects.filter(time_review__isnull=True, document__is_hidden=False).filter(Documents.case_access_q(who, "document__"))
         if who:
             qs = qs.filter(doctor_review=who)
         else:
@@ -1923,6 +3095,7 @@ class DocumentRecent(models.Model):
             page_size = cls.PAGE_SIZE
         qs = (
             cls.objects.filter(doctor=who, document__is_hidden=False, document__time_confirm__isnull=False)
+            .filter(Documents.case_access_q(who, "document__"))
             .select_related("document", "document__type_document", "document__schema")
             .order_by("-opened_at", "-pk")
         )

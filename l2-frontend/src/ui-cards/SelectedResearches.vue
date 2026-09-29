@@ -91,7 +91,7 @@
                 :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
                 :count="counts[res.pk]"
                 :service_location="(service_locations[res.pk] || {}).label"
-                :category="res.show_category ? categories[res.site_type_raw] : ''"
+                :category="res.show_category ? (categories[res.site_type_raw] || categories[res.site_type]) : ''"
                 :has_not_filled="hasNotFilled(res.pk)"
                 :has_params="Boolean(form_params[res.pk])"
                 :not_filled_fields="hasNotFilled(res.pk) ? r_list(form_params[res.pk]) : []"
@@ -821,7 +821,7 @@ export default {
       return this.l2_user_data.priceCategories || [];
     },
     show_additions() {
-      return this.researches.length > 0 && !this.simple;
+      return this.directionResearches.length > 0 && !this.simple;
     },
     current_fin() {
       return this.get_fin_obj(this.fin);
@@ -850,6 +850,12 @@ export default {
     l2CashEnabled() {
       return this.$store.getters.modules.l2_cash;
     },
+    directionResearches() {
+      return (this.researches || []).filter((pk) => {
+        const res = this.$store.getters.researches_obj[pk];
+        return Boolean(res) && !res.is_dou_document_type;
+      });
+    },
     researches_departments() {
       const r = {};
       const deps = {
@@ -858,6 +864,7 @@ export default {
         '-4': { title: 'Стоматология' },
         '-5': { title: 'Стационар' },
         '-9998': { title: 'Морфология' },
+        '-10008': { title: 'ДОУ' },
         '-9': { title: 'Формы' },
         '-11': { title: 'Заявления' },
         '-12': { title: 'Мониторинги' },
@@ -867,7 +874,7 @@ export default {
         deps[dep.pk] = dep;
       }
 
-      for (const pk of this.researches) {
+      for (const pk of this.directionResearches) {
         if (this.$store.getters.researches_obj[pk]) {
           const res = this.$store.getters.researches_obj[pk];
           const d = res.department_pk && !res.doc_refferal && !res.is_case ? res.department_pk : -2;
@@ -882,14 +889,18 @@ export default {
             pk,
             title: res.title,
             site_type_raw: res.site_type_raw,
-            show_category: res.department_pk === -9998,
+            show_category: res.department_pk === -9998 || res.department_pk === -10008,
           });
         }
       }
       return r;
     },
     categories() {
-      const sc = this.$store.getters.ex_dep[8] || [];
+      const sc = [
+        ...(this.$store.getters.ex_dep[8] || []),
+        ...(this.$store.getters.ex_dep[10000] || []),
+        ...(this.$store.getters.ex_dep[10010] || []),
+      ];
       return sc.reduce((a, b) => ({ ...a, [b.pk]: b.title }), {});
     },
     need_vich_code() {
@@ -902,10 +913,15 @@ export default {
     },
     can_save() {
       if (this.monitoring) {
-        if (this.researches.filter(r => r !== -1).length === 0) {
+        if (this.directionResearches.filter(r => r !== -1).length === 0) {
           return false;
         }
-      } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1 || this.selectedCard?.isArchive) {
+      } else if (
+        this.fin === -1
+        || this.directionResearches.length === 0
+        || this.card_pk === -1
+        || this.selectedCard?.isArchive
+      ) {
         return false;
       }
 
@@ -1370,7 +1386,7 @@ export default {
     researches_departments_simple() {
       const r = {};
 
-      for (const pk of this.researches) {
+      for (const pk of this.directionResearches) {
         if (pk in this.$store.getters.researches_obj) {
           const res = this.$store.getters.researches_obj[pk];
           if (!(res.department_pk in r)) {

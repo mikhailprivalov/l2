@@ -15,6 +15,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     HOSP = 7
     MICROBIOLOGY = 8
     MORFOLOGY = 10000  # Не добавлять в типы
+    DOU = 10010  # Не добавлять в типы
     FORMS = 11
     DIRECTIONPARAMS = 12
     APPLICATIONS = 13

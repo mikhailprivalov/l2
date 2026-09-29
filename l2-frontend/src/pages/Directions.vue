@@ -129,7 +129,10 @@
       :class="{ onlyDocCall: l2_only_doc_call }"
     />
     <div class="e">
-      <ResearchesPicker v-model="selected_researches" />
+      <ResearchesPicker
+        v-model="selected_researches"
+        :filter_types="researchPickerDouFilter"
+      />
     </div>
     <div class="f gutter gutter-col gutter-column-2" />
     <div
@@ -335,6 +338,9 @@ export default {
     },
     daysSubtract() {
       return this.$store.getters.modules.days_subtract;
+    },
+    researchPickerDouFilter() {
+      return this.$store.getters.modules.research_picker_show_dou ? [] : [10010];
     },
   },
   watch: {

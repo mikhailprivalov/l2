@@ -605,23 +605,27 @@ class EmployeePosition(models.Model):
         return groups
 
     @staticmethod
-    def get_mentors(hospital_id, department_id):
-        if department_id in (None, "", -1, "-1"):
-            return []
-        try:
-            department_id = int(department_id)
-        except (TypeError, ValueError):
-            return []
-        rows = EmployeePosition._active_role_positions(hospital_id, "is_mentor").filter(department_id=department_id)
-        return [
-            {
-                "id": row.pk,
-                "label": EmployeePosition._employee_fio(row.employee),
-                "fio": EmployeePosition._employee_fio(row.employee),
-                "departmentId": row.department_id,
-            }
-            for row in rows
-        ]
+    def get_mentors(hospital_id):
+        rows = list(EmployeePosition._active_role_positions(hospital_id, "is_mentor"))
+        groups = []
+        groups_by_id = {}
+        for row in rows:
+            department = row.department
+            group = groups_by_id.get(department.pk)
+            if group is None:
+                group = {"id": f"dept-{department.pk}", "label": department.name or "", "children": []}
+                groups_by_id[department.pk] = group
+                groups.append(group)
+            fio = EmployeePosition._employee_fio(row.employee)
+            group["children"].append(
+                {
+                    "id": row.pk,
+                    "label": fio,
+                    "fio": fio,
+                    "departmentId": department.pk,
+                }
+            )
+        return groups
 
     @staticmethod
     def _parse_form_date(value):

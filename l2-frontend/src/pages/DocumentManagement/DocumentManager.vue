@@ -21,8 +21,9 @@
           :list-refresh="listRefresh"
           :count-refresh="countRefresh"
           :found-document="foundDocument"
-          @select="selectedDocumentId = $event"
+          @select="onExplorerSelect"
           @update:filter="roleFilter = $event"
+          @update:my-cases="showMyCases = $event"
         />
       </div>
     </template>
@@ -37,6 +38,7 @@
         <div class="viewer">
           <DocumentViewer
             :document-id="selectedDocumentId"
+            :show-case-documents="showCaseDocuments"
             @visibility-change="onVisibilityChange"
             @reviewed="onReviewed"
           />
@@ -47,7 +49,9 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, ref, watch } from 'vue';
+import {
+  computed, getCurrentInstance, onMounted, onUnmounted, ref, watch,
+} from 'vue';
 
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
@@ -77,6 +81,9 @@ const readStoredLeftWidth = (): number => {
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const selectedDocumentId = ref<number | null>(null);
+const showMyCases = ref(false);
+const openedFromCaseFavorite = ref(false);
+const showCaseDocuments = computed(() => showMyCases.value || openedFromCaseFavorite.value);
 const roleFilter = ref<string | null>(null);
 const listRefresh = ref(0);
 const countRefresh = ref(0);
@@ -103,12 +110,43 @@ const onReviewed = () => {
   countRefresh.value += 1;
 };
 
+const onExplorerSelect = (id: number | null) => {
+  openedFromCaseFavorite.value = false;
+  selectedDocumentId.value = id;
+};
+
+const openFavorite = (payload: number | { id?: number; cases?: boolean }) => {
+  const id = typeof payload === 'number' ? payload : Number(payload?.id);
+  openedFromCaseFavorite.value = typeof payload === 'object' && Boolean(payload?.cases);
+  if (id) {
+    selectedDocumentId.value = id;
+  }
+};
+
+const openDocumentFromQuery = () => {
+  const id = Number(new URLSearchParams(window.location.search).get('document'));
+  if (id > 0) {
+    openedFromCaseFavorite.value = false;
+    selectedDocumentId.value = id;
+  }
+};
+
+onMounted(() => {
+  openDocumentFromQuery();
+  root.$on('open-dou-document', openFavorite);
+});
+
+onUnmounted(() => {
+  root.$off('open-dou-document', openFavorite);
+});
+
 const onSearch = async (q: string) => {
   await store.dispatch(actions.INC_LOADING);
   try {
     const data = await api('document-manager/documents/find', { id: Number(q) });
     if (data?.ok) {
       foundDocument.value = { id: data.id, title: data.title };
+      openedFromCaseFavorite.value = false;
       selectedDocumentId.value = data.id;
     } else {
       root.$emit('msg', 'error', data?.message || 'Документ не найден');

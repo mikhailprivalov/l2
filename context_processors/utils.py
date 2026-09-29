@@ -14,6 +14,7 @@ from laboratory.settings import (
     ALLOW_DIGITS_IN_FAMILY,
     DOCUMENT_MANAGER_FOR_ALL,
     DOCUMENT_MANAGER_VIEW_GROUP,
+    HIDE_DOCUMENT_MANAGER,
 )
 from rmis_integration.client import get_md5
 from utils.common import get_system_name
@@ -43,7 +44,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:8'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:{int(bool(HIDE_DOCUMENT_MANAGER))}'
         data = cache.get(k)
         if not data:
             pages = [
@@ -280,10 +281,14 @@ def menu(request):
                 },
                 {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
-                {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["*"] if DOCUMENT_MANAGER_FOR_ALL else [DOCUMENT_MANAGER_VIEW_GROUP]},
+                {"url": "/ui/document-manager-2", "title": "ДОУ-2", "nt": False, "access": ["*"] if DOCUMENT_MANAGER_FOR_ALL else [DOCUMENT_MANAGER_VIEW_GROUP]},
                 {"url": "/ui/document-history", "title": "История документов", "nt": False, "access": ["История документа"]},
                 {"url": "/ui/gardening", "title": "Садоводство", "nt": False, "access": ["Бухгалтер садоводства"]},
             ]
+            if not HIDE_DOCUMENT_MANAGER:
+                dou_access = ["*"] if DOCUMENT_MANAGER_FOR_ALL else [DOCUMENT_MANAGER_VIEW_GROUP]
+                dou2_index = next(i for i, page in enumerate(pages) if page.get("url") == "/ui/document-manager-2")
+                pages.insert(dou2_index, {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": dou_access})
 
             hp = SettingManager.get(key="home_page", default="false")
             if hp not in ['', 'false']:

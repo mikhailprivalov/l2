@@ -857,6 +857,20 @@ const router = new Router({
         fullPageLayout: true,
         groups: ['ДОУ: просмотр документов'],
         openIfModule: 'document_manager_for_all',
+        module: 'document_manager_enabled',
+        showDouFavorites: true,
+      },
+    },
+    {
+      path: '/ui/document-manager-2',
+      name: 'document-manager-2',
+      component: () => import('@/pages/DocumentManagement/DocumentManager2.vue'),
+      meta: {
+        title: 'ДОУ-2',
+        fullPageLayout: true,
+        groups: ['ДОУ: просмотр документов'],
+        openIfModule: 'document_manager_for_all',
+        showDouFavorites: true,
       },
     },
     {

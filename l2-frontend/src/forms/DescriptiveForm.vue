@@ -552,7 +552,6 @@
                 <MenteeMentorField
                   v-model="field.value"
                   kind="mentor"
-                  :department-id="menteeDepartmentId"
                   :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
@@ -741,23 +740,6 @@ export default {
     },
     userGroups() {
       return this.$store.getters.user_data.groups || [];
-    },
-    menteeDepartmentId() {
-      for (const group of this.research.groups || []) {
-        for (const field of group.fields || []) {
-          if (field.field_type === 46 && field.value) {
-            try {
-              const data = JSON.parse(field.value);
-              if (data?.departmentId) {
-                return data.departmentId;
-              }
-            } catch {
-              return null;
-            }
-          }
-        }
-      }
-      return null;
     },
   },
   watch: {

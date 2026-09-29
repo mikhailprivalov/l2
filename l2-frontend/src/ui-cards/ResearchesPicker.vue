@@ -1,5 +1,9 @@
 <template>
-  <div style="height: 100%; width: 100%; position: relative">
+  <div
+    class="picker-root"
+    :class="{ 'picker-root--compact': compact }"
+    :style="compactRootStyle"
+  >
     <div
       class="top-picker"
       :class="{ 'hide-type-picker': !!hideTypePicker }"
@@ -41,8 +45,18 @@
         class="top-inner"
         :class="departments_of_type.length > 7 ? 'top-inner-right' : '' "
       >
+        <Treeselect
+          v-if="showDouSectionTypeSelect"
+          v-model="sectionTypeId"
+          class="treeselect-wide treeselect-34px section-type-select"
+          :multiple="false"
+          :options="sectionTypeOptions"
+          placeholder="Тип раздела"
+          :append-to-body="true"
+          :clearable="true"
+        />
         <div
-          v-if="l2_all_service"
+          v-else-if="showAllDepartment"
           class="top-inner-select all-dep"
           :class="{ active: dep === 'all' }"
           @click="select_dep('all')"
@@ -136,19 +150,22 @@
           v-for="row in researches_display"
           :key="row.pk"
           class="research-select"
-          :class="[{ active: research_selected(row.pk) }, l2_research_col ? `research-select-col--${l2_research_col}` : '']"
+          :class="[{ active: research_selected(row.pk) }, researchSelectColClass]"
+          :style="researchSelectColStyle"
           :research="row"
           :use-hospital-synonym="useHospitalSynonym"
           @click.native="select_research(row.pk)"
         />
       </template>
     </div>
-    <div
-      v-else
-      class="content-none"
-    >
-      Нет данных
-    </div>
+      <div
+        v-else
+        class="content-none"
+      >
+        <template v-if="!douPickerBlocked">
+          Нет данных
+        </template>
+      </div>
     <div
       v-if="!hidetemplates"
       class="bottom-picker"
@@ -265,11 +282,21 @@
     <div
       v-else-if="just_search"
       class="bottom-picker"
+      :class="{ 'bottom-picker--with-prefix': hasSearchPrefix }"
       style="white-space: nowrap"
     >
+      <slot name="search-prefix" />
+      <div
+        v-show="founded_n !== '' && search !== ''"
+        id="founded-n"
+      >
+        <div style="font-size: 16px">
+          {{ founded_n }}
+        </div>
+      </div>
       <input
         ref="fndsrc"
-        v-model="search"
+        v-model.trim="search"
         v-tippy="{
           html: '#founded-n',
           trigger: 'mouseenter focus input',
@@ -281,7 +308,7 @@
         type="text"
         placeholder="Поиск назначения (Enter для быстрого выбора и очистки)"
         class="form-control"
-        style="width: calc(100% - 68px); max-width: 100%"
+        :style="searchInputStyle"
         @keyup.enter="founded_select(true)"
         @show="check_found_tip"
         @shown="check_found_tip"
@@ -312,15 +339,22 @@
 
 <script lang="ts">
 import { debounce } from 'lodash/function';
+import Treeselect from '@riophae/vue-treeselect';
 
+import api from '@/api';
 import * as actions from '@/store/action-types';
 import CategoryPick from '@/ui-cards/CategoryPick.vue';
 
 import ResearchPick from './ResearchPick.vue';
 
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
+const DOU_TYPE_PK = 10010;
+const FAVORITES_SECTION_ID = -100;
+
 export default {
   name: 'ResearchesPicker',
-  components: { CategoryPick, ResearchPick },
+  components: { CategoryPick, ResearchPick, Treeselect },
   props: {
     value: {},
     autoselect: {
@@ -383,6 +417,30 @@ export default {
       type: Boolean,
       default: false,
     },
+    overrideDepartments: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
+    overrideResearches: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
+    skipDirectoryLoad: {
+      type: Boolean,
+      default: false,
+    },
+    defaultResearchColumns: {
+      type: Number,
+      default: undefined,
+    },
+    maxContentRows: {
+      type: Number,
+      default: undefined,
+    },
   },
   data() {
     return {
@@ -394,11 +452,27 @@ export default {
       search: '',
       search_template: '',
       founded_templates: [],
+      sectionTypeId: null,
+      sectionTypeOptions: [],
+      sectionTypesLoaded: false,
+      favoritePks: [],
     };
   },
   computed: {
     hide_grouped_researches() {
       return Boolean(this.autoselect !== 'directions' || this.oneselect || this.hidetemplates);
+    },
+    compact() {
+      return Number(this.maxContentRows) >= 1;
+    },
+    compactRootStyle() {
+      if (!this.compact) {
+        return null;
+      }
+      return {
+        height: 'auto',
+        '--picker-content-max': `${Math.round(Number(this.maxContentRows) * 34)}px`,
+      };
     },
     onlyServicesWithHospitalSynonym() {
       return this.useHospitalSynonym && Boolean(this.$store.getters.onlyServicesWithHospitalSynonym);
@@ -412,8 +486,63 @@ export default {
     l2_research_col() {
       return this.$store.getters.modules.l2_research_select_col;
     },
+    researchSelectCol() {
+      if (this.defaultResearchColumns == null) {
+        return this.l2_research_col;
+      }
+      const depRow = this.departments_of_type.find((row) => row.pk === this.dep);
+      const fromPlace = Number(depRow?.columnsCount);
+      if (Number.isFinite(fromPlace) && fromPlace >= 1) {
+        return Math.min(12, Math.max(1, Math.round(fromPlace)));
+      }
+      const fallback = Number(this.defaultResearchColumns);
+      if (Number.isFinite(fallback) && fallback >= 1) {
+        return Math.min(12, Math.max(1, Math.round(fallback)));
+      }
+      return 10;
+    },
+    researchSelectColClass() {
+      return this.researchSelectCol ? `research-select-col--${this.researchSelectCol}` : '';
+    },
+    researchSelectColStyle() {
+      if (this.defaultResearchColumns == null || !this.researchSelectCol) {
+        return null;
+      }
+      return { width: `${100 / this.researchSelectCol}%` };
+    },
     l2_all_service() {
       return this.$store.getters.modules.l2_all_service;
+    },
+    showAllDepartment() {
+      return Boolean(this.l2_all_service || this.useOverrideCatalog);
+    },
+    showDouSectionTypeSelect() {
+      return Number(this.type) === DOU_TYPE_PK;
+    },
+    showDouFavorites() {
+      return this.showDouSectionTypeSelect && Number(this.sectionTypeId) === FAVORITES_SECTION_ID;
+    },
+    douPickerBlocked() {
+      return this.showDouSectionTypeSelect && !this.sectionTypeId;
+    },
+    favoritePkSet() {
+      return new Set((this.favoritePks || []).map((pk) => Number(pk)));
+    },
+    sectionPlaceIds() {
+      const sectionId = Number(this.sectionTypeId);
+      if (!this.showDouSectionTypeSelect || sectionId < 1) {
+        return null;
+      }
+      const source = this.useOverrideCatalog
+        ? this.overrideDepartments
+        : (this.$store.getters.ex_dep[this.type] || []);
+      const ids = new Set();
+      source.forEach((row) => {
+        if (Number(row.typeSectionId) === sectionId) {
+          ids.add(Number(row.pk));
+        }
+      });
+      return ids;
     },
     types() {
       let result = this.$store.getters.allTypes.filter(
@@ -496,23 +625,36 @@ export default {
     is_doc_ref() {
       return parseInt(this.type || 0, 10) > 3;
     },
+    useOverrideCatalog() {
+      return this.overrideDepartments.length > 0;
+    },
     departments_of_type() {
-      if (this.is_doc_ref) {
+      let rows;
+      if (this.useOverrideCatalog) {
         if (this.filter_sub_types.length === 0) {
-          return this.$store.getters.ex_dep[this.type];
+          rows = this.overrideDepartments;
+        } else {
+          rows = this.overrideDepartments.filter((t) => this.filter_sub_types.includes(t.pk));
         }
-        return this.$store.getters.ex_dep[this.type].filter((t) => this.filter_sub_types.includes(t.pk));
-      }
-      const r = [];
-      for (const row of this.$store.getters.allDepartments) {
-        if (row.type === this.type && (this.filter_sub_types.length === 0 || this.filter_sub_types.includes(row.pk))) {
-          r.push(row);
+      } else if (this.is_doc_ref) {
+        const source = this.$store.getters.ex_dep[this.type] || [];
+        if (this.filter_sub_types.length === 0) {
+          rows = source;
+        } else {
+          rows = source.filter((t) => this.filter_sub_types.includes(t.pk));
         }
+      } else {
+        const r = [];
+        for (const row of this.$store.getters.allDepartments) {
+          if (row.type === this.type && (this.filter_sub_types.length === 0 || this.filter_sub_types.includes(row.pk))) {
+            r.push(row);
+          }
+        }
+        rows = this.onlyServicesWithHospitalSynonym
+          ? r.filter((row) => this.departmentHasSynonymResearch(row.pk))
+          : r;
       }
-      if (!this.onlyServicesWithHospitalSynonym) {
-        return r;
-      }
-      return r.filter((row) => this.departmentHasSynonymResearch(row.pk));
+      return this.filterDepartmentsBySection(rows);
     },
     dep_i() {
       let i = 0;
@@ -537,6 +679,23 @@ export default {
         return researchTitle.includes(searchTerm) || researchShortTitle.includes(searchTerm)
           || researchInternalCode.includes(searchTerm) || hospitalTitle?.includes(searchTerm);
       });
+    },
+    hasSearchPrefix() {
+      return Boolean(this.$slots['search-prefix'] || this.$scopedSlots['search-prefix']);
+    },
+    searchInputStyle() {
+      if (this.hasSearchPrefix) {
+        return {
+          flex: '1 1 auto',
+          width: 'auto',
+          maxWidth: 'none',
+          minWidth: '0',
+        };
+      }
+      return {
+        width: 'calc(100% - 68px)',
+        maxWidth: '100%',
+      };
     },
     founded_n() {
       let r = 'Не найдено';
@@ -567,6 +726,9 @@ export default {
     types() {
       this.checkType();
     },
+    overrideDepartments() {
+      this.checkType();
+    },
     templates() {
       this.check_template();
     },
@@ -582,6 +744,15 @@ export default {
     },
     search() {
       this.check_found_tip();
+    },
+    type() {
+      this.loadDouSectionTypes();
+    },
+    sectionTypeId() {
+      if (!this.showDouSectionTypeSelect) {
+        return;
+      }
+      this.dep = 'all';
     },
     search_template: debounce(function (nv) {
       this.do_search_template(nv);
@@ -623,6 +794,18 @@ export default {
     this.$root.$on(`researches-picker:deselect_all${this.kk}`, this.clear);
     this.$root.$on(`researches-picker:add_research${this.kk}`, this.select_research_ignore);
 
+    if (this.skipDirectoryLoad || this.useOverrideCatalog) {
+      this.checkType();
+      this.check_template();
+      if (this.value instanceof Array) {
+        this.checked_researches = this.value;
+      } else {
+        this.syncCheckedResearchesFromValue(this.value, true);
+      }
+      this.loadDouSectionTypes();
+      return;
+    }
+
     if (this.useHospitalSynonym) {
       await this.$store.dispatch(actions.INC_LOADING);
       await Promise.all([
@@ -646,6 +829,7 @@ export default {
     } else {
       this.syncCheckedResearchesFromValue(this.value, true);
     }
+    this.loadDouSectionTypes();
   },
   methods: {
     researchesArraysEqual(a, b) {
@@ -698,25 +882,95 @@ export default {
       return r.filter((x) => this.passesResearchFilters(x));
     },
     researches_dep_display(dep = this.dep) {
+      if (this.douPickerBlocked) {
+        return [];
+      }
+      if (this.showDouFavorites) {
+        const source = this.useOverrideCatalog
+          ? (this.overrideResearches || [])
+          : (this.$store.getters.researches[this.rev_t] || []);
+        return source.filter((row) => this.favoritePkSet.has(Number(row.pk)) && this.passesResearchFilters(row));
+      }
       let r = [];
+      const showAll = dep === 'all';
+      if (this.useOverrideCatalog) {
+        r = this.overrideResearches.filter((row) => this.matchesDouPickerDep(row, dep, showAll));
+        return r.filter((x) => this.passesResearchFilters(x));
+      }
       if (this.rev_t === -2 || dep === -13) {
         for (const d of Object.keys(this.$store.getters.researches)) {
           for (const row of this.$store.getters.researches[d] || []) {
-            if ((row.doc_refferal || row.is_application) && row.site_type === dep) {
+            if ((row.doc_refferal || row.is_application) && (showAll || row.site_type === dep)) {
               r.push(row);
             }
           }
         }
       } else if (this.rev_t < -2) {
         for (const row of this.$store.getters.researches[this.rev_t] || []) {
-          if (row.site_type === dep || (dep === -1 && !row.site_type)) {
+          if (this.matchesDouPickerDep(row, dep, showAll)) {
             r.push(row);
           }
+        }
+      } else if (showAll) {
+        for (const row of this.departments_of_type) {
+          r = r.concat(this.$store.getters.researches[row.pk] || []);
         }
       } else if (this.dep in this.$store.getters.researches) {
         r = this.$store.getters.researches[dep];
       }
       return r.filter((x) => this.passesResearchFilters(x));
+    },
+    filterDepartmentsBySection(rows) {
+      const visible = (rows || []).filter((row) => !row.isCases);
+      if (this.showDouSectionTypeSelect && (!this.sectionTypeId || this.showDouFavorites)) {
+        return [];
+      }
+      if (!this.showDouSectionTypeSelect) {
+        return visible;
+      }
+      const sectionId = Number(this.sectionTypeId);
+      return visible.filter((row) => row.pk === -1 || Number(row.typeSectionId) === sectionId);
+    },
+    matchesDouPickerDep(row, dep, showAll) {
+      if (showAll) {
+        if (row.is_dou_case_type) {
+          return false;
+        }
+        const placeIds = this.sectionPlaceIds;
+        if (placeIds) {
+          return placeIds.has(Number(row.site_type));
+        }
+        return true;
+      }
+      return row.site_type === dep || (dep === -1 && !row.site_type);
+    },
+    async loadDouSectionTypes() {
+      if (!this.showDouSectionTypeSelect || this.sectionTypesLoaded) {
+        return;
+      }
+      this.sectionTypesLoaded = true;
+      try {
+        const { result } = await api('document-manager/section-types/list');
+        this.sectionTypeOptions = [
+          { id: FAVORITES_SECTION_ID, label: 'Избранное' },
+          ...(result || []).map((row) => ({
+            id: row.id,
+            label: row.title,
+          })),
+        ];
+        await this.reloadFavorites();
+      } catch (e) {
+        this.sectionTypesLoaded = false;
+        this.sectionTypeOptions = [];
+      }
+    },
+    async reloadFavorites() {
+      try {
+        const { result } = await api('document-manager/favorites/list');
+        this.favoritePks = result || [];
+      } catch (e) {
+        this.favoritePks = [];
+      }
     },
     passesResearchFilters(row) {
       if (this.filter_researches.includes(row.pk)) {
@@ -792,6 +1046,9 @@ export default {
       if (this.types.length > 0 && !this.types.map((t) => Number(t.pk)).includes(Number(this.type))) {
         this.type = JSON.parse(JSON.stringify(this.types[0].pk));
       }
+      if (this.dep === 'all' && (this.showAllDepartment || this.showDouSectionTypeSelect)) {
+        return;
+      }
       for (const row of this.departments_of_type) {
         if (this.dep === row.pk) {
           return;
@@ -853,6 +1110,11 @@ export default {
       }
       if (!this.research_selected(pk)) {
         const research = this.research_data(pk);
+        if (this.isDouPickerItem(research)) {
+          this.checked_researches = this.checked_researches.filter(
+            (id) => !this.isDouPickerItem(this.research_data(id)),
+          );
+        }
         if (!research.auto_deselect) {
           this.checked_researches.push(pk);
         } else {
@@ -864,6 +1126,9 @@ export default {
           }
         }
       }
+    },
+    isDouPickerItem(row) {
+      return Boolean(row && (row.is_dou_document_type || row.is_dou_case_type));
     },
     deselect_research_ignore(pk) {
       if (this.readonly) {
@@ -923,6 +1188,9 @@ export default {
       return s !== '' && (t.includes(s) || ft.includes(s) || ht?.includes(s) || c.startsWith(codeSearch));
     },
     research_data(pk) {
+      if (this.useOverrideCatalog) {
+        return this.overrideResearches.find((row) => row.pk === pk) || {};
+      }
       if (pk in this.$store.getters.researches_obj) {
         return this.$store.getters.researches_obj[pk];
       }
@@ -1019,6 +1287,12 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.picker-root {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
 .top-picker,
 .bottom-picker {
   height: 34px;
@@ -1105,9 +1379,13 @@ export default {
 }
 
 .research-select {
+  box-sizing: border-box;
   flex: 0 1 auto;
   width: 25%;
   height: 34px;
+  padding: 0;
+  margin-right: -1px;
+  margin-bottom: -1px;
   border: 1px solid #6c7a89 !important;
   cursor: pointer;
   text-align: left;
@@ -1176,6 +1454,14 @@ export default {
   }
 }
 
+.bottom-picker--with-prefix {
+  justify-content: flex-start;
+
+  input {
+    border-left: none;
+  }
+}
+
 .bottom-inner-btn {
   width: auto;
   text-align: center;
@@ -1215,15 +1501,44 @@ export default {
   width: 30px;
   flex: none;
 }
+.section-type-select {
+  flex: 0 0 127px;
+  width: 127px;
+  min-width: 127px;
+  align-self: stretch;
+}
+:deep(.section-type-select .vue-treeselect__control),
+:deep(.section-type-select:not(.vue-treeselect--disabled) .vue-treeselect__control:hover),
+:deep(.section-type-select.vue-treeselect--focused:not(.vue-treeselect--open) .vue-treeselect__control),
+:deep(.section-type-select.vue-treeselect--open .vue-treeselect__control) {
+  height: 34px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #aab2bd;
+  color: #fff;
+}
+:deep(.section-type-select .vue-treeselect__control:hover),
+:deep(.section-type-select.vue-treeselect--open .vue-treeselect__control) {
+  background: #434a54;
+}
+:deep(.section-type-select .vue-treeselect__placeholder),
+:deep(.section-type-select .vue-treeselect__single-value) {
+  line-height: 34px;
+  color: #fff;
+  font-size: 12px;
+}
+:deep(.section-type-select .vue-treeselect__x-container),
+:deep(.section-type-select .vue-treeselect__x-container:hover),
+:deep(.section-type-select .vue-treeselect__control-arrow),
+:deep(.section-type-select .vue-treeselect__control-arrow-container:hover .vue-treeselect__control-arrow) {
+  color: #fff;
+}
 .research-select-col {
-  &--1 {
-    width: 100%;
-  }
-  &--2 {
-    width: 50%;
-  }
-  &--3 {
-    width: 33.3%;
+  @for $i from 1 through 12 {
+    &--#{$i} {
+      width: percentage(1 / $i);
+    }
   }
 }
 .depart-other {
@@ -1244,5 +1559,40 @@ export default {
   text-align: right;
   max-height: 250px;
   overflow-y: auto;
+}
+
+.picker-root--compact {
+  height: auto !important;
+
+  .top-picker {
+    position: relative;
+    left: auto;
+    right: auto;
+  }
+
+  .bottom-picker {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+
+    input {
+      border-top: none;
+      box-shadow: none;
+    }
+  }
+
+  .content-picker,
+  .content-none {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    height: var(--picker-content-max, 68px);
+    min-height: var(--picker-content-max, 68px);
+    max-height: var(--picker-content-max, 68px);
+    overflow-y: auto;
+  }
 }
 </style>

@@ -2,8 +2,8 @@
   <div class="mentee-mentor-field">
     <Treeselect
       :multiple="false"
-      :disable-branch-nodes="isMentee"
-      :search-nested="isMentee"
+      :disable-branch-nodes="true"
+      :search-nested="true"
       class="treeselect-wide treeselect-34px"
       :options="options"
       :append-to-body="true"
@@ -21,7 +21,6 @@
       v-if="isMentee && selectedId"
       class="mentee-mentor-field__dates"
     >
-      <div>Дата рождения: {{ dateBirth || 'не указана' }}</div>
       <div>Дата приема на работу: {{ dateEmployment || 'не указана' }}</div>
     </div>
   </div>
@@ -50,12 +49,10 @@ const props = withDefaults(defineProps<{
   value?: string;
   disabled?: boolean;
   kind?: FieldKind;
-  departmentId?: number | string | null;
 }>(), {
   value: '',
   disabled: false,
   kind: 'mentee',
-  departmentId: null,
 });
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
@@ -69,17 +66,9 @@ const details = ref<Details>({});
 const ready = ref(false);
 
 const isMentee = computed(() => props.kind === 'mentee');
-const isMentor = computed(() => props.kind === 'mentor');
-const dateBirth = computed(() => details.value.dateBirth || '');
 const dateEmployment = computed(() => details.value.dateEmployment || '');
-const hasDepartment = computed(() => props.departmentId != null && props.departmentId !== '' && Number(props.departmentId) > 0);
-const isDisabled = computed(() => props.disabled || (isMentor.value && !hasDepartment.value));
-const placeholder = computed(() => {
-  if (isMentor.value && !hasDepartment.value) {
-    return 'Сначала выберите наставляемого';
-  }
-  return isMentee.value ? 'Выберите наставляемого' : 'Выберите наставника';
-});
+const isDisabled = computed(() => props.disabled);
+const placeholder = computed(() => (isMentee.value ? 'Выберите наставляемого' : 'Выберите наставника'));
 
 function parseValue(raw?: string): Details {
   if (!raw) {
@@ -154,11 +143,7 @@ async function loadMentees() {
 }
 
 async function loadMentors() {
-  if (!hasDepartment.value) {
-    options.value = [];
-    return;
-  }
-  const { result } = await api('employees/mentors', { departmentId: Number(props.departmentId) });
+  const { result } = await api('employees/mentors');
   options.value = result || [];
 }
 
@@ -171,26 +156,10 @@ watch(() => props.value, (raw) => {
   }
 }, { immediate: true });
 
-watch(() => props.departmentId, async (departmentId, previousDepartmentId) => {
-  if (!isMentor.value) {
-    return;
-  }
-  await loadMentors();
-  if (!hasDepartment.value) {
-    if (previousDepartmentId != null && previousDepartmentId !== '' && Number(previousDepartmentId) > 0) {
-      clear();
-    }
-    return;
-  }
-  if (details.value.id && details.value.departmentId != null && Number(details.value.departmentId) !== Number(departmentId)) {
-    clear();
-  }
-});
-
 onMounted(async () => {
   if (isMentee.value) {
     await loadMentees();
-  } else if (hasDepartment.value) {
+  } else {
     await loadMentors();
   }
   ready.value = true;
