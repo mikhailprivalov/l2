@@ -857,6 +857,7 @@ const router = new Router({
         fullPageLayout: true,
         groups: ['ДОУ: просмотр документов'],
         openIfModule: 'document_manager_for_all',
+        module: 'document_manager_enabled',
         showDouFavorites: true,
       },
     },

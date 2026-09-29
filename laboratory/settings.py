@@ -565,6 +565,9 @@ CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER = -1
 # Кнопка и страница ДОУ доступны всем авторизованным. Переопределение в laboratory/local_settings.py
 DOCUMENT_MANAGER_VIEW_GROUP = "ДОУ: просмотр документов"
 DOCUMENT_MANAGER_FOR_ALL = False
+# Скрыть кнопку меню и страницу /ui/document-manager (ДОУ). ДОУ-2 не затрагивается.
+# Переопределение в laboratory/local_settings.py
+HIDE_DOCUMENT_MANAGER = False
 # Раздел «ДОУ» после «Морфология» в пикере услуг на /ui/directions. На /ui/document-manager-2 категория ДОУ всегда видна. Переопределение в laboratory/local_settings.py
 RESEARCH_PICKER_SHOW_DOU = False
 # Начало рабочего дня для работников и подразделений (Employees, Department) HH:MM

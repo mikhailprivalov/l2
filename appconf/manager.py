@@ -245,6 +245,7 @@ class SettingManager:
         return {
             "show_rmis_change_password": bool(getattr(django_settings, "SHOW_RMIS_CHANGE_PASSWORD", False)),
             "document_manager_for_all": bool(getattr(django_settings, "DOCUMENT_MANAGER_FOR_ALL", False)),
+            "document_manager_enabled": not bool(getattr(django_settings, "HIDE_DOCUMENT_MANAGER", False)),
             "show_requests_fill_dicom_download": bool(getattr(django_settings, "SHOW_REQUESTS_FILL_DICOM_DOWNLOAD", False)),
             "show_code_in_request_creation": bool(getattr(django_settings, "SHOW_CODE_IN_REQUEST_CREATION", False)),
             "research_picker_show_dou": bool(getattr(django_settings, "RESEARCH_PICKER_SHOW_DOU", False)),
