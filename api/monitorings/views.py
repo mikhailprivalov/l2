@@ -1,4 +1,6 @@
 import datetime
+import html
+import re
 from typing import Optional
 import json
 from copy import deepcopy
@@ -16,11 +18,18 @@ from api.monitorings.sql_func import (
     dashboard_sql_by_day_filter_hosp,
 )
 
-from directory.models import Researches
+from directory.models import ParaclinicInputGroups, Researches
 from utils.data_verification import data_parse
 from laboratory.utils import strdatetime
-from directions.models import DirectionParamsResult, Issledovaniya, Napravleniya, Dashboard, DashboardCharts
+from directions.models import DirectionParamsResult, Issledovaniya, MonitoringResult, Napravleniya, ParaclinicResult, Dashboard, DashboardCharts
 from hospitals.models import Hospitals
+
+_TAG_RE = re.compile(r"<[^>]+>")
+_ISO_DATE_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+_XLSX_TRANSLIT = (
+    "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+    "abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA",
+)
 
 
 @login_required
@@ -228,6 +237,162 @@ def filexlsx(request):
         response['Content-Disposition'] = str.translate(f"attachment; filename=\"{monitoring.title}, {date}.xlsx\"", tr)
         wb.save(response)
         return response
+
+
+def _plain_text(value):
+    text = "" if value is None else str(value)
+    text = text.replace("<br/>", "\n").replace("<br />", "\n").replace("<br>", "\n")
+    text = _TAG_RE.sub("", text)
+    return html.unescape(text).strip()
+
+
+def _as_ru_date(value):
+    match = _ISO_DATE_RE.match((value or "").strip())
+    if not match:
+        return value
+    year, month, day = match.groups()
+    return f"{day}.{month}.{year}"
+
+
+def _table_cell_text(value_raw):
+    if value_raw is None:
+        return ""
+    text = str(value_raw)
+    try:
+        row_data = json.loads(text)
+    except Exception:
+        return text
+    if isinstance(row_data, list):
+        return "\n".join(str(item) for item in row_data)
+    if isinstance(row_data, dict):
+        if row_data.get("fio") or row_data.get("family"):
+            return " ".join(part for part in (row_data.get("family"), row_data.get("name"), row_data.get("patronymic")) if part)
+        return str(row_data.get("title") or row_data.get("address") or text)
+    return str(row_data)
+
+
+def _table_text(value):
+    try:
+        data = json.loads(value)
+    except Exception:
+        return _plain_text(value)
+    if not isinstance(data, dict) or "rows" not in data:
+        return _plain_text(value)
+    lines = []
+    titles = (data.get("columns") or {}).get("titles") or []
+    if titles:
+        lines.append(" | ".join(str(title) for title in titles))
+    for row in data.get("rows") or []:
+        if not isinstance(row, list):
+            lines.append(_plain_text(row))
+            continue
+        lines.append(" | ".join(_table_cell_text(cell) for cell in row))
+    return "\n".join(lines).strip()
+
+
+def _field_text(result):
+    field_type = result.get_field_type()
+    if field_type == 42:
+        return None
+    raw = result.string_value or ""
+    if field_type == 27:
+        text = _table_text(raw)
+    else:
+        text = _plain_text(raw)
+        if field_type == 1 or _ISO_DATE_RE.match(text):
+            text = _as_ru_date(text)
+    return text or None
+
+
+def _monitoring_report_date(direction):
+    row = MonitoringResult.objects.filter(napravleniye=direction).order_by("pk").first()
+    if not row:
+        return ""
+    if row.period_date:
+        return row.period_date.strftime("%d.%m.%Y")
+    year = row.period_param_year or ""
+    if row.type_period == MonitoringResult.PERIOD_WEEK and row.period_param_week_date_start and row.period_param_week_date_end:
+        start = row.period_param_week_date_start.strftime("%d.%m.%Y")
+        end = row.period_param_week_date_end.strftime("%d.%m.%Y")
+        return f"{start}–{end}"
+    if row.type_period == MonitoringResult.PERIOD_QURTER and row.period_param_quarter:
+        return f"{row.period_param_quarter} квартал {year}".strip()
+    if row.type_period == MonitoringResult.PERIOD_HALFYEAR and row.period_param_halfyear:
+        return f"{row.period_param_halfyear} полугодие {year}".strip()
+    if row.type_period == MonitoringResult.PERIOD_MONTH and row.period_param_month and year:
+        return f"{int(row.period_param_month):02d}.{year}"
+    if row.type_period == MonitoringResult.PERIOD_YEAR:
+        return str(year)
+    if row.period_param_week_description:
+        return row.period_param_week_description
+    return str(year)
+
+
+def _monitoring_direction_payload(direction, iss):
+    params = []
+    for param in DirectionParamsResult.objects.filter(napravleniye=direction).select_related("field").order_by("order"):
+        value = _plain_text(param.string_value_normalized or "")
+        if param.get_field_type() == 1 or _ISO_DATE_RE.match(value):
+            value = _as_ru_date(value)
+        if not value:
+            continue
+        title = param.title or (param.field.title if param.field_id else "")
+        params.append(f"{title}: {value}" if title else value)
+
+    filled_at = iss.time_confirmation or iss.time_save or direction.data_sozdaniya
+    header = {
+        "title": iss.research.title,
+        "params": "\n".join(params),
+        "hospital": direction.hospital_short_title or "",
+        "report_date": _monitoring_report_date(direction),
+        "filled_at": strdatetime(filled_at) if filled_at else "",
+    }
+    groups = []
+    group_rows = ParaclinicInputGroups.objects.filter(research=iss.research, hide=False).order_by("order")
+    for group in group_rows:
+        fields = []
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group, field__hide=False).exclude(value="").select_related("field").order_by("field__order")
+        for result in results:
+            value = _field_text(result)
+            if not value:
+                continue
+            fields.append({"title": result.field.get_title(force_type=result.get_field_type()), "value": value})
+        if fields:
+            groups.append({"title": group.title, "fields": fields})
+    return header, groups
+
+
+def _safe_sheet_title(title):
+    cleaned = re.sub(r"[:\\/?*\[\]]", " ", title or "Отчет")
+    cleaned = re.sub(r"\s+", " ", cleaned).strip() or "Отчет"
+    return cleaned[:31]
+
+
+@login_required
+@group_required("Заполнение мониторингов")
+def direction_xlsx(request):
+    try:
+        pk = int(request.GET.get("pk") or "")
+    except (TypeError, ValueError):
+        return HttpResponse(status=404)
+
+    direction = Napravleniya.objects.filter(pk=pk).first()
+    iss = Issledovaniya.objects.filter(napravleniye=direction, research__is_monitoring=True).select_related("research").first() if direction else None
+    if not iss:
+        return HttpResponse(status=404)
+
+    header, groups = _monitoring_direction_payload(direction, iss)
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = _safe_sheet_title(iss.research.title)
+    structure_sheet.monitoring_direction_xlsx(ws, header, groups)
+
+    translit = {ord(src): ord(dst) for src, dst in zip(*_XLSX_TRANSLIT)}
+    filename = str.translate(f"{iss.research.title}, {direction.pk}.xlsx".replace('"', ""), translit)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
 
 
 @login_required

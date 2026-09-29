@@ -6,6 +6,7 @@ urlpatterns = [
     path('search', views.search),
     path('history', views.history),
     path('filexlsx', views.filexlsx),
+    path('direction-xlsx', views.direction_xlsx),
     path('dashboard', views.get_dashboard),
     path('chart', views.get_chart_data),
     path('listdashboard', views.dashboard_list),

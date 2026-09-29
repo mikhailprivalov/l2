@@ -54,17 +54,22 @@
         />
       </div>
       <div slot="footer">
-        <div class="row">
-          <div class="col-xs-4">
+        <div class="footer-actions">
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="hideModalResults"
+          >
+            Закрыть
+          </button>
+          <div class="footer-actions__right">
             <button
               class="btn btn-primary-nb btn-blue-nb"
               type="button"
-              @click="hideModalResults"
+              @click="downloadXlsx"
             >
-              Закрыть
+              XLSX
             </button>
-          </div>
-          <div class="col-xs-4 col-xs-offset-4 text-right">
             <button
               class="btn btn-primary-nb btn-blue-nb"
               type="button"
@@ -150,11 +155,33 @@ export default {
       }
       this.$root.$emit('print:results', [this.toEnter]);
     },
+    downloadXlsx() {
+      if (!this.toEnter) {
+        return;
+      }
+      window.open(`/api/monitorings/direction-xlsx?pk=${this.toEnter}`, '_blank');
+    },
   },
 };
 </script>
 
 <style scoped lang="scss">
+.footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .btn {
+    width: auto !important;
+  }
+}
+
+.footer-actions__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .root {
   position: absolute;
   top: 36px;
