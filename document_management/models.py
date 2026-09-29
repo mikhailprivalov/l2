@@ -1105,9 +1105,7 @@ class DocumentCase(models.Model):
         with transaction.atomic():
             self.access_rows.exclude(doctor_id__in=valid_set).delete()
             existing = set(self.access_rows.filter(doctor_id__in=valid_set).values_list("doctor_id", flat=True))
-            DocumentCaseAccess.objects.bulk_create(
-                [DocumentCaseAccess(document_case=self, doctor_id=doctor_id) for doctor_id in valid_ids if doctor_id not in existing]
-            )
+            DocumentCaseAccess.objects.bulk_create([DocumentCaseAccess(document_case=self, doctor_id=doctor_id) for doctor_id in valid_ids if doctor_id not in existing])
         cache = getattr(self, "_prefetched_objects_cache", None)
         if cache is not None:
             cache.pop("access_rows", None)
