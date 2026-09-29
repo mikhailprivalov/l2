@@ -1149,10 +1149,7 @@ class DocumentPickerFavorite(models.Model):
         verbose_name_plural = "Избранные виды"
         constraints = [
             models.CheckConstraint(
-                check=(
-                    models.Q(type_document__isnull=False, type_case__isnull=True)
-                    | models.Q(type_document__isnull=True, type_case__isnull=False)
-                ),
+                check=(models.Q(type_document__isnull=False, type_case__isnull=True) | models.Q(type_document__isnull=True, type_case__isnull=False)),
                 name="document_picker_favorite_one_target",
             ),
             models.UniqueConstraint(
