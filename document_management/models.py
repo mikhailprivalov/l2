@@ -1292,8 +1292,12 @@ def list_record_favorites(doctor, cases=False):
     if not doctor:
         return []
     model = UserFavoriteCase if cases else UserFavoriteDocument
-    rows = model.objects.filter(doctor=doctor).filter(Documents.case_access_q(doctor, "document__")).select_related("document", "document__type_document",
-                                                                                                                    "document__document_case").order_by("-pk")
+    rows = (
+        model.objects.filter(doctor=doctor)
+        .filter(Documents.case_access_q(doctor, "document__"))
+        .select_related("document", "document__type_document", "document__document_case")
+        .order_by("-pk")
+    )
     documents = [row.document for row in rows if row.document_id]
     if not documents:
         return []
