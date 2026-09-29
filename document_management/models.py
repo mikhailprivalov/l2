@@ -2297,11 +2297,7 @@ class Documents(models.Model):
             titled = in_period(Documents.objects.filter(type_document__title__icontains=query)).order_by("-pk")
             add_ids(titled.values_list("pk", flat=True)[:limit])
             if len(found_ids) < limit:
-                recent_ids = (
-                    in_period(DocumentRecent.objects.filter(topic__icontains=query), "document__create_at")
-                    .order_by("-opened_at")
-                    .values_list("document_id", flat=True)[:limit]
-                )
+                recent_ids = in_period(DocumentRecent.objects.filter(topic__icontains=query), "document__create_at").order_by("-opened_at").values_list("document_id", flat=True)[:limit]
                 add_ids(recent_ids)
             topic_id = Documents.topic_cda_id()
             if topic_id and len(found_ids) < limit:
