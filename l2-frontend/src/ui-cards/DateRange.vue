@@ -38,6 +38,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    allowEmpty: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -110,13 +114,21 @@ export default {
   },
   methods: {
     updateDatepickers(from, to) {
-      const fromMoment = moment(from, this.datef, true);
-      const toMoment = moment(to, this.datef, true);
-      if (this.$refs.from && fromMoment.isValid()) {
-        window.$(this.$refs.from).datepicker('update', fromMoment.toDate());
+      this.updateDatepicker(this.$refs.from, from);
+      this.updateDatepicker(this.$refs.to, to);
+    },
+    updateDatepicker(input, value) {
+      if (!input) {
+        return;
       }
-      if (this.$refs.to && toMoment.isValid()) {
-        window.$(this.$refs.to).datepicker('update', toMoment.toDate());
+      const parsed = moment(value, this.datef, true);
+      const $input = window.$(input);
+      if (parsed.isValid()) {
+        $input.datepicker('update', parsed.toDate());
+        return;
+      }
+      if (this.allowEmpty && !String(value || '').trim()) {
+        $input.datepicker('update', '');
       }
     },
     emit() {
@@ -124,6 +136,9 @@ export default {
       this.$emit('input', [this.dfrom, this.dto]);
     },
     validate_date(date) {
+      if (this.allowEmpty && !String(date || '').trim()) {
+        return true;
+      }
       const r = moment(date, this.datef, true).isValid();
 
       if (!r) this.$root.$emit('msg', 'error', 'Неверная дата');
