@@ -141,7 +141,7 @@ const router = new Router({
       component: () => import('@/construct/ConstructEmployees.vue'),
       meta: {
         title: 'Управление сотрудниками',
-        groups: ['Конструктор: Настройка организации'],
+        groups: ['Управление сотрудниками'],
         fullPageLayout: true,
       },
     },
