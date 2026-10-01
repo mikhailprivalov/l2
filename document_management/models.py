@@ -516,7 +516,8 @@ class PlaceSection(models.Model):
                     queryset=PlaceSectionAccess.objects.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk"),
                 )
             )
-        ).order_by("title", "pk")
+            .order_by("title", "pk")
+        )
 
     @staticmethod
     def get_list():
