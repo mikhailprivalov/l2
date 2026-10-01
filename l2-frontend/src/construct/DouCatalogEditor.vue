@@ -202,6 +202,67 @@
           />
         </div>
       </div>
+      <div
+        v-else-if="kind === 'place' || kind === 'section'"
+        class="templates-block"
+      >
+        <div class="template-row access-mode-row">
+          <span class="input-group-addon">Доступ</span>
+          <label
+            class="access-check"
+            @click.prevent="accessMode = 'white'"
+          >
+            <input
+              type="checkbox"
+              :checked="accessMode === 'white'"
+              tabindex="-1"
+            >
+            <span>Белые</span>
+          </label>
+          <label
+            class="access-check"
+            @click.prevent="accessMode = 'black'"
+          >
+            <input
+              type="checkbox"
+              :checked="accessMode === 'black'"
+              tabindex="-1"
+            >
+            <span>Черные</span>
+          </label>
+        </div>
+        <div class="template-row">
+          <span class="input-group-addon">{{ accessMode === 'white' ? 'Кому доступно' : 'Кому недоступно' }}</span>
+          <AddresseeField
+            class="creators-field"
+            :header="accessMode === 'white' ? 'Белые' : 'Черные'"
+            hide-preview
+            :value="accessMembersJson"
+            @input="onAccessMembersInput"
+          />
+        </div>
+        <div
+          v-if="accessMembers.length === 0"
+          class="empty-templates"
+        >
+          {{ accessMode === 'white' ? 'Список пуст — не видит никто' : 'Список пуст — видят все' }}
+        </div>
+        <div
+          v-for="row in accessMembers"
+          :key="row.id"
+          class="template-item"
+        >
+          <span class="template-item-title">{{ row.fio }}</span>
+          <button
+            class="btn btn-blue-nb template-item-btn"
+            type="button"
+            title="Удалить"
+            @click="removeAccessMember(row.id)"
+          >
+            <i class="glyphicon glyphicon-remove" />
+          </button>
+        </div>
+      </div>
     </div>
     <div class="footer-editor">
       <button
@@ -268,6 +329,8 @@ const props = defineProps<{
   placeSectionIdValue?: number | null;
   columnsCountValue?: number | null;
   typeSectionIdValue?: number | null;
+  accessModeValue?: string | null;
+  accessMembersValue?: CreatorPerson[];
   groups?: CatalogGroup[];
   places?: CatalogGroup[];
   sectionTypes?: CatalogGroup[];
@@ -293,6 +356,8 @@ const defaultTypeDocumentId = ref<number | null>(null);
 const placeSectionId = ref<number>(-1);
 const typeSectionId = ref<number | null>(null);
 const columnsCount = ref<number>(10);
+const accessMode = ref<'white' | 'black'>('black');
+const accessMembers = ref<CreatorPerson[]>([]);
 const documentTypeOptions = ref<LayoutTemplateOption[]>([]);
 
 const canSave = computed(() => {
@@ -312,6 +377,11 @@ const canSave = computed(() => {
 });
 
 const creatorsJson = computed(() => JSON.stringify(creators.value.map(row => ({
+  id: row.id,
+  fio: row.fio,
+}))));
+
+const accessMembersJson = computed(() => JSON.stringify(accessMembers.value.map(row => ({
   id: row.id,
   fio: row.fio,
 }))));
@@ -364,6 +434,12 @@ const fill = () => {
   typeSectionId.value = props.typeSectionIdValue || null;
   const n = Number(props.columnsCountValue);
   columnsCount.value = Number.isFinite(n) && n >= 1 ? n : 10;
+  accessMode.value = props.accessModeValue === 'white' ? 'white' : 'black';
+  accessMembers.value = (props.accessMembersValue || []).map(row => ({
+    id: row.id,
+    fio: row.fio || '',
+    department: row.department || '',
+  }));
 };
 
 watch(
@@ -380,6 +456,8 @@ watch(
     props.placeSectionIdValue,
     props.typeSectionIdValue,
     props.columnsCountValue,
+    props.accessModeValue,
+    props.accessMembersValue,
   ],
   fill,
   { immediate: true },
@@ -458,6 +536,38 @@ const removeCreator = (id: number) => {
   creators.value = creators.value.filter(row => row.id !== id);
 };
 
+const parsePeople = (value: string): CreatorPerson[] => {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .map((item) => {
+        const id = Number(item?.id);
+        if (!id) {
+          return null;
+        }
+        return {
+          id,
+          fio: item.fio || '',
+          department: item.department || '',
+        };
+      })
+      .filter(Boolean) as CreatorPerson[];
+  } catch {
+    return [];
+  }
+};
+
+const onAccessMembersInput = (value: string) => {
+  accessMembers.value = parsePeople(value);
+};
+
+const removeAccessMember = (id: number) => {
+  accessMembers.value = accessMembers.value.filter(row => row.id !== id);
+};
+
 const loadLayoutTemplates = async () => {
   if (props.kind !== 'type') {
     return;
@@ -508,6 +618,8 @@ const save = async () => {
       if (props.kind === 'place') {
         payload.typeSectionId = typeSectionId.value ?? -1;
       }
+      payload.accessMode = accessMode.value;
+      payload.accessMemberIds = accessMembers.value.map(row => row.id);
     } else if (props.kind === 'case') {
       payload = {
         ...payload,
@@ -646,6 +758,28 @@ const save = async () => {
 .templates-block {
   display: flex;
   flex-direction: column;
+}
+
+.access-mode-row {
+  align-items: stretch;
+  background: #fff;
+}
+
+.access-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  margin: 0;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: normal;
+  cursor: pointer;
+
+  input {
+    margin: 0;
+    pointer-events: none;
+  }
 }
 
 .template-row {

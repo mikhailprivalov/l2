@@ -10,7 +10,9 @@ from document_management.models import (
     DocumentReview,
     GroupDocuments,
     PlaceSection,
+    PlaceSectionAccess,
     TypeSection,
+    TypeSectionAccess,
     PlanIndicator,
     PlanIndicatorGroup,
     Plans,
@@ -32,17 +34,31 @@ class GroupDocumentsAdmin(admin.ModelAdmin):
     search_fields = ("title",)
 
 
+class TypeSectionAccessInline(admin.TabularInline):
+    model = TypeSectionAccess
+    extra = 0
+    raw_id_fields = ("doctor",)
+
+
+class PlaceSectionAccessInline(admin.TabularInline):
+    model = PlaceSectionAccess
+    extra = 0
+    raw_id_fields = ("doctor",)
+
+
 @admin.register(TypeSection)
 class TypeSectionAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "columns_count")
+    list_display = ("pk", "title", "columns_count", "access_mode")
     search_fields = ("title",)
+    inlines = (TypeSectionAccessInline,)
 
 
 @admin.register(PlaceSection)
 class PlaceSectionAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "columns_count", "type_section")
+    list_display = ("pk", "title", "columns_count", "type_section", "access_mode")
     search_fields = ("title",)
-    list_filter = ("type_section",)
+    list_filter = ("type_section", "access_mode")
+    inlines = (PlaceSectionAccessInline,)
 
 
 class TypeDocumentLayoutTemplateInline(admin.TabularInline):

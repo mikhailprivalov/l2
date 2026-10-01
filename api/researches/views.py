@@ -82,7 +82,7 @@ def get_researches(request, last_used=False):
         dou_key = str(2 - Podrazdeleniya.DOU)
         result = {
             "researches": {dou_key: PlaceSection.picker_researches(doctor=doctorprofile, available_only=True)},
-            "departments": PlaceSection.picker_departments(),
+            "departments": PlaceSection.picker_departments(doctorprofile),
             "tubes": [],
         }
         if hasattr(request, "plain_response") and request.plain_response:

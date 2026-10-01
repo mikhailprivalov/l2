@@ -87,6 +87,8 @@
         :place-section-id-value="selectedItem?.placeSectionId"
         :columns-count-value="selectedItem?.columnsCount"
         :type-section-id-value="selectedItem?.typeSectionId"
+        :access-mode-value="selectedItem?.accessMode"
+        :access-members-value="selectedItem?.accessMembers"
         :groups="groups"
         :places="places"
         :section-types="sectionTypes"
@@ -166,6 +168,8 @@ interface CatalogItem {
   typeSectionId?: number | null;
   typeSectionTitle?: string;
   columnsCount?: number;
+  accessMode?: string;
+  accessMembers?: { id: number; fio: string; department?: string }[];
   hide?: boolean;
 }
 
