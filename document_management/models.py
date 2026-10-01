@@ -661,9 +661,7 @@ class PlaceSection(models.Model):
         from django.db.utils import OperationalError, ProgrammingError
 
         try:
-            visible_places = set(
-                access_visible_queryset(PlaceSection.objects.all(), PlaceSectionAccess, "place_section_id", doctor).values_list("pk", flat=True)
-            )
+            visible_places = set(access_visible_queryset(PlaceSection.objects.all(), PlaceSectionAccess, "place_section_id", doctor).values_list("pk", flat=True))
         except (OperationalError, ProgrammingError):
             connection.rollback()
             return docs + cases
