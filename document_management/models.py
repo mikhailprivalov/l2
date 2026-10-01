@@ -298,9 +298,7 @@ def access_visible_queryset(qs, access_model, fk_name, doctor):
     if not doctor:
         return qs.exclude(access_mode=ACCESS_MODE_WHITE)
     listed = access_model.objects.filter(**{fk_name: models.OuterRef("pk"), "doctor_id": doctor.pk})
-    return qs.filter(
-        (models.Q(access_mode=ACCESS_MODE_WHITE) & models.Exists(listed)) | (~models.Q(access_mode=ACCESS_MODE_WHITE) & ~models.Exists(listed))
-    )
+    return qs.filter((models.Q(access_mode=ACCESS_MODE_WHITE) & models.Exists(listed)) | (~models.Q(access_mode=ACCESS_MODE_WHITE) & ~models.Exists(listed)))
 
 
 def access_members_json(rows):
