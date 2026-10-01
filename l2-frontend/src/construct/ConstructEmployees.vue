@@ -110,7 +110,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import {
+  computed, getCurrentInstance, onMounted, ref,
+} from 'vue';
 
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import ContentCenterLayout from '@/layouts/ContentCenterLayout.vue';
@@ -120,6 +122,11 @@ import EditFormList from '@/components/EditFormList.vue';
 import FetchComponent from '@/components/FetchComponent.vue';
 import EditFormTable from '@/components/EditFormTable.vue';
 import type { IdOptional } from '@/components/EditableList.vue';
+import { useStore } from '@/store';
+import { EDIT_OPEN } from '@/store/action-types';
+
+const store = useStore();
+const route = getCurrentInstance().proxy.$route;
 
 const selectedDepartmentId = ref<IdOptional>(null);
 
@@ -143,6 +150,25 @@ const sections = ref<ListElementSimple[]>([
 const employeeEmployeePositionFilters = computed(() => ({
   department_id: selectedDepartmentId.value,
 }));
+
+onMounted(() => {
+  const query = route.query || {};
+  const department = Number(query.department);
+  const employeePosition = Number(query.employeePosition);
+  if (query.section !== 'departments' || !Number.isInteger(department) || department <= 0) {
+    return;
+  }
+  activeSection.value = 'departments';
+  selectedDepartmentId.value = department;
+  if (!Number.isInteger(employeePosition) || employeePosition <= 0) {
+    return;
+  }
+  store.dispatch(EDIT_OPEN, {
+    editId: employeePosition,
+    formType: 'employeeEmployeePosition',
+    filters: { department_id: department },
+  });
+});
 </script>
 
 <style lang="scss" module>

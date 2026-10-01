@@ -1,8 +1,48 @@
 from typing import Any, Dict, Optional
 from api.edit_forms.forms.base import BaseForm, FormObjectNotFoundException, HospitalObjectView
-from employees.models import Employee
+from employees.models import Employee, EmployeePosition
 from laboratory.utils import strfdatetime
 from users.models import DoctorProfile
+
+
+def _rate_text(rate) -> str:
+    number = float(rate)
+    if number == int(number):
+        value = str(int(number))
+    else:
+        value = f"{number}".replace(".", ",")
+    return f"{value} ст"
+
+
+def _employee_position_schema(employee: Employee):
+    rows = EmployeePosition.objects.filter(employee_id=employee.pk).select_related("position", "department").order_by("department__name", "position__name", "pk")
+    items = []
+    for row in rows:
+        status = "активна" if row.is_active else "не активна"
+        text = f"{_rate_text(row.rate)}, {row.position.name}, {row.department.name}, {status}"
+        href = f"/ui/construct/employees?section=departments&department={row.department_id}&employeePosition={row.pk}"
+        items.append(
+            {
+                "component": "div",
+                "children": [
+                    {
+                        "component": "a",
+                        "href": href,
+                        "target": "_blank",
+                        "rel": "noopener noreferrer",
+                        "children": text,
+                    }
+                ],
+            }
+        )
+    block = [
+        {"component": "h6", "children": "Должности", "style": "margin-top: 12px;"},
+    ]
+    if items:
+        block.extend(items)
+    else:
+        block.append({"component": "div", "children": "Должностей нет"})
+    return block
 
 
 class EmployeeEmployeeForm(BaseForm, HospitalObjectView[Employee]):
@@ -74,6 +114,7 @@ class EmployeeEmployeeForm(BaseForm, HospitalObjectView[Employee]):
                     "type": "checkbox",
                 }
             )
+            schema.extend(_employee_position_schema(employee))
 
         values = {
             "family": employee.family if employee else "",
