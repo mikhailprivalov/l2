@@ -382,10 +382,7 @@ class TypeSection(models.Model):
             return [row.json for row in TypeSection._queryset()]
         except (OperationalError, ProgrammingError):
             connection.rollback()
-            return [
-                legacy_access_row(row, TypeSection.COLUMNS_DEFAULT)
-                for row in TypeSection.objects.defer("access_mode").order_by("title", "pk")
-            ]
+            return [legacy_access_row(row, TypeSection.COLUMNS_DEFAULT) for row in TypeSection.objects.defer("access_mode").order_by("title", "pk")]
 
     @staticmethod
     def get_visible_list(doctor):
