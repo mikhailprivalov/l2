@@ -2807,6 +2807,7 @@ def results_by_direction(request):
 
     if is_paraclinic or is_doc_refferal or is_user_forms:
         results = desc_to_data(directions_data, force_all_fields=True)
+
         for i in results:
             additional_data_confirm_direction = None
             direction_data = i["result"][0]["date"].split(" ")
