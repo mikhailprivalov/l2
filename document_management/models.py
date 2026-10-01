@@ -511,10 +511,13 @@ class PlaceSection(models.Model):
 
     @staticmethod
     def _queryset():
-        return PlaceSection.objects.select_related("type_section").prefetch_related(
-            models.Prefetch(
-                "access_members",
-                queryset=PlaceSectionAccess.objects.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk"),
+        return (
+            PlaceSection.objects.select_related("type_section")
+            .prefetch_related(
+                models.Prefetch(
+                    "access_members",
+                    queryset=PlaceSectionAccess.objects.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk"),
+                )
             )
         ).order_by("title", "pk")
 
