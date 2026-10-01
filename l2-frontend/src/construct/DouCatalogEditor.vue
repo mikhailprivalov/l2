@@ -198,7 +198,7 @@
             :options="documentTypeOptions"
             placeholder="Выберите вид документа"
             :append-to-body="true"
-            :clearable="true"
+            :clearable="false"
           />
         </div>
       </div>
@@ -352,7 +352,7 @@ const templateToAdd = ref<number | null>(null);
 const layoutTemplates = ref<LayoutTemplateOption[]>([]);
 const selectedTemplates = ref<LayoutTemplateOption[]>([]);
 const creators = ref<CreatorPerson[]>([]);
-const defaultTypeDocumentId = ref<number | null>(null);
+const defaultTypeDocumentId = ref<number>(-1);
 const placeSectionId = ref<number>(-1);
 const typeSectionId = ref<number | null>(null);
 const columnsCount = ref<number>(10);
@@ -364,7 +364,7 @@ const canSave = computed(() => {
   if (!title.value.trim()) {
     return false;
   }
-  if (props.kind === 'case' && (!defaultTypeDocumentId.value || Number(placeSectionId.value) <= 0)) {
+  if (props.kind === 'case' && Number(placeSectionId.value) <= 0) {
     return false;
   }
   if (props.kind === 'place' || props.kind === 'section') {
@@ -429,7 +429,9 @@ const fill = () => {
     fio: row.fio || '',
     department: row.department || '',
   }));
-  defaultTypeDocumentId.value = props.defaultTypeDocumentIdValue || null;
+  defaultTypeDocumentId.value = props.defaultTypeDocumentIdValue != null && Number(props.defaultTypeDocumentIdValue) > 0
+    ? Number(props.defaultTypeDocumentIdValue)
+    : -1;
   placeSectionId.value = props.placeSectionIdValue || -1;
   typeSectionId.value = props.typeSectionIdValue || null;
   const n = Number(props.columnsCountValue);
@@ -582,10 +584,13 @@ const loadDocumentTypes = async () => {
     return;
   }
   const { result } = await api('document-manager/types/list');
-  documentTypeOptions.value = (result || []).map((row: { id: number; title: string }) => ({
-    id: row.id,
-    label: row.title,
-  }));
+  documentTypeOptions.value = [
+    { id: -1, label: 'Без документа' },
+    ...(result || []).map((row: { id: number; title: string }) => ({
+      id: row.id,
+      label: row.title,
+    })),
+  ];
 };
 
 onMounted(() => {

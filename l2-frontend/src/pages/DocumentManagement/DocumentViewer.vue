@@ -60,7 +60,9 @@
           <input
             v-model="caseTopic"
             type="text"
-            :disabled="confirmed"
+            required
+            :disabled="!canEditCaseTopic"
+            @blur="saveCaseTopic"
           >
         </label>
         <div class="case-block__meta">
@@ -389,6 +391,7 @@ const canReset = ref(false);
 const inFavorite = ref(false);
 const caseBlock = ref<{ id: number; createdAt: string; creator: string } | null>(null);
 const caseTopic = ref('');
+const savedCaseTopic = ref('');
 const caseAccess = ref('[]');
 const canEditCaseAccess = ref(false);
 const caseComment = ref('');
@@ -396,6 +399,7 @@ const savedCaseComment = ref('');
 const caseClosedAt = ref('');
 const caseClosedBy = ref('');
 const canEditCase = ref(false);
+const canEditCaseTopic = ref(false);
 const canCloseCase = ref(false);
 const caseInFavorite = ref(false);
 const selectedCaseId = ref<number | null>(null);
@@ -581,6 +585,7 @@ const load = async () => {
   inFavorite.value = false;
   caseBlock.value = null;
   caseTopic.value = '';
+  savedCaseTopic.value = '';
   caseAccess.value = '[]';
   canEditCaseAccess.value = false;
   caseComment.value = '';
@@ -588,6 +593,7 @@ const load = async () => {
   caseClosedAt.value = '';
   caseClosedBy.value = '';
   canEditCase.value = false;
+  canEditCaseTopic.value = false;
   canCloseCase.value = false;
   caseInFavorite.value = false;
   selectedCaseId.value = null;
@@ -616,6 +622,7 @@ const load = async () => {
           creator: result.case.creator || '',
         };
         caseTopic.value = result.case.topic || '';
+        savedCaseTopic.value = caseTopic.value;
         caseAccess.value = JSON.stringify(result.case.access || []);
         canEditCaseAccess.value = Boolean(result.case.canEditAccess);
         caseComment.value = result.case.comment || '';
@@ -623,6 +630,7 @@ const load = async () => {
         caseClosedAt.value = result.case.closedAt || '';
         caseClosedBy.value = result.case.closedBy || '';
         canEditCase.value = Boolean(result.case.canEdit);
+        canEditCaseTopic.value = Boolean(result.case.canEditTopic);
         canCloseCase.value = Boolean(result.case.canClose);
         caseInFavorite.value = Boolean(result.case.isFavorite);
         selectedCaseId.value = result.case.closedAt ? null : result.case.id;
@@ -649,6 +657,28 @@ const load = async () => {
   }
 };
 
+const saveCaseTopic = async () => {
+  if (!canEditCaseTopic.value || !props.documentId || !caseBlock.value || caseTopic.value === savedCaseTopic.value) {
+    return;
+  }
+  const topic = caseTopic.value.trim();
+  if (!topic) {
+    caseTopic.value = savedCaseTopic.value;
+    root.$emit('msg', 'error', 'Укажите тему дела');
+    return;
+  }
+  const result = await api('document-manager/cases/topic', { id: props.documentId, topic });
+  if (result?.ok) {
+    caseTopic.value = result.topic ?? topic;
+    savedCaseTopic.value = caseTopic.value;
+    root.$emit('msg', 'ok', 'Тема сохранена');
+    emit('visibility-change');
+  } else {
+    caseTopic.value = savedCaseTopic.value;
+    root.$emit('msg', 'error', result?.message || 'Не удалось сохранить тему');
+  }
+};
+
 const saveCaseComment = async () => {
   if (!canEditCase.value || !props.documentId || !caseBlock.value || caseComment.value === savedCaseComment.value) {
     return;
@@ -671,6 +701,7 @@ const closeCase = async () => {
     caseClosedAt.value = result.closedAt || '';
     caseClosedBy.value = result.closedBy || '';
     canCloseCase.value = false;
+    canEditCaseTopic.value = false;
     caseInFavorite.value = false;
     const closedId = caseBlock.value.id;
     availableCases.value = availableCases.value.filter(item => item.id !== closedId);
@@ -708,11 +739,13 @@ const onMainCase = async (caseId: number | null) => {
   if (!result.case) {
     caseBlock.value = null;
     caseTopic.value = '';
+    savedCaseTopic.value = '';
     caseComment.value = '';
     savedCaseComment.value = '';
     caseClosedAt.value = '';
     caseClosedBy.value = '';
     canEditCase.value = false;
+    canEditCaseTopic.value = false;
     canCloseCase.value = false;
     caseInFavorite.value = false;
     canEditCaseAccess.value = false;
@@ -725,11 +758,13 @@ const onMainCase = async (caseId: number | null) => {
     creator: result.case.creator || '',
   };
   caseTopic.value = result.case.topic || '';
+  savedCaseTopic.value = caseTopic.value;
   caseComment.value = result.case.comment || '';
   savedCaseComment.value = caseComment.value;
   caseClosedAt.value = result.case.closedAt || '';
   caseClosedBy.value = result.case.closedBy || '';
   canEditCase.value = Boolean(result.case.canEdit);
+  canEditCaseTopic.value = Boolean(result.case.canEditTopic);
   canCloseCase.value = Boolean(result.case.canClose);
   caseInFavorite.value = Boolean(result.case.isFavorite);
   caseAccess.value = JSON.stringify(result.case.access || []);
@@ -759,11 +794,13 @@ const onRowCase = async (id: number, caseId: number | null) => {
   if (!result.case) {
     caseBlock.value = null;
     caseTopic.value = '';
+    savedCaseTopic.value = '';
     caseComment.value = '';
     savedCaseComment.value = '';
     caseClosedAt.value = '';
     caseClosedBy.value = '';
     canEditCase.value = false;
+    canEditCaseTopic.value = false;
     canCloseCase.value = false;
     caseInFavorite.value = false;
     canEditCaseAccess.value = false;
@@ -776,11 +813,13 @@ const onRowCase = async (id: number, caseId: number | null) => {
     creator: result.case.creator || '',
   };
   caseTopic.value = result.case.topic || '';
+  savedCaseTopic.value = caseTopic.value;
   caseComment.value = result.case.comment || '';
   savedCaseComment.value = caseComment.value;
   caseClosedAt.value = result.case.closedAt || '';
   caseClosedBy.value = result.case.closedBy || '';
   canEditCase.value = Boolean(result.case.canEdit);
+  canEditCaseTopic.value = Boolean(result.case.canEditTopic);
   canCloseCase.value = Boolean(result.case.canClose);
   caseInFavorite.value = Boolean(result.case.isFavorite);
   caseAccess.value = JSON.stringify(result.case.access || []);
@@ -856,6 +895,10 @@ const onCaseAccess = async (value: string) => {
 
 const save = async () => {
   if (!props.documentId || !research.value || !issPk.value) {
+    return false;
+  }
+  if (caseBlock.value && !caseTopic.value.trim()) {
+    root.$emit('msg', 'error', 'Укажите тему дела');
     return false;
   }
   await store.dispatch(actions.INC_LOADING);
@@ -942,12 +985,17 @@ const saveDocument = async (id: number) => {
   if (!current?.research || !current.issPk) {
     return;
   }
+  if (caseBlock.value && !caseTopic.value.trim()) {
+    root.$emit('msg', 'error', 'Укажите тему дела');
+    return;
+  }
   await store.dispatch(actions.INC_LOADING);
   try {
     const result = await saveRequest({
       data: { pk: current.issPk, research: current.research },
       with_confirm: false,
       visibility_state: visibilityStateFor(current.research),
+      ...(caseBlock.value ? { caseTopic: caseTopic.value } : {}),
     });
     if (result?.ok) {
       applyFilesByField(result.files_by_field, current.research);

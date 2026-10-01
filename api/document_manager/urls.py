@@ -11,6 +11,7 @@ urlpatterns = [
     path('cases/update', views.cases_update),
     path('cases/access', views.cases_access),
     path('cases/comment', views.cases_comment),
+    path('cases/topic', views.cases_topic),
     path('cases/close', views.cases_close),
     path('places/list', views.places_list),
     path('places/update', views.places_update),
