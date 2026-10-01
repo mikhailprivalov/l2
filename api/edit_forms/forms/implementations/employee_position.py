@@ -6,7 +6,8 @@ from users.models import DoctorProfile
 
 
 class EmployeePositionForm(BaseForm, HospitalObjectView[Position]):
-    access_groups_to_edit = ('Конструктор: Настройка организации',)
+    access_groups_to_edit = ('Управление сотрудниками',)
+    access_groups_to_view = ('Управление сотрудниками',)
     model: Position = Position
 
     @staticmethod

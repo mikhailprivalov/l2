@@ -44,7 +44,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:{int(bool(HIDE_DOCUMENT_MANAGER))}:dou-r'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:{int(bool(HIDE_DOCUMENT_MANAGER))}:employees-mgmt'
         data = cache.get(k)
         if not data:
             pages = [
@@ -117,6 +117,7 @@ def menu(request):
                 },
                 {"url": "/ui/departments", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/ui/profiles", "title": "Профили пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
+                {"url": "/ui/construct/employees", "title": "Управление сотрудниками", "nt": False, "access": ["Управление сотрудниками"]},
                 {"url": "/ui/logs", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
                 {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
                 {

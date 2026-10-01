@@ -46,7 +46,8 @@ def _employee_position_schema(employee: Employee):
 
 
 class EmployeeEmployeeForm(BaseForm, HospitalObjectView[Employee]):
-    access_groups_to_edit = ('Конструктор: Настройка организации',)
+    access_groups_to_edit = ('Управление сотрудниками',)
+    access_groups_to_view = ('Управление сотрудниками',)
     model: Employee = Employee
 
     @staticmethod

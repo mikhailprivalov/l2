@@ -2316,7 +2316,6 @@ def construct_menu_data(request):
         {"url": "/ui/construct/dispensary-plan", "title": "Д-учет", "access": ["Конструктор: Д-учет"], "module": None},
         {"url": "/ui/construct/screening", "title": "Настройка скрининга", "access": ["Конструктор: Настройка скрининга"], "module": None},
         {"url": "/ui/construct/org", "title": "Настройка организации", "access": ["Конструктор: Настройка организации"], "module": None},
-        {"url": "/ui/construct/employees", "title": "Управление сотрудниками", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/district", "title": "Участки организации", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/price", "title": "Настройка прайсов", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/company", "title": "Настройка компаний", "access": ["Конструктор: Настройка организации"], "module": None},

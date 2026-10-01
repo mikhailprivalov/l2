@@ -37,7 +37,8 @@ def _form_row(*fields):
 
 
 class EmployeeEmployeePositionForm(BaseForm, HospitalObjectView[EmployeePosition]):
-    access_groups_to_edit = ('Конструктор: Настройка организации',)
+    access_groups_to_edit = ('Управление сотрудниками',)
+    access_groups_to_view = ('Управление сотрудниками',)
     supports_delete = True
     model: EmployeePosition = EmployeePosition
 
