@@ -284,12 +284,56 @@ class AddresseeGroupMember(models.Model):
         return f"{self.group} {self.doctor}"
 
 
+ACCESS_MODE_BLACK = "black"
+ACCESS_MODE_WHITE = "white"
+
+
+def normalize_access_mode(value, default=ACCESS_MODE_BLACK):
+    if value in (None, ""):
+        return default
+    return ACCESS_MODE_WHITE if str(value) == ACCESS_MODE_WHITE else ACCESS_MODE_BLACK
+
+
+def access_visible_queryset(qs, access_model, fk_name, doctor):
+    if not doctor:
+        return qs.exclude(access_mode=ACCESS_MODE_WHITE)
+    listed = access_model.objects.filter(**{fk_name: models.OuterRef("pk"), "doctor_id": doctor.pk})
+    return qs.filter((models.Q(access_mode=ACCESS_MODE_WHITE) & models.Exists(listed)) | (~models.Q(access_mode=ACCESS_MODE_WHITE) & ~models.Exists(listed)))
+
+
+def access_members_json(rows):
+    return [AddresseeGroup._employee_json(row.doctor) for row in rows if getattr(row, "doctor_id", None)]
+
+
+def legacy_access_row(row, columns_default, extra=None):
+    data = {
+        "id": row.pk,
+        "title": row.title or "",
+        "columnsCount": row.columns_count or columns_default,
+        "accessMode": ACCESS_MODE_BLACK,
+        "accessMembers": [],
+    }
+    if extra:
+        data.update(extra)
+    return data
+
+
+def replace_access_members(access_model, fk_name, obj, member_ids):
+    ids = TypeDocuments._parse_creator_ids(member_ids)
+    valid = set(DoctorProfile.objects.filter(pk__in=ids).values_list("pk", flat=True))
+    ids = [doctor_id for doctor_id in ids if doctor_id in valid]
+    access_model.objects.filter(**{fk_name: obj}).delete()
+    access_model.objects.bulk_create([access_model(**{fk_name: obj, "doctor_id": doctor_id}) for doctor_id in ids])
+    return ids
+
+
 class TypeSection(models.Model):
     COLUMNS_MIN = 1
     COLUMNS_MAX = 12
     COLUMNS_DEFAULT = 10
 
     title = models.CharField(max_length=128, blank=True, null=True)
+    access_mode = models.CharField(max_length=8, default=ACCESS_MODE_BLACK, db_index=True)
     columns_count = models.PositiveSmallIntegerField(
         default=COLUMNS_DEFAULT,
         help_text="Количество колонок значений в ResearchesPicker",
@@ -302,17 +346,55 @@ class TypeSection(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+    def get_access_members(self):
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("access_members")
+        if prefetched is not None:
+            rows = prefetched
+        else:
+            rows = self.access_members.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk")
+        return access_members_json(rows)
+
     @property
     def json(self):
         return {
             "id": self.id,
             "title": self.title or "",
             "columnsCount": self.columns_count or self.COLUMNS_DEFAULT,
+            "accessMode": self.access_mode or ACCESS_MODE_BLACK,
+            "accessMembers": self.get_access_members(),
         }
 
     @staticmethod
+    def _queryset():
+        return TypeSection.objects.prefetch_related(
+            models.Prefetch(
+                "access_members",
+                queryset=TypeSectionAccess.objects.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk"),
+            )
+        ).order_by("title", "pk")
+
+    @staticmethod
     def get_list():
-        return [row.json for row in TypeSection.objects.all().order_by("title", "pk")]
+        from django.db import connection
+        from django.db.utils import OperationalError, ProgrammingError
+
+        try:
+            return [row.json for row in TypeSection._queryset()]
+        except (OperationalError, ProgrammingError):
+            connection.rollback()
+            return [legacy_access_row(row, TypeSection.COLUMNS_DEFAULT) for row in TypeSection.objects.defer("access_mode").order_by("title", "pk")]
+
+    @staticmethod
+    def get_visible_list(doctor):
+        from django.db import connection
+        from django.db.utils import OperationalError, ProgrammingError
+
+        try:
+            qs = access_visible_queryset(TypeSection._queryset(), TypeSectionAccess, "type_section_id", doctor)
+            return [row.json for row in qs]
+        except (OperationalError, ProgrammingError):
+            connection.rollback()
+            return TypeSection.get_list()
 
     @classmethod
     def normalize_columns_count(cls, value):
@@ -327,7 +409,7 @@ class TypeSection(models.Model):
         return n
 
     @staticmethod
-    def save_section(pk, title, columns_count=None):
+    def save_section(pk, title, columns_count=None, access_mode=None, access_member_ids=None):
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
@@ -338,20 +420,40 @@ class TypeSection(models.Model):
                 "ok": False,
                 "message": f"Количество колонок от {TypeSection.COLUMNS_MIN} до {TypeSection.COLUMNS_MAX}",
             }
-        if pk in (None, -1, "-1"):
-            obj = TypeSection(
-                title=title,
-                columns_count=n if n is not None else TypeSection.COLUMNS_DEFAULT,
-            )
-        else:
-            obj = TypeSection.objects.filter(pk=pk).first()
-            if not obj:
-                return {"ok": False, "message": "Тип раздела не найден"}
-            obj.title = title
-            if provided:
-                obj.columns_count = n
-        obj.save()
+        mode = normalize_access_mode(access_mode)
+        with transaction.atomic():
+            if pk in (None, -1, "-1"):
+                obj = TypeSection(
+                    title=title,
+                    columns_count=n if n is not None else TypeSection.COLUMNS_DEFAULT,
+                    access_mode=mode,
+                )
+            else:
+                obj = TypeSection.objects.filter(pk=pk).first()
+                if not obj:
+                    return {"ok": False, "message": "Тип раздела не найден"}
+                obj.title = title
+                if provided:
+                    obj.columns_count = n
+                if access_mode not in (None, ""):
+                    obj.access_mode = mode
+            obj.save()
+            if access_member_ids is not None:
+                replace_access_members(TypeSectionAccess, "type_section", obj, access_member_ids)
         return {"ok": True, "id": obj.pk, "title": obj.title, "columnsCount": obj.columns_count}
+
+
+class TypeSectionAccess(models.Model):
+    type_section = models.ForeignKey(TypeSection, related_name="access_members", on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, related_name="type_section_access_rows", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Доступ к типу раздела"
+        verbose_name_plural = "Доступ к типам разделов"
+        unique_together = ("type_section", "doctor")
+
+    def __str__(self):
+        return f"{self.type_section} {self.doctor}"
 
 
 class PlaceSection(models.Model):
@@ -360,6 +462,7 @@ class PlaceSection(models.Model):
     COLUMNS_DEFAULT = 10
 
     title = models.CharField(max_length=128, blank=True, null=True)
+    access_mode = models.CharField(max_length=8, default=ACCESS_MODE_BLACK, db_index=True)
     columns_count = models.PositiveSmallIntegerField(
         default=COLUMNS_DEFAULT,
         help_text="Количество колонок значений в ResearchesPicker",
@@ -382,6 +485,14 @@ class PlaceSection(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+    def get_access_members(self):
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("access_members")
+        if prefetched is not None:
+            rows = prefetched
+        else:
+            rows = self.access_members.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk")
+        return access_members_json(rows)
+
     @property
     def json(self):
         section = self.type_section if self.type_section_id else None
@@ -391,12 +502,47 @@ class PlaceSection(models.Model):
             "columnsCount": self.columns_count or self.COLUMNS_DEFAULT,
             "typeSectionId": self.type_section_id,
             "typeSectionTitle": section.title if section else "",
+            "accessMode": self.access_mode or ACCESS_MODE_BLACK,
+            "accessMembers": self.get_access_members(),
         }
 
     @staticmethod
+    def _queryset():
+        return (
+            PlaceSection.objects.select_related("type_section")
+            .prefetch_related(
+                models.Prefetch(
+                    "access_members",
+                    queryset=PlaceSectionAccess.objects.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk"),
+                )
+            )
+            .order_by("title", "pk")
+        )
+
+    @staticmethod
     def get_list():
-        qs = PlaceSection.objects.select_related("type_section").order_by("title", "pk")
-        return [row.json for row in qs]
+        from django.db import connection
+        from django.db.utils import OperationalError, ProgrammingError
+
+        try:
+            return [row.json for row in PlaceSection._queryset()]
+        except (OperationalError, ProgrammingError):
+            connection.rollback()
+            rows = []
+            qs = PlaceSection.objects.select_related("type_section").defer("access_mode", "type_section__access_mode").order_by("title", "pk")
+            for row in qs:
+                section = row.type_section if row.type_section_id else None
+                rows.append(
+                    legacy_access_row(
+                        row,
+                        PlaceSection.COLUMNS_DEFAULT,
+                        {
+                            "typeSectionId": row.type_section_id,
+                            "typeSectionTitle": section.title if section else "",
+                        },
+                    )
+                )
+            return rows
 
     @classmethod
     def normalize_columns_count(cls, value):
@@ -424,7 +570,7 @@ class PlaceSection(models.Model):
         }
 
     @staticmethod
-    def save_place(pk, title, columns_count=None, type_section_id=None):
+    def save_place(pk, title, columns_count=None, type_section_id=None, access_mode=None, access_member_ids=None):
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
@@ -440,21 +586,28 @@ class PlaceSection(models.Model):
             section = TypeSection.objects.filter(pk=type_section_id).first()
             if not section:
                 return {"ok": False, "message": "Тип раздела не найден"}
-        if pk in (None, -1, "-1"):
-            obj = PlaceSection(
-                title=title,
-                columns_count=n if n is not None else PlaceSection.COLUMNS_DEFAULT,
-                type_section=section,
-            )
-        else:
-            obj = PlaceSection.objects.filter(pk=pk).first()
-            if not obj:
-                return {"ok": False, "message": "Подраздел/место не найден"}
-            obj.title = title
-            if provided:
-                obj.columns_count = n
-            obj.type_section = section
-        obj.save()
+        mode = normalize_access_mode(access_mode)
+        with transaction.atomic():
+            if pk in (None, -1, "-1"):
+                obj = PlaceSection(
+                    title=title,
+                    columns_count=n if n is not None else PlaceSection.COLUMNS_DEFAULT,
+                    type_section=section,
+                    access_mode=mode,
+                )
+            else:
+                obj = PlaceSection.objects.filter(pk=pk).first()
+                if not obj:
+                    return {"ok": False, "message": "Подраздел/место не найден"}
+                obj.title = title
+                if provided:
+                    obj.columns_count = n
+                obj.type_section = section
+                if access_mode not in (None, ""):
+                    obj.access_mode = mode
+            obj.save()
+            if access_member_ids is not None:
+                replace_access_members(PlaceSectionAccess, "place_section", obj, access_member_ids)
         return {
             "ok": True,
             "id": obj.pk,
@@ -464,7 +617,7 @@ class PlaceSection(models.Model):
         }
 
     @staticmethod
-    def picker_departments():
+    def picker_departments(doctor=None):
         from podrazdeleniya.models import Podrazdeleniya
 
         dou = Podrazdeleniya.DOU
@@ -480,14 +633,52 @@ class PlaceSection(models.Model):
                     "columnsCount": PlaceSection.COLUMNS_DEFAULT,
                 }
             )
-        for place in PlaceSection.objects.select_related("type_section").order_by("title", "pk"):
+        from django.db import connection
+        from django.db.utils import OperationalError, ProgrammingError
+
+        try:
+            places = access_visible_queryset(
+                PlaceSection.objects.select_related("type_section").order_by("title", "pk"),
+                PlaceSectionAccess,
+                "place_section_id",
+                doctor,
+            )
+            places = list(places)
+        except (OperationalError, ProgrammingError):
+            connection.rollback()
+            places = PlaceSection.objects.select_related("type_section").defer("access_mode", "type_section__access_mode").order_by("title", "pk")
+        for place in places:
             rows.append(place.as_picker_department(dou))
         return rows
 
     @staticmethod
     def picker_researches(doctor=None, available_only=False):
         docs = TypeDocuments.picker_researches(doctor=doctor, available_only=available_only)
-        return docs + TypeCases.picker_researches()
+        cases = TypeCases.picker_researches()
+        if doctor is None:
+            return docs + cases
+        from django.db import connection
+        from django.db.utils import OperationalError, ProgrammingError
+
+        try:
+            visible_places = set(access_visible_queryset(PlaceSection.objects.all(), PlaceSectionAccess, "place_section_id", doctor).values_list("pk", flat=True))
+        except (OperationalError, ProgrammingError):
+            connection.rollback()
+            return docs + cases
+        return [row for row in docs + cases if not row.get("site_type") or row.get("site_type") in visible_places]
+
+
+class PlaceSectionAccess(models.Model):
+    place_section = models.ForeignKey(PlaceSection, related_name="access_members", on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, related_name="place_section_access_rows", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Доступ к подразделу"
+        verbose_name_plural = "Доступ к подразделам"
+        unique_together = ("place_section", "doctor")
+
+    def __str__(self):
+        return f"{self.place_section} {self.doctor}"
 
 
 class TypeDocuments(models.Model):

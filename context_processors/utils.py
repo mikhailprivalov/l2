@@ -44,7 +44,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:{int(bool(HIDE_DOCUMENT_MANAGER))}'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:{int(bool(HIDE_DOCUMENT_MANAGER))}:dou-r'
         data = cache.get(k)
         if not data:
             pages = [
@@ -282,6 +282,7 @@ def menu(request):
                 {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
                 {"url": "/ui/document-manager-2", "title": "ДОУ-2", "nt": False, "access": ["*"] if DOCUMENT_MANAGER_FOR_ALL else [DOCUMENT_MANAGER_VIEW_GROUP]},
+                {"url": "/ui/document-registrar", "title": "ДОУ-Р", "nt": False, "access": ["*"] if DOCUMENT_MANAGER_FOR_ALL else [DOCUMENT_MANAGER_VIEW_GROUP]},
                 {"url": "/ui/document-history", "title": "История документов", "nt": False, "access": ["История документа"]},
                 {"url": "/ui/gardening", "title": "Садоводство", "nt": False, "access": ["Бухгалтер садоводства"]},
             ]

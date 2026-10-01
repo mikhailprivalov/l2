@@ -1,10 +1,30 @@
 from typing import Any, Dict, Optional
+
+from django.db.models import CharField, F, Func, Value
+from django.db.models.functions import Lower
+
 from api.edit_forms.forms.base import BaseForm, FormObjectNotFoundException, HospitalObjectView
 from api.edit_forms.forms.implementations.employee_employee import EmployeeEmployeeForm
 from api.edit_forms.forms.implementations.employee_position import EmployeePositionForm
 from employees.models import EmployeePosition, Department, TypeWorkTimeEmployee
 from laboratory.utils import strfdatetime
 from users.models import DoctorProfile
+
+CYRILLIC_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+CYRILLIC_LOWER = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
+
+
+class _Translate(Func):
+    function = "TRANSLATE"
+    output_field = CharField()
+
+
+def _fold_text(field_name):
+    return Lower(_Translate(F(field_name), Value(CYRILLIC_UPPER), Value(CYRILLIC_LOWER)))
+
+
+def _fold_query(search: str) -> str:
+    return search.translate(str.maketrans(CYRILLIC_UPPER, CYRILLIC_LOWER)).lower()
 
 
 def _form_row(*fields):
@@ -31,7 +51,18 @@ class EmployeeEmployeePositionForm(BaseForm, HospitalObjectView[EmployeePosition
 
     @classmethod
     def _default_rows(cls, doctorprofile: DoctorProfile):
-        return cls.model.objects.all().prefetch_related('employee').prefetch_related('position')
+        return (
+            cls.model.objects.all()
+            .prefetch_related('employee')
+            .prefetch_related('position')
+            .annotate(
+                family_fold=_fold_text('employee__family'),
+                name_fold=_fold_text('employee__name'),
+                patronymic_fold=_fold_text('employee__patronymic'),
+                position_fold=_fold_text('position__name'),
+                department_fold=_fold_text('department__name'),
+            )
+        )
 
     @staticmethod
     def _json(object: EmployeePosition) -> Optional[Dict[str, Any]]:
@@ -60,22 +91,13 @@ class EmployeeEmployeePositionForm(BaseForm, HospitalObjectView[EmployeePosition
 
     @staticmethod
     def _search_filters(search: str):
+        needle = _fold_query(search)
         return [
-            {
-                "employee__family__istartswith": search,
-            },
-            {
-                "employee__name__istartswith": search,
-            },
-            {
-                "employee__patronymic__istartswith": search,
-            },
-            {
-                "position__name__istartswith": search,
-            },
-            {
-                "department__name__istartswith": search,
-            },
+            {"family_fold__startswith": needle},
+            {"name_fold__startswith": needle},
+            {"patronymic_fold__startswith": needle},
+            {"position_fold__startswith": needle},
+            {"department_fold__startswith": needle},
         ]
 
     @staticmethod

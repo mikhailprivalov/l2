@@ -874,6 +874,17 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/document-registrar',
+      name: 'document-registrar',
+      component: () => import('@/pages/DocumentManagement/DocumentRegistrar.vue'),
+      meta: {
+        title: 'ДОУ-Р',
+        fullPageLayout: true,
+        groups: ['ДОУ: просмотр документов'],
+        openIfModule: 'document_manager_for_all',
+      },
+    },
+    {
       path: '/ui/document-history',
       name: 'document-history',
       component: () => import('@/pages/DocumentManagement/DocumentHistory.vue'),

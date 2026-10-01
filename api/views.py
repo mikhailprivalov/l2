@@ -792,7 +792,7 @@ def current_user_info(request):
 
             from document_management.models import PlaceSection
 
-            ret["extended_departments"][Podrazdeleniya.DOU] = PlaceSection.picker_departments()
+            ret["extended_departments"][Podrazdeleniya.DOU] = PlaceSection.picker_departments(getattr(user, "doctorprofile", None))
 
             try:
                 connections.close_all()

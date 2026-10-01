@@ -150,6 +150,10 @@ def favorites_toggle(request):
 
 @login_required
 def section_types_list(request):
+    data = _request_data(request)
+    if data.get("forPicker"):
+        doctor = getattr(request.user, "doctorprofile", None)
+        return JsonResponse({"result": TypeSection.get_visible_list(doctor)})
     return JsonResponse({"result": TypeSection.get_list()})
 
 
@@ -157,7 +161,13 @@ def section_types_list(request):
 @group_required("Конструктор: ДОУ")
 def section_types_update(request):
     data = _request_data(request)
-    result = TypeSection.save_section(data.get("id", -1), data.get("title", ""), data.get("columnsCount"))
+    result = TypeSection.save_section(
+        data.get("id", -1),
+        data.get("title", ""),
+        data.get("columnsCount"),
+        data.get("accessMode"),
+        data.get("accessMemberIds"),
+    )
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -178,6 +188,8 @@ def places_update(request):
         data.get("title", ""),
         data.get("columnsCount"),
         data.get("typeSectionId"),
+        data.get("accessMode"),
+        data.get("accessMemberIds"),
     )
     if result.get("ok"):
         return status_response(True, data=result)

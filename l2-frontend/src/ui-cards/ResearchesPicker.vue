@@ -950,7 +950,7 @@ export default {
       }
       this.sectionTypesLoaded = true;
       try {
-        const { result } = await api('document-manager/section-types/list');
+        const { result } = await api('document-manager/section-types/list', { forPicker: true });
         this.sectionTypeOptions = [
           { id: FAVORITES_SECTION_ID, label: 'Избранное' },
           ...(result || []).map((row) => ({

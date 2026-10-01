@@ -252,15 +252,15 @@ const addRecord = () => {
 
 .toolbar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
   margin-bottom: 8px;
 }
 
 .filterWrapper {
   position: relative;
-  flex: 1;
-  max-width: 320px;
+  width: 100%;
 }
 
 .filterInput {
