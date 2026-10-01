@@ -1968,11 +1968,6 @@ export default {
         this.show_more_services = data.show_more_services;
         this.is_paraclinic = data.is_paraclinic;
         this.type_period = data.type_period;
-        if (this.groups.length === 0) {
-          this.add_group();
-        }
-      } else {
-        this.add_group();
       }
       if (this.ex_deps.length > 0 && this.site_type === null) {
         this.site_type = this.ex_deps[0].pk;
