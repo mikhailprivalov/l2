@@ -534,10 +534,16 @@ class PlaceSection(models.Model):
             qs = PlaceSection.objects.select_related("type_section").defer("access_mode", "type_section__access_mode").order_by("title", "pk")
             for row in qs:
                 section = row.type_section if row.type_section_id else None
-                rows.append(legacy_access_row(row, PlaceSection.COLUMNS_DEFAULT, {
-                    "typeSectionId": row.type_section_id,
-                    "typeSectionTitle": section.title if section else "",
-                }))
+                rows.append(
+                    legacy_access_row(
+                        row,
+                        PlaceSection.COLUMNS_DEFAULT,
+                        {
+                            "typeSectionId": row.type_section_id,
+                            "typeSectionTitle": section.title if section else "",
+                        },
+                    )
+                )
             return rows
 
     @classmethod
