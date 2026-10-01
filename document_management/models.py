@@ -1008,8 +1008,8 @@ class TypeCases(models.Model):
             "id": self.id,
             "title": self.title or "",
             "code": self.code or "",
-            "defaultTypeDocumentId": self.default_type_document_id,
-            "defaultTypeDocumentTitle": type_doc.title if type_doc else "",
+            "defaultTypeDocumentId": self.default_type_document_id if self.default_type_document_id else -1,
+            "defaultTypeDocumentTitle": type_doc.title if type_doc else "Без документа",
             "placeSectionId": self.place_section_id,
             "placeSectionTitle": place.title if place else "",
         }
@@ -1054,7 +1054,7 @@ class TypeCases(models.Model):
             "direction_params": -1,
             "is_dou_document_type": True,
             "is_dou_case_type": True,
-            "defaultTypeDocumentId": self.default_type_document_id,
+            "defaultTypeDocumentId": self.default_type_document_id if self.default_type_document_id else -1,
         }
 
     @staticmethod
@@ -1072,11 +1072,11 @@ class TypeCases(models.Model):
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
-        if default_type_document_id in (None, "", -1, "-1"):
-            return {"ok": False, "message": "Укажите документ по умолчанию"}
-        type_doc = TypeDocuments.objects.filter(pk=default_type_document_id).first()
-        if not type_doc:
-            return {"ok": False, "message": "Вид документа не найден"}
+        type_doc = None
+        if default_type_document_id not in (None, "", -1, "-1"):
+            type_doc = TypeDocuments.objects.filter(pk=default_type_document_id).first()
+            if not type_doc:
+                return {"ok": False, "message": "Вид документа не найден"}
         if place_section_id in (None, "", -1, "-1"):
             return {"ok": False, "message": "Укажите подраздел/место"}
         place = PlaceSection.objects.filter(pk=place_section_id).first()
@@ -1146,6 +1146,7 @@ class DocumentCase(models.Model):
         data["access"] = self.access_json()
         data["canEditAccess"] = self.can_edit_access(who)
         data["canEdit"] = data["canEditAccess"]
+        data["canEditTopic"] = data["canEditAccess"] and not self.closed_at
         data["canClose"] = data["canEditAccess"] and not self.closed_at
         data["isFavorite"] = bool(who and UserFavoriteCase.objects.filter(doctor=who, document__document_case_id=self.pk).exists())
         data["documents"] = self.documents_rows(who)
@@ -1233,6 +1234,18 @@ class DocumentCase(models.Model):
         self.comment = str(comment or "").strip()
         self.save(update_fields=["comment"])
         return {"ok": True, "comment": self.comment}
+
+    def set_topic(self, who, topic):
+        if not self.can_edit_access(who):
+            return {"ok": False, "message": "Нет прав"}
+        if self.closed_at:
+            return {"ok": False, "message": "Дело закрыто"}
+        topic_text = str(topic or "").strip()
+        if not topic_text:
+            return {"ok": False, "message": "Укажите тему дела"}
+        self.topic = topic_text
+        self.save(update_fields=["topic"])
+        return {"ok": True, "topic": self.topic}
 
     def close_case(self, who):
         from django.utils import timezone
@@ -2533,7 +2546,12 @@ class Documents(models.Model):
 
     @staticmethod
     def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False):
-        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema").filter(Documents.case_access_q(who)).order_by("-pk")
+        qs = Documents.objects.select_related(
+            "type_document",
+            "type_document__group_document",
+            "schema",
+            "document_case",
+        ).filter(Documents.case_access_q(who)).order_by("-pk")
         if my_cases:
             if not who:
                 return []
@@ -2566,21 +2584,51 @@ class Documents(models.Model):
         iss_by_doc = {}
         for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in docs]).order_by("pk"):
             iss_by_doc.setdefault(iss.document_id, iss)
-        topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
+
+        topic_by_doc = {}
+        if not my_cases:
+            topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
 
         result = []
         for doc in docs:
             payload = doc.json
-            topic = (topic_by_doc.get(doc.pk) or "").strip()
-            type_doc = doc.type_document.title if doc.type_document else ""
-            title = " ".join(part for part in (topic, type_doc) if part)
-            payload["title"] = Documents.title_with_id(doc.pk, title)
+            if my_cases:
+                case_topic = ""
+                if doc.document_case_id and doc.document_case:
+                    case_topic = (doc.document_case.topic or "").strip()
+                payload["title"] = f"{case_topic} {doc.pk}".strip() if case_topic else str(doc.pk)
+            else:
+                topic = (topic_by_doc.get(doc.pk) or "").strip()
+                type_doc = doc.type_document.title if doc.type_document else ""
+                title = " ".join(part for part in (topic, type_doc) if part)
+                payload["title"] = Documents.title_with_id(doc.pk, title)
             result.append(payload)
         return result
 
     @staticmethod
-    def create_document(type_id, who_create, case_id=None):
+    def create_document(type_id, who_create, case_id=None, topic=None):
         from directions.models import Issledovaniya
+
+        case = None
+        if case_id not in (None, "", -1, "-1"):
+            case = TypeCases.objects.filter(pk=case_id).select_related("default_type_document").first()
+            if not case:
+                return {"ok": False, "message": "Вид дела не найден"}
+            topic_text = (topic or "").strip()
+            if not topic_text:
+                return {"ok": False, "message": "Укажите тему дела"}
+            if case.default_type_document_id:
+                type_id = case.default_type_document_id
+            elif type_id in (None, "", -1, "-1"):
+                with transaction.atomic():
+                    document_case = DocumentCase.objects.create(type_case=case, topic=topic_text, who_create=who_create)
+                return {
+                    "ok": True,
+                    "id": None,
+                    "caseId": document_case.pk,
+                    "emptyCase": True,
+                    "title": topic_text,
+                }
 
         if type_id in (None, "", -1, "-1"):
             return {"ok": False, "message": "Выберите вид документа"}
@@ -2589,17 +2637,6 @@ class Documents(models.Model):
             return {"ok": False, "message": "Вид документа не найден"}
         if not type_doc.can_create(who_create):
             return {"ok": False, "message": "Нет прав на создание этого вида документа"}
-        case = None
-        if case_id not in (None, "", -1, "-1"):
-            case = TypeCases.objects.filter(pk=case_id).select_related("default_type_document").first()
-            if not case:
-                return {"ok": False, "message": "Вид дела не найден"}
-            if case.default_type_document_id:
-                type_doc = case.default_type_document
-                if not type_doc:
-                    return {"ok": False, "message": "Вид документа не найден"}
-                if not type_doc.can_create(who_create):
-                    return {"ok": False, "message": "Нет прав на создание этого вида документа"}
         schema = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
         if schema is None:
             schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
@@ -2607,7 +2644,7 @@ class Documents(models.Model):
         with transaction.atomic():
             document_case = None
             if case is not None:
-                document_case = DocumentCase.objects.create(type_case=case, topic="", who_create=who_create)
+                document_case = DocumentCase.objects.create(type_case=case, topic=(topic or "").strip(), who_create=who_create)
             obj = Documents.objects.create(
                 type_document=type_doc,
                 who_create=who_create,
@@ -2629,7 +2666,7 @@ class Documents(models.Model):
             who_create,
             {"title": title, "typeId": type_doc.pk, "typeTitle": type_doc.title or ""},
         )
-        return {"ok": True, "id": obj.pk, "title": title}
+        return {"ok": True, "id": obj.pk, "title": title, "caseId": document_case.pk if document_case else None}
 
     def get_issledovaniye(self):
         from directions.models import Issledovaniya
@@ -2849,7 +2886,7 @@ class Documents(models.Model):
         next_topic = None
         if case_row is not None and case_topic is not None:
             next_topic = str(case_topic).strip()
-        if with_confirm and case_row is not None:
+        if case_row is not None:
             topic = next_topic if next_topic is not None else (case_row.topic or "").strip()
             if not topic:
                 return {"ok": False, "message": "Укажите тему дела"}

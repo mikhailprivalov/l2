@@ -242,6 +242,20 @@ def cases_comment(request):
 
 @login_required
 @group_required("ДОУ: просмотр документов")
+def cases_topic(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
+    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = document.document_case.set_topic(doctor, data.get("topic"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
 def cases_close(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
@@ -367,7 +381,7 @@ def documents_recent(request):
 @group_required("ДОУ: просмотр документов")
 def documents_create(request):
     data = _request_data(request)
-    result = Documents.create_document(data.get("typeId"), request.user.doctorprofile, data.get("caseId"))
+    result = Documents.create_document(data.get("typeId"), request.user.doctorprofile, data.get("caseId"), data.get("topic"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))

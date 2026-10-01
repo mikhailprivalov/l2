@@ -223,6 +223,49 @@
         </template>
       </ResearchesPicker>
     </div>
+  <Modal
+    v-if="caseTopicModalOpen"
+    show-footer="true"
+    white-bg="true"
+    max-width="480px"
+    width="100%"
+    margin-left-right="auto"
+    @close="closeCaseTopicModal"
+  >
+    <span slot="header">Тема дела</span>
+    <div slot="body">
+      <label class="case-topic-label">
+        <span>Тема дела</span>
+        <input
+          v-model="caseTopicDraft"
+          type="text"
+          class="form-control"
+          autofocus
+          @keyup.enter="confirmCaseTopic"
+        >
+      </label>
+    </div>
+    <div
+      slot="footer"
+      class="case-topic-footer"
+    >
+      <button
+        type="button"
+        class="btn btn-blue-nb"
+        @click="closeCaseTopicModal"
+      >
+        Отмена
+      </button>
+      <button
+        type="button"
+        class="btn btn-blue-nb"
+        :disabled="!caseTopicDraft.trim()"
+        @click="confirmCaseTopic"
+      >
+        Создать
+      </button>
+    </div>
+  </Modal>
   </div>
 </template>
 
@@ -240,6 +283,7 @@ import DateRange from '@/ui-cards/DateRange.vue';
 import RadioField from '@/fields/RadioField.vue';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
+import Modal from '@/ui-cards/Modal.vue';
 
 const LEFT_WIDTH_STORAGE_KEY = 'document-registrar-left-width';
 const MIN_SIDE_WIDTH_PX = 80;
@@ -266,6 +310,9 @@ const picker = ref<{ favoritePks: number[] } | null>(null);
 const overrideDepartments = ref<Record<string, unknown>[]>([]);
 const overrideResearches = ref<Record<string, unknown>[]>([]);
 const ready = ref(false);
+const caseTopicModalOpen = ref(false);
+const caseTopicDraft = ref('');
+const pendingCreate = ref<{ typeId: number | null; caseId: number | null } | null>(null);
 const splitEl = ref<HTMLElement | null>(null);
 
 const readStoredLeftWidth = (): number | null => {
@@ -555,27 +602,66 @@ const toggleFavorite = async () => {
   }
 };
 
-const createDocument = async () => {
-  if (!canCreate.value) {
-    return;
-  }
-  const { typeId, caseId } = resolveCreate(selectedResearches.value[0]);
-  if (!typeId) {
-    root.$emit('msg', 'error', 'Не указан вид документа');
-    return;
-  }
+const runCreate = async (payload: { typeId: number | null; caseId: number | null; topic?: string }) => {
   await store.dispatch(actions.INC_LOADING);
   try {
-    const result = await api('document-manager/documents/create', { typeId, caseId });
+    const result = await api('document-manager/documents/create', {
+      typeId: payload.typeId,
+      caseId: payload.caseId,
+      topic: payload.topic || '',
+    });
     if (result?.ok) {
-      root.$emit('msg', 'ok', 'Документ создан');
-      selectedDocument.value = result.id;
+      if (result.emptyCase) {
+        root.$emit('msg', 'ok', 'Дело создано');
+        selectedDocument.value = null;
+      } else {
+        root.$emit('msg', 'ok', 'Документ создан');
+        selectedDocument.value = result.id;
+      }
     } else {
       root.$emit('msg', 'error', result?.message || 'Ошибка создания');
     }
   } finally {
     await store.dispatch(actions.DEC_LOADING);
   }
+};
+
+const createDocument = async () => {
+  if (!canCreate.value) {
+    return;
+  }
+  const resolved = resolveCreate(selectedResearches.value[0]);
+  if (resolved.caseId) {
+    pendingCreate.value = resolved;
+    caseTopicDraft.value = '';
+    caseTopicModalOpen.value = true;
+    return;
+  }
+  if (!resolved.typeId) {
+    root.$emit('msg', 'error', 'Не указан вид документа');
+    return;
+  }
+  await runCreate(resolved);
+};
+
+const closeCaseTopicModal = () => {
+  caseTopicModalOpen.value = false;
+  pendingCreate.value = null;
+  caseTopicDraft.value = '';
+};
+
+const confirmCaseTopic = async () => {
+  const topic = caseTopicDraft.value.trim();
+  if (!topic) {
+    root.$emit('msg', 'error', 'Укажите тему дела');
+    return;
+  }
+  if (!pendingCreate.value) {
+    return;
+  }
+  const payload = { ...pendingCreate.value, topic };
+  closeCaseTopicModal();
+  await runCreate(payload);
 };
 
 const onLeftWidthChange = (value: number) => {
@@ -801,5 +887,18 @@ watch([roleFilter, showHidden, showMyCases], () => {
 .active-button {
   background-color: #049372;
   color: #fff;
+}
+
+.case-topic-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.case-topic-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>
