@@ -446,6 +446,7 @@ def researches_by_department(request):
                     "code": research.code,
                     "id": research.pk,
                     "label": research.title,
+                    "podrazdeleniye_id": research.podrazdeleniye_id,
                 }
             )
     return JsonResponse(response)

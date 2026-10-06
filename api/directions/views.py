@@ -79,6 +79,7 @@ from directions.models import (
     ParaclinicResultFile,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService, ParaclinicInputFieldFileSettings
+from podrazdeleniya.models import Podrazdeleniya
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
@@ -2436,7 +2437,14 @@ def directions_paraclinic_result(request):
     files_by_field = {}
     request_data = rb.get("data", {})
     pk = request_data.get("pk", -1)
-    stationar_research = request_data.get("stationar_research", -1)
+    try:
+        stationar_research = int(request_data.get("stationar_research", -1))
+    except (TypeError, ValueError):
+        stationar_research = -1
+    try:
+        stationar_department = int(request_data.get("stationar_department", -1))
+    except (TypeError, ValueError):
+        stationar_department = -1
     with_confirm = rb.get("with_confirm", False)
     visibility_state = rb.get("visibility_state", {})
     v_g = visibility_state.get("groups", {})
@@ -2487,6 +2495,40 @@ def directions_paraclinic_result(request):
             if parent == child and slave_reserch.site_type == 6 and iss.research.title.lower().find('перевод') != -1 and child != -1:
                 response["message"] = err_message
                 return JsonResponse(response)
+            if slave_reserch.site_type == 6:
+                current_hosp = Issledovaniya.objects.filter(pk=current, research__is_hospital=True).select_related("research").first()
+                if current_hosp:
+                    current_dep = current_hosp.hospital_department_override_id or current_hosp.research.podrazdeleniye_id
+                    current_research = current_hosp.research_id
+                    for linked_pk in (parent, child):
+                        if linked_pk in (-1, current):
+                            continue
+                        linked = Issledovaniya.objects.filter(pk=linked_pk, research__is_hospital=True).select_related("research").first()
+                        if not linked:
+                            continue
+                        linked_dep = linked.hospital_department_override_id or linked.research.podrazdeleniye_id
+                        if linked_dep == current_dep and linked.research_id == current_research:
+                            response["message"] = "Подразделение и профиль совпадают с текущим отделением"
+                            return JsonResponse(response)
+
+        if stationar_research != -1 and (iss.research.can_transfer or (slave_reserch and slave_reserch.site_type == 6)):
+            transfer_research = Researches.objects.filter(pk=stationar_research, is_hospital=True).first()
+            if not transfer_research:
+                response["message"] = "Не выбран профиль перевода"
+                return JsonResponse(response)
+            if stationar_department != -1:
+                if not Podrazdeleniya.objects.filter(pk=stationar_department, p_type=Podrazdeleniya.HOSP, hide=False).exists():
+                    response["message"] = "Выберите подразделение типа стационар"
+                    return JsonResponse(response)
+                new_dep = stationar_department
+            else:
+                new_dep = transfer_research.podrazdeleniye_id
+            current_hosp = iss.napravleniye.parent if iss.napravleniye and iss.napravleniye.parent_id else None
+            if current_hosp and current_hosp.research and current_hosp.research.is_hospital:
+                current_dep = current_hosp.hospital_department_override_id or current_hosp.research.podrazdeleniye_id
+                if current_dep == new_dep and current_hosp.research_id == transfer_research.pk:
+                    response["message"] = "Текущее подразделение и профиль совпадают с переводом"
+                    return JsonResponse(response)
 
         if procedure_list:
             with transaction.atomic():
@@ -2865,7 +2907,7 @@ def directions_paraclinic_result(request):
             if iss.napravleniye:
                 iss.napravleniye.send_task_result()
             if stationar_research != -1:
-                iss.gen_after_confirm(request.user)
+                iss.gen_after_confirm(request.user, hospital_department_override=stationar_department)
             transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
             response["transfer_direction"] = None if not transfer_d else transfer_d.pk
             response["transfer_direction_iss"] = [] if not transfer_d else [r.research.title for r in Issledovaniya.objects.filter(napravleniye=transfer_d.pk)]

@@ -512,9 +512,21 @@
             </div>
             <div
               v-if="newTransfer"
-              class="group-title"
+              class="group-title transfer-department-title"
             >
-              Отделение перевода
+              <span class="transfer-department-label">Отделение перевода</span>
+              <Treeselect
+                v-if="!row.confirmed"
+                v-model="stationar_department"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                class="treeselect-nbr treeselect-32px transfer-department-select"
+                :options="stationar_transfer_departments"
+                placeholder="По умолчанию"
+                :clearable="false"
+                :append-to-body="true"
+                :z-index="5000"
+              />
             </div>
             <div
               v-else
@@ -1096,6 +1108,8 @@ export default {
       templates: {},
       stationar_researches: [],
       stationar_research: -1,
+      stationar_department: -1,
+      research_id: -1,
       anamnesis_edit: false,
       anamnesis_data: {
         text: '',
@@ -1151,7 +1165,7 @@ export default {
           pk: -1,
           title: 'Не выбрано',
         },
-        ...(this.stationar_researches || []).filter((r) => r.title !== this.issTitle && !r.hide),
+        ...(this.stationar_researches || []).filter((r) => !r.hide),
       ];
     },
     stationar_researches_change_hosp() {
@@ -1161,6 +1175,15 @@ export default {
           label: 'Не выбрано',
         },
         ...(this.stationar_researches || []),
+      ];
+    },
+    stationar_transfer_departments() {
+      return [
+        {
+          id: -1,
+          label: 'По умолчанию',
+        },
+        ...(this.departments || []),
       ];
     },
     bases_obj() {
@@ -1310,6 +1333,7 @@ export default {
         ok,
         from: depFrom,
         to: depTo,
+        message,
       } = await stationarPoint.changeDepartment(this, 'iss', {
         needUpdate,
         department_id: departmentId || this.department_id,
@@ -1321,7 +1345,7 @@ export default {
         this.$root.$emit('msg', 'ok', `Отделение успешно изменено\n${depFrom} → ${depTo}`);
         this.change_department = false;
       } else if (needUpdate) {
-        this.$root.$emit('msg', 'error', 'Не удалось сменить отделение!');
+        this.$root.$emit('msg', 'error', message || 'Не удалось сменить отделение!');
       }
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -1381,6 +1405,7 @@ export default {
       this.researches_forms = null;
       this.patient_form = null;
       this.stationar_research = -1;
+      this.stationar_department = -1;
       this.tableFieldsErrors = {};
       this.$root.$emit('open-pk', -1);
     },
@@ -1416,6 +1441,8 @@ export default {
       this.every = false;
       this.every = false;
       this.stationar_research = -1;
+      this.stationar_department = -1;
+      this.research_id = -1;
       this.create_directions_data = [];
       this.tree = [];
     },
@@ -1435,6 +1462,7 @@ export default {
         this.child_direction = data.child_direction;
         this.child_research_title = data.child_research_title;
         this.issTitle = data.iss_title;
+        this.research_id = data.research_id || -1;
         this.finId = data.fin_pk;
         this.forbidden_edit = data.forbidden_edit;
         this.soft_forbidden = !!data.soft_forbidden;
@@ -1565,8 +1593,26 @@ export default {
         }
       }
     },
+    getEffectiveTransferDepartment(researchPk, departmentPk) {
+      if (departmentPk !== -1 && departmentPk != null) {
+        return Number(departmentPk);
+      }
+      const research = (this.stationar_researches || []).find((r) => r.pk === researchPk);
+      return research?.podrazdeleniye_id || research?.podrazdeleniye || -1;
+    },
+    isSameTransferTarget() {
+      if (this.stationar_research === -1 || this.research_id === -1) {
+        return false;
+      }
+      const newDep = this.getEffectiveTransferDepartment(this.stationar_research, this.stationar_department);
+      return Number(this.department_id) === Number(newDep) && Number(this.research_id) === Number(this.stationar_research);
+    },
     save(iss) {
       this.hide_results();
+      if (this.r_is_transfer(iss) && this.newTransfer && this.isSameTransferTarget()) {
+        this.$root.$emit('msg', 'error', 'Текущее подразделение и профиль совпадают с переводом');
+        return;
+      }
       this.$store.dispatch(actions.INC_LOADING);
       paraclinicResultSaveSmart({
         force: true,
@@ -1576,6 +1622,7 @@ export default {
             pk: this.opened_form_pk,
           },
           stationar_research: this.stationar_research,
+          stationar_department: this.stationar_department,
         },
         with_confirm: false,
         visibility_state: this.visibility_state(iss),
@@ -1610,10 +1657,14 @@ export default {
       if (this.direcions_order[this.parent_issledovaniye] > this.direcions_order[this.child_issledovaniye]) {
         return this.$root.$emit('msg', 'error', 'Порядок отделений меняется снизу вверх');
       }
+      if (this.r_is_transfer(iss) && this.newTransfer && this.isSameTransferTarget()) {
+        return this.$root.$emit('msg', 'error', 'Текущее подразделение и профиль совпадают с переводом');
+      }
 
       this.$store.dispatch(actions.INC_LOADING);
       if (!this.newTransfer) {
         this.stationar_research = -1;
+        this.stationar_department = -1;
       }
       return paraclinicResultSaveSmart({
         force: true,
@@ -1623,6 +1674,7 @@ export default {
             pk: this.opened_form_pk,
           },
           stationar_research: this.stationar_research,
+          stationar_department: this.stationar_department,
         },
         with_confirm: true,
         visibility_state: this.visibility_state(iss),
@@ -1652,6 +1704,7 @@ export default {
             this.forbidden_edit = data.forbidden_edit;
             this.soft_forbidden = data.soft_forbidden;
             this.stationar_research = -1;
+            this.stationar_department = -1;
             this.apply_files_by_field(iss, data.files_by_field);
             if (iss.procedure_list) {
               for (const pl of iss.procedure_list) {
@@ -1759,8 +1812,12 @@ export default {
           }
         }
       }
-      if (this.r_is_transfer(research) && this.stationar_research === -1 && this.typeTransfer === 'Новый перевод') {
-        l.push('Отделение перевода');
+      if (this.r_is_transfer(research) && this.typeTransfer === 'Новый перевод') {
+        if (this.stationar_research === -1) {
+          l.push('Отделение перевода');
+        } else if (this.isSameTransferTarget()) {
+          l.push('Другое подразделение или профиль');
+        }
       }
       return l.slice(0, 2);
     },
@@ -1914,6 +1971,27 @@ export default {
 .transferArrow {
   padding-top: 40px;
   opacity: 0.5;
+}
+
+.transfer-department-title {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.transfer-department-label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.transfer-department-select {
+  flex: 0 1 560px;
+  width: 560px;
+  min-width: 180px;
+  max-width: 100%;
+  font-weight: normal;
 }
 
 .cancel_color {
