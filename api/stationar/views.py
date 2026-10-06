@@ -66,6 +66,7 @@ def load(request):
             "child_direction": child_direction if child_direction else '-1',
             "child_research_title": child_research_title if child_research_title else '-1',
             "iss_title": i.research.title,
+            "research_id": i.research_id,
             "forbidden_edit": forbidden_edit or "Врач стационара" not in [str(x) for x in request.user.groups.all()],
             "soft_forbidden": not forbidden_edit,
             "patient": {
@@ -272,11 +273,33 @@ def change_department(request):
     ok = False
     dep_from = ""
     dep_to = ""
+    message = ""
     if Issledovaniya.objects.filter(pk=iss, research__is_hospital=True).exists():
         i = Issledovaniya.objects.filter(pk=iss, research__is_hospital=True)[0]
         forbidden_edit = forbidden_edit_dir(i.napravleniye_id)
         old_dep = i.hospital_department_override_id or i.research.podrazdeleniye_id
         if not forbidden_edit and need_update and Podrazdeleniya.objects.filter(pk=dep_id, p_type=Podrazdeleniya.HOSP).exists():
+            tree = hosp_get_hosp_direction(i.napravleniye_id) or []
+            for node in tree:
+                other_iss_pk = node.get("issledovaniye")
+                if not other_iss_pk or int(other_iss_pk) == i.pk:
+                    continue
+                other = Issledovaniya.objects.filter(pk=other_iss_pk, research__is_hospital=True).select_related("research").first()
+                if not other:
+                    continue
+                other_dep = other.hospital_department_override_id or other.research.podrazdeleniye_id
+                if other_dep == dep_id and other.research_id == i.research_id:
+                    message = "Подразделение и профиль совпадают с другим отделением в истории"
+                    dep_id = old_dep
+                    return JsonResponse(
+                        {
+                            "newDepartment": dep_id,
+                            "ok": False,
+                            "from": dep_from,
+                            "to": dep_to,
+                            "message": message,
+                        }
+                    )
             i.hospital_department_override_id = dep_id
             i.save(update_fields=['hospital_department_override_id'])
             Log.log(
@@ -299,6 +322,7 @@ def change_department(request):
             "ok": ok,
             "from": dep_from,
             "to": dep_to,
+            "message": message,
         }
     )
 

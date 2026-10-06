@@ -2595,7 +2595,7 @@ class Issledovaniya(models.Model):
             return self.doc_confirmation.position.title
         return ''
 
-    def gen_after_confirm(self, user: User):
+    def gen_after_confirm(self, user: User, hospital_department_override=-1):
         if not self.time_confirmation or not self.gen_direction_with_research_after_confirm:
             return
         Napravleniya.gen_napravleniya_by_issledovaniya(
@@ -2613,7 +2613,8 @@ class Issledovaniya(models.Model):
             count=1,
             discount=0,
             parent_iss=self.napravleniye.parent_id or self.pk,
-            parent_auto_gen=None,
+            parent_auto_gen=self.pk,
+            hospital_department_override=hospital_department_override,
         )
 
     def __str__(self):
