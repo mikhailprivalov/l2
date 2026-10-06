@@ -681,6 +681,10 @@ class PlaceSectionAccess(models.Model):
         return f"{self.place_section} {self.doctor}"
 
 
+def get_print_docx_path(instance, filename):
+    return os.path.join("dou-print-docx", str(instance.pk or "new"), str(uuid.uuid4()), filename)
+
+
 class TypeDocuments(models.Model):
     PICKER_PK_SHIFT = 1000000000
 
@@ -706,6 +710,7 @@ class TypeDocuments(models.Model):
         help_text="Шаблон документа",
         on_delete=models.SET_NULL,
     )
+    print_docx = models.FileField(upload_to=get_print_docx_path, default=None, null=True, blank=True, help_text="Шаблон печати docx")
 
     class Meta:
         verbose_name = "Вид документа"
@@ -758,7 +763,26 @@ class TypeDocuments(models.Model):
             "layoutTemplateIds": template_ids,
             "layoutTemplates": [{"id": row.pk, "label": row.title} for row in templates],
             "creators": self.get_creators(),
+            "hasPrintTemplate": bool(self.print_docx),
+            "printTemplateName": os.path.basename(self.print_docx.name) if self.print_docx else "",
         }
+
+    def save_print_docx(self, uploaded):
+        filename = os.path.basename(getattr(uploaded, "name", "") or "")
+        if not filename.lower().endswith(".docx"):
+            return {"ok": False, "message": "Нужен файл .docx"}
+        if getattr(uploaded, "size", 0) > 5 * 1024 * 1024:
+            return {"ok": False, "message": "Файл больше 5 МБ"}
+        if self.print_docx:
+            self.print_docx.delete(save=False)
+        self.print_docx = uploaded
+        self.save(update_fields=["print_docx"])
+        return {"ok": True, "fileName": os.path.basename(self.print_docx.name)}
+
+    def clear_print_docx(self):
+        if self.print_docx:
+            self.print_docx.delete(save=True)
+        return {"ok": True}
 
     @staticmethod
     def get_list(group_id=None, doctor=None, available_only=False):
@@ -2460,7 +2484,11 @@ class Documents(models.Model):
         found_ids = []
         seen = set()
 
+        number_only = bool(by_number) and not bool(by_text)
+
         def in_period(qs, field="create_at"):
+            if number_only:
+                return qs
             if start:
                 qs = qs.filter(**{f"{field}__date__gte": start})
             if end:
@@ -2862,6 +2890,7 @@ class Documents(models.Model):
         payload["case"] = obj.document_case.as_json(who) if obj.document_case_id else None
         payload["availableCases"] = DocumentCase.available_options(who)
         payload["isFavorite"] = record_favorite_status(who, obj)
+        payload["hasPrintTemplate"] = bool(obj.type_document_id and obj.type_document.print_docx)
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
         type_doc = obj.type_document.title if obj.type_document else ""
         DocumentRecent.remember(who, obj, topic=obj.topic_value(iss, research=research), type_doc=type_doc)

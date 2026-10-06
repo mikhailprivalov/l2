@@ -556,6 +556,8 @@ const searchDocuments = async () => {
   if (!text) {
     return;
   }
+  const numberSearch = byNumber.value && !byText.value;
+  const loadId = numberSearch ? ++documentsLoadId : documentsLoadId;
   await store.dispatch(actions.INC_LOADING);
   try {
     const result = await api('document-manager/documents/search', {
@@ -565,9 +567,25 @@ const searchDocuments = async () => {
       dateFrom: toApiDate(dateRange.value[0]),
       dateTo: toApiDate(dateRange.value[1]),
     });
+    if (numberSearch && loadId !== documentsLoadId) {
+      return;
+    }
     if (result?.ok) {
+      if (numberSearch) {
+        const rows = result.result || [];
+        documents.value = rows;
+        recentPage.value = 1;
+        recentHasMore.value = false;
+        openedFromCaseFavorite.value = false;
+        selectedDocument.value = rows[0]?.id || null;
+      }
       root.$emit('msg', 'ok', result.message || 'Найдено');
     } else {
+      if (numberSearch) {
+        documents.value = [];
+        recentHasMore.value = false;
+        selectedDocument.value = null;
+      }
       root.$emit('msg', 'error', result?.message || 'Документ не найден');
     }
   } finally {

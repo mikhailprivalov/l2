@@ -107,6 +107,42 @@ def types_update(request):
 
 
 @login_required
+@group_required("Конструктор: ДОУ")
+def types_print_template(request):
+    type_id = request.POST.get("id")
+    uploaded = request.FILES.get("file")
+    obj = TypeDocuments.objects.filter(pk=type_id).first()
+    if not obj:
+        return status_response(False, "Вид документа не найден")
+    if not uploaded:
+        return status_response(False, "Файл не выбран")
+    result = obj.save_print_docx(uploaded)
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def types_print_template_delete(request):
+    data = _request_data(request)
+    obj = TypeDocuments.objects.filter(pk=data.get("id")).first()
+    if not obj:
+        return status_response(False, "Вид документа не найден")
+    result = obj.clear_print_docx()
+    return status_response(True, data=result)
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_print(request):
+    from document_management.print_docx import render_document_print
+
+    doctor = getattr(request.user, "doctorprofile", None)
+    return render_document_print(request.GET.get("id"), request.GET.get("format"), doctor)
+
+
+@login_required
 @group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def cases_list(request):
     return JsonResponse({"result": TypeCases.get_list()})
