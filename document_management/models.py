@@ -1484,11 +1484,7 @@ class DocumentBlock(models.Model):
         return (
             cls.objects.annotate(_has_readers=Exists(has_readers))
             .filter(
-                models.Q(is_published=True)
-                | models.Q(_has_readers=False)
-                | models.Q(who_create_id=who.pk)
-                | models.Q(read_rows__doctor_id=who.pk)
-                | models.Q(write_rows__doctor_id=who.pk)
+                models.Q(is_published=True) | models.Q(_has_readers=False) | models.Q(who_create_id=who.pk) | models.Q(read_rows__doctor_id=who.pk) | models.Q(write_rows__doctor_id=who.pk)
             )
             .distinct()
         )
