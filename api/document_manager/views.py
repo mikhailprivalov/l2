@@ -12,6 +12,7 @@ from document_management.models import (  # noqa: I001
     DocumentReview,
     DocumentPickerFavorite,
     DocumentCase,
+    DocumentBlock,
     Documents,
     GroupDocuments,
     PlaceSection,
@@ -299,6 +300,98 @@ def cases_close(request):
     if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
         return status_response(False, "Документ не найден")
     result = document.document_case.close_case(doctor)
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+def _block_for(data, doctor):
+    block = DocumentBlock.objects.select_related("who_create").filter(pk=data.get("id")).first()
+    if not block or not block.can_read(doctor):
+        return None
+    return block
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def blocks_list(request):
+    doctor = getattr(request.user, "doctorprofile", None)
+    return JsonResponse({"result": DocumentBlock.list_for(doctor)})
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def blocks_create(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    result = DocumentBlock.create_block(doctor, data.get("title"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def blocks_details(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    block = _block_for(data, doctor)
+    if not block:
+        return status_response(False, "Блок не найден")
+    return JsonResponse(block.as_json(doctor))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def blocks_update(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    block = _block_for(data, doctor)
+    if not block:
+        return status_response(False, "Блок не найден")
+    result = block.save_settings(doctor, data.get("title"), data.get("isPublished"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def blocks_read_access(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    block = _block_for(data, doctor)
+    if not block:
+        return status_response(False, "Блок не найден")
+    result = block.set_read_access(doctor, data.get("members"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def blocks_write_access(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    block = _block_for(data, doctor)
+    if not block:
+        return status_response(False, "Блок не найден")
+    result = block.set_write_access(doctor, data.get("members"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_block(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.select_related("block").filter(pk=data.get("id")).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = DocumentBlock.assign_document(document, doctor, data.get("blockId"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))

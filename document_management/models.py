@@ -1353,6 +1353,266 @@ class DocumentCaseAccess(models.Model):
         return f"{self.document_case_id} {self.doctor_id}"
 
 
+class DocumentBlock(models.Model):
+    CREATE_GROUP = "Создание блоков"
+
+    title = models.CharField(max_length=512, help_text="Название блока")
+    who_create = models.ForeignKey(
+        DoctorProfile,
+        related_name="document_blocks",
+        db_index=True,
+        blank=True,
+        null=True,
+        help_text="Создатель блока",
+        on_delete=models.SET_NULL,
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, help_text="Дата создания блока")
+    is_published = models.BooleanField(default=False, db_index=True, help_text="Опубликован")
+
+    class Meta:
+        verbose_name = "Блок"
+        verbose_name_plural = "Блоки"
+
+    def __str__(self):
+        return self.title or f"Блок {self.pk}"
+
+    @staticmethod
+    def _is_superuser(who):
+        return DocumentCase._is_superuser(who)
+
+    @classmethod
+    def can_create(cls, who):
+        if not who:
+            return False
+        if cls._is_superuser(who):
+            return True
+        return who.has_group(cls.CREATE_GROUP)
+
+    def can_edit(self, who):
+        if not who:
+            return False
+        if self._is_superuser(who):
+            return True
+        return self.who_create_id == who.pk
+
+    def can_write(self, who):
+        if self.can_edit(who):
+            return True
+        if not who:
+            return False
+        return self.write_rows.filter(doctor_id=who.pk).exists()
+
+    def is_public(self):
+        return bool(self.is_published) or not self.read_rows.exists()
+
+    def can_read(self, who):
+        if not who:
+            return False
+        if self.can_write(who) or self.is_public():
+            return True
+        return self.read_rows.filter(doctor_id=who.pk).exists()
+
+    def as_json(self, who=None):
+        return {
+            "ok": True,
+            "id": self.pk,
+            "title": self.title or "",
+            "createdAt": DocumentCase._date_text(self.created_at),
+            "creator": self.who_create.get_full_fio() if self.who_create_id and self.who_create else "",
+            "isPublished": bool(self.is_published),
+            "canEdit": self.can_edit(who),
+            "canWrite": self.can_write(who),
+            "readAccess": self._access_json("read_rows"),
+            "writeAccess": self._access_json("write_rows"),
+            "documents": self.documents_rows(who),
+        }
+
+    def list_json(self):
+        creator = self.who_create.get_full_fio() if self.who_create_id and self.who_create else ""
+        return {
+            "id": self.pk,
+            "title": self.title or "",
+            "creator": creator,
+            "createdAt": DocumentCase._date_text(self.created_at),
+        }
+
+    def _access_json(self, relation_name):
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get(relation_name)
+        rows = prefetched if prefetched is not None else getattr(self, relation_name).select_related("doctor", "doctor__podrazdeleniye")
+        return [AddresseeGroup._employee_json(row.doctor) for row in rows if row.doctor_id]
+
+    def documents_rows(self, who):
+        from django.utils import timezone
+
+        from directions.models import Issledovaniya
+
+        linked = self.documents.select_related("type_document", "who_create").order_by("pk")
+        docs = [doc for doc in linked if Documents.can_see_document(doc, who)]
+        if not docs:
+            return []
+        iss_by_doc = {}
+        for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in docs]).order_by("pk"):
+            iss_by_doc.setdefault(iss.document_id, iss)
+        topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
+        rows = []
+        for doc in docs:
+            created = doc.create_at
+            date_text = ""
+            if created:
+                local = timezone.localtime(created) if timezone.is_aware(created) else created
+                date_text = local.strftime("%d.%m.%Y")
+            rows.append(
+                {
+                    "id": doc.pk,
+                    "topic": (topic_by_doc.get(doc.pk) or "").strip(),
+                    "typeTitle": doc.type_document.title if doc.type_document else "",
+                    "createdAt": date_text,
+                    "creator": doc.who_create.get_full_fio() if doc.who_create_id and doc.who_create else "",
+                }
+            )
+        return rows
+
+    @classmethod
+    def visible_for(cls, who):
+        from django.db.models import Exists, OuterRef
+
+        if not who:
+            return cls.objects.none()
+        if cls._is_superuser(who):
+            return cls.objects.all()
+        has_readers = DocumentBlockReadAccess.objects.filter(block_id=OuterRef("pk"))
+        return (
+            cls.objects.annotate(_has_readers=Exists(has_readers))
+            .filter(
+                models.Q(is_published=True)
+                | models.Q(_has_readers=False)
+                | models.Q(who_create_id=who.pk)
+                | models.Q(read_rows__doctor_id=who.pk)
+                | models.Q(write_rows__doctor_id=who.pk)
+            )
+            .distinct()
+        )
+
+    @classmethod
+    def list_for(cls, who):
+        rows = cls.visible_for(who).select_related("who_create").order_by("-pk")
+        return [row.list_json() for row in rows]
+
+    @classmethod
+    def write_options(cls, who):
+        if not who:
+            return []
+        if cls._is_superuser(who):
+            qs = cls.objects.all()
+        else:
+            qs = cls.objects.filter(models.Q(who_create_id=who.pk) | models.Q(write_rows__doctor_id=who.pk)).distinct()
+        return [{"id": row.pk, "label": row.title or f"Блок {row.pk}"} for row in qs.order_by("-pk")]
+
+    @classmethod
+    def create_block(cls, who, title):
+        if not cls.can_create(who):
+            return {"ok": False, "message": "Нет прав"}
+        title_text = str(title or "").strip()
+        if not title_text:
+            return {"ok": False, "message": "Укажите название блока"}
+        row = cls.objects.create(title=title_text, who_create=who)
+        return {"ok": True, "id": row.pk}
+
+    def save_settings(self, who, title, is_published):
+        if not self.can_edit(who):
+            return {"ok": False, "message": "Нет прав"}
+        title_text = str(title or "").strip()
+        if not title_text:
+            return {"ok": False, "message": "Укажите название блока"}
+        self.title = title_text
+        self.is_published = bool(is_published)
+        self.save(update_fields=["title", "is_published"])
+        return {"ok": True, "title": self.title, "isPublished": self.is_published}
+
+    def set_read_access(self, who, members):
+        return self._set_access(who, members, "read_rows", DocumentBlockReadAccess, "block")
+
+    def set_write_access(self, who, members):
+        return self._set_access(who, members, "write_rows", DocumentBlockWriteAccess, "block")
+
+    def _set_access(self, who, members, relation_name, model_cls, fk_name):
+        if not self.can_edit(who):
+            return {"ok": False, "message": "Нет прав"}
+        if not isinstance(members, list):
+            return {"ok": False, "message": "Некорректный список доступа"}
+        ids = []
+        seen = set()
+        for item in members:
+            raw = item.get("id") if isinstance(item, dict) else item
+            try:
+                doctor_id = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if doctor_id > 0 and doctor_id not in seen:
+                seen.add(doctor_id)
+                ids.append(doctor_id)
+        valid_ids = list(DoctorProfile.objects.filter(pk__in=ids).values_list("pk", flat=True))
+        valid_set = set(valid_ids)
+        relation = getattr(self, relation_name)
+        with transaction.atomic():
+            relation.exclude(doctor_id__in=valid_set).delete()
+            existing = set(relation.filter(doctor_id__in=valid_set).values_list("doctor_id", flat=True))
+            model_cls.objects.bulk_create([model_cls(**{fk_name: self, "doctor_id": doctor_id}) for doctor_id in valid_ids if doctor_id not in existing])
+        cache = getattr(self, "_prefetched_objects_cache", None)
+        if cache is not None:
+            cache.pop(relation_name, None)
+        key = "readAccess" if relation_name == "read_rows" else "writeAccess"
+        return {"ok": True, key: self._access_json(relation_name)}
+
+    @staticmethod
+    def assign_document(document, who, block_id):
+        if not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        current = document.block if document.block_id else None
+        if current and not current.can_write(who):
+            return {"ok": False, "message": "Нет прав"}
+        if block_id in (None, "", 0, "0"):
+            document.block = None
+            document.save(update_fields=["block"])
+            return {"ok": True, "blockId": None}
+        try:
+            block_pk = int(block_id)
+        except (TypeError, ValueError):
+            return {"ok": False, "message": "Блок недоступен"}
+        block = DocumentBlock.objects.filter(pk=block_pk).first()
+        if not block or not block.can_write(who):
+            return {"ok": False, "message": "Блок недоступен"}
+        document.block = block
+        document.save(update_fields=["block"])
+        return {"ok": True, "blockId": block.pk}
+
+
+class DocumentBlockWriteAccess(models.Model):
+    block = models.ForeignKey(DocumentBlock, related_name="write_rows", on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, related_name="document_block_write_access", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Запись в блок"
+        verbose_name_plural = "Запись в блоки"
+        unique_together = ("block", "doctor")
+
+    def __str__(self):
+        return f"{self.block_id} {self.doctor_id}"
+
+
+class DocumentBlockReadAccess(models.Model):
+    block = models.ForeignKey(DocumentBlock, related_name="read_rows", on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, related_name="document_block_read_access", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Чтение блока"
+        verbose_name_plural = "Чтение блоков"
+        unique_together = ("block", "doctor")
+
+    def __str__(self):
+        return f"{self.block_id} {self.doctor_id}"
+
+
 class DocumentPickerFavorite(models.Model):
     doctor = models.ForeignKey(DoctorProfile, related_name="document_picker_favorites", on_delete=models.CASCADE)
     type_document = models.ForeignKey(
@@ -2194,6 +2454,16 @@ class Documents(models.Model):
         help_text="Дело",
         on_delete=models.SET_NULL,
     )
+    block = models.ForeignKey(
+        "DocumentBlock",
+        related_name="documents",
+        blank=True,
+        null=True,
+        default=None,
+        db_index=True,
+        help_text="Блок",
+        on_delete=models.SET_NULL,
+    )
 
     HIDDEN_DOCS_GROUP = "Скрытие документа"
     RESET_GROUP = "Сброс документов"
@@ -2394,6 +2664,8 @@ class Documents(models.Model):
 
     @classmethod
     def can_see_document(cls, obj, who):
+        if who and obj.block_id and Documents._public_block(obj):
+            return True
         if obj.document_case_id:
             case = obj.document_case if getattr(obj, "document_case", None) is not None else None
             if case is None or case.pk != obj.document_case_id:
@@ -2403,6 +2675,13 @@ class Documents(models.Model):
         if not obj.is_hidden:
             return True
         return cls.can_view_all_hidden(who)
+
+    @staticmethod
+    def _public_block(obj):
+        block = obj.block if getattr(obj, "block", None) is not None else None
+        if block is None or block.pk != obj.block_id:
+            block = DocumentBlock.objects.filter(pk=obj.block_id).first()
+        return bool(block and block.is_public())
 
     @staticmethod
     def case_access_q(who, related=""):
@@ -2852,6 +3131,7 @@ class Documents(models.Model):
                 "document_case",
                 "document_case__who_create",
                 "document_case__who_close",
+                "block",
                 "who_confirm",
                 "who_confirm__podrazdeleniye",
             )
@@ -2889,6 +3169,13 @@ class Documents(models.Model):
         payload["isCase"] = bool(obj.type_case_id)
         payload["case"] = obj.document_case.as_json(who) if obj.document_case_id else None
         payload["availableCases"] = DocumentCase.available_options(who)
+        block_options = DocumentBlock.write_options(who)
+        if obj.block_id and obj.block and not any(item["id"] == obj.block_id for item in block_options):
+            block_label = obj.block.title or f"Блок {obj.block_id}"
+            block_options = [{"id": obj.block_id, "label": block_label}, *block_options]
+        payload["blockId"] = obj.block_id
+        payload["availableBlocks"] = block_options
+        payload["canChangeBlock"] = (not obj.block_id) or obj.block.can_write(who)
         payload["isFavorite"] = record_favorite_status(who, obj)
         payload["hasPrintTemplate"] = bool(obj.type_document_id and obj.type_document.print_docx)
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False

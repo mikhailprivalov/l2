@@ -287,10 +287,6 @@ def menu(request):
                 {"url": "/ui/document-history", "title": "История документов", "nt": False, "access": ["История документа"]},
                 {"url": "/ui/gardening", "title": "Садоводство", "nt": False, "access": ["Бухгалтер садоводства"]},
             ]
-            if not HIDE_DOCUMENT_MANAGER:
-                dou_access = ["*"] if DOCUMENT_MANAGER_FOR_ALL else [DOCUMENT_MANAGER_VIEW_GROUP]
-                dou2_index = next(i for i, page in enumerate(pages) if page.get("url") == "/ui/document-manager-2")
-                pages.insert(dou2_index, {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": dou_access})
 
             hp = SettingManager.get(key="home_page", default="false")
             if hp not in ['', 'false']:

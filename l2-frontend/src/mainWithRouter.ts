@@ -849,19 +849,6 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/document-manager',
-      name: 'document-manager',
-      component: () => import('@/pages/DocumentManagement/DocumentManager.vue'),
-      meta: {
-        title: 'ДОУ',
-        fullPageLayout: true,
-        groups: ['ДОУ: просмотр документов'],
-        openIfModule: 'document_manager_for_all',
-        module: 'document_manager_enabled',
-        showDouFavorites: true,
-      },
-    },
-    {
       path: '/ui/document-manager-2',
       name: 'document-manager-2',
       component: () => import('@/pages/DocumentManagement/DocumentManager2.vue'),

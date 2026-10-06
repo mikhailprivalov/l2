@@ -46,104 +46,11 @@
           :key="item.id"
           class="bank-receipts__group"
         >
-        <div
-          class="bank-receipts__row"
-          :class="{ 'bank-receipts__row--parent': item.not_control }"
-        >
-          <template v-if="editingId === item.id && editingParentId === null">
-            <input
-              v-model="formDate"
-              class="form-control bank-field bank-field--date"
-              type="date"
-              :disabled="saving"
-            >
-            <Treeselect
-              v-model="formPaymentTypeId"
-              :multiple="false"
-              :disable-branch-nodes="true"
-              :options="paymentTypeOptions"
-              placeholder="Вид платежа…"
-              :clearable="true"
-              :append-to-body="true"
-              :disabled="saving"
-              class="treeselect-wide treeselect-34px treeselect-noborder bank-field--type"
-            />
-            <input
-              v-model="formAmount"
-              class="form-control bank-field bank-field--amount"
-              type="number"
-              min="0"
-              step="0.01"
-              :disabled="saving"
-            >
-            <input
-              v-model.trim="formComment"
-              class="form-control bank-field bank-field--comment"
-              type="text"
-              placeholder="Комментарий"
-              :disabled="saving"
-            >
-            <button
-              class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-              type="button"
-              title="Сохранить"
-              :disabled="saving || !canSave"
-              @click="saveEdit"
-            >
-              <i class="fa fa-save" />
-            </button>
-            <button
-              class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-              type="button"
-              title="Удалить"
-              :disabled="saving"
-              @click="removeItem(item)"
-            >
-              <i class="fa fa-minus" />
-            </button>
-          </template>
-          <template v-else>
-            <span class="bank-receipts__date">{{ formatDate(item.date) }}</span>
-            <span
-              class="bank-receipts__type"
-              :title="item.payment_type_title"
-            >{{ item.payment_type_title || '—' }}</span>
-            <span
-              class="bank-receipts__amount"
-              :class="parentAmountClass(item)"
-            >{{ formatParentAmount(item) }}</span>
-            <span
-              class="bank-receipts__comment"
-              :title="item.comment"
-            >{{ item.comment }}</span>
-            <button
-              class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-              type="button"
-              title="Редактировать"
-              :disabled="isBusy"
-              @click="startEditRoot(item)"
-            >
-              <i class="fa fa-pencil" />
-            </button>
-            <button
-              class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-              type="button"
-              title="Удалить"
-              :disabled="isBusy"
-              @click="removeItem(item)"
-            >
-              <i class="fa fa-minus" />
-            </button>
-          </template>
-        </div>
-
-        <template v-if="item.not_control">
           <div
-            v-for="child in (item.parent_pay_receipt || [])"
-            :key="`child-${child.id}`"
-            class="bank-receipts__row bank-receipts__row--child"
+            class="bank-receipts__row"
+            :class="{ 'bank-receipts__row--parent': item.not_control }"
           >
-            <template v-if="editingId === child.id && editingParentId === item.id">
+            <template v-if="editingId === item.id && editingParentId === null">
               <input
                 v-model="formDate"
                 class="form-control bank-field bank-field--date"
@@ -154,7 +61,7 @@
                 v-model="formPaymentTypeId"
                 :multiple="false"
                 :disable-branch-nodes="true"
-                :options="paymentTypeAllocOptions"
+                :options="paymentTypeOptions"
                 placeholder="Вид платежа…"
                 :clearable="true"
                 :append-to-body="true"
@@ -190,28 +97,31 @@
                 type="button"
                 title="Удалить"
                 :disabled="saving"
-                @click="removeItem(child)"
+                @click="removeItem(item)"
               >
                 <i class="fa fa-minus" />
               </button>
             </template>
             <template v-else>
-              <span class="bank-receipts__date">{{ formatDate(child.date) }}</span>
+              <span class="bank-receipts__date">{{ formatDate(item.date) }}</span>
               <span
                 class="bank-receipts__type"
-                :title="child.payment_type_title"
-              >{{ child.payment_type_title || '—' }}</span>
-              <span class="bank-receipts__amount">{{ child.amount }}</span>
+                :title="item.payment_type_title"
+              >{{ item.payment_type_title || '—' }}</span>
+              <span
+                class="bank-receipts__amount"
+                :class="parentAmountClass(item)"
+              >{{ formatParentAmount(item) }}</span>
               <span
                 class="bank-receipts__comment"
-                :title="child.comment"
-              >{{ child.comment }}</span>
+                :title="item.comment"
+              >{{ item.comment }}</span>
               <button
                 class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
                 type="button"
                 title="Редактировать"
                 :disabled="isBusy"
-                @click="startEditChild(item, child)"
+                @click="startEditRoot(item)"
               >
                 <i class="fa fa-pencil" />
               </button>
@@ -220,143 +130,233 @@
                 type="button"
                 title="Удалить"
                 :disabled="isBusy"
-                @click="removeItem(child)"
+                @click="removeItem(item)"
               >
                 <i class="fa fa-minus" />
               </button>
             </template>
           </div>
 
-          <div
-            v-if="creatingParentId === item.id"
-            class="bank-receipts__row bank-receipts__row--child bank-receipts__row--form"
-          >
-            <input
-              v-model="formDate"
-              class="form-control bank-field bank-field--date"
-              type="date"
-              :disabled="saving"
+          <template v-if="item.not_control">
+            <div
+              v-for="child in (item.parent_pay_receipt || [])"
+              :key="`child-${child.id}`"
+              class="bank-receipts__row bank-receipts__row--child"
             >
-            <Treeselect
-              v-model="formPaymentTypeId"
-              :multiple="false"
-              :disable-branch-nodes="true"
-              :options="paymentTypeAllocOptions"
-              placeholder="Вид платежа…"
-              :clearable="true"
-              :append-to-body="true"
-              :disabled="saving"
-              class="treeselect-wide treeselect-34px treeselect-noborder bank-field--type"
-            />
-            <input
-              v-model="formAmount"
-              class="form-control bank-field bank-field--amount"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Сумма"
-              :disabled="saving"
-            >
-            <input
-              v-model.trim="formComment"
-              class="form-control bank-field bank-field--comment"
-              type="text"
-              placeholder="Комментарий"
-              :disabled="saving"
-            >
-            <button
-              class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-              type="button"
-              title="Сохранить"
-              :disabled="saving || !canSave"
-              @click="saveCreate"
-            >
-              <i class="fa fa-save" />
-            </button>
-            <button
-              class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-              type="button"
-              title="Отмена"
-              :disabled="saving"
-              @click="cancelForm"
-            >
-              <i class="fa fa-times" />
-            </button>
-          </div>
+              <template v-if="editingId === child.id && editingParentId === item.id">
+                <input
+                  v-model="formDate"
+                  class="form-control bank-field bank-field--date"
+                  type="date"
+                  :disabled="saving"
+                >
+                <Treeselect
+                  v-model="formPaymentTypeId"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="paymentTypeAllocOptions"
+                  placeholder="Вид платежа…"
+                  :clearable="true"
+                  :append-to-body="true"
+                  :disabled="saving"
+                  class="treeselect-wide treeselect-34px treeselect-noborder bank-field--type"
+                />
+                <input
+                  v-model="formAmount"
+                  class="form-control bank-field bank-field--amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  :disabled="saving"
+                >
+                <input
+                  v-model.trim="formComment"
+                  class="form-control bank-field bank-field--comment"
+                  type="text"
+                  placeholder="Комментарий"
+                  :disabled="saving"
+                >
+                <button
+                  class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                  type="button"
+                  title="Сохранить"
+                  :disabled="saving || !canSave"
+                  @click="saveEdit"
+                >
+                  <i class="fa fa-save" />
+                </button>
+                <button
+                  class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                  type="button"
+                  title="Удалить"
+                  :disabled="saving"
+                  @click="removeItem(child)"
+                >
+                  <i class="fa fa-minus" />
+                </button>
+              </template>
+              <template v-else>
+                <span class="bank-receipts__date">{{ formatDate(child.date) }}</span>
+                <span
+                  class="bank-receipts__type"
+                  :title="child.payment_type_title"
+                >{{ child.payment_type_title || '—' }}</span>
+                <span class="bank-receipts__amount">{{ child.amount }}</span>
+                <span
+                  class="bank-receipts__comment"
+                  :title="child.comment"
+                >{{ child.comment }}</span>
+                <button
+                  class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                  type="button"
+                  title="Редактировать"
+                  :disabled="isBusy"
+                  @click="startEditChild(item, child)"
+                >
+                  <i class="fa fa-pencil" />
+                </button>
+                <button
+                  class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                  type="button"
+                  title="Удалить"
+                  :disabled="isBusy"
+                  @click="removeItem(child)"
+                >
+                  <i class="fa fa-minus" />
+                </button>
+              </template>
+            </div>
 
-          <div
-            v-else
-            class="bank-receipts__row bank-receipts__row--child bank-receipts__row--add"
-          >
-            <button
-              class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-              type="button"
-              title="Добавить распределение"
-              :disabled="isBusy"
-              @click="startCreateChild(item)"
+            <div
+              v-if="creatingParentId === item.id"
+              class="bank-receipts__row bank-receipts__row--child bank-receipts__row--form"
             >
-              <i class="fa fa-plus" />
-            </button>
-          </div>
-        </template>
-      </div>
+              <input
+                v-model="formDate"
+                class="form-control bank-field bank-field--date"
+                type="date"
+                :disabled="saving"
+              >
+              <Treeselect
+                v-model="formPaymentTypeId"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="paymentTypeAllocOptions"
+                placeholder="Вид платежа…"
+                :clearable="true"
+                :append-to-body="true"
+                :disabled="saving"
+                class="treeselect-wide treeselect-34px treeselect-noborder bank-field--type"
+              />
+              <input
+                v-model="formAmount"
+                class="form-control bank-field bank-field--amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Сумма"
+                :disabled="saving"
+              >
+              <input
+                v-model.trim="formComment"
+                class="form-control bank-field bank-field--comment"
+                type="text"
+                placeholder="Комментарий"
+                :disabled="saving"
+              >
+              <button
+                class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                type="button"
+                title="Сохранить"
+                :disabled="saving || !canSave"
+                @click="saveCreate"
+              >
+                <i class="fa fa-save" />
+              </button>
+              <button
+                class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                type="button"
+                title="Отмена"
+                :disabled="saving"
+                @click="cancelForm"
+              >
+                <i class="fa fa-times" />
+              </button>
+            </div>
 
-      <div
-        v-if="creatingRoot"
-        class="bank-receipts__row bank-receipts__row--form"
-      >
-        <input
-          v-model="formDate"
-          class="form-control bank-field bank-field--date"
-          type="date"
-          :disabled="saving"
+            <div
+              v-else
+              class="bank-receipts__row bank-receipts__row--child bank-receipts__row--add"
+            >
+              <button
+                class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+                type="button"
+                title="Добавить распределение"
+                :disabled="isBusy"
+                @click="startCreateChild(item)"
+              >
+                <i class="fa fa-plus" />
+              </button>
+            </div>
+          </template>
+        </div>
+
+        <div
+          v-if="creatingRoot"
+          class="bank-receipts__row bank-receipts__row--form"
         >
-        <Treeselect
-          v-model="formPaymentTypeId"
-          :multiple="false"
-          :disable-branch-nodes="true"
-          :options="paymentTypeOptions"
-          placeholder="Вид платежа…"
-          :clearable="true"
-          :append-to-body="true"
-          :disabled="saving"
-          class="treeselect-wide treeselect-34px treeselect-noborder bank-field--type"
-        />
-        <input
-          v-model="formAmount"
-          class="form-control bank-field bank-field--amount"
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="Сумма"
-          :disabled="saving"
-        >
-        <input
-          v-model.trim="formComment"
-          class="form-control bank-field bank-field--comment"
-          type="text"
-          placeholder="Комментарий"
-          :disabled="saving"
-        >
-        <button
-          class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-          type="button"
-          title="Сохранить"
-          :disabled="saving || !canSave"
-          @click="saveCreate"
-        >
-          <i class="fa fa-save" />
-        </button>
-        <button
-          class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
-          type="button"
-          title="Отмена"
-          :disabled="saving"
-          @click="cancelForm"
-        >
-          <i class="fa fa-times" />
-        </button>
-      </div>
+          <input
+            v-model="formDate"
+            class="form-control bank-field bank-field--date"
+            type="date"
+            :disabled="saving"
+          >
+          <Treeselect
+            v-model="formPaymentTypeId"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="paymentTypeOptions"
+            placeholder="Вид платежа…"
+            :clearable="true"
+            :append-to-body="true"
+            :disabled="saving"
+            class="treeselect-wide treeselect-34px treeselect-noborder bank-field--type"
+          />
+          <input
+            v-model="formAmount"
+            class="form-control bank-field bank-field--amount"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Сумма"
+            :disabled="saving"
+          >
+          <input
+            v-model.trim="formComment"
+            class="form-control bank-field bank-field--comment"
+            type="text"
+            placeholder="Комментарий"
+            :disabled="saving"
+          >
+          <button
+            class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+            type="button"
+            title="Сохранить"
+            :disabled="saving || !canSave"
+            @click="saveCreate"
+          >
+            <i class="fa fa-save" />
+          </button>
+          <button
+            class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+            type="button"
+            title="Отмена"
+            :disabled="saving"
+            @click="cancelForm"
+          >
+            <i class="fa fa-times" />
+          </button>
+        </div>
 
         <div
           v-if="!creatingRoot"

@@ -372,6 +372,23 @@
           @input="onMainCase"
         />
       </div>
+      <div
+        v-if="!caseListMode && (research || loaded)"
+        class="doc-case-select"
+      >
+        <span>Блок</span>
+        <Treeselect
+          :value="selectedBlockId"
+          class="doc-case-select__field"
+          :multiple="false"
+          :options="availableBlocks"
+          :disabled="!canChangeBlock"
+          placeholder="Выберите блок"
+          no-options-text="Нет доступных блоков"
+          :append-to-body="true"
+          @input="onMainBlock"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -431,6 +448,9 @@ const canCloseCase = ref(false);
 const caseInFavorite = ref(false);
 const selectedCaseId = ref<number | null>(null);
 const availableCases = ref<{ id: number; label: string }[]>([]);
+const selectedBlockId = ref<number | null>(null);
+const availableBlocks = ref<{ id: number; label: string }[]>([]);
+const canChangeBlock = ref(true);
 const whoConfirmed = ref('');
 const patient = {};
 
@@ -633,6 +653,9 @@ const load = async () => {
   caseInFavorite.value = false;
   selectedCaseId.value = null;
   availableCases.value = [];
+  selectedBlockId.value = null;
+  availableBlocks.value = [];
+  canChangeBlock.value = true;
   caseDocuments.value = [];
   whoConfirmed.value = '';
   if (!props.documentId) {
@@ -680,6 +703,9 @@ const load = async () => {
         }));
       }
       availableCases.value = result.availableCases || [];
+      selectedBlockId.value = result.blockId || null;
+      availableBlocks.value = result.availableBlocks || [];
+      canChangeBlock.value = result.canChangeBlock !== false;
       whoConfirmed.value = result.whoConfirmed || '';
       if (result.reviewedNow) {
         emit('reviewed');
@@ -758,6 +784,29 @@ const assignDocumentCase = async (documentId: number, caseId: number | null) => 
   }
   root.$emit('msg', 'ok', caseId ? 'Документ добавлен в дело' : 'Документ убран из дела');
   return result;
+};
+
+const assignDocumentBlock = async (documentId: number, blockId: number | null) => {
+  const result = await api('document-manager/documents/block', { id: documentId, blockId });
+  if (!result?.ok) {
+    root.$emit('msg', 'error', result?.message || 'Не удалось изменить блок');
+    return null;
+  }
+  root.$emit('msg', 'ok', blockId ? 'Документ добавлен в блок' : 'Документ убран из блока');
+  return result;
+};
+
+const onMainBlock = async (blockId: number | null) => {
+  const next = blockId || null;
+  if (!props.documentId || !canChangeBlock.value || next === selectedBlockId.value) {
+    return;
+  }
+  const previous = selectedBlockId.value;
+  selectedBlockId.value = next;
+  const result = await assignDocumentBlock(props.documentId, next);
+  if (!result) {
+    selectedBlockId.value = previous;
+  }
 };
 
 const onMainCase = async (caseId: number | null) => {
