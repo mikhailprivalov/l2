@@ -76,6 +76,27 @@
           />
         </div>
 
+        <div
+          v-if="showAnatomicalArea"
+          class="request-fields"
+        >
+          <FormulateInput
+            class="half-width"
+            type="text"
+            name="anatomy"
+            label="Анатомическая область"
+            placeholder="Анатомическая область"
+            maxlength="255"
+          />
+          <FormulateInput
+            class="half-width"
+            type="text"
+            name="visitReason"
+            label="Причина обращения"
+            placeholder="Причина обращения"
+            maxlength="255"
+          />
+        </div>
         <div class="request-fields">
           <FormulateInput
             class="full-width"
@@ -198,6 +219,7 @@ const fileInput = ref<HTMLInputElement>();
 const notify = useNotify();
 const store = useStore();
 const showCode = computed(() => !!store.getters.modules.show_code_in_request_creation);
+const showAnatomicalArea = computed(() => !!store.getters.modules.show_anatomical_area_in_request_creation);
 const fileLimits = computed(() => requestFileLimitsFromModules(store.getters.modules));
 const fileUploadHint = computed(() => requestFileHint(fileLimits.value));
 const fileAccept = computed(() => requestFileAccept(fileLimits.value));

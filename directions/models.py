@@ -607,6 +607,8 @@ class Napravleniya(models.Model):
     text_contrast = models.CharField(max_length=50, default='', blank=True, help_text='Вид контраста текстом')
     dose = models.CharField(max_length=50, default='', blank=True, help_text='Доза')
     request_code = models.CharField(max_length=100, default='', blank=True, help_text='Код заявки (без / и \\)')
+    anatomical_area = models.CharField(max_length=255, default='', blank=True, help_text='Анатомическая область')
+    visit_reason = models.CharField(max_length=255, default='', blank=True, help_text='Причина обращения')
     anamnesis = models.TextField(default='', blank=True, help_text='Краткий анамнез')
     direction_comment = models.TextField(default='', blank=True, help_text='Комментарий к направлению')
     accept_who_doctor = models.ForeignKey(
@@ -625,6 +627,14 @@ class Napravleniya(models.Model):
                 raise ValueError('Код не должен содержать / или \\')
             code = code.replace('/', '').replace('\\', '')
         return code[:100]
+
+    @staticmethod
+    def normalize_anatomical_area(value):
+        return str(value or '').strip()[:255]
+
+    @staticmethod
+    def normalize_visit_reason(value):
+        return str(value or '').strip()[:255]
 
     def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()

@@ -581,6 +581,8 @@ WEB_PLUGIN_LINK_STUDY = None
 SHOW_REQUESTS_FILL_DICOM_DOWNLOAD = False
 # Поле «Код» после «Объём» на /ui/request-creation. Переопределение в laboratory/local_settings.py
 SHOW_CODE_IN_REQUEST_CREATION = False
+# Поле «Анатомическая область» перед «Краткий анамнез» на /ui/request-creation. Переопределение в laboratory/local_settings.py
+SHOW_ANATOMICAL_AREA_IN_REQUEST_CREATION = False
 # Суммарный размер файлов одной заявки на /ui/request-creation, МБ.
 # Переопределение в laboratory/local_settings.py
 REQUEST_CREATION_FILES_MAX_TOTAL_MB = 10
