@@ -2748,11 +2748,11 @@ class Documents(models.Model):
         return start, end, None
 
     @staticmethod
-    def search(query, by_number=False, by_text=False, who=None, limit=50, date_from=None, date_to=None):
+    def search(query, by_number=False, by_text=False, by_case=False, who=None, limit=50, date_from=None, date_to=None):
         query = (query or "").strip()
         if not query:
             return {"ok": False, "message": "Введите запрос"}
-        if not by_number and not by_text:
+        if not by_number and not by_text and not by_case:
             return {"ok": False, "message": "Выберите способ поиска"}
         start, end, date_error = Documents._search_dates(date_from, date_to)
         if date_error:
@@ -2760,7 +2760,8 @@ class Documents(models.Model):
         found_ids = []
         seen = set()
 
-        number_only = bool(by_number) and not bool(by_text)
+        number_only = bool(by_number) and not bool(by_text) and not bool(by_case)
+        case_only = bool(by_case) and not bool(by_number) and not bool(by_text)
 
         def in_period(qs, field="create_at"):
             if number_only:
@@ -2781,7 +2782,24 @@ class Documents(models.Model):
                     return True
             return False
 
-        if by_number:
+        if case_only:
+            import re
+
+            from document_management.sql_func import search_cases_by_topic
+
+            found = search_cases_by_topic(re.escape(query), limit)
+            case_ids = [row.id for row in found]
+            cases = [case for case in DocumentCase.objects.filter(pk__in=case_ids) if case.can_access(who)]
+            order = {pk: index for index, pk in enumerate(case_ids)}
+            cases.sort(key=lambda case: order.get(case.pk, 0))
+            if not cases:
+                return {"ok": False, "message": "Дело не найдено"}
+            rows = []
+            for case in cases:
+                rows.append({"id": case.pk, "title": Documents.title_with_id(case.pk, case.topic or ""), "isCase": True})
+            message = rows[0]["title"] if len(rows) == 1 else f"Найдено {len(rows)}"
+            return {"ok": True, "result": rows, "cases": True, "message": message}
+        elif by_number:
             digits = "".join(ch for ch in query if ch.isdigit())
             if not digits:
                 if not by_text:

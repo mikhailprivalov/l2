@@ -1,7 +1,7 @@
 <template>
   <div class="viewer-root">
     <div
-      v-if="!documentId"
+      v-if="!documentId && !caseId"
       class="empty"
     >
       Выберите документ
@@ -110,7 +110,7 @@
           />
         </div>
         <div
-          v-if="showCaseDocuments && caseDocuments.length"
+          v-if="caseListMode && (caseDocuments.length || caseId)"
           class="case-docs"
         >
           <div class="case-docs__head">
@@ -411,6 +411,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 const props = defineProps<{
   documentId?: number | null;
+  caseId?: number | null;
   showCaseDocuments?: boolean;
 }>();
 
@@ -477,7 +478,7 @@ type CaseDocumentRow = {
 
 const caseDocuments = ref<CaseDocumentRow[]>([]);
 
-const caseListMode = computed(() => Boolean(props.showCaseDocuments && caseBlock.value));
+const caseListMode = computed(() => Boolean((props.showCaseDocuments || props.caseId) && caseBlock.value));
 
 const printHref = (id: number, format: 'docx' | 'pdf') => (
   `${window.location.origin}/api/document-manager/documents/print?id=${id}&format=${format}`
@@ -627,6 +628,44 @@ const saveRequest = async (payload) => {
   return api('document-manager/documents/save', payload);
 };
 
+const fillCase = (caseData) => {
+  if (!caseData) {
+    return;
+  }
+  caseBlock.value = {
+    id: caseData.id,
+    createdAt: caseData.createdAt || '',
+    creator: caseData.creator || '',
+  };
+  caseTopic.value = caseData.topic || '';
+  savedCaseTopic.value = caseTopic.value;
+  caseAccess.value = JSON.stringify(caseData.access || []);
+  canEditCaseAccess.value = Boolean(caseData.canEditAccess);
+  caseComment.value = caseData.comment || '';
+  savedCaseComment.value = caseComment.value;
+  caseClosedAt.value = caseData.closedAt || '';
+  caseClosedBy.value = caseData.closedBy || '';
+  canEditCase.value = Boolean(caseData.canEdit);
+  canEditCaseTopic.value = Boolean(caseData.canEditTopic);
+  canCloseCase.value = Boolean(caseData.canClose);
+  caseInFavorite.value = Boolean(caseData.isFavorite);
+  selectedCaseId.value = caseData.closedAt ? null : caseData.id;
+  caseDocuments.value = (caseData.documents || []).map(row => ({
+    id: row.id,
+    topic: row.topic || '',
+    typeTitle: row.typeTitle || '',
+    createdAt: row.createdAt || '',
+    creator: row.creator || '',
+    ...blankDocumentBody(),
+  }));
+};
+
+const casePayload = (extra: Record<string, unknown> = {}) => (
+  props.caseId && !props.documentId
+    ? { caseId: props.caseId, ...extra }
+    : { id: props.documentId, ...extra }
+);
+
 const load = async () => {
   title.value = '';
   research.value = null;
@@ -658,6 +697,21 @@ const load = async () => {
   canChangeBlock.value = true;
   caseDocuments.value = [];
   whoConfirmed.value = '';
+  if (props.caseId && !props.documentId) {
+    await store.dispatch(actions.INC_LOADING);
+    try {
+      const result = await api('document-manager/cases/details', { id: props.caseId });
+      if (result?.ok) {
+        fillCase(result);
+      } else {
+        root.$emit('msg', 'error', result?.message || 'Дело не найдено');
+      }
+    } finally {
+      loaded.value = true;
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    return;
+  }
   if (!props.documentId) {
     return;
   }
@@ -674,34 +728,7 @@ const load = async () => {
       canReset.value = Boolean(result.canReset);
       hasPrintTemplate.value = Boolean(result.hasPrintTemplate);
       inFavorite.value = Boolean(result.isFavorite);
-      if (result.case) {
-        caseBlock.value = {
-          id: result.case.id,
-          createdAt: result.case.createdAt || '',
-          creator: result.case.creator || '',
-        };
-        caseTopic.value = result.case.topic || '';
-        savedCaseTopic.value = caseTopic.value;
-        caseAccess.value = JSON.stringify(result.case.access || []);
-        canEditCaseAccess.value = Boolean(result.case.canEditAccess);
-        caseComment.value = result.case.comment || '';
-        savedCaseComment.value = caseComment.value;
-        caseClosedAt.value = result.case.closedAt || '';
-        caseClosedBy.value = result.case.closedBy || '';
-        canEditCase.value = Boolean(result.case.canEdit);
-        canEditCaseTopic.value = Boolean(result.case.canEditTopic);
-        canCloseCase.value = Boolean(result.case.canClose);
-        caseInFavorite.value = Boolean(result.case.isFavorite);
-        selectedCaseId.value = result.case.closedAt ? null : result.case.id;
-        caseDocuments.value = (result.case.documents || []).map(row => ({
-          id: row.id,
-          topic: row.topic || '',
-          typeTitle: row.typeTitle || '',
-          createdAt: row.createdAt || '',
-          creator: row.creator || '',
-          ...blankDocumentBody(),
-        }));
-      }
+      fillCase(result.case);
       availableCases.value = result.availableCases || [];
       selectedBlockId.value = result.blockId || null;
       availableBlocks.value = result.availableBlocks || [];
@@ -720,7 +747,8 @@ const load = async () => {
 };
 
 const saveCaseTopic = async () => {
-  if (!canEditCaseTopic.value || !props.documentId || !caseBlock.value || caseTopic.value === savedCaseTopic.value) {
+  const anchored = Boolean(props.documentId || props.caseId);
+  if (!canEditCaseTopic.value || !anchored || !caseBlock.value || caseTopic.value === savedCaseTopic.value) {
     return;
   }
   const topic = caseTopic.value.trim();
@@ -729,7 +757,7 @@ const saveCaseTopic = async () => {
     root.$emit('msg', 'error', 'Укажите тему дела');
     return;
   }
-  const result = await api('document-manager/cases/topic', { id: props.documentId, topic });
+  const result = await api('document-manager/cases/topic', casePayload({ topic }));
   if (result?.ok) {
     caseTopic.value = result.topic ?? topic;
     savedCaseTopic.value = caseTopic.value;
@@ -742,10 +770,11 @@ const saveCaseTopic = async () => {
 };
 
 const saveCaseComment = async () => {
-  if (!canEditCase.value || !props.documentId || !caseBlock.value || caseComment.value === savedCaseComment.value) {
+  const anchored = Boolean(props.documentId || props.caseId);
+  if (!canEditCase.value || !anchored || !caseBlock.value || caseComment.value === savedCaseComment.value) {
     return;
   }
-  const result = await api('document-manager/cases/comment', { id: props.documentId, comment: caseComment.value });
+  const result = await api('document-manager/cases/comment', casePayload({ comment: caseComment.value }));
   if (result?.ok) {
     savedCaseComment.value = result.comment ?? caseComment.value;
     root.$emit('msg', 'ok', 'Комментарий сохранён');
@@ -755,10 +784,11 @@ const saveCaseComment = async () => {
 };
 
 const closeCase = async () => {
-  if (!canCloseCase.value || !props.documentId || !caseBlock.value) {
+  const anchored = Boolean(props.documentId || props.caseId);
+  if (!canCloseCase.value || !anchored || !caseBlock.value) {
     return;
   }
-  const result = await api('document-manager/cases/close', { id: props.documentId });
+  const result = await api('document-manager/cases/close', casePayload());
   if (result?.ok) {
     caseClosedAt.value = result.closedAt || '';
     caseClosedBy.value = result.closedBy || '';
@@ -957,7 +987,8 @@ onUnmounted(() => {
 });
 
 const onCaseAccess = async (value: string) => {
-  if (!canEditCaseAccess.value || !props.documentId || value === caseAccess.value) {
+  const anchored = Boolean(props.documentId || props.caseId);
+  if (!canEditCaseAccess.value || !anchored || value === caseAccess.value) {
     return;
   }
   const previous = caseAccess.value;
@@ -968,7 +999,7 @@ const onCaseAccess = async (value: string) => {
   } catch {
     members = [];
   }
-  const result = await api('document-manager/cases/access', { id: props.documentId, members });
+  const result = await api('document-manager/cases/access', casePayload({ members }));
   if (result?.ok) {
     caseAccess.value = JSON.stringify(result.access || members);
     root.$emit('msg', 'ok', 'Доступ сохранён');
@@ -1155,7 +1186,7 @@ const setDocumentHidden = async (id: number, hidden: boolean) => {
   }
 };
 
-watch(() => props.documentId, load, { immediate: true });
+watch(() => [props.documentId, props.caseId], load, { immediate: true });
 </script>
 
 <style scoped lang="scss">

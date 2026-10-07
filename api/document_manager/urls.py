@@ -10,6 +10,7 @@ urlpatterns = [
     path('types/print-template', views.types_print_template),
     path('types/print-template-delete', views.types_print_template_delete),
     path('cases/list', views.cases_list),
+    path('cases/details', views.cases_details),
     path('cases/update', views.cases_update),
     path('cases/access', views.cases_access),
     path('cases/comment', views.cases_comment),
