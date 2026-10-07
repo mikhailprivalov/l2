@@ -1779,6 +1779,7 @@ def list_record_favorites(doctor, cases=False):
         .filter(Documents.case_access_q(doctor, "document__"))
         .select_related("document", "document__type_document", "document__document_case")
         .order_by("-pk")
+        .distinct()
     )
     documents = [row.document for row in rows if row.document_id]
     if not documents:
@@ -2878,7 +2879,7 @@ class Documents(models.Model):
             qs = qs.filter(is_hidden=True)
         else:
             qs = qs.filter(is_hidden=False)
-        docs = list(qs)
+        docs = list(qs.distinct())
         if not docs:
             return []
 
@@ -3492,7 +3493,7 @@ class DocumentReview(models.Model):
             qs = qs.filter(doctor_review=who)
         else:
             qs = qs.none()
-        return qs
+        return qs.distinct()
 
     @classmethod
     def pending_document_ids(cls, who):
@@ -3638,6 +3639,7 @@ class DocumentRecent(models.Model):
             .filter(Documents.case_access_q(who, "document__"))
             .select_related("document", "document__type_document", "document__schema")
             .order_by("-opened_at", "-pk")
+            .distinct()
         )
         offset = (page - 1) * page_size
         rows = list(qs[offset : offset + page_size + 1])
