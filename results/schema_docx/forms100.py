@@ -311,7 +311,6 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         peroral_amount = f"{data.get('пр-Пероральный контраст', '')}"
         allergy = f"{data.get('пр-Аллергическая реакция', '')}"
 
-
         meta_info = {
             "contrast_amount": contrast_amount,
             "area": anatomical_area,
