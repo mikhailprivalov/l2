@@ -115,7 +115,7 @@
       <input
         v-model="query"
         class="form-control search"
-        :placeholder="byText ? 'Номер или текст' : 'Номер документа'"
+        :placeholder="searchPlaceholder"
         :maxlength="byNumber && !byText ? 15 : 128"
         spellcheck="false"
         @keypress.enter="searchDocuments"
@@ -130,6 +130,17 @@
           tabindex="-1"
         >
         <span>по номеру</span>
+      </label>
+      <label
+        class="mode-check"
+        @click.prevent="toggleMode('case')"
+      >
+        <input
+          type="checkbox"
+          :checked="byCase"
+          tabindex="-1"
+        >
+        <span>по делу</span>
       </label>
       <label
         class="mode-check"
@@ -428,6 +439,7 @@ const storedLeftWidth = readStoredLeftWidth();
 const leftWidthPx = ref(storedLeftWidth ?? issuingButtonCenter(window.innerWidth));
 const query = ref('');
 const byNumber = ref(true);
+const byCase = ref(false);
 const byText = ref(false);
 const LIST_FILTER_STORAGE_KEY = 'document-registrar-list-filter';
 const LIST_ROLE_FILTERS = ['created', 'doing', 'wrote', 'onControl', 'toReview', 'recent', 'onSignature'];
@@ -492,15 +504,21 @@ const toApiDate = (value: string) => {
   return parsed.isValid() ? parsed.format('YYYY-MM-DD') : value;
 };
 
-const toggleMode = (mode: 'number' | 'text') => {
-  if (mode === 'number') {
-    byNumber.value = true;
-    byText.value = false;
-    return;
-  }
-  byNumber.value = false;
-  byText.value = true;
+const toggleMode = (mode: 'number' | 'case' | 'text') => {
+  byNumber.value = mode === 'number';
+  byCase.value = mode === 'case';
+  byText.value = mode === 'text';
 };
+
+const searchPlaceholder = computed(() => {
+  if (byText.value) {
+    return 'Номер или текст';
+  }
+  if (byCase.value) {
+    return 'Тема дела';
+  }
+  return 'Номер документа';
+});
 
 const userGroups = computed(() => store.getters.user_groups || []);
 const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
@@ -674,8 +692,8 @@ const toggleTopics = () => {
   loadDocuments();
 };
 
-watch([query, byNumber, byText], () => {
-  if (!byNumber.value || byText.value) {
+watch([query, byNumber, byCase, byText], () => {
+  if (!byNumber.value || byCase.value || byText.value) {
     return;
   }
   const digits = query.value.replace(/[^0-9]/g, '');
@@ -697,22 +715,23 @@ const searchDocuments = async () => {
   if (!text) {
     return;
   }
-  const numberSearch = byNumber.value && !byText.value;
-  const loadId = numberSearch ? ++documentsLoadId : documentsLoadId;
+  const listSearch = !byText.value;
+  const loadId = listSearch ? ++documentsLoadId : documentsLoadId;
   await store.dispatch(actions.INC_LOADING);
   try {
     const result = await api('document-manager/documents/search', {
       query: text,
       byNumber: byNumber.value,
+      byCase: byCase.value,
       byText: byText.value,
       dateFrom: toApiDate(dateRange.value[0]),
       dateTo: toApiDate(dateRange.value[1]),
     });
-    if (numberSearch && loadId !== documentsLoadId) {
+    if (listSearch && loadId !== documentsLoadId) {
       return;
     }
     if (result?.ok) {
-      if (numberSearch) {
+      if (listSearch) {
         const rows = result.result || [];
         showTopics.value = false;
         selectedBlock.value = null;
@@ -723,7 +742,7 @@ const searchDocuments = async () => {
       }
       root.$emit('msg', 'ok', result.message || 'Найдено');
     } else {
-      if (numberSearch) {
+      if (listSearch) {
         documents.value = [];
         recentHasMore.value = false;
         selectedDocument.value = null;
@@ -1081,6 +1100,7 @@ watch([roleFilter, showHidden, showMyCases, showTopics], () => {
   width: 100%;
   height: 34px;
   border-color: #b1b1b1;
+  border-right: 0;
   border-bottom: 0;
   border-radius: 0;
 }

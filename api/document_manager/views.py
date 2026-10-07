@@ -151,6 +151,23 @@ def cases_list(request):
 
 @login_required
 @group_required("ДОУ: просмотр документов")
+def cases_details(request):
+    data = _request_data(request)
+    try:
+        pk = int(data.get("id"))
+    except (TypeError, ValueError):
+        pk = 0
+    case = DocumentCase.objects.filter(pk=pk).first() if pk > 0 else None
+    doctor = getattr(request.user, "doctorprofile", None)
+    if not case or not case.can_access(doctor):
+        return status_response(False, "Дело не найдено")
+    payload = case.as_json(doctor)
+    payload["ok"] = True
+    return JsonResponse(payload)
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
 def record_favorites_list(request):
     data = _request_data(request)
     doctor = getattr(request.user, "doctorprofile", None)
@@ -249,15 +266,32 @@ def cases_update(request):
     return status_response(False, result.get("message"))
 
 
+def _case_from_request(data, doctor):
+    case_id = data.get("caseId")
+    if case_id not in (None, ""):
+        try:
+            pk = int(case_id)
+        except (TypeError, ValueError):
+            return None
+        case = DocumentCase.objects.filter(pk=pk).first()
+        if not case or not case.can_access(doctor):
+            return None
+        return case
+    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
+    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
+        return None
+    return document.document_case
+
+
 @login_required
 @group_required("ДОУ: просмотр документов")
 def cases_access(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
-    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
-    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
-        return status_response(False, "Документ не найден")
-    result = document.document_case.set_access(doctor, data.get("members"))
+    case = _case_from_request(data, doctor)
+    if not case:
+        return status_response(False, "Дело не найдено")
+    result = case.set_access(doctor, data.get("members"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -268,10 +302,10 @@ def cases_access(request):
 def cases_comment(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
-    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
-    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
-        return status_response(False, "Документ не найден")
-    result = document.document_case.set_comment(doctor, data.get("comment"))
+    case = _case_from_request(data, doctor)
+    if not case:
+        return status_response(False, "Дело не найдено")
+    result = case.set_comment(doctor, data.get("comment"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -282,10 +316,10 @@ def cases_comment(request):
 def cases_topic(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
-    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
-    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
-        return status_response(False, "Документ не найден")
-    result = document.document_case.set_topic(doctor, data.get("topic"))
+    case = _case_from_request(data, doctor)
+    if not case:
+        return status_response(False, "Дело не найдено")
+    result = case.set_topic(doctor, data.get("topic"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -296,10 +330,10 @@ def cases_topic(request):
 def cases_close(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
-    document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
-    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
-        return status_response(False, "Документ не найден")
-    result = document.document_case.close_case(doctor)
+    case = _case_from_request(data, doctor)
+    if not case:
+        return status_response(False, "Дело не найдено")
+    result = case.close_case(doctor)
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -490,6 +524,7 @@ def documents_search(request):
         data.get("query"),
         by_number=bool(data.get("byNumber")),
         by_text=bool(data.get("byText")),
+        by_case=bool(data.get("byCase")),
         who=request.user.doctorprofile,
         date_from=data.get("dateFrom"),
         date_to=data.get("dateTo"),

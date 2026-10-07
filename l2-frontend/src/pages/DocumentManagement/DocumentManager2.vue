@@ -147,6 +147,22 @@
             </button>
           </div>
         </template>
+        <template v-else-if="caseSearch">
+          <div
+            v-for="row in visibleDocuments"
+            :key="`case-${row.id}`"
+            class="doc-row"
+          >
+            <button
+              class="doc-btn"
+              :class="{ 'active-button': selectedCase === row.id }"
+              type="button"
+              @click="selectCase(row.id)"
+            >
+              <span class="doc-title">{{ row.title }}</span>
+            </button>
+          </div>
+        </template>
         <template v-else>
           <div
             v-for="document in visibleDocuments"
@@ -205,7 +221,7 @@
         <input
           v-model="query"
           class="form-control search"
-          :placeholder="byText ? 'Номер или текст' : 'Номер документа'"
+          :placeholder="searchPlaceholder"
           :maxlength="byNumber && !byText ? 15 : 128"
           spellcheck="false"
           @keypress.enter="searchDocuments"
@@ -220,6 +236,17 @@
             tabindex="-1"
           >
           <span>по номеру</span>
+        </label>
+        <label
+          class="mode-check"
+          @click.prevent="toggleMode('case')"
+        >
+          <input
+            type="checkbox"
+            :checked="byCase"
+            tabindex="-1"
+          >
+          <span>по делу</span>
         </label>
         <label
           class="mode-check"
@@ -248,8 +275,9 @@
         />
         <DocumentViewer
           v-else
-          :document-id="selectedDocument"
-          :show-case-documents="showCaseDocuments"
+          :document-id="caseSearch ? null : selectedDocument"
+          :case-id="caseSearch ? selectedCase : null"
+          :show-case-documents="showCaseDocuments || caseSearch"
           @visibility-change="onVisibilityChange"
           @reviewed="onReviewed"
         />
@@ -418,6 +446,7 @@ const caseTopicDraft = ref('');
 const pendingCreate = ref<{ typeId: number | null; caseId: number | null } | null>(null);
 const query = ref('');
 const byNumber = ref(true);
+const byCase = ref(false);
 const byText = ref(false);
 const LIST_FILTER_STORAGE_KEY = 'document-manager-2-list-filter';
 const LEFT_WIDTH_STORAGE_KEY = 'document-manager-2-left-width';
@@ -476,6 +505,8 @@ const documents = ref<{ id: number; title: string; confirmed?: boolean }[]>([]);
 const listQuery = ref('');
 const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
 const selectedDocument = ref<number | null>(null);
+const selectedCase = ref<number | null>(null);
+const caseSearch = ref(false);
 const selectedBlock = ref<number | null>(null);
 const blockModalOpen = ref(false);
 const blockTitleDraft = ref('');
@@ -505,15 +536,21 @@ const toApiDate = (value: string) => {
   return parsed.isValid() ? parsed.format('YYYY-MM-DD') : value;
 };
 
-const toggleMode = (mode: 'number' | 'text') => {
-  if (mode === 'number') {
-    byNumber.value = true;
-    byText.value = false;
-    return;
-  }
-  byNumber.value = false;
-  byText.value = true;
+const toggleMode = (mode: 'number' | 'case' | 'text') => {
+  byNumber.value = mode === 'number';
+  byCase.value = mode === 'case';
+  byText.value = mode === 'text';
 };
+
+const searchPlaceholder = computed(() => {
+  if (byText.value) {
+    return 'Номер или текст';
+  }
+  if (byCase.value) {
+    return 'Тема дела';
+  }
+  return 'Номер документа';
+});
 
 const userGroups = computed(() => store.getters.user_groups || []);
 const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
@@ -583,6 +620,8 @@ const onDocumentsScroll = () => {
 const loadDocuments = async () => {
   const loadId = ++documentsLoadId;
   documents.value = [];
+  caseSearch.value = false;
+  selectedCase.value = null;
   recentPage.value = 1;
   recentHasMore.value = false;
   const hasListFilter = roleFilter.value === 'created' || roleFilter.value === 'toReview' || roleFilter.value === 'recent';
@@ -688,8 +727,8 @@ const toggleTopics = () => {
   loadDocuments();
 };
 
-watch([query, byNumber, byText], () => {
-  if (!byNumber.value || byText.value) {
+watch([query, byNumber, byCase, byText], () => {
+  if (!byNumber.value || byCase.value || byText.value) {
     return;
   }
   const digits = query.value.replace(/[^0-9]/g, '');
@@ -711,36 +750,47 @@ const searchDocuments = async () => {
   if (!text) {
     return;
   }
-  const numberSearch = byNumber.value && !byText.value;
-  const loadId = numberSearch ? ++documentsLoadId : documentsLoadId;
+  const listSearch = !byText.value;
+  const loadId = listSearch ? ++documentsLoadId : documentsLoadId;
   await store.dispatch(actions.INC_LOADING);
   try {
     const result = await api('document-manager/documents/search', {
       query: text,
       byNumber: byNumber.value,
+      byCase: byCase.value,
       byText: byText.value,
       dateFrom: toApiDate(dateRange.value[0]),
       dateTo: toApiDate(dateRange.value[1]),
     });
-    if (numberSearch && loadId !== documentsLoadId) {
+    if (listSearch && loadId !== documentsLoadId) {
       return;
     }
     if (result?.ok) {
-      if (numberSearch) {
+      if (listSearch) {
         const rows = result.result || [];
+        const searchingCases = byCase.value;
         showTopics.value = false;
         selectedBlock.value = null;
         documents.value = rows;
         recentPage.value = 1;
         recentHasMore.value = false;
         openedFromCaseFavorite.value = false;
-        selectedDocument.value = rows[0]?.id || null;
+        caseSearch.value = searchingCases;
+        if (searchingCases) {
+          selectedDocument.value = null;
+          selectedCase.value = rows[0]?.id || null;
+        } else {
+          selectedCase.value = null;
+          selectedDocument.value = rows[0]?.id || null;
+        }
       }
       root.$emit('msg', 'ok', result.message || 'Найдено');
     } else {
-      if (numberSearch) {
+      if (listSearch) {
         documents.value = [];
         recentHasMore.value = false;
+        caseSearch.value = false;
+        selectedCase.value = null;
         selectedDocument.value = null;
       }
       root.$emit('msg', 'error', result?.message || 'Документ не найден');
@@ -854,7 +904,14 @@ const confirmCaseTopic = async () => {
 
 const selectDocument = (id: number) => {
   openedFromCaseFavorite.value = false;
+  caseSearch.value = false;
+  selectedCase.value = null;
   selectedDocument.value = id;
+};
+
+const selectCase = (id: number) => {
+  selectedCase.value = id;
+  selectedDocument.value = null;
 };
 
 const blockLabel = (block: { title: string; creator: string; createdAt: string }) => (
@@ -916,6 +973,8 @@ const openFavorite = (payload: number | { id?: number; cases?: boolean }) => {
     const topicsWereOn = showTopics.value;
     showTopics.value = false;
     selectedBlock.value = null;
+    caseSearch.value = false;
+    selectedCase.value = null;
     selectedDocument.value = id;
     if (topicsWereOn) {
       loadDocuments();
@@ -929,6 +988,8 @@ const openDocumentFromQuery = () => {
     openedFromCaseFavorite.value = false;
     showTopics.value = false;
     selectedBlock.value = null;
+    caseSearch.value = false;
+    selectedCase.value = null;
     selectedDocument.value = id;
   }
 };
@@ -1202,6 +1263,7 @@ const onReviewed = () => {
   width: 100%;
   height: 34px;
   border-color: #b1b1b1;
+  border-right: 0;
   border-bottom: 0;
   border-radius: 0;
 }
