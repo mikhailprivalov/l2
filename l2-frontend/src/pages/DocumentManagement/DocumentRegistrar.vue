@@ -70,6 +70,25 @@
         >
         <span>Скрытые</span>
       </label>
+      <label
+        class="filter-check"
+        @click.prevent="toggleTopics"
+      >
+        <input
+          type="checkbox"
+          :checked="showTopics"
+          tabindex="-1"
+        >
+        <span>Блоки</span>
+      </label>
+      <button
+        v-if="showTopics && canCreateBlocks"
+        class="blocks-add"
+        type="button"
+        @click="openBlockModal"
+      >
+        <i class="fa-regular fa-square-plus" />
+      </button>
       <button
         class="clear-x"
         type="button"
@@ -150,16 +169,42 @@
         @update:left-width-px="onLeftWidthChange"
       >
         <template #left>
-          <div
-            ref="docsEl"
-            class="doc-list"
-            @scroll="onDocumentsScroll"
-          >
-            <div
-              v-for="document in documents"
-              :key="document.id"
-              class="doc-row"
+          <div class="doc-pane">
+            <input
+              v-if="listFilterActive"
+              v-model="listQuery"
+              class="form-control list-filter"
+              type="text"
+              placeholder="Фильтр"
+              spellcheck="false"
             >
+            <div
+              ref="docsEl"
+              class="doc-list"
+              @scroll="onDocumentsScroll"
+            >
+            <template v-if="showTopics">
+              <div
+                v-for="block in visibleBlocks"
+                :key="`block-${block.id}`"
+                class="doc-row"
+              >
+                <button
+                  class="doc-btn"
+                  :class="{ 'active-button': selectedBlock === block.id }"
+                  type="button"
+                  @click="selectBlock(block.id)"
+                >
+                  <span class="doc-title">{{ blockLabel(block) }}</span>
+                </button>
+              </div>
+            </template>
+            <template v-else>
+              <div
+                v-for="document in visibleDocuments"
+                :key="document.id"
+                class="doc-row"
+              >
               <button
                 class="doc-btn"
                 :class="{ 'active-button': selectedDocument === document.id }"
@@ -172,17 +217,24 @@
                   class="fa-solid fa-pen doc-draft"
                 />
               </button>
-            </div>
+              </div>
+            </template>
             <div
               v-if="isLoadingMoreRecent"
               class="filter-check"
             >
               Загрузка...
             </div>
+            </div>
           </div>
         </template>
         <template #right>
-          <div class="split-right" />
+          <div class="split-right">
+            <DocumentBlockPanel
+              v-if="showTopics"
+              :block-id="selectedBlock"
+            />
+          </div>
         </template>
       </TwoSidedLayout>
     </div>
@@ -266,6 +318,49 @@
       </button>
     </div>
   </Modal>
+  <Modal
+    v-if="blockModalOpen"
+    show-footer="true"
+    white-bg="true"
+    max-width="480px"
+    width="100%"
+    margin-left-right="auto"
+    @close="closeBlockModal"
+  >
+    <span slot="header">Блок</span>
+    <div slot="body">
+      <label class="case-topic-label">
+        <span>Название</span>
+        <input
+          v-model="blockTitleDraft"
+          type="text"
+          class="form-control"
+          autofocus
+          @keyup.enter="confirmBlock"
+        >
+      </label>
+    </div>
+    <div
+      slot="footer"
+      class="case-topic-footer"
+    >
+      <button
+        type="button"
+        class="btn btn-blue-nb"
+        @click="closeBlockModal"
+      >
+        Отмена
+      </button>
+      <button
+        type="button"
+        class="btn btn-blue-nb"
+        :disabled="!blockTitleDraft.trim()"
+        @click="confirmBlock"
+      >
+        Создать
+      </button>
+    </div>
+  </Modal>
   </div>
 </template>
 
@@ -284,6 +379,7 @@ import RadioField from '@/fields/RadioField.vue';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import Modal from '@/ui-cards/Modal.vue';
+import DocumentBlockPanel from '@/pages/DocumentManagement/DocumentBlockPanel.vue';
 
 const LEFT_WIDTH_STORAGE_KEY = 'document-registrar-left-width';
 const MIN_SIDE_WIDTH_PX = 80;
@@ -336,19 +432,26 @@ const byText = ref(false);
 const LIST_FILTER_STORAGE_KEY = 'document-registrar-list-filter';
 const LIST_ROLE_FILTERS = ['created', 'doing', 'wrote', 'onControl', 'toReview', 'recent', 'onSignature'];
 
-const readStoredListFilter = (): { role: string | null; hidden: boolean; myCases: boolean } => {
+const readStoredListFilter = (): { role: string | null; hidden: boolean; myCases: boolean; topics: boolean } => {
   try {
     const raw = localStorage.getItem(LIST_FILTER_STORAGE_KEY);
     if (!raw) {
-      return { role: 'recent', hidden: false, myCases: false };
+      return {
+        role: 'recent', hidden: false, myCases: false, topics: false,
+      };
     }
     const data = JSON.parse(raw);
     const role = LIST_ROLE_FILTERS.includes(data?.role) ? data.role : null;
-    const hidden = Boolean(data?.hidden) && !role;
-    const myCases = Boolean(data?.myCases) && !hidden && !role;
-    return { role, hidden, myCases };
+    const topics = Boolean(data?.topics) && !role;
+    const hidden = Boolean(data?.hidden) && !role && !topics;
+    const myCases = Boolean(data?.myCases) && !hidden && !role && !topics;
+    return {
+      role, hidden, myCases, topics,
+    };
   } catch {
-    return { role: 'recent', hidden: false, myCases: false };
+    return {
+      role: 'recent', hidden: false, myCases: false, topics: false,
+    };
   }
 };
 
@@ -356,9 +459,15 @@ const storedListFilter = readStoredListFilter();
 const roleFilter = ref<string | null>(storedListFilter.role);
 const showHidden = ref(storedListFilter.hidden);
 const showMyCases = ref(storedListFilter.myCases);
+const showTopics = ref(storedListFilter.topics);
 const pendingReviewCount = ref(0);
 const documents = ref<{ id: number; title: string; confirmed?: boolean }[]>([]);
+const listQuery = ref('');
+const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
 const selectedDocument = ref<number | null>(null);
+const selectedBlock = ref<number | null>(null);
+const blockModalOpen = ref(false);
+const blockTitleDraft = ref('');
 const docsEl = ref<HTMLElement | null>(null);
 const recentPage = ref(1);
 const recentHasMore = ref(false);
@@ -395,13 +504,19 @@ const toggleMode = (mode: 'number' | 'text') => {
 
 const userGroups = computed(() => store.getters.user_groups || []);
 const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
+const canCreateBlocks = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Создание блоков'));
+const listFilterActive = computed(() => Boolean(
+  roleFilter.value || showHidden.value || showMyCases.value || showTopics.value,
+));
 if (!canViewHidden.value) {
   showHidden.value = false;
 }
 
 const toggleRole = (id: string) => {
+  listQuery.value = '';
   const next = roleFilter.value === id ? null : id;
   showMyCases.value = false;
+  showTopics.value = false;
   if (next) {
     showHidden.value = false;
   }
@@ -458,6 +573,27 @@ const loadDocuments = async () => {
   recentPage.value = 1;
   recentHasMore.value = false;
   const hasListFilter = roleFilter.value === 'created' || roleFilter.value === 'toReview' || roleFilter.value === 'recent';
+  if (showTopics.value) {
+    selectedDocument.value = null;
+    await loadPendingCount();
+    await store.dispatch(actions.INC_LOADING);
+    try {
+      const { result } = await api('document-manager/blocks/list');
+      if (loadId !== documentsLoadId) {
+        return;
+      }
+      blocks.value = result || [];
+      const stillThere = blocks.value.some(row => row.id === selectedBlock.value);
+      if (selectedBlock.value && !stillThere) {
+        selectedBlock.value = null;
+      }
+    } finally {
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    return;
+  }
+  blocks.value = [];
+  selectedBlock.value = null;
   if (!hasListFilter && !showHidden.value && !showMyCases.value) {
     await loadPendingCount();
     return;
@@ -492,10 +628,12 @@ const toggleHidden = () => {
     return;
   }
   const next = !showHidden.value;
+  listQuery.value = '';
   showHidden.value = next;
   selectedDocument.value = null;
   if (next) {
     showMyCases.value = false;
+    showTopics.value = false;
   }
   if (next && roleFilter.value) {
     roleFilter.value = null;
@@ -505,11 +643,29 @@ const toggleHidden = () => {
 };
 
 const toggleMyCases = () => {
+  listQuery.value = '';
   const next = !showMyCases.value;
   showMyCases.value = next;
   selectedDocument.value = null;
   if (next) {
     showHidden.value = false;
+    showTopics.value = false;
+    if (roleFilter.value) {
+      roleFilter.value = null;
+      return;
+    }
+  }
+  loadDocuments();
+};
+
+const toggleTopics = () => {
+  listQuery.value = '';
+  const next = !showTopics.value;
+  showTopics.value = next;
+  selectedDocument.value = null;
+  if (next) {
+    showHidden.value = false;
+    showMyCases.value = false;
     if (roleFilter.value) {
       roleFilter.value = null;
       return;
@@ -541,6 +697,8 @@ const searchDocuments = async () => {
   if (!text) {
     return;
   }
+  const numberSearch = byNumber.value && !byText.value;
+  const loadId = numberSearch ? ++documentsLoadId : documentsLoadId;
   await store.dispatch(actions.INC_LOADING);
   try {
     const result = await api('document-manager/documents/search', {
@@ -550,9 +708,26 @@ const searchDocuments = async () => {
       dateFrom: toApiDate(dateRange.value[0]),
       dateTo: toApiDate(dateRange.value[1]),
     });
+    if (numberSearch && loadId !== documentsLoadId) {
+      return;
+    }
     if (result?.ok) {
+      if (numberSearch) {
+        const rows = result.result || [];
+        showTopics.value = false;
+        selectedBlock.value = null;
+        documents.value = rows;
+        recentPage.value = 1;
+        recentHasMore.value = false;
+        selectedDocument.value = rows[0]?.id || null;
+      }
       root.$emit('msg', 'ok', result.message || 'Найдено');
     } else {
+      if (numberSearch) {
+        documents.value = [];
+        recentHasMore.value = false;
+        selectedDocument.value = null;
+      }
       root.$emit('msg', 'error', result?.message || 'Документ не найден');
     }
   } finally {
@@ -562,6 +737,58 @@ const searchDocuments = async () => {
 
 const selectDocument = (id: number) => {
   selectedDocument.value = id;
+};
+
+const blockLabel = (block: { title: string; creator: string; createdAt: string }) => (
+  [block.title, block.creator, block.createdAt].filter(part => (part || '').trim()).join(', ')
+);
+
+const folded = (value: string) => (value || '').toLocaleLowerCase();
+
+const visibleDocuments = computed(() => {
+  const filterText = folded(listQuery.value.trim());
+  if (!filterText) {
+    return documents.value;
+  }
+  return documents.value.filter(row => folded(row.title).includes(filterText));
+});
+
+const visibleBlocks = computed(() => {
+  const filterText = folded(listQuery.value.trim());
+  if (!filterText) {
+    return blocks.value;
+  }
+  return blocks.value.filter(row => folded(blockLabel(row)).includes(filterText));
+});
+
+const selectBlock = (id: number) => {
+  selectedBlock.value = id;
+};
+
+const openBlockModal = () => {
+  blockTitleDraft.value = '';
+  blockModalOpen.value = true;
+};
+
+const closeBlockModal = () => {
+  blockModalOpen.value = false;
+  blockTitleDraft.value = '';
+};
+
+const confirmBlock = async () => {
+  const title = blockTitleDraft.value.trim();
+  if (!title) {
+    root.$emit('msg', 'error', 'Укажите название блока');
+    return;
+  }
+  const result = await api('document-manager/blocks/create', { title });
+  if (!result?.ok) {
+    root.$emit('msg', 'error', result?.message || 'Не удалось создать блок');
+    return;
+  }
+  closeBlockModal();
+  selectedBlock.value = result.id;
+  await loadDocuments();
 };
 
 const canCreate = computed(() => selectedResearches.value.length === 1);
@@ -696,12 +923,13 @@ watch(roleFilter, () => {
   loadDocuments();
 });
 
-watch([roleFilter, showHidden, showMyCases], () => {
+watch([roleFilter, showHidden, showMyCases, showTopics], () => {
   try {
     localStorage.setItem(LIST_FILTER_STORAGE_KEY, JSON.stringify({
       role: roleFilter.value,
       hidden: showHidden.value,
       myCases: showMyCases.value,
+      topics: showTopics.value,
     }));
   } catch {
     // ignore storage errors
@@ -758,6 +986,18 @@ watch([roleFilter, showHidden, showMyCases], () => {
 .top-panel .btn {
   height: 34px;
   border-radius: 0;
+}
+
+.blocks-add {
+  align-self: center;
+  flex: 0 0 auto;
+  margin: 0 4px 0 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #434a54;
+  font-size: 14px;
+  line-height: 16px;
 }
 
 .clear-x {
@@ -821,6 +1061,28 @@ watch([roleFilter, showHidden, showMyCases], () => {
   height: 100%;
   min-height: 0;
   background-color: #fff;
+}
+
+.doc-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background-color: #fff;
+}
+
+.doc-pane .doc-list {
+  flex: 1 1 auto;
+  height: auto;
+}
+
+.list-filter {
+  flex: 0 0 34px;
+  width: 100%;
+  height: 34px;
+  border-color: #b1b1b1;
+  border-bottom: 0;
+  border-radius: 0;
 }
 
 .doc-list {

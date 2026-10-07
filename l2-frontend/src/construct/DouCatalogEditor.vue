@@ -153,6 +153,36 @@
           </button>
         </div>
         <div class="template-row">
+          <span class="input-group-addon">Шаблон печати</span>
+          <div class="print-template-body">
+            <template v-if="itemId <= 0">
+              Сохраните вид документа, чтобы прикрепить docx
+            </template>
+            <template v-else>
+              <span v-if="printTemplateName">{{ printTemplateName }}</span>
+              <span v-else>Файл не выбран</span>
+              <a
+                href="#"
+                class="a-under"
+                @click.prevent="pickPrintTemplate"
+              >{{ printTemplateName ? 'Заменить' : 'Добавить docx' }}</a>
+              <a
+                v-if="printTemplateName"
+                href="#"
+                class="a-under"
+                @click.prevent="removePrintTemplate"
+              >Удалить</a>
+            </template>
+          </div>
+        </div>
+        <div class="empty-templates">
+          В файле: &#123;&#123;id&#125;&#125;.
+          Для наставляемого и наставника ещё
+          &#123;&#123;id_fio&#125;&#125;,
+          &#123;&#123;id_dolzhnost&#125;&#125;,
+          &#123;&#123;id_podrazdelenie&#125;&#125;
+        </div>
+        <div class="template-row">
           <span class="input-group-addon">Создатели</span>
           <AddresseeField
             class="creators-field"
@@ -293,6 +323,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import { selectFile } from '@/utils';
 import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -331,6 +362,7 @@ const props = defineProps<{
   typeSectionIdValue?: number | null;
   accessModeValue?: string | null;
   accessMembersValue?: CreatorPerson[];
+  printTemplateNameValue?: string;
   groups?: CatalogGroup[];
   places?: CatalogGroup[];
   sectionTypes?: CatalogGroup[];
@@ -339,6 +371,7 @@ const props = defineProps<{
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
   (e: 'saved', payload: { id: number }): void;
+  (e: 'print-template', payload: { id: number; printTemplateName: string }): void;
   (e: 'cancel'): void;
 }>();
 
@@ -359,6 +392,8 @@ const columnsCount = ref<number>(10);
 const accessMode = ref<'white' | 'black'>('black');
 const accessMembers = ref<CreatorPerson[]>([]);
 const documentTypeOptions = ref<LayoutTemplateOption[]>([]);
+const printTemplateName = ref('');
+const printTemplateBusy = ref(false);
 
 const canSave = computed(() => {
   if (!title.value.trim()) {
@@ -437,6 +472,7 @@ const fill = () => {
   const n = Number(props.columnsCountValue);
   columnsCount.value = Number.isFinite(n) && n >= 1 ? n : 10;
   accessMode.value = props.accessModeValue === 'white' ? 'white' : 'black';
+  printTemplateName.value = props.printTemplateNameValue || '';
   accessMembers.value = (props.accessMembersValue || []).map(row => ({
     id: row.id,
     fio: row.fio || '',
@@ -568,6 +604,69 @@ const onAccessMembersInput = (value: string) => {
 
 const removeAccessMember = (id: number) => {
   accessMembers.value = accessMembers.value.filter(row => row.id !== id);
+};
+
+const rememberPrintTemplate = (name: string) => {
+  printTemplateName.value = name;
+  if (props.itemId > 0) {
+    emit('print-template', { id: props.itemId, printTemplateName: name });
+  }
+};
+
+const pickPrintTemplate = async () => {
+  if (props.itemId <= 0 || printTemplateBusy.value) {
+    return;
+  }
+  const file = await selectFile('.docx');
+  if (!file) {
+    return;
+  }
+  const name = (file.name || '').toLowerCase();
+  if (!name.endsWith('.docx')) {
+    root.$emit('msg', 'error', 'Нужен файл .docx');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    root.$emit('msg', 'error', 'Файл больше 5 МБ');
+    return;
+  }
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('id', String(props.itemId));
+  printTemplateBusy.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/types/print-template', null, null, null, formData);
+    if (result?.ok) {
+      rememberPrintTemplate(result.fileName || file.name);
+      root.$emit('msg', 'ok', 'Шаблон печати сохранён');
+    } else {
+      root.$emit('msg', 'error', result?.message || 'Не удалось сохранить шаблон');
+    }
+  } finally {
+    printTemplateBusy.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+const removePrintTemplate = async () => {
+  if (props.itemId <= 0 || printTemplateBusy.value || !printTemplateName.value) {
+    return;
+  }
+  printTemplateBusy.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/types/print-template-delete', { id: props.itemId });
+    if (result?.ok) {
+      rememberPrintTemplate('');
+      root.$emit('msg', 'ok', 'Шаблон печати удалён');
+    } else {
+      root.$emit('msg', 'error', result?.message || 'Не удалось удалить шаблон');
+    }
+  } finally {
+    printTemplateBusy.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
 };
 
 const loadLayoutTemplates = async () => {
@@ -847,6 +946,24 @@ const save = async () => {
 .empty-templates {
   padding: 10px;
   color: #656d78;
+}
+
+.print-template-body {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 10px;
+  background: #fff;
+  border-bottom: 1px solid #96a0ad;
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .template-item {

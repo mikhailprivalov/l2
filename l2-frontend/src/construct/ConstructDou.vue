@@ -89,10 +89,12 @@
         :type-section-id-value="selectedItem?.typeSectionId"
         :access-mode-value="selectedItem?.accessMode"
         :access-members-value="selectedItem?.accessMembers"
+        :print-template-name-value="selectedItem?.printTemplateName"
         :groups="groups"
         :places="places"
         :section-types="sectionTypes"
         @saved="onCatalogSaved"
+        @print-template="onPrintTemplate"
         @cancel="selectedId = null"
       />
       <DouDocumentStructureEditor
@@ -170,6 +172,7 @@ interface CatalogItem {
   columnsCount?: number;
   accessMode?: string;
   accessMembers?: { id: number; fio: string; department?: string }[];
+  printTemplateName?: string;
   hide?: boolean;
 }
 
@@ -367,6 +370,14 @@ const addItem = () => {
 const onCatalogSaved = async (payload: { id: number }) => {
   await loadItems();
   selectedId.value = payload.id;
+};
+
+const onPrintTemplate = (payload: { id: number; printTemplateName: string }) => {
+  items.value = items.value.map(row => (
+    row.id === payload.id
+      ? { ...row, printTemplateName: payload.printTemplateName }
+      : row
+  ));
 };
 
 const onStructureSaved = async () => {

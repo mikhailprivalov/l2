@@ -196,6 +196,19 @@
                   <div class="res-title">
                     {{ row.typeTitle }}:
                   </div>
+                  <a
+                    v-if="row.hasPrintTemplate"
+                    class="print-link a-under"
+                    :href="printHref(row.id, 'docx')"
+                    download
+                  >docx</a>
+                  <a
+                    v-if="row.hasPrintTemplate"
+                    class="print-link a-under"
+                    :href="printHref(row.id, 'pdf')"
+                    target="_blank"
+                    rel="noopener"
+                  >pdf</a>
                   <button
                     v-if="!row.confirmed"
                     class="btn btn-blue-nb"
@@ -289,6 +302,19 @@
         <div class="res-title">
           {{ title }}:
         </div>
+        <a
+          v-if="hasPrintTemplate && documentId"
+          class="print-link a-under"
+          :href="printHref(documentId, 'docx')"
+          download
+        >docx</a>
+        <a
+          v-if="hasPrintTemplate && documentId"
+          class="print-link a-under"
+          :href="printHref(documentId, 'pdf')"
+          target="_blank"
+          rel="noopener"
+        >pdf</a>
         <button
           v-if="!confirmed"
           class="btn btn-blue-nb"
@@ -346,6 +372,23 @@
           @input="onMainCase"
         />
       </div>
+      <div
+        v-if="!caseListMode && (research || loaded)"
+        class="doc-case-select"
+      >
+        <span>Блок</span>
+        <Treeselect
+          :value="selectedBlockId"
+          class="doc-case-select__field"
+          :multiple="false"
+          :options="availableBlocks"
+          :disabled="!canChangeBlock"
+          placeholder="Выберите блок"
+          no-options-text="Нет доступных блоков"
+          :append-to-body="true"
+          @input="onMainBlock"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -388,6 +431,7 @@ const confirmed = ref(false);
 const isHidden = ref(false);
 const canHide = ref(false);
 const canReset = ref(false);
+const hasPrintTemplate = ref(false);
 const inFavorite = ref(false);
 const caseBlock = ref<{ id: number; createdAt: string; creator: string } | null>(null);
 const caseTopic = ref('');
@@ -404,6 +448,9 @@ const canCloseCase = ref(false);
 const caseInFavorite = ref(false);
 const selectedCaseId = ref<number | null>(null);
 const availableCases = ref<{ id: number; label: string }[]>([]);
+const selectedBlockId = ref<number | null>(null);
+const availableBlocks = ref<{ id: number; label: string }[]>([]);
+const canChangeBlock = ref(true);
 const whoConfirmed = ref('');
 const patient = {};
 
@@ -422,6 +469,7 @@ type CaseDocumentRow = {
   isHidden: boolean;
   canHide: boolean;
   canReset: boolean;
+  hasPrintTemplate: boolean;
   whoConfirmed: string;
   caseId: number | null;
   availableCases: { id: number; label: string }[];
@@ -430,6 +478,10 @@ type CaseDocumentRow = {
 const caseDocuments = ref<CaseDocumentRow[]>([]);
 
 const caseListMode = computed(() => Boolean(props.showCaseDocuments && caseBlock.value));
+
+const printHref = (id: number, format: 'docx' | 'pdf') => (
+  `${window.location.origin}/api/document-manager/documents/print?id=${id}&format=${format}`
+);
 
 const caseDocumentHref = (id: number) => {
   const url = new URL(window.location.href);
@@ -451,6 +503,7 @@ const blankDocumentBody = () => ({
   isHidden: false,
   canHide: false,
   canReset: false,
+  hasPrintTemplate: false,
   whoConfirmed: '',
   caseId: null,
   availableCases: [],
@@ -484,6 +537,7 @@ const loadDocumentBody = async (id: number) => {
       isHidden: Boolean(result.isHidden),
       canHide: Boolean(result.canHide),
       canReset: Boolean(result.canReset),
+      hasPrintTemplate: Boolean(result.hasPrintTemplate),
       whoConfirmed: result.whoConfirmed || '',
       caseId: result.case && !result.case.closedAt ? result.case.id : null,
       availableCases: result.availableCases || [],
@@ -582,6 +636,7 @@ const load = async () => {
   isHidden.value = false;
   canHide.value = false;
   canReset.value = false;
+  hasPrintTemplate.value = false;
   inFavorite.value = false;
   caseBlock.value = null;
   caseTopic.value = '';
@@ -598,6 +653,9 @@ const load = async () => {
   caseInFavorite.value = false;
   selectedCaseId.value = null;
   availableCases.value = [];
+  selectedBlockId.value = null;
+  availableBlocks.value = [];
+  canChangeBlock.value = true;
   caseDocuments.value = [];
   whoConfirmed.value = '';
   if (!props.documentId) {
@@ -614,6 +672,7 @@ const load = async () => {
       isHidden.value = Boolean(result.isHidden);
       canHide.value = Boolean(result.canHide);
       canReset.value = Boolean(result.canReset);
+      hasPrintTemplate.value = Boolean(result.hasPrintTemplate);
       inFavorite.value = Boolean(result.isFavorite);
       if (result.case) {
         caseBlock.value = {
@@ -644,6 +703,9 @@ const load = async () => {
         }));
       }
       availableCases.value = result.availableCases || [];
+      selectedBlockId.value = result.blockId || null;
+      availableBlocks.value = result.availableBlocks || [];
+      canChangeBlock.value = result.canChangeBlock !== false;
       whoConfirmed.value = result.whoConfirmed || '';
       if (result.reviewedNow) {
         emit('reviewed');
@@ -722,6 +784,29 @@ const assignDocumentCase = async (documentId: number, caseId: number | null) => 
   }
   root.$emit('msg', 'ok', caseId ? 'Документ добавлен в дело' : 'Документ убран из дела');
   return result;
+};
+
+const assignDocumentBlock = async (documentId: number, blockId: number | null) => {
+  const result = await api('document-manager/documents/block', { id: documentId, blockId });
+  if (!result?.ok) {
+    root.$emit('msg', 'error', result?.message || 'Не удалось изменить блок');
+    return null;
+  }
+  root.$emit('msg', 'ok', blockId ? 'Документ добавлен в блок' : 'Документ убран из блока');
+  return result;
+};
+
+const onMainBlock = async (blockId: number | null) => {
+  const next = blockId || null;
+  if (!props.documentId || !canChangeBlock.value || next === selectedBlockId.value) {
+    return;
+  }
+  const previous = selectedBlockId.value;
+  selectedBlockId.value = next;
+  const result = await assignDocumentBlock(props.documentId, next);
+  if (!result) {
+    selectedBlockId.value = previous;
+  }
 };
 
 const onMainCase = async (caseId: number | null) => {
@@ -1336,5 +1421,11 @@ watch(() => props.documentId, load, { immediate: true });
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.print-link {
+  align-self: center;
+  margin-right: 12px;
+  white-space: nowrap;
 }
 </style>
