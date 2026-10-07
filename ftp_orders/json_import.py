@@ -338,6 +338,8 @@ def create_request_from_ord_payload(payload):
         direction.contrast_amount = payload.get("contrast_amount") or ""
         direction.dose = payload.get("dose") or ""
         direction.request_code = Napravleniya.normalize_request_code(payload.get("request_code") or payload.get("requestCode") or "", strict=False)
+        direction.anatomical_area = Napravleniya.normalize_anatomical_area(payload.get("anatomical_area"))
+        direction.visit_reason = Napravleniya.normalize_visit_reason(payload.get("visit_reason"))
         direction.anamnesis = payload.get("anamnesis") or ""
         direction.direction_comment = payload.get("direction_comment") or ""
         direction.text_contrast = payload.get("text_contrast") or ""

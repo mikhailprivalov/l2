@@ -110,6 +110,7 @@ const defaultRequestFields = () => ({
   time: moment().format('HH:mm'),
   modality: '',
   anatomy: '',
+  visitReason: '',
   side: '',
   contrast: '',
   contrastAmount: '',

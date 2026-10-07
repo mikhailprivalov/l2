@@ -248,6 +248,7 @@ class SettingManager:
             "document_manager_enabled": not bool(getattr(django_settings, "HIDE_DOCUMENT_MANAGER", False)),
             "show_requests_fill_dicom_download": bool(getattr(django_settings, "SHOW_REQUESTS_FILL_DICOM_DOWNLOAD", False)),
             "show_code_in_request_creation": bool(getattr(django_settings, "SHOW_CODE_IN_REQUEST_CREATION", False)),
+            "show_anatomical_area_in_request_creation": bool(getattr(django_settings, "SHOW_ANATOMICAL_AREA_IN_REQUEST_CREATION", False)),
             "research_picker_show_dou": bool(getattr(django_settings, "RESEARCH_PICKER_SHOW_DOU", False)),
             "request_creation_files_max_total_mb": SettingManager._request_creation_files_max_total_mb(),
             "request_creation_file_extensions": SettingManager._request_creation_file_extensions(),

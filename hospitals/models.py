@@ -100,6 +100,7 @@ class Hospitals(models.Model):
     dicom_auth = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="auth dicom")
     remote_dicom_server = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="dicom-данные одной строкой")
     web_plugin_link_study = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="plugin")
+    qr_code_link = models.CharField(max_length=255, blank=True, default='', help_text="Ссылка QR-кода")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

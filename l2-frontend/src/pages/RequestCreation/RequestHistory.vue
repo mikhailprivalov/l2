@@ -550,6 +550,45 @@
                 <h4 class="detail-section-title">
                   Клинические данные
                 </h4>
+                <div
+                  v-if="showAnatomicalArea"
+                  class="detail-pair-row"
+                >
+                  <div class="detail-pair-field">
+                    <span class="detail-label">Анатомическая область:</span>
+                    <input
+                      v-if="requestDetails.editable"
+                      v-model="editForm.anatomy"
+                      type="text"
+                      maxlength="255"
+                      class="form-control detail-edit-input"
+                      placeholder="Анатомическая область"
+                    >
+                    <div
+                      v-else
+                      class="detail-textarea-value detail-anatomy-value"
+                      :class="{ 'empty-value': !requestDetails.anatomy }"
+                      v-text="requestDetails.anatomy || '(не указана)'"
+                    />
+                  </div>
+                  <div class="detail-pair-field">
+                    <span class="detail-label">Причина обращения:</span>
+                    <input
+                      v-if="requestDetails.editable"
+                      v-model="editForm.visitReason"
+                      type="text"
+                      maxlength="255"
+                      class="form-control detail-edit-input"
+                      placeholder="Причина обращения"
+                    >
+                    <div
+                      v-else
+                      class="detail-textarea-value detail-anatomy-value"
+                      :class="{ 'empty-value': !requestDetails.visitReason }"
+                      v-text="requestDetails.visitReason || '(не указана)'"
+                    />
+                  </div>
+                </div>
                 <div class="detail-textarea-row">
                   <span class="detail-label">Краткий анамнез:</span>
                   <textarea
@@ -648,6 +687,7 @@ const loader = useLoader();
 const { printResults } = usePrint();
 const store = useStore();
 const showCode = computed(() => !!store.getters.modules.show_code_in_request_creation);
+const showAnatomicalArea = computed(() => !!store.getters.modules.show_anatomical_area_in_request_creation);
 
 const printResult = (id: number) => {
   printResults([id]);
@@ -699,6 +739,8 @@ type EditForm = {
   currentContrast: number;
   contrastAmount: string;
   requestCode: string;
+  anatomy: string;
+  visitReason: string;
   anamnesis: string;
   comment: string;
   files: Array<{ url: string; name: string; type: string }>;
@@ -714,6 +756,8 @@ const defaultEditForm = (): EditForm => ({
   currentContrast: -1,
   contrastAmount: '',
   requestCode: '',
+  anatomy: '',
+  visitReason: '',
   anamnesis: '',
   comment: '',
   files: [],
@@ -1030,6 +1074,8 @@ const populateEditForm = (details: any) => {
     currentContrast: details.currentContrast ?? -1,
     contrastAmount: details.contrastAmount || '',
     requestCode: details.requestCode || '',
+    anatomy: details.anatomy || '',
+    visitReason: details.visitReason || '',
     anamnesis: details.anamnesis || '',
     comment: details.comment || '',
     files: [],
@@ -1119,6 +1165,8 @@ const saveRequestDetails = async () => {
         currentContrast: editForm.value.currentContrast,
         contrastAmount: editForm.value.contrastAmount,
         requestCode: editForm.value.requestCode,
+        anatomy: editForm.value.anatomy,
+        visitReason: editForm.value.visitReason,
         anamnesis: editForm.value.anamnesis,
         comment: editForm.value.comment,
         files: editForm.value.files,
@@ -1944,6 +1992,28 @@ defineExpose({
 .detail-textarea-value.empty-value {
   color: #888;
   font-style: italic;
+}
+
+.detail-anatomy-value {
+  min-height: 0;
+}
+
+.detail-pair-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.detail-pair-field {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-pair-field .detail-label {
+  margin-bottom: 5px;
+  min-width: auto;
 }
 
 .detail-edit-row {

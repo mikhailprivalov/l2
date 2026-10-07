@@ -480,6 +480,8 @@ def create_request(request):
         direction.contrast_amount = request_fields.get('contrastAmount', '')
         direction.dose = request_fields.get('dose', '')
         direction.request_code = request_code
+        direction.anatomical_area = Napravleniya.normalize_anatomical_area(request_fields.get('anatomy', ''))
+        direction.visit_reason = Napravleniya.normalize_visit_reason(request_fields.get('visitReason', ''))
         direction.anamnesis = request_fields.get('anamnesis', '')
         direction.direction_comment = request_fields.get('comment', '')
         current_contrast = request_fields.get('currentContrast', -1)
@@ -496,6 +498,8 @@ def create_request(request):
                 'contrast_amount',
                 'dose',
                 'request_code',
+                'anatomical_area',
+                'visit_reason',
                 'anamnesis',
                 'direction_comment',
                 'fact_research_date',
@@ -618,6 +622,8 @@ def _build_request_edit_snapshot(direction, hospital_id=None):
         'contrast': direction.text_contrast or '',
         'contrastAmount': direction.contrast_amount or '',
         'requestCode': direction.request_code or '',
+        'anatomy': direction.anatomical_area or '',
+        'visitReason': direction.visit_reason or '',
         'anamnesis': direction.anamnesis or '',
         'comment': direction.direction_comment or '',
         'files': files,
@@ -692,6 +698,8 @@ def get_request_details(request):
         "contrastAmount": direction.contrast_amount or '',
         "dose": direction.dose or '',
         "requestCode": direction.request_code or '',
+        "anatomy": direction.anatomical_area or '',
+        "visitReason": direction.visit_reason or '',
         "anamnesis": direction.anamnesis or '',
         "comment": direction.direction_comment or '',
         "isCito": direction.is_cito,
@@ -777,6 +785,8 @@ def update_request(request):
         direction.contrast_amount = request_fields.get('contrastAmount', '')
         direction.dose = request_fields.get('dose', '')
         direction.request_code = request_code
+        direction.anatomical_area = Napravleniya.normalize_anatomical_area(request_fields.get('anatomy', ''))
+        direction.visit_reason = Napravleniya.normalize_visit_reason(request_fields.get('visitReason', ''))
         direction.anamnesis = request_fields.get('anamnesis', '')
         direction.direction_comment = request_fields.get('comment', '')
         current_contrast = request_fields.get('currentContrast', -1)
@@ -796,6 +806,8 @@ def update_request(request):
                 'contrast_amount',
                 'dose',
                 'request_code',
+                'anatomical_area',
+                'visit_reason',
                 'anamnesis',
                 'direction_comment',
                 'fact_research_date',

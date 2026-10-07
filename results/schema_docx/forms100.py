@@ -1,6 +1,9 @@
 from io import BytesIO
 
 import pytz
+import qrcode
+
+from api.dicom import search_dicom_study
 from appconf.manager import SettingManager
 from directions.models import DirectionDocument, DocumentSign, Napravleniya, Issledovaniya
 from docx.shared import Mm
@@ -101,6 +104,17 @@ def _certificate_stamp_image(signs):
     buffer.width_px = image.width
     buffer.height_px = image.height
     return buffer
+
+
+def qr_code_image(doc, link, size_mm=20):
+    link = (link or "").strip()
+    if not link:
+        return ""
+    image = qrcode.make(link)
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    buffer.seek(0)
+    return InlineImage(doc, buffer, width=Mm(size_mm), height=Mm(size_mm))
 
 
 def stamp_doctor_value(doc, direction, doctor):
@@ -264,6 +278,8 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
         contrast_amount = direction.contrast_amount
         dose = direction.dose
+        anatomical_area = direction.anatomical_area
+        visit_reason = direction.visit_reason
         request_code = direction.request_code
         anamnesis = direction.anamnesis
         direction_comment = direction.direction_comment
@@ -297,7 +313,9 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
         meta_info = {
             "contrast_amount": contrast_amount,
+            "area": anatomical_area,
             "dose": dose,
+            "reason": visit_reason,
             "request_code": request_code,
             "anamnesis": anamnesis,
             "direction_comment": direction_comment,
@@ -323,7 +341,23 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "peroral_amount": peroral_amount,
             "allergy": allergy,
         }
-        context = {**meta_info, **result_data, "stamp_doctor": stamp_doctor_value(doc, direction, iss.doc_confirmation)}
+        abs_qr_code_link = direction.hospital.qr_code_link
+        dicom_link = search_dicom_study(direction.pk)
+        qr_code_link = None
+        if dicom_link:
+            dicom_link_data = dicom_link.split("=")
+            dcm_tag = dicom_link_data[1]
+            qr_code_link = f"{abs_qr_code_link}={dcm_tag}"
+
+        context = {
+            **meta_info,
+            **result_data,
+            "stamp_doctor": stamp_doctor_value(doc, direction, iss.doc_confirmation),
+        }
+
+        if qr_code_link:
+            context["qr_code"] = qr_code_image(doc, qr_code_link)
+
         doc.render(context)
 
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
