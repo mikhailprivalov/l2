@@ -2,6 +2,7 @@ import json
 import os
 import shlex
 import uuid
+from datetime import date, datetime, timedelta
 from io import BytesIO
 from urllib.parse import quote
 
@@ -20,6 +21,22 @@ MENTEE_FIELD_TYPE = 46
 MENTOR_FIELD_TYPE = 47
 
 DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+_MONTHS_GENITIVE = (
+    "",
+    "января",
+    "февраля",
+    "марта",
+    "апреля",
+    "мая",
+    "июня",
+    "июля",
+    "августа",
+    "сентября",
+    "октября",
+    "ноября",
+    "декабря",
+)
 
 
 def _error(message, status=400):
@@ -73,6 +90,47 @@ def _person_print_values(raw):
     return fio or stored_fio, position, department
 
 
+def _parse_print_date(value):
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    text = str(value or "").strip()
+    if not text:
+        return None
+    for fmt in ("%d.%m.%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(text[:10], fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _shift_date(value, days, months):
+    months = int(months or 0)
+    days = int(days or 0)
+    month_index = value.month - 1 + months
+    year = value.year + month_index // 12
+    month = month_index % 12 + 1
+    if month == 12:
+        month_end = date(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        month_end = date(year, month + 1, 1) - timedelta(days=1)
+    shifted = date(year, month, min(value.day, month_end.day))
+    return shifted + timedelta(days=days)
+
+
+def ru_date(value, days=0, months=0):
+    parsed = _parse_print_date(value)
+    if not parsed:
+        return ""
+    try:
+        shifted = _shift_date(parsed, days, months)
+    except (TypeError, ValueError, OverflowError):
+        return ""
+    return f"«{shifted.day:02d}» {_MONTHS_GENITIVE[shifted.month]} {shifted.year}"
+
+
 def _context_for_iss(iss_pk):
     context = {}
     if not iss_pk:
@@ -104,7 +162,9 @@ def _render_docx_bytes(document):
 
     iss = Issledovaniya.objects.filter(document=document).order_by("pk").only("pk").first()
     template = DocxTemplate(document.type_document.print_docx.path)
-    template.render(_context_for_iss(iss.pk if iss else None))
+    context = _context_for_iss(iss.pk if iss else None)
+    context["ru_date"] = ru_date
+    template.render(context)
     buffer = BytesIO()
     template.save(buffer)
     return buffer.getvalue()

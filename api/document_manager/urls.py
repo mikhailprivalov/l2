@@ -8,6 +8,7 @@ urlpatterns = [
     path('types/list', views.types_list),
     path('types/update', views.types_update),
     path('types/print-template', views.types_print_template),
+    path('types/print-template-file', views.types_print_template_file),
     path('types/print-template-delete', views.types_print_template_delete),
     path('cases/list', views.cases_list),
     path('cases/details', views.cases_details),

@@ -1,6 +1,8 @@
+import os
+
 import simplejson as json
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 
 from document_management.models import (  # noqa: I001
     list_record_favorites,
@@ -132,6 +134,25 @@ def types_print_template_delete(request):
         return status_response(False, "Вид документа не найден")
     result = obj.clear_print_docx()
     return status_response(True, data=result)
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def types_print_template_file(request):
+    obj = TypeDocuments.objects.filter(pk=request.GET.get("id")).first()
+    if not obj or not obj.print_docx:
+        return HttpResponse("Шаблон не найден", status=404, content_type="text/plain; charset=utf-8")
+    try:
+        handle = obj.print_docx.open("rb")
+    except OSError:
+        return HttpResponse("Шаблон не найден", status=404, content_type="text/plain; charset=utf-8")
+    name = os.path.basename(obj.print_docx.name)
+    return FileResponse(
+        handle,
+        as_attachment=True,
+        filename=name,
+        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
 
 
 @login_required
