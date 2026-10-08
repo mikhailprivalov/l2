@@ -159,7 +159,12 @@
               Сохраните вид документа, чтобы прикрепить docx
             </template>
             <template v-else>
-              <span v-if="printTemplateName">{{ printTemplateName }}</span>
+              <a
+                v-if="printTemplateName"
+                class="a-under print-template-link"
+                :href="printTemplateHref"
+                download
+              >{{ printTemplateName }}</a>
               <span v-else>Файл не выбран</span>
               <a
                 href="#"
@@ -394,6 +399,9 @@ const accessMembers = ref<CreatorPerson[]>([]);
 const documentTypeOptions = ref<LayoutTemplateOption[]>([]);
 const printTemplateName = ref('');
 const printTemplateBusy = ref(false);
+const printTemplateHref = computed(() => (
+  `${window.location.origin}/api/document-manager/types/print-template-file?id=${props.itemId}`
+));
 
 const canSave = computed(() => {
   if (!title.value.trim()) {
@@ -958,7 +966,8 @@ const save = async () => {
   background: #fff;
   border-bottom: 1px solid #96a0ad;
 
-  span {
+  span,
+  .print-template-link {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
