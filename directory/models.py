@@ -197,6 +197,21 @@ class CategoryDirectory(models.Model):
         verbose_name_plural = "Категории услуг"
 
 
+class ResearchSummary(models.Model):
+    title = models.CharField(max_length=255, unique=True, help_text="Обобщающее название")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    @staticmethod
+    def get_summaries():
+        return [{"id": summary.pk, "label": summary.title} for summary in ResearchSummary.objects.all().order_by("title")]
+
+    class Meta:
+        verbose_name = "Обобщение услуги"
+        verbose_name_plural = "Обобщения услуг"
+
+
 class SubGroupPadrazdeleniye(models.Model):
     subgroup = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
@@ -415,9 +430,11 @@ class Researches(models.Model):
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код услуги в ЕЦП")
     ecp_id_synonym = models.CharField(max_length=160, default="", blank=True, verbose_name="Код услуги в ЕЦП-синоним")
+    ecp_title = models.CharField(max_length=300, default="", blank=True, verbose_name="Название ЕЦП")
     laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text="Биоматериал", on_delete=models.SET_NULL)
     sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.SET_NULL)
     category = models.ForeignKey(CategoryDirectory, blank=True, default=None, null=True, help_text="Категория", on_delete=models.SET_NULL)
+    summary = models.ForeignKey(ResearchSummary, blank=True, default=None, null=True, help_text="Обобщение", on_delete=models.SET_NULL, db_index=True)
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
     count_volume_material_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости в долях", blank=True)
@@ -644,10 +661,12 @@ class Researches(models.Model):
             "internalCode": self.internal_code,
             "ecpId": self.ecp_id,
             "ecpIdSynonym": self.ecp_id_synonym,
+            "ecpTitle": self.ecp_title,
             "preparation": self.preparation,
             "departmentId": self.podrazdeleniye_id,
             "laboratoryMaterialId": self.laboratory_material_id,
             "subGroupId": self.sub_group_id,
+            "summaryId": self.summary_id,
             "laboratoryDuration": self.laboratory_duration,
             "countVolumeMaterialForTube": self.count_volume_material_for_tube,
         }
@@ -761,12 +780,14 @@ class Researches(models.Model):
             "short_title": research_data["shortTitle"].strip() if research_data["shortTitle"] else "",
             "ecp_id": research_data["ecpId"].strip() if research_data["ecpId"] else "",
             "ecp_id_synonym": research_data["ecpIdSynonym"].strip() if research_data["ecpIdSynonym"] else "",
+            "ecp_title": (research_data.get("ecpTitle") or "").strip()[:300],
             "code": research_data["code"].strip() if research_data["code"] else "",
             "internal_code": research_data["internalCode"].strip() if research_data["internalCode"] else "",
             "preparation": research_data["preparation"],
             "department_id": research_data["departmentId"],
             "laboratory_material_id": research_data.get("laboratoryMaterialId", None),
             "sub_group_id": research_data.get("subGroupId", None),
+            "summary_id": None if research_data.get("summaryId") in (None, "", -1, "-1") else research_data.get("summaryId"),
             "laboratory_duration": research_data["laboratoryDuration"],
             "count_volume_material_for_tube": research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0,
         }
@@ -778,11 +799,13 @@ class Researches(models.Model):
         service.code = service_data["code"]
         service.ecp_id = service_data["ecp_id"]
         service.ecp_id_synonym = service_data["ecp_id_synonym"]
+        service.ecp_title = service_data["ecp_title"]
         service.internal_code = service_data["internal_code"]
         service.preparation = service_data["preparation"]
         service.podrazdeleniye_id = service_data["department_id"]
         service.laboratory_material_id = service_data["laboratory_material_id"]
         service.sub_group_id = service_data["sub_group_id"]
+        service.summary_id = service_data["summary_id"]
         service.laboratory_duration = service_data["laboratory_duration"]
         service.count_volume_material_for_tube = service_data["count_volume_material_for_tube"]
         service.save()
@@ -836,11 +859,13 @@ class Researches(models.Model):
             short_title=service_data["short_title"],
             code=service_data["code"],
             ecp_id=service_data["ecp_id"],
+            ecp_title=service_data["ecp_title"],
             internal_code=service_data["internal_code"],
             preparation=service_data["preparation"],
             podrazdeleniye_id=service_data["department_id"],
             laboratory_material_id=service_data["laboratory_material_id"],
             sub_group_id=service_data["sub_group_id"],
+            summary_id=service_data["summary_id"],
             laboratory_duration=service_data["laboratory_duration"],
             count_volume_material_for_tube=service_data["count_volume_material_for_tube"],
         )

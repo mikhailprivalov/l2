@@ -158,7 +158,7 @@ onBeforeUnmount(() => {
   width: 5px;
   height: 100%;
   cursor: col-resize;
-  z-index: 2;
+  z-index: 5;
   touch-action: none;
   position: relative;
   background: transparent;

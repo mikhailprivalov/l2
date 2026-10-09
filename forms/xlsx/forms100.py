@@ -41,6 +41,7 @@ def form_01(request_data) -> Workbook:
                 "fsidi": research.nsi_id,
                 "category": research.categoty_title,
                 "short_title": research.short_title,
+                "summary": research.summary_title or "",
                 **price_template,
             }
 
@@ -58,7 +59,7 @@ def form_01(request_data) -> Workbook:
                 if research_id in research_dict:
                     research_dict[research_id]["synonym"] = synonym
 
-    headers = ["Код по прайсу", "Услуга", "Синоним", "Код НМУ", "ФСИДИ", "Категория", "Короткое название"]
+    headers = ["Код по прайсу", "Услуга", "Синоним", "Код НМУ", "ФСИДИ", "Категория", "Короткое название", "Обобщение"]
     headers.extend(price_titles)
     work_sheet.append(headers)
 

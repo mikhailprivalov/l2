@@ -16,5 +16,9 @@ export type GetRefBooksResponse = {
     id: number
     label: string
   }[]
+  summaries: {
+    id: number
+    label: string
+  }[]
   paragraph_field_enabled: boolean
 }

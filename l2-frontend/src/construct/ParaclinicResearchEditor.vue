@@ -462,6 +462,29 @@
         </div>
         <div class="row">
           <div
+            class="col-xs-6"
+            style="padding-right: 0"
+          >
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 120px"
+              >Обобщение</span>
+              <Treeselect
+                v-model="currentSummary"
+                class="treeselect-nbr treeselect-wide"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="collectSummaries"
+                placeholder="Не выбрано"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div
             :class="expertise ? 'col-xs-5' : 'col-xs-6'"
             style="padding-right: 0"
           >
@@ -1491,6 +1514,8 @@ export default {
       currentMethod: -1,
       collectCategories: [],
       currentCategory: -1,
+      collectSummaries: [],
+      currentSummary: -1,
       assigned_to_params: [],
       type_period: null,
       cda_options: [],
@@ -1928,6 +1953,7 @@ export default {
       this.currentMethod = -1;
       this.collectMethods = [];
       this.currentCategory = -1;
+      this.currentSummary = -1;
       this.hospital_research_department_pk = -1;
       this.type_period = null;
       if (this.pk >= 0) {
@@ -1949,6 +1975,7 @@ export default {
         this.collectNsiResearchCode = data.collectNsiResearchCode;
         this.collectMethods = data.collectMethods;
         this.currentCategory = data.currentCategory;
+        this.currentSummary = data.currentSummary;
         this.speciality = data.speciality;
         this.hospital_research_department_pk = data.department;
         this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
@@ -2014,6 +2041,7 @@ export default {
         'is_diag_table',
         'currentNsiResearchCode',
         'currentCategory',
+        'currentSummary',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
@@ -2125,6 +2153,7 @@ export default {
         fileFieldAllowedExtensions: result.file_field_allowed_extensions,
       };
       this.collectCategories = result.categories;
+      this.collectSummaries = result.summaries;
       this.paragraph_field_enabled = result.paragraph_field_enabled;
     },
   },

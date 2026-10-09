@@ -4,7 +4,7 @@ import json
 import requests
 from openpyxl.reader.excel import load_workbook
 from contracts.models import PriceName, PriceCoast
-from directory.models import Researches, CategoryDirectory
+from directory.models import Researches, CategoryDirectory, ResearchSummary
 from hospitals.models import TitleResearchHospital
 from laboratory.settings import RMIS_MIDDLE_SERVER_ADDRESS, RMIS_MIDDLE_SERVER_TOKEN
 
@@ -14,6 +14,15 @@ def _find_column_index(cells, *titles):
         if title and title in cells:
             return cells.index(title)
     return None
+
+
+def _cell_text(cells, idx):
+    if idx is None or idx >= len(cells):
+        return ""
+    value = cells[idx].strip()
+    if value in ("", "None"):
+        return ""
+    return value
 
 
 def _parse_optional_coast(value):
@@ -38,7 +47,10 @@ def form_01(request_data):
     Код по прайсу (internal_code Researches), Услуга (title_researches),
     колонка с названием прайса (priceCoasts.coast),
     опционально колонка "<название прайса> ЦИТО" (priceCoasts.coast_cito),
-    опционально колонка "Синоним" (TitleResearchHospital, только прайс Заказчик с больницей)
+    опционально колонка "Синоним" (TitleResearchHospital, только прайс Заказчик с больницей),
+    опционально колонки "Категория", "Короткое название", "Обобщение", "Код НМУ".
+    Новые названия категории и обобщения сначала создаются в справочнике, затем записываются на услугу.
+    Пустые ячейки этих колонок и пустая цена ЦИТО не затирают значения в базе.
     """
     price_id = request_data.get("entity_id")
     file = request_data.get("file")
@@ -47,12 +59,14 @@ def form_01(request_data):
         return {"ok": False, "result": [], "message": "Такого прайса нет"}
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    internal_code_idx, coast_idx, coast_cito_idx, category_idx, short_title_research_idx, synonym_idx = (
+    internal_code_idx, coast_idx, coast_cito_idx, category_idx, short_title_research_idx, synonym_idx, summary_idx, nmu_code_idx = (
         '',
         '',
         None,
-        '',
-        '',
+        None,
+        None,
+        None,
+        None,
         None,
     )
     starts = False
@@ -61,24 +75,24 @@ def form_01(request_data):
         if not starts:
             if "Код по прайсу" in cells:
                 internal_code_idx = cells.index("Код по прайсу")
-                category_idx = cells.index("Категория")
-                short_title_research_idx = cells.index("Короткое название")
+                category_idx = _find_column_index(cells, "Категория")
+                short_title_research_idx = _find_column_index(cells, "Короткое название")
                 synonym_idx = _find_column_index(cells, "Синоним")
+                summary_idx = _find_column_index(cells, "Обобщение")
+                nmu_code_idx = _find_column_index(cells, "Код НМУ")
                 coast_idx = _find_column_index(cells, price.title, f"{price.title}-{price.symbol_code}")
                 if coast_idx is None:
                     return {"ok": False, "result": [], "message": "Название прайса не совпадает"}
                 coast_cito_idx = _find_column_index(cells, f"{price.title} ЦИТО", f"{price.title}-{price.symbol_code} ЦИТО")
                 starts = True
         else:
-            internal_code = cells[internal_code_idx].strip()
-            category_title = cells[category_idx].strip()
-            short_service_title = cells[short_title_research_idx].strip()
+            internal_code = _cell_text(cells, internal_code_idx)
             try:
                 coast = float(cells[coast_idx].strip())
             except Exception:
                 continue
             coast_cito = _parse_optional_coast(cells[coast_cito_idx]) if coast_cito_idx is not None else None
-            if internal_code == "None" or not coast:
+            if not internal_code or not coast:
                 continue
             service = Researches.objects.filter(internal_code=internal_code).first()
 
@@ -90,7 +104,7 @@ def form_01(request_data):
                 if current_coast.coast != coast:
                     current_coast.coast = coast
                     changed = True
-                if coast_cito_idx is not None and current_coast.coast_cito != coast_cito:
+                if coast_cito is not None and current_coast.coast_cito != coast_cito:
                     current_coast.coast_cito = coast_cito
                     changed = True
                 if changed:
@@ -98,16 +112,33 @@ def form_01(request_data):
             else:
                 new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast, coast_cito=coast_cito)
                 new_coast.save()
-            category = CategoryDirectory.objects.filter(title=category_title).first()
-            if category:
-                service.category = category
-            if short_service_title == 'None' or not short_service_title:
-                short_service_title = ""
-            if service.short_title != short_service_title:
+            service_changed = False
+            category_title = _cell_text(cells, category_idx)
+            if category_title:
+                category = CategoryDirectory.objects.filter(title=category_title).first()
+                if not category:
+                    category = CategoryDirectory.objects.create(title=category_title)
+                if service.category_id != category.pk:
+                    service.category = category
+                    service_changed = True
+            short_service_title = _cell_text(cells, short_title_research_idx)
+            if short_service_title and service.short_title != short_service_title:
                 service.short_title = short_service_title
-            service.save()
-            if synonym_idx is not None and synonym_idx < len(cells) and price.is_customer_hospital_price():
-                TitleResearchHospital.set_title_for_research(price.hospital, service, cells[synonym_idx])
+                service_changed = True
+            nmu_code = _cell_text(cells, nmu_code_idx)
+            if nmu_code and service.code != nmu_code:
+                service.code = nmu_code
+                service_changed = True
+            summary_title = _cell_text(cells, summary_idx)
+            if summary_title:
+                summary, _ = ResearchSummary.objects.get_or_create(title=summary_title)
+                if service.summary_id != summary.pk:
+                    service.summary = summary
+                    service_changed = True
+            if service_changed:
+                service.save()
+            if price.is_customer_hospital_price():
+                TitleResearchHospital.set_title_for_research(price.hospital, service, _cell_text(cells, synonym_idx))
 
     if not starts:
         return {"ok": False, "result": [], "message": "Не найдены колонка 'Код по прайсу' "}

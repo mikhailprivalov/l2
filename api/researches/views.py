@@ -535,6 +535,8 @@ def researches_update(request):
         current_nsi_research_code = request_data.get("currentNsiResearchCode", -1)
         current_category = request_data.get("currentCategory", -1)
         category_id = None if current_category in (-1, None, "-1") else int(current_category)
+        current_summary = request_data.get("currentSummary", -1)
+        summary_id = None if current_summary in (-1, None, "-1") else int(current_summary)
         user = request.user
         can_change_template_department = user.doctorprofile.has_group("Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям")
         if not can_change_template_department:
@@ -599,6 +601,7 @@ def researches_update(request):
                     show_more_services=show_more_services,
                     nsi_id=current_nsi_research_code,
                     category_id=category_id,
+                    summary_id=summary_id,
                 )
                 if can_change_template_department:
                     res.templates_by_department = templates_by_department
@@ -659,6 +662,7 @@ def researches_update(request):
                 res.show_more_services = show_more_services and not res.is_microbiology and not res.is_form
                 res.nsi_id = current_nsi_research_code
                 res.category_id = category_id
+                res.summary_id = summary_id
                 if can_change_template_department:
                     res.templates_by_department = templates_by_department
             if res:

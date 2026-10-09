@@ -456,3 +456,4 @@ admin.site.register(models.GardeningElectricityMeter, ResCGardeningElectricityMe
 admin.site.register(models.GardeningElectricityMeterReading, ResCGardeningElectricityMeterReading)
 admin.site.register(models.Contrasts, ResContrasts)
 admin.site.register(models.CategoryDirectory)
+admin.site.register(models.ResearchSummary)
