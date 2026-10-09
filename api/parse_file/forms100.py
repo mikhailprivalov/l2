@@ -48,7 +48,7 @@ def form_01(request_data):
     колонка с названием прайса (priceCoasts.coast),
     опционально колонка "<название прайса> ЦИТО" (priceCoasts.coast_cito),
     опционально колонка "Синоним" (TitleResearchHospital, только прайс Заказчик с больницей),
-    опционально колонки "Категория", "Короткое название", "Обобщение".
+    опционально колонки "Категория", "Короткое название", "Обобщение", "Код НМУ".
     Новые названия категории и обобщения сначала создаются в справочнике, затем записываются на услугу.
     Пустые ячейки этих колонок и пустая цена ЦИТО не затирают значения в базе.
     """
@@ -59,9 +59,10 @@ def form_01(request_data):
         return {"ok": False, "result": [], "message": "Такого прайса нет"}
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    internal_code_idx, coast_idx, coast_cito_idx, category_idx, short_title_research_idx, synonym_idx, summary_idx = (
+    internal_code_idx, coast_idx, coast_cito_idx, category_idx, short_title_research_idx, synonym_idx, summary_idx, nmu_code_idx = (
         '',
         '',
+        None,
         None,
         None,
         None,
@@ -78,6 +79,7 @@ def form_01(request_data):
                 short_title_research_idx = _find_column_index(cells, "Короткое название")
                 synonym_idx = _find_column_index(cells, "Синоним")
                 summary_idx = _find_column_index(cells, "Обобщение")
+                nmu_code_idx = _find_column_index(cells, "Код НМУ")
                 coast_idx = _find_column_index(cells, price.title, f"{price.title}-{price.symbol_code}")
                 if coast_idx is None:
                     return {"ok": False, "result": [], "message": "Название прайса не совпадает"}
@@ -122,6 +124,10 @@ def form_01(request_data):
             short_service_title = _cell_text(cells, short_title_research_idx)
             if short_service_title and service.short_title != short_service_title:
                 service.short_title = short_service_title
+                service_changed = True
+            nmu_code = _cell_text(cells, nmu_code_idx)
+            if nmu_code and service.code != nmu_code:
+                service.code = nmu_code
                 service_changed = True
             summary_title = _cell_text(cells, summary_idx)
             if summary_title:
