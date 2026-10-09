@@ -5,7 +5,8 @@ import qrcode
 
 from api.dicom import search_dicom_study
 from appconf.manager import SettingManager
-from directions.models import DirectionDocument, DocumentSign, Napravleniya, Issledovaniya
+from directions.models import DirectionDocument, DocumentSign, Napravleniya, Issledovaniya, ParaclinicResult
+from directory.models import ParaclinicInputGroups
 from docx.shared import Mm
 from docxtpl import DocxTemplate, InlineImage
 import os
@@ -164,6 +165,50 @@ def transform_value(field_value, type_field):
     return result
 
 
+def _display_field_value(field_value, field_type):
+    if field_type in (1, 34):
+        return transform_value(field_value, field_type)
+    return field_value or ""
+
+
+def _one_line_field(title, value):
+    value = " ".join(str(value or "").split())
+    if not value:
+        return ""
+    title = (title or "").strip()
+    if not title:
+        return value
+    if title.endswith("?") or title.endswith(":"):
+        return f"{title} {value}"
+    return f"{title}: {value}"
+
+
+def _join_inline_fields(pairs):
+    return " ".join(part for part in (_one_line_field(title, value) for title, value in pairs) if part)
+
+
+def _research_summary_title(iss):
+    research = iss.research if iss.research_id else None
+    summary = research.summary if research and research.summary_id else None
+    return summary.title if summary else ""
+
+
+def _inline_group_lines(iss):
+    lines = {}
+    groups = ParaclinicInputGroups.objects.filter(research_id=iss.research_id, fields_inline=True).order_by("order")
+    for group in groups:
+        group_title = (group.title or "").strip()
+        if not group_title:
+            continue
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").select_related("field").order_by("field__order")
+        pairs = []
+        for result in results:
+            field_type = result.field_type if result.field_type is not None else result.field.field_type
+            pairs.append((result.field.title, _display_field_value(result.value, field_type)))
+        lines[group_title] = _join_inline_fields(pairs)
+    return lines
+
+
 def _read_docx_converted_pdf(temp_file_dir: str) -> bytes:
     pdf_path = f"{temp_file_dir}.pdf"
     writer = PdfWriter()
@@ -267,6 +312,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     try:
         fields_values = get_paraclinic_result_by_iss(iss.pk)
         result_data = {i.field_title: transform_value(i.field_value, i.field_type) if i.field_type in [1, 34] else i.field_value for i in fields_values}
+        result_data.update(_inline_group_lines(iss))
         name_pdf_file = ""
         for k, v in result_data.items():
             if "name_file" in k:
@@ -329,6 +375,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "born": individula.get('born'),
             "protocol_number": direction.pk,
             "research": f"{iss.research.code} {_research_title_for_user(iss, user)}",
+            "summary": _research_summary_title(iss),
             "hosp_confirmation": iss.doc_confirmation.hospital.title if iss.doc_confirmation else "",
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
