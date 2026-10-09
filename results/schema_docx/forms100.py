@@ -356,7 +356,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         }
 
         if qr_code_link:
-            context["qr_code"] = qr_code_image(doc, qr_code_link)
+            context["qr_code"] = qr_code_image(doc, qr_code_link, 40)
 
         doc.render(context)
 
