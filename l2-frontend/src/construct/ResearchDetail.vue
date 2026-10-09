@@ -168,6 +168,18 @@
             </div>
             <div class="margin flex-item">
               <label
+                class="research-detail-label"
+              >Обобщение</label>
+              <Treeselect
+                v-model="research.summaryId"
+                :options="props.refBooks.summaries"
+                class="treeselect-34px"
+                placeholder="Выберите обобщение"
+                :append-to-body="true"
+              />
+            </div>
+            <div class="margin flex-item">
+              <label
                 for="laboratoryDuration"
                 class="research-detail-label"
               >Доля контейнера</label>
@@ -180,6 +192,21 @@
                 type="number"
               >
             </div>
+          </div>
+        </div>
+        <div class="ecp-title-row">
+          <div class="margin">
+            <label
+              for="ecpTitle"
+              class="research-detail-label"
+            >Название ЕЦП</label>
+            <input
+              id="ecpTitle"
+              v-model="research.ecpTitle"
+              maxlength="300"
+              class="form-control"
+              placeholder="Введите название ЕЦП"
+            >
           </div>
         </div>
       </div>
@@ -450,10 +477,12 @@ interface researchData {
   internalCode: number | null,
   ecpId: string,
   ecpIdSynonym: string,
+  ecpTitle: string,
   preparation: string | null,
   departmentId: number,
   laboratoryMaterialId: number,
   subGroupId: number,
+  summaryId: number | null,
   laboratoryDuration: string,
   countVolumeMaterialForTube: number,
   tubes: tubeData[]
@@ -473,10 +502,12 @@ const research = ref<researchData>({
   internalCode: null,
   ecpId: '',
   ecpIdSynonymfr: '',
+  ecpTitle: '',
   preparation: '',
   departmentId: null,
   laboratoryMaterialId: null,
   subGroupId: null,
+  summaryId: null,
   laboratoryDuration: '',
   countVolumeMaterialForTube: null,
   tubes: [],
@@ -538,10 +569,12 @@ watch(() => [props.research.pk, props.research.tubes], () => {
       order: props.research.order,
       internalCode: null,
       ecpId: '',
+      ecpTitle: '',
       preparation: '',
       departmentId: props.research.departmentId,
       laboratoryMaterialId: null,
       subGroupId: null,
+      summaryId: null,
       laboratoryDuration: '',
       countVolumeMaterialForTube: null,
       tubes: [],
@@ -684,7 +717,7 @@ const deleteRef = (idx: number, refKey: string) => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   padding: 10px 0;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
-  max-height: 185px;
+  max-height: 250px;
   overflow-y: auto;
 }
 .flex-col {
@@ -701,6 +734,9 @@ const deleteRef = (idx: number, refKey: string) => {
 }
 .margin-bottom {
   margin-bottom: 15px;
+}
+.ecp-title-row {
+  grid-column: 1 / 3;
 }
 .research-detail-label {
   margin-bottom: 0;

@@ -259,10 +259,12 @@ def get_researches():
             is_complex,
             nsi_id,
             dc.title as categoty_title,
-            directory_researches.short_title
+            directory_researches.short_title,
+            rs.title as summary_title
             FROM directory_researches
             LEFT JOIN podrazdeleniya_podrazdeleniya ON directory_researches.podrazdeleniye_id = podrazdeleniya_podrazdeleniya.id
             LEFT JOIN directory_categorydirectory dc on directory_researches.category_id = dc.id
+            LEFT JOIN directory_researchsummary rs on directory_researches.summary_id = rs.id
             
             WHERE directory_researches.hide=False and (directory_researches.podrazdeleniye_id IS NULL or podrazdeleniya_podrazdeleniya.p_type != 0)
             ORDER BY internal_code

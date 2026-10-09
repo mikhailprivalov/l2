@@ -13,6 +13,7 @@ from directory.models import (
     ReleationsFT,
     Fractions,
     CategoryDirectory,
+    ResearchSummary,
 )
 from laboratory.decorators import group_required
 from appconf.manager import SettingManager
@@ -142,7 +143,15 @@ def get_lab_ref_books(request):
     variants = ResultVariants.get_all()
     tubes = Tubes.get_all(True)
     relations_tubes = ReleationsFT.get_all_relation()
-    result = {"units": units, "materials": materials, "subGroups": subgroups, "variants": variants, "tubes": tubes, "relations": relations_tubes}
+    result = {
+        "units": units,
+        "materials": materials,
+        "subGroups": subgroups,
+        "summaries": ResearchSummary.get_summaries(),
+        "variants": variants,
+        "tubes": tubes,
+        "relations": relations_tubes,
+    }
     return JsonResponse({"result": result})
 
 
@@ -305,6 +314,7 @@ def get_descriptive_ref_books(request):
         "file_field_default_settings": file_field_default_settings,
         "file_field_allowed_extensions": file_field_allowed_extensions,
         "categories": [{"id": -1, "label": "Пусто"}, *CategoryDirectory.get_categories()],
+        "summaries": [{"id": -1, "label": "Пусто"}, *ResearchSummary.get_summaries()],
         "paragraph_field_enabled": PARAGRAPH_FIELD_ENABLED,
     }
     return JsonResponse(result)
