@@ -125,7 +125,7 @@ Result (Result)
 - **Audit Trail** - `slog/` module, `create_at`, `who_create` fields
 - **Multi-tenancy** - Support for multiple hospitals via `Hospitals`, data filtering by organization
 - **Research internal_code:** empty `Researches.internal_code` is filled as `{pk}-code`. Command `fill_empty_internal_code` backfills existing rows. Constructor save (`researches_update` for `/ui/construct/descriptive`) fills the same way after save if the field is empty.
-- **Research summary:** `ResearchSummary` is an optional umbrella title for a service (`Researches.summary`). Examples: several X-ray services share «Рентгенологическое»; mammography services share «Маммографические». Titles are created in Django admin. Constructors `/ui/construct/descriptive` and laboratory research edit pick the value; an empty choice stores no summary. This is separate from `CategoryDirectory` and `SubGroupDirectory`.
+- **Research summary:** `ResearchSummary` is an optional umbrella title for a service (`Researches.summary`). Examples: several X-ray services share «Рентгенологическое»; mammography services share «Маммографические». Titles are created in Django admin. Constructors `/ui/construct/descriptive` and laboratory research edit pick the value; an empty choice stores no summary. This is separate from `CategoryDirectory` and `SubGroupDirectory`. Hospital schema print `results.schema_docx.forms100.form_02` exposes that title as `{{ summary }}`. A protocol group with `fields_inline` (**Поля в одну строку**) is also one context value under the group title.
 
 ## Integration Patterns
 
