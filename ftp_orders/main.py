@@ -994,20 +994,39 @@ def hospitals_for_direction_push(direction: Napravleniya):
     return [hospital for hospital in get_hospitals_push_orders() if direction_matches_hospital_push(direction, hospital)]
 
 
-def push_order_after_receipt(direction: Napravleniya):
+def _log_push_skip(direction, reason):
+    pk = getattr(direction, "pk", None)
+    stdout.write(f"push_order_after_receipt skip direction={pk}: {reason}\n")
+    stdout.flush()
+
+
+def push_order_after_receipt(direction: Napravleniya, explain=False):
     """
     Отправка одного направления на внешний FTP теми же правилами, что process_push_orders.
-    Вызывается сразу после приёмки, когда у направления статус 1.
+    Вызывается сразу после сохранения приёмки, когда у направления статус 1.
     Ошибка FTP не отменяет приёмку: флаг need_order_redirection снимается внутри отправки
     и возвращается, если запись файла не удалась.
     """
-    if not direction or not direction.need_order_redirection or direction.cancel:
+    if not direction:
+        return False
+    if direction.cancel:
+        if explain:
+            _log_push_skip(direction, "нет статуса 1, сейчас -1")
+        return False
+    if not direction.need_order_redirection:
+        if explain:
+            _log_push_skip(direction, "нет маршрута на внешний FTP")
         return False
     try:
-        if direction_receive_status(direction) != 1:
+        status = direction_receive_status(direction)
+        if status != 1:
+            if explain:
+                _log_push_skip(direction, f"нет статуса 1, сейчас {status}")
             return False
         hospitals = hospitals_for_direction_push(direction)
         if not hospitals:
+            if explain:
+                _log_push_skip(direction, "нет маршрута на внешний FTP")
             return False
         sent = False
         for hospital in hospitals:
@@ -1044,9 +1063,13 @@ def push_order_after_receipt(direction: Napravleniya):
         return False
 
 
-def push_orders_after_receipt_by_ids(direction_ids):
-    for direction in Napravleniya.objects.filter(pk__in=list(direction_ids)):
-        push_order_after_receipt(direction)
+def push_orders_after_receipt_by_ids(direction_ids, explain=False):
+    try:
+        for direction in Napravleniya.objects.filter(pk__in=list(direction_ids)):
+            push_order_after_receipt(direction, explain=explain)
+    except Exception as e:
+        stdout.write(f"push_orders_after_receipt_by_ids error: {e}\n")
+        stdout.flush()
 
 
 def process_push_orders_after_receipt():

@@ -6,7 +6,6 @@ from typing import Optional
 
 import bleach
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 import simplejson as json
@@ -797,7 +796,7 @@ def receive_one_by_one(request):
                     },
                 )
                 is_new = True
-                transaction.on_commit(lambda direction_id=d.pk: push_orders_after_receipt_by_ids([direction_id]))
+                push_orders_after_receipt_by_ids([d.pk], explain=True)
             ok_objects.append(
                 {
                     "pk": pk,
