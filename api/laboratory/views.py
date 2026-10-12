@@ -6,6 +6,7 @@ from typing import Optional
 
 import bleach
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 import simplejson as json
@@ -17,7 +18,7 @@ from barcodes.views import tubes
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result, IssledovaniyaFiles
 from directions.sql_func import get_tube_registration
 from directory.models import Fractions, Researches, Unit
-from ftp_orders.main import push_result
+from ftp_orders.main import push_orders_after_receipt_by_ids, push_result
 from laboratory.decorators import group_required
 from laboratory.settings import FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, DEFECT_VARIANTS
 from laboratory.utils import strdate, strfdatetime
@@ -796,6 +797,7 @@ def receive_one_by_one(request):
                     },
                 )
                 is_new = True
+                transaction.on_commit(lambda direction_id=d.pk: push_orders_after_receipt_by_ids([direction_id]))
             ok_objects.append(
                 {
                     "pk": pk,

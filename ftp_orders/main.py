@@ -952,6 +952,124 @@ def process_push_orders_start():
         time.sleep(1)
 
 
+def direction_receive_status(direction: Napravleniya) -> int:
+    """
+    Тот же статус, что в истории направлений:
+    -1 отменено, 0 выписано, 1 материал получен, 2 подтверждено.
+    Статус направления — минимум по строкам исследований и пробирок.
+    """
+    if direction.cancel:
+        return -1
+    iss_list = list(direction.issledovaniya_set.select_related("research").prefetch_related("tubes"))
+    if not iss_list:
+        return 0
+    received_on_direction = bool(direction.visit_date or direction.time_microbiology_receive or direction.time_gistology_receive)
+    statuses = []
+    for iss in iss_list:
+        if iss.time_confirmation or (iss.research_id and iss.research.is_application):
+            statuses.append(2)
+            continue
+        received = received_on_direction or bool(iss.time_save)
+        tubes = list(iss.tubes.all())
+        if not tubes:
+            statuses.append(1 if received else 0)
+            continue
+        for tube in tubes:
+            statuses.append(1 if tube.time_recive or received else 0)
+    return min(statuses)
+
+
+def direction_matches_hospital_push(direction: Napravleniya, hospital: Hospitals) -> bool:
+    if hospital.is_auto_transfer_hl7_file:
+        return direction.hospital_id == hospital.pk
+    if direction.external_executor_hospital_id != hospital.pk:
+        return False
+    tube_data = []
+    for iss in direction.issledovaniya_set.all():
+        tube_data = [i.tube_number for i in get_tubesregistration_id_by_iss(iss.pk)]
+    return len(tube_data) > 0
+
+
+def hospitals_for_direction_push(direction: Napravleniya):
+    return [hospital for hospital in get_hospitals_push_orders() if direction_matches_hospital_push(direction, hospital)]
+
+
+def push_order_after_receipt(direction: Napravleniya):
+    """
+    Отправка одного направления на внешний FTP теми же правилами, что process_push_orders.
+    Вызывается сразу после приёмки, когда у направления статус 1.
+    Ошибка FTP не отменяет приёмку: флаг need_order_redirection снимается внутри отправки
+    и возвращается, если запись файла не удалась.
+    """
+    if not direction or not direction.need_order_redirection or direction.cancel:
+        return False
+    try:
+        if direction_receive_status(direction) != 1:
+            return False
+        hospitals = hospitals_for_direction_push(direction)
+        if not hospitals:
+            return False
+        sent = False
+        for hospital in hospitals:
+            ftp_connection = None
+            try:
+                with transaction.atomic():
+                    locked = Napravleniya.objects.select_for_update().filter(pk=direction.pk, need_order_redirection=True).first()
+                    if not locked or direction_receive_status(locked) != 1:
+                        continue
+                    if not direction_matches_hospital_push(locked, hospital):
+                        continue
+                    ftp_connection = FTPConnection(hospital.orders_push_by_numbers, hospital=hospital)
+                    ftp_connection.connect()
+                    ftp_connection.log(f"Immediate push after receipt: {locked.pk}")
+                    directions_to_sync = [locked]
+                    if locked.external_order_id and locked.need_order_redirection:
+                        registered_orders_ids = locked.external_order.get_registered_orders_by_file_name()
+                        ftp_connection.push_tranfer_file_order(locked, registered_orders_ids, directions_to_sync)
+                    else:
+                        ftp_connection.push_order(locked)
+                    if SettingManager.get("use_rest_api_send_order", default="False", default_type="b"):
+                        send_order_by_rest_api(locked)
+                sent = True
+            except ftplib.all_errors as e:
+                if ftp_connection:
+                    ftp_connection.error(f"error: {e}")
+                    ftp_connection.log("Disconnecting...")
+            finally:
+                if ftp_connection:
+                    ftp_connection.disconnect()
+        return sent
+    except Exception as e:
+        stdout.write(f"push_order_after_receipt error direction={getattr(direction, 'pk', None)}: {e}\n")
+        return False
+
+
+def push_orders_after_receipt_by_ids(direction_ids):
+    for direction in Napravleniya.objects.filter(pk__in=list(direction_ids)):
+        push_order_after_receipt(direction)
+
+
+def process_push_orders_after_receipt():
+    seen = set()
+    for hospital in get_hospitals_push_orders():
+        if hospital.is_auto_transfer_hl7_file:
+            qs = Napravleniya.objects.filter(hospital=hospital, need_order_redirection=True)
+        else:
+            qs = Napravleniya.objects.filter(external_executor_hospital=hospital, need_order_redirection=True)
+        for direction in qs.order_by("pk")[:2750]:
+            if direction.pk in seen:
+                continue
+            seen.add(direction.pk)
+            push_order_after_receipt(direction)
+
+
+def process_push_orders_after_receipt_start():
+    stdout.write("Starting push_orders_after_receipt process")
+    while True:
+        process_push_orders_after_receipt()
+        time.sleep(1)
+
+
 def get_hospitals_pull_results():
     hospitals = Hospitals.objects.filter(result_pull_by_numbers__isnull=False, hide=False)
     return hospitals

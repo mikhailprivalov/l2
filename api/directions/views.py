@@ -1440,6 +1440,9 @@ def directions_receive_material(request):
                 n.save()
                 response["ok"] = True
                 response["receive_datetime"] = strdatetime(n.time_microbiology_receive)
+                from ftp_orders.main import push_orders_after_receipt_by_ids
+
+                transaction.on_commit(lambda direction_id=n.pk: push_orders_after_receipt_by_ids([direction_id]))
             else:
                 response["message"] = "Материал уже принят"
         else:
