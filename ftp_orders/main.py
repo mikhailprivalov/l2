@@ -75,6 +75,7 @@ class FTPConnection:
         self.ftp = None
         self.connected = False
         self.encoding = "utf-8"
+        self.detail_console = False
 
     @property
     def name(self):
@@ -97,16 +98,28 @@ class FTPConnection:
     def error(self, *msg):
         self.log(*msg, color="91", level="ERROR")
 
+    def target_without_password(self):
+        parsed = urlparse(self.url)
+        user = parsed.username or ""
+        host = parsed.hostname or ""
+        port = f":{parsed.port}" if parsed.port else ""
+        directory = parsed.path or "/"
+        return f"ftp://{user}@{host}{port}{directory}"
+
     def connect(self, forced=False, encoding="utf-8"):
         if forced:
             self.disconnect()
         if not self.connected:
+            if self.detail_console:
+                _console_line(f"Подключение FTP: {self.target_without_password()} организация={self.name} encoding={encoding}")
             self.ftp = ftplib.FTP(self.hostname, encoding=encoding)
             self.ftp.login(self.username, self.password)
             self.ftp.cwd(self.directory)
             self.connected = True
             self.encoding = encoding
             self.log("Connected with encoding", self.encoding)
+            if self.detail_console:
+                _console_line(f"Подключено: {self.target_without_password()} encoding={self.encoding}")
 
     def disconnect(self):
         if self.connected:
@@ -165,10 +178,17 @@ class FTPConnection:
                 return content.decode("cp1251")
 
     def write_file_as_text(self, file, content):
+        if self.detail_console:
+            _console_line(f"Файл: {file}")
+            _console_line(f"Куда: {self.target_without_password()}")
+            _console_line("Содержимое HL7:")
+            _console_line(content)
         self.log(f"Writing file {file}")
         self.connect()
         self.ftp.storbinary(f"STOR {file}", BytesIO(content.encode("utf-8")))
         self.log(f"Wrote file {file}")
+        if self.detail_console:
+            _console_line(f"Записан на FTP: {file} -> {self.target_without_password()}")
 
     def read_file_as_hl7(self, file, is_result=False):
         content = self.read_file_as_text(file).strip("\x0b").strip("\x0c")
@@ -994,51 +1014,64 @@ def hospitals_for_direction_push(direction: Napravleniya):
     return [hospital for hospital in get_hospitals_push_orders() if direction_matches_hospital_push(direction, hospital)]
 
 
-def _log_push_skip(direction, reason):
-    pk = getattr(direction, "pk", None)
-    stdout.write(f"push_order_after_receipt skip direction={pk}: {reason}\n")
+def _console_line(text=""):
+    text = "" if text is None else str(text)
+    stdout.write(text)
+    if not text.endswith("\n"):
+        stdout.write("\n")
     stdout.flush()
 
 
-def push_order_after_receipt(direction: Napravleniya, explain=False):
+def _log_push_skip(direction, reason):
+    pk = getattr(direction, "pk", None)
+    _console_line(f"push_order_after_receipt skip direction={pk}: {reason}")
+
+
+def push_order_after_receipt(direction: Napravleniya, explain=False, detail=False):
     """
     Отправка одного направления на внешний FTP теми же правилами, что process_push_orders.
     Вызывается сразу после сохранения приёмки, когда у направления статус 1.
     Ошибка FTP не отменяет приёмку: флаг need_order_redirection снимается внутри отправки
     и возвращается, если запись файла не удалась.
+    Возвращает: sent, not_status_1, no_route, error, already.
     """
     if not direction:
-        return False
+        return "empty"
     if direction.cancel:
         if explain:
             _log_push_skip(direction, "нет статуса 1, сейчас -1")
-        return False
+        return "not_status_1"
     if not direction.need_order_redirection:
         if explain:
             _log_push_skip(direction, "нет маршрута на внешний FTP")
-        return False
+        return "no_route"
     try:
         status = direction_receive_status(direction)
         if status != 1:
             if explain:
                 _log_push_skip(direction, f"нет статуса 1, сейчас {status}")
-            return False
+            return "not_status_1"
         hospitals = hospitals_for_direction_push(direction)
         if not hospitals:
-            if explain:
+            if explain or detail:
                 _log_push_skip(direction, "нет маршрута на внешний FTP")
-            return False
+            return "no_route"
         sent = False
+        had_error = False
         for hospital in hospitals:
             ftp_connection = None
             try:
                 with transaction.atomic():
                     locked = Napravleniya.objects.select_for_update().filter(pk=direction.pk, need_order_redirection=True).first()
                     if not locked or direction_receive_status(locked) != 1:
-                        continue
+                        if explain or detail:
+                            _console_line(f"Направление {direction.pk}: флаг отправки уже снят")
+                        return "already"
                     if not direction_matches_hospital_push(locked, hospital):
                         continue
                     ftp_connection = FTPConnection(hospital.orders_push_by_numbers, hospital=hospital)
+                    ftp_connection.detail_console = True
+                    _console_line(f"Направление {locked.pk}: отправка, организация={hospital.safe_short_title}, куда={ftp_connection.target_without_password()}")
                     ftp_connection.connect()
                     ftp_connection.log(f"Immediate push after receipt: {locked.pk}")
                     directions_to_sync = [locked]
@@ -1048,33 +1081,44 @@ def push_order_after_receipt(direction: Napravleniya, explain=False):
                     else:
                         ftp_connection.push_order(locked)
                     if SettingManager.get("use_rest_api_send_order", default="False", default_type="b"):
+                        _console_line(f"Направление {locked.pk}: дополнительная отправка REST API")
                         send_order_by_rest_api(locked)
                 sent = True
             except ftplib.all_errors as e:
+                had_error = True
+                target = ftp_connection.target_without_password() if ftp_connection else ""
+                _console_line(f"Ошибка FTP направление {direction.pk} {target}: {e}")
                 if ftp_connection:
                     ftp_connection.error(f"error: {e}")
                     ftp_connection.log("Disconnecting...")
             finally:
                 if ftp_connection:
                     ftp_connection.disconnect()
-        return sent
+        if sent:
+            return "sent"
+        if had_error:
+            return "error"
+        if explain or detail:
+            _log_push_skip(direction, "нет маршрута на внешний FTP")
+        return "no_route"
     except Exception as e:
-        stdout.write(f"push_order_after_receipt error direction={getattr(direction, 'pk', None)}: {e}\n")
-        return False
+        _console_line(f"push_order_after_receipt error direction={getattr(direction, 'pk', None)}: {e}")
+        return "error"
 
 
 def push_orders_after_receipt_by_ids(direction_ids, explain=False):
     try:
         for direction in Napravleniya.objects.filter(pk__in=list(direction_ids)):
-            push_order_after_receipt(direction, explain=explain)
+            push_order_after_receipt(direction, explain=explain, detail=True)
     except Exception as e:
-        stdout.write(f"push_orders_after_receipt_by_ids error: {e}\n")
-        stdout.flush()
+        _console_line(f"push_orders_after_receipt_by_ids error: {e}")
 
 
 def process_push_orders_after_receipt():
+    hospitals = list(get_hospitals_push_orders())
     seen = set()
-    for hospital in get_hospitals_push_orders():
+    counts = {"routed": 0, "status1": 0, "sent": 0, "not_status_1": 0, "no_route": 0, "error": 0, "already": 0}
+    for hospital in hospitals:
         if hospital.is_auto_transfer_hl7_file:
             qs = Napravleniya.objects.filter(hospital=hospital, need_order_redirection=True)
         else:
@@ -1083,11 +1127,26 @@ def process_push_orders_after_receipt():
             if direction.pk in seen:
                 continue
             seen.add(direction.pk)
-            push_order_after_receipt(direction)
+            counts["routed"] += 1
+            if direction_receive_status(direction) == 1:
+                counts["status1"] += 1
+            result = push_order_after_receipt(direction, detail=True)
+            if result in counts:
+                counts[result] += 1
+    _console_line(
+        "push_after_receipt: "
+        f"организаций={len(hospitals)}, с маршрутом={counts['routed']}, статус 1={counts['status1']}, "
+        f"отправлено={counts['sent']}, не статус 1={counts['not_status_1']}, без FTP={counts['no_route']}, "
+        f"уже снято={counts['already']}, ошибок={counts['error']}"
+    )
 
 
 def process_push_orders_after_receipt_start():
-    stdout.write("Starting push_orders_after_receipt process")
+    try:
+        stdout.reconfigure(line_buffering=True)
+    except Exception:
+        pass
+    _console_line("Starting push_orders_after_receipt process")
     while True:
         process_push_orders_after_receipt()
         time.sleep(1)
