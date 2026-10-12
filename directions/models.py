@@ -245,7 +245,7 @@ class TubesRegistration(models.Model):
         if direction_ids:
             from ftp_orders.main import push_orders_after_receipt_by_ids
 
-            transaction.on_commit(lambda ids=direction_ids: push_orders_after_receipt_by_ids(ids))
+            push_orders_after_receipt_by_ids(direction_ids, explain=True)
 
     def set_notice(self, doc_r, notice):
         """
