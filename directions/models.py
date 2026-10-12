@@ -241,6 +241,11 @@ class TubesRegistration(models.Model):
         self.doc_recive = doc_r
         self.save()
         slog.Log(key=str(self.number), user=doc_r, type=11, body=json.dumps({"Замечание не приёма": self.notice}) if self.notice != "" else "").save()
+        direction_ids = [pk for pk in self.issledovaniya_set.values_list("napravleniye_id", flat=True).distinct() if pk]
+        if direction_ids:
+            from ftp_orders.main import push_orders_after_receipt_by_ids
+
+            transaction.on_commit(lambda ids=direction_ids: push_orders_after_receipt_by_ids(ids))
 
     def set_notice(self, doc_r, notice):
         """
