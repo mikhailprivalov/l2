@@ -95,7 +95,8 @@ from laboratory.settings import (
     WEB_PLUGIN_LINK_STUDY,
     NOT_CONTROL_VISIT_RESEARCH_ID,
     IS_WITHOUT_LIMIT_PARALINIC_ALWAYS,
-    URL_REQUEST_GET_DIRECTIONS_FROM_ECP, LIPID_RESEARCHES, LIPID_RESEARCHES_DAYS_AGO_FIND,
+    URL_REQUEST_GET_DIRECTIONS_FROM_ECP,
+    ECP_LAB_RESEARCHES_DAYS_AGO_FIND,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -5032,6 +5033,27 @@ def send_ecp(request):
     return JsonResponse({"ok": True, "data": res})
 
 
+def _ecp_usluga_names_from_row(row):
+    raw = row.get("EvnLabRequest_UslugaName")
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return []
+    if not isinstance(raw, list):
+        return []
+    names = []
+    for service in raw:
+        if not isinstance(service, dict):
+            continue
+        name = (service.get("UslugaComplex_Name") or "").strip()
+        if name:
+            names.append(name)
+    return names
+
+
 @login_required
 def directions_get_from_ecp(request):
     data = json.loads(request.body)
@@ -5049,9 +5071,9 @@ def directions_get_from_ecp(request):
     individual = card.individual
     today = current_time(only_date=True)
     end_date = today.strftime("%d.%m.%Y")
-    start_date = (today + timedelta(days=LIPID_RESEARCHES_DAYS_AGO_FIND)).strftime("%d.%m.%Y")
+    start_date = (today + timedelta(days=ECP_LAB_RESEARCHES_DAYS_AGO_FIND)).strftime("%d.%m.%Y")
     payload = {
-        "starDate": start_date,
+        "startDate": start_date,
         "endDate": end_date,
         "patient": {
             "family": individual.family,
@@ -5077,26 +5099,24 @@ def directions_get_from_ecp(request):
                 "direction_id": direction_id,
                 "evnLabRequestId": row["EvnLabRequest_id"],
                 "personId": row["Person_id"],
-                "parsed_ids": [],
+                "ecp_titles": [],
             }
             grouped[direction_id] = item
-        raw_ids = LIPID_RESEARCHES.get(row["UslugaComplex_id"]) or []
-        if not isinstance(raw_ids, list):
-            raw_ids = [raw_ids]
-        seen = set(item["parsed_ids"])
-        for pk in raw_ids:
-            try:
-                research_id = int(pk)
-            except (TypeError, ValueError):
-                continue
-            if research_id not in seen:
-                item["parsed_ids"].append(research_id)
-                seen.add(research_id)
+        seen = set(item["ecp_titles"])
+        for title in _ecp_usluga_names_from_row(row):
+            if title not in seen:
+                item["ecp_titles"].append(title)
+                seen.add(title)
 
-    all_ids = []
+    all_titles = []
     for item in grouped.values():
-        all_ids.extend(item["parsed_ids"])
-    found = {r.pk: r for r in Researches.objects.filter(pk__in=all_ids)}
+        all_titles.extend(item["ecp_titles"])
+    unique_titles = list(dict.fromkeys(all_titles))
+    found_by_title = {}
+    if unique_titles:
+        for research in Researches.objects.filter(ecp_title__in=unique_titles):
+            if research.ecp_title not in found_by_title:
+                found_by_title[research.ecp_title] = research
 
     existing_by_number = {}
     direction_ids = [direction_id for direction_id in grouped if direction_id]
@@ -5112,12 +5132,13 @@ def directions_get_from_ecp(request):
     directions = []
     for item in grouped.values():
         researches = []
-        for pk in item["parsed_ids"]:
-            research = found.get(pk)
+        for ecp_title in item["ecp_titles"]:
+            research = found_by_title.get(ecp_title)
             researches.append(
                 {
-                    "id": pk,
-                    "title": research.title if research else None,
+                    "id": research.pk if research else 0,
+                    "title": research.title if research else ecp_title,
+                    "ecpTitle": ecp_title,
                     "missing": research is None,
                 }
             )

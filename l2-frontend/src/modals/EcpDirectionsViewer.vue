@@ -43,15 +43,19 @@
         </div>
         <ol class="ecp-services">
           <li
-            v-for="research in direction.researches"
-            :key="research.id"
+            v-for="(research, idx) in direction.researches"
+            :key="research.missing ? `missing-${idx}-${research.ecpTitle || research.title}` : research.id"
             :class="{ missing: research.missing }"
           >
             <template v-if="research.missing">
-              Услуга с id {{ research.id }} не найдена в L2
+              Услуга «{{ research.ecpTitle || research.title }}» не найдена в L2
             </template>
             <template v-else>
               {{ research.title }}
+              <span
+                v-if="research.ecpTitle && research.ecpTitle !== research.title"
+                class="ecp-title"
+              > (ЕЦП: {{ research.ecpTitle }})</span>
             </template>
           </li>
         </ol>
@@ -144,6 +148,7 @@ import useNotify from '@/hooks/useNotify';
 interface EcpResearch {
   id: number;
   title: string | null;
+  ecpTitle?: string | null;
   missing: boolean;
 }
 
@@ -253,6 +258,11 @@ const createDirection = async (direction: EcpDirectionData, printAfter: boolean)
 
   .missing {
     color: #a94442;
+  }
+
+  .ecp-title {
+    font-weight: normal;
+    color: #666;
   }
 }
 
