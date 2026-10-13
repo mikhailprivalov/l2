@@ -66,9 +66,12 @@ export default (instance: Vue): void => {
   });
 
   instance.$root.$on('directions:need_order_redirection', async ids => {
-    await instance.$api('directions/need-order-redirection', { ids });
-    // eslint-disable-next-line max-len
-    instance.$ok('Запланирована повторная отправка направления исполнителю');
+    const data = await instance.$api('directions/need-order-redirection', { ids });
+    if (data?.ok) {
+      instance.$ok(data.message || 'Направление отправлено внешнему исполнителю');
+    } else {
+      instance.$error(data?.message || 'Не удалось отправить направление внешнему исполнителю');
+    }
   });
 
   instance.$root.$on('directions:request_result', async ids => {

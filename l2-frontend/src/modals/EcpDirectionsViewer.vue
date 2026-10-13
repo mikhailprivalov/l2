@@ -23,7 +23,7 @@
       >
         <div class="ecp-meta">
           <div v-if="direction.direction_id">
-            Направление ЕЦП №{{ direction.direction_id }}
+            Направление ЕЦП №{{ direction.direction_id }}<template v-if="direction.setDate"> - {{ direction.setDate }}</template>
           </div>
           <div v-if="direction.evnLabRequestId">
             Заявка: {{ direction.evnLabRequestId }}
@@ -156,6 +156,7 @@ interface EcpDirectionData {
   direction_id: string;
   evnLabRequestId: string;
   personId?: string;
+  setDate?: string | null;
   researches: EcpResearch[];
   alreadyExists: boolean;
   localDirectionId?: number | null;
