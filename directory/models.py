@@ -430,7 +430,7 @@ class Researches(models.Model):
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код услуги в ЕЦП")
     ecp_id_synonym = models.CharField(max_length=160, default="", blank=True, verbose_name="Код услуги в ЕЦП-синоним")
-    ecp_title = models.CharField(max_length=300, default="", blank=True, verbose_name="Название ЕЦП")
+    ecp_title = models.CharField(max_length=300, default="", blank=True, db_index=True, verbose_name="Название ЕЦП")
     laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text="Биоматериал", on_delete=models.SET_NULL)
     sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.SET_NULL)
     category = models.ForeignKey(CategoryDirectory, blank=True, default=None, null=True, help_text="Категория", on_delete=models.SET_NULL)
@@ -701,6 +701,13 @@ class Researches(models.Model):
         return result.exists()
 
     @staticmethod
+    def check_duplicated_ecp_title(ecp_title, pk=None):
+        if not ecp_title:
+            return False
+        result = Researches.objects.filter(ecp_title=ecp_title).exclude(pk=pk)
+        return result.exists()
+
+    @staticmethod
     def internal_code_from_pk(pk):
         return f"{pk}-code"
 
@@ -818,6 +825,9 @@ class Researches(models.Model):
         internal_code_is_duplicated = Researches.check_duplicated_internal_code(service_data["internal_code"], service_data["pk"])
         if internal_code_is_duplicated:
             return {"ok": False, "message": "Такой внутренний код уже есть"}
+        ecp_title_is_duplicated = Researches.check_duplicated_ecp_title(service_data["ecp_title"], service_data["pk"])
+        if ecp_title_is_duplicated:
+            return {"ok": False, "message": "Такое название ЕЦП уже есть"}
 
         service = Researches.objects.filter(pk=service_data["pk"]).first()
         if need_log_data:
@@ -879,6 +889,9 @@ class Researches(models.Model):
         internal_code_is_duplicated = Researches.check_duplicated_internal_code(service_data["internal_code"])
         if internal_code_is_duplicated:
             return {"ok": False, "pk": None, "message": "Такой внутренний код уже есть"}
+        ecp_title_is_duplicated = Researches.check_duplicated_ecp_title(service_data["ecp_title"])
+        if ecp_title_is_duplicated:
+            return {"ok": False, "pk": None, "message": "Такое название ЕЦП уже есть"}
         new_service = Researches.create_lab_service(service_data)
         if need_log_data:
             log_data = new_service.as_json_lab_full()
