@@ -972,6 +972,84 @@ def process_push_orders_start():
         time.sleep(1)
 
 
+def _tubes_received_for_push(direction: Napravleniya) -> bool:
+    is_recieve = False
+    for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).distinct():
+        is_recieve = True
+        if tube.time_recive is None:
+            is_recieve = False
+    return is_recieve
+
+
+def push_directions_now(directions):
+    """
+    Отправка выбранных направлений внешнему исполнителю сразу, теми же правилами, что process_push_orders.
+    Флаг need_order_redirection снимается до отправки и не используется как очередь.
+    """
+    sent = []
+    errors = []
+    for direction in directions:
+        if not direction:
+            continue
+        if direction.cancel:
+            errors.append(f"{direction.pk}: направление отменено")
+            continue
+        hospitals = hospitals_for_direction_push(direction)
+        if not hospitals:
+            errors.append(f"{direction.pk}: нет маршрута на внешний FTP")
+            continue
+        if NEED_RECIEVE_TUBE_TO_PUSH_ORDER and not _tubes_received_for_push(direction):
+            errors.append(f"{direction.pk}: материал ещё не принят")
+            continue
+        with transaction.atomic():
+            locked = Napravleniya.objects.select_for_update().filter(pk=direction.pk).first()
+            if not locked:
+                errors.append(f"{direction.pk}: направление не найдено")
+                continue
+            if locked.need_order_redirection:
+                locked.need_order_redirection = False
+                locked.save(update_fields=["need_order_redirection"])
+        direction.refresh_from_db()
+        direction_sent = False
+        direction_error = None
+        for hospital in hospitals:
+            ftp_connection = None
+            try:
+                ftp_connection = FTPConnection(hospital.orders_push_by_numbers, hospital=hospital)
+                ftp_connection.connect()
+                ftp_connection.log(f"Immediate push by button: {direction.pk}")
+                _console_line(f"Направление {direction.pk}: отправка внешнему исполнителю, организация={hospital.safe_short_title}, куда={ftp_connection.target_without_password()}")
+                if direction.external_order_id:
+                    registered_orders_ids = direction.external_order.get_registered_orders_by_file_name()
+                    ftp_connection.push_tranfer_file_order(direction, registered_orders_ids, [direction])
+                else:
+                    ftp_connection.push_order(direction)
+                if SettingManager.get("use_rest_api_send_order", default="False", default_type="b"):
+                    _console_line(f"Направление {direction.pk}: дополнительная отправка REST API")
+                    if send_order_by_rest_api(direction) is False:
+                        direction_error = f"{direction.pk}: FTP отправлен, REST API не принял заказ"
+                direction_sent = True
+            except ftplib.all_errors as e:
+                direction_error = f"{direction.pk}: ошибка FTP {e}"
+                _console_line(f"Ошибка FTP направление {direction.pk}: {e}")
+                if ftp_connection:
+                    ftp_connection.error(f"error: {e}")
+                    ftp_connection.log("Disconnecting...")
+            except Exception as e:
+                direction_error = f"{direction.pk}: {e}"
+                _console_line(f"push_directions_now error direction={direction.pk}: {e}")
+            finally:
+                if ftp_connection:
+                    ftp_connection.disconnect()
+        if direction_sent and not direction_error:
+            sent.append(direction.pk)
+        elif direction_error:
+            errors.append(direction_error)
+        else:
+            errors.append(f"{direction.pk}: отправка не выполнена")
+    return {"sent": sent, "errors": errors}
+
+
 def direction_receive_status(direction: Napravleniya) -> int:
     """
     Тот же статус, что в истории направлений:

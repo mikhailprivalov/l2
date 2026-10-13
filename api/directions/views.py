@@ -365,12 +365,32 @@ def resend_results(request):
 @login_required()
 def need_order_redirection(request):
     request_data = json.loads(request.body)
-    ids = request_data['ids']
+    ids = request_data["ids"]
+    if not ids:
+        return status_response(False, "Не выбраны направления")
+    by_pk = {direction.pk: direction for direction in Napravleniya.objects.filter(pk__in=ids)}
+    directions = []
+    missing = []
     for pk in ids:
-        direction = Napravleniya.objects.get(pk=pk)
-        direction.need_order_redirection = True
-        direction.save()
-    return status_response(True)
+        direction = by_pk.get(int(pk))
+        if direction:
+            directions.append(direction)
+        else:
+            missing.append(str(pk))
+    from ftp_orders.main import push_directions_now
+
+    result = push_directions_now(directions)
+    errors = list(result["errors"])
+    if missing:
+        errors.append("Не найдены направления: " + ", ".join(missing))
+    sent = result["sent"]
+    if sent and not errors:
+        message = "Направление отправлено внешнему исполнителю" if len(sent) == 1 else f"Отправлено направлений: {len(sent)}"
+        return status_response(True, message)
+    if sent:
+        message = f"Отправлено: {', '.join(str(pk) for pk in sent)}. " + "; ".join(errors)
+        return status_response(False, message)
+    return status_response(False, "; ".join(errors) or "Отправка не выполнена")
 
 
 @login_required()
@@ -5099,9 +5119,12 @@ def directions_get_from_ecp(request):
                 "direction_id": direction_id,
                 "evnLabRequestId": row["EvnLabRequest_id"],
                 "personId": row["Person_id"],
+                "setDate": row.get("EvnDirection_setDate") or None,
                 "ecp_titles": [],
             }
             grouped[direction_id] = item
+        elif not item.get("setDate") and row.get("EvnDirection_setDate"):
+            item["setDate"] = row.get("EvnDirection_setDate")
         seen = set(item["ecp_titles"])
         for title in _ecp_usluga_names_from_row(row):
             if title not in seen:
@@ -5148,6 +5171,7 @@ def directions_get_from_ecp(request):
                 "direction_id": item["direction_id"],
                 "evnLabRequestId": item["evnLabRequestId"],
                 "personId": item["personId"],
+                "setDate": item.get("setDate"),
                 "researches": researches,
                 "alreadyExists": local_direction_id is not None,
                 "localDirectionId": local_direction_id,
