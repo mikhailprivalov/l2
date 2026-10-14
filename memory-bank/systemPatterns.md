@@ -78,6 +78,7 @@
 - `dashboards/` - dashboards
 - `statistics_tickets/` - ticket statistics
 - Statistics UI catalog lives in `l2-frontend/src/pages/Statistics.vue` (`STATS_CATEGORIES`); each report `type` is handled in `statistic/views.py`
+- Magazine **Статус пользователей** (`statistic/report/current_users_role.py`, local `MAGAZINE_REPORT` key `6`) lists doctors and roles. Column **Суперадмин** is `Да` when `auth_user.is_superuser` is true, otherwise `нет`.
 - Report `unlimitPeriod: true` skips the 2-month date range check on the frontend; backend excludes that `type` from the 60-day cap
 - Extra notifications: `EXTRA_MASTER_RESEARCH_PK` is a list of master research pks (int still accepted); SQL filters with `research_id in %(master_research)s` after converting to a tuple. `EXTRA_SLAVE_RESEARCH_PK` stays a single slave research pk. `/ui/extra-notification` filters those masters with checkboxes (short titles) above the table; the **Услуга** column shows full titles. Search returns `researches` from the setting only.
 - Epid numbers report (`statistics-epid-numbers`) reuses `forms.views.get_epid_data` for extra-notification slave directions confirmed in the period

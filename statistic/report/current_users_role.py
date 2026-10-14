@@ -24,6 +24,7 @@ def form_01(ws1, data):
         ('Статус МО', 20),
         ('Пользователь', 35),
         ('Статус пользователя', 20),
+        ('Суперадмин', 16),
         ('Роль', 30),
         ('Детали-роли', 50),
         ('Закрепленные клиники', 50),
@@ -41,6 +42,7 @@ def form_01(ws1, data):
             "hospital_status": "Скрыт" if i.hospital_hide else "Доступен",
             "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
             "doctor_active": "Не активен" if i.dismissed or i.hospital_hide else "Активен",
+            "is_superuser": "Да" if i.is_superuser else "нет",
             "doctor_detail_role": list(set(i.group_name)),
             "assigned_hospital": i.hospitals_title,
         }
@@ -56,20 +58,21 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=3).value = i.get("hospital_status")
         ws1.cell(row=row, column=4).value = i.get("doctor")
         ws1.cell(row=row, column=5).value = i.get("doctor_active")
+        ws1.cell(row=row, column=6).value = i.get("is_superuser")
         combo_user = [r for r in i.get('doctor_detail_role') if r in combo_role]
         detail_combo_role = []
         for cu in combo_user:
             detail_combo_role.extend(USE_COMBO_ROLE.get(cu))
-        ws1.cell(row=row, column=6).value = ", ".join(combo_user)
+        ws1.cell(row=row, column=7).value = ", ".join(combo_user)
         detail_role_str = ", ".join(i.get("doctor_detail_role"))
         if len(detail_combo_role) > 0:
             detail_combo_str = ", ".join(detail_combo_role)
         else:
             detail_combo_str = ""
-        ws1.cell(row=row, column=7).value = f"{detail_role_str}, {detail_combo_str}"
+        ws1.cell(row=row, column=8).value = f"{detail_role_str}, {detail_combo_str}"
         assigned_hospital = ", ".join(i.get("assigned_hospital"))
-        ws1.cell(row=row, column=8).value = assigned_hospital
-        for k in range(8):
+        ws1.cell(row=row, column=9).value = assigned_hospital
+        for k in range(9):
             ws1.cell(row=row, column=k + 1).style = style_border2
     return ws1
 
@@ -89,6 +92,7 @@ def sql_01():
                     users_doctorprofile.name as doc_name,
                     users_doctorprofile.patronymic as doc_patronymic,
                     users_doctorprofile.dismissed,
+                    auth_user.is_superuser,
                     COALESCE(
                     (
                         SELECT JSON_AGG(auth_group.name)
@@ -106,7 +110,8 @@ def sql_01():
                     ), '[]'::json
                     ) AS hospitals_title
                     FROM users_doctorprofile
-                    LEFT JOIN hospitals_hospitals hh ON users_doctorprofile.hospital_id = hh.id    
+                    LEFT JOIN hospitals_hospitals hh ON users_doctorprofile.hospital_id = hh.id
+                    LEFT JOIN auth_user ON auth_user.id = users_doctorprofile.user_id    
                     order by hh.id, users_doctorprofile.family
                 """,
             params={},
