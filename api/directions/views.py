@@ -31,6 +31,7 @@ from datetime import datetime, time as dtime, timedelta
 from operator import itemgetter
 
 import pytz_deprecation_shim as pytz
+import requests
 import simplejson as json
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
@@ -42,7 +43,7 @@ from django.http import JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
 from api import sql_func
-from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid
+from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid, check_sum_ean13
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result, get_field_result_by_cda, get_field_lab_result_by_research_and_test
 from api.chambers.discharge_sync import sync_patient_to_bed_discharge_date_from_extract
@@ -96,7 +97,7 @@ from laboratory.settings import (
     NOT_CONTROL_VISIT_RESEARCH_ID,
     IS_WITHOUT_LIMIT_PARALINIC_ALWAYS,
     URL_REQUEST_GET_DIRECTIONS_FROM_ECP,
-    ECP_LAB_RESEARCHES_DAYS_AGO_FIND,
+    ECP_LAB_RESEARCHES_DAYS_AGO_FIND, DICOM_DEVICE,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -3437,6 +3438,33 @@ def last_field_result(request):
         result = {"value": work_data.strip()}
     elif request_data["fieldPk"].find('%harmful_factor') != -1:
         result = {"value": c.harmful_factor}
+    elif request_data["fieldPk"].find('%device_dicom') != -1:
+        str_dir = str(num_dir)
+        ean13_dir = str(num_dir + 460000000000)
+        check_sum = check_sum_ean13(ean13_dir)
+        ean13_dir = f'{ean13_dir}{check_sum}'
+        station_name = ''
+        device_serial_number = ''
+        try:
+            find_data = {'Level': 'Instance', 'Query': {'PatientID': ean13_dir}}
+            instances_response = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(find_data), timeout=10)
+            instances = instances_response.json()
+            if instances:
+                instance_id = instances[0]
+                station_name_response = requests.get(f'{DICOM_SERVER}/instances/{instance_id}/content/0008-1010', timeout=10)
+                device_serial_response = requests.get(f'{DICOM_SERVER}/instances/{instance_id}/content/0018-1000', timeout=10)
+                station_name = station_name_response.text.strip()
+                device_serial_number = device_serial_response.text.strip()
+        except Exception:
+            station_name = ''
+            device_serial_number = ''
+        result_value = ''
+        if DICOM_DEVICE.get(station_name):
+            result_value = DICOM_DEVICE.get(station_name)
+        elif DICOM_DEVICE.get(device_serial_number):
+            result_value = DICOM_DEVICE.get(device_serial_number)
+        result = {"value": result_value}
+
     elif request_data["fieldPk"].find('%proto_operation') != -1:
         # получить все направления в истории по типу hosp
         main_hosp_dir = hosp_get_hosp_direction(num_dir)[0]
