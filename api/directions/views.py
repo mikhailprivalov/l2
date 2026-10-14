@@ -97,7 +97,8 @@ from laboratory.settings import (
     NOT_CONTROL_VISIT_RESEARCH_ID,
     IS_WITHOUT_LIMIT_PARALINIC_ALWAYS,
     URL_REQUEST_GET_DIRECTIONS_FROM_ECP,
-    ECP_LAB_RESEARCHES_DAYS_AGO_FIND, DICOM_DEVICE,
+    ECP_LAB_RESEARCHES_DAYS_AGO_FIND,
+    DICOM_DEVICE,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
