@@ -3446,10 +3446,14 @@ def last_field_result(request):
         station_name = ''
         device_serial_number = ''
         try:
-            find_data = {'Level': 'Instance', 'Query': {'PatientID': ean13_dir}}
-            instances_response = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(find_data), timeout=10)
-            instances = instances_response.json()
-            if instances:
+            instances = []
+            for patient_id in (ean13_dir, str_dir):
+                find_data = {'Level': 'Instance', 'Query': {'PatientID': patient_id}}
+                instances_response = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(find_data), timeout=10)
+                instances = instances_response.json()
+                if isinstance(instances, list) and instances:
+                    break
+            if isinstance(instances, list) and instances:
                 instance_id = instances[0]
                 station_name_response = requests.get(f'{DICOM_SERVER}/instances/{instance_id}/content/0008-1010', timeout=10)
                 device_serial_response = requests.get(f'{DICOM_SERVER}/instances/{instance_id}/content/0018-1000', timeout=10)
