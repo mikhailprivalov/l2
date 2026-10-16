@@ -941,8 +941,15 @@ const onRowCase = async (id: number, caseId: number | null) => {
   canEditCaseAccess.value = Boolean(result.case.canEditAccess);
 };
 
-const onFavoritesChanged = (payload?: { id?: number; favorite?: boolean; case?: boolean }) => {
-  if (!payload || Number(payload.id) !== Number(props.documentId)) {
+const onFavoritesChanged = (payload?: { id?: number; caseId?: number; favorite?: boolean; case?: boolean }) => {
+  if (!payload) {
+    return;
+  }
+  if (payload.case && Number(payload.caseId) === Number(caseBlock.value?.id)) {
+    caseInFavorite.value = Boolean(payload.favorite);
+    return;
+  }
+  if (Number(payload.id) !== Number(props.documentId)) {
     return;
   }
   if (payload.case) {
@@ -953,13 +960,21 @@ const onFavoritesChanged = (payload?: { id?: number; favorite?: boolean; case?: 
 };
 
 const toggleCaseFavorite = async () => {
-  if (!props.documentId || !caseBlock.value) {
+  if (!caseBlock.value) {
     return;
   }
-  const result = await api('document-manager/record-favorites/toggle', { id: props.documentId, case: true });
+  const payload = props.documentId
+    ? { id: props.documentId, case: true }
+    : { caseId: caseBlock.value.id };
+  const result = await api('document-manager/record-favorites/toggle', payload);
   if (result?.ok) {
     caseInFavorite.value = Boolean(result.favorite);
-    root.$emit('dou-favorites-changed', { id: props.documentId, favorite: result.favorite, case: true });
+    root.$emit('dou-favorites-changed', {
+      id: props.documentId,
+      caseId: caseBlock.value.id,
+      favorite: result.favorite,
+      case: true,
+    });
   } else {
     root.$emit('msg', 'error', result?.message || 'Не удалось изменить избранное');
   }

@@ -8,6 +8,8 @@ from document_management.models import (  # noqa: I001
     list_record_favorites,
     toggle_record_favorite,
     toggle_case_favorite,
+    toggle_favorite_case,
+    UserMyCase,
     AddresseeGroup,
     DocumentFieldGroups,
     DocumentRecent,
@@ -201,7 +203,12 @@ def record_favorites_list(request):
 def record_favorites_toggle(request):
     data = _request_data(request)
     doctor = getattr(request.user, "doctorprofile", None)
-    result = toggle_case_favorite(doctor, data.get("id")) if data.get("case") else toggle_record_favorite(doctor, data.get("id"))
+    if data.get("caseId"):
+        result = toggle_favorite_case(doctor, data.get("caseId"))
+    elif data.get("case"):
+        result = toggle_case_favorite(doctor, data.get("id"))
+    else:
+        result = toggle_record_favorite(doctor, data.get("id"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -302,6 +309,17 @@ def _case_from_request(data, doctor):
     if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
         return None
     return document.document_case
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def cases_my(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    result = UserMyCase.toggle(who=doctor, case_id=data.get("id"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
 
 
 @login_required

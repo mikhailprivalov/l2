@@ -25,6 +25,7 @@ from document_management.models import (
     TypeDocumentsSchema,
     UserFavoriteCase,
     UserFavoriteDocument,
+    UserMyCase,
 )
 
 
@@ -85,6 +86,12 @@ class TypeDocumentsAdmin(admin.ModelAdmin):
 class UserFavoriteDocumentAdmin(admin.ModelAdmin):
     list_display = ("pk", "doctor", "document")
     raw_id_fields = ("doctor", "document")
+
+
+@admin.register(UserMyCase)
+class UserMyCaseAdmin(admin.ModelAdmin):
+    list_display = ("pk", "doctor", "document_case")
+    raw_id_fields = ("doctor", "document_case")
 
 
 @admin.register(UserFavoriteCase)
