@@ -3013,9 +3013,7 @@ class Documents(models.Model):
         elif who:
             case_ids = [doc.document_case_id for doc in docs if doc.document_case_id]
             if case_ids:
-                favorite_case_ids = set(
-                    UserFavoriteCase.objects.filter(doctor=who, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True)
-                )
+                favorite_case_ids = set(UserFavoriteCase.objects.filter(doctor=who, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True))
 
         result = []
         for doc in docs:
