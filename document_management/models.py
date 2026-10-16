@@ -2867,13 +2867,23 @@ class Documents(models.Model):
         Log.log(str(pk), log_type, who, extra or {})
 
     @staticmethod
+    def participant_cases(who, date_from=None, date_to=None):
+        if not who:
+            return {"ok": True, "result": []}
+        start, end, date_error = Documents._search_dates(date_from, date_to)
+        if date_error:
+            return {"ok": False, "message": date_error, "result": []}
+        qs = DocumentCase.objects.filter(access_rows__doctor_id=who.pk).distinct()
+        if start:
+            qs = qs.filter(created_at__date__gte=start)
+        if end:
+            qs = qs.filter(created_at__date__lte=end)
+        rows = [{"id": case.pk, "title": Documents.title_with_id(case.pk, case.topic or ""), "isCase": True} for case in qs.order_by("-created_at", "-pk")]
+        return {"ok": True, "result": rows}
+
+    @staticmethod
     def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False):
-        qs = Documents.objects.select_related(
-            "type_document",
-            "type_document__group_document",
-            "schema",
-            "document_case",
-        ).filter(Documents.case_access_q(who)).order_by("-pk")
+        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case").filter(Documents.case_access_q(who)).order_by("-pk")
         if my_cases:
             if not who:
                 return []

@@ -99,6 +99,17 @@
           </label>
           <label
             class="filter-check side-check side-check-hidden"
+            @click.prevent="toggleParticipant"
+          >
+            <input
+              type="checkbox"
+              :checked="showParticipant"
+              tabindex="-1"
+            >
+            <span>Участник</span>
+          </label>
+          <label
+            class="filter-check side-check side-check-hidden"
             @click.prevent="toggleTopics"
           >
             <input
@@ -118,14 +129,45 @@
           </button>
         </div>
       </div>
-      <input
+      <div
         v-if="listFilterActive"
-        v-model="listQuery"
-        class="form-control list-filter"
-        type="text"
-        placeholder="Фильтр"
-        spellcheck="false"
+        class="list-filter-row"
       >
+        <input
+          v-model="listQuery"
+          class="form-control list-filter"
+          type="text"
+          placeholder="Фильтр"
+          spellcheck="false"
+        >
+        <div
+          v-if="showParticipant"
+          class="side-check-line list-filter-kinds"
+        >
+          <label
+            class="filter-check side-check side-check-hidden"
+            @click.prevent="participantDocuments = !participantDocuments"
+          >
+            <input
+              type="checkbox"
+              :checked="participantDocuments"
+              tabindex="-1"
+            >
+            <span>Документы</span>
+          </label>
+          <label
+            class="filter-check side-check side-check-hidden"
+            @click.prevent="toggleParticipantCases"
+          >
+            <input
+              type="checkbox"
+              :checked="participantCases"
+              tabindex="-1"
+            >
+            <span>Дела</span>
+          </label>
+        </div>
+      </div>
       <div
         ref="docsEl"
         class="doc-list"
@@ -454,12 +496,14 @@ const DEFAULT_LEFT_WIDTH_PX = 448;
 const MIN_LEFT_WIDTH_PX = 448;
 const LIST_ROLE_FILTERS = ['created', 'doing', 'wrote', 'onControl', 'toReview', 'recent', 'toBeAgreed', 'onSignature'];
 
-const readStoredListFilter = (): { role: string | null; hidden: boolean; myCases: boolean; topics: boolean } => {
+const readStoredListFilter = (): {
+  role: string | null; hidden: boolean; myCases: boolean; topics: boolean; participant: boolean;
+} => {
   try {
     const raw = localStorage.getItem(LIST_FILTER_STORAGE_KEY);
     if (!raw) {
       return {
-        role: 'recent', hidden: false, myCases: false, topics: false,
+        role: 'recent', hidden: false, myCases: false, topics: false, participant: false,
       };
     }
     const data = JSON.parse(raw);
@@ -467,12 +511,13 @@ const readStoredListFilter = (): { role: string | null; hidden: boolean; myCases
     const topics = Boolean(data?.topics) && !role;
     const hidden = Boolean(data?.hidden) && !role && !topics;
     const myCases = Boolean(data?.myCases) && !hidden && !role && !topics;
+    const participant = Boolean(data?.participant) && !role && !topics && !hidden && !myCases;
     return {
-      role, hidden, myCases, topics,
+      role, hidden, myCases, topics, participant,
     };
   } catch {
     return {
-      role: 'recent', hidden: false, myCases: false, topics: false,
+      role: 'recent', hidden: false, myCases: false, topics: false, participant: false,
     };
   }
 };
@@ -500,6 +545,9 @@ const roleFilter = ref<string | null>(storedListFilter.role);
 const showHidden = ref(storedListFilter.hidden);
 const showMyCases = ref(storedListFilter.myCases);
 const showTopics = ref(storedListFilter.topics);
+const showParticipant = ref(storedListFilter.participant);
+const participantDocuments = ref(true);
+const participantCases = ref(true);
 const pendingReviewCount = ref(0);
 const documents = ref<{ id: number; title: string; confirmed?: boolean }[]>([]);
 const listQuery = ref('');
@@ -556,7 +604,7 @@ const userGroups = computed(() => store.getters.user_groups || []);
 const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
 const canCreateBlocks = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Создание блоков'));
 const listFilterActive = computed(() => Boolean(
-  roleFilter.value || showHidden.value || showMyCases.value || showTopics.value,
+  roleFilter.value || showHidden.value || showMyCases.value || showTopics.value || showParticipant.value,
 ));
 if (!canViewHidden.value) {
   showHidden.value = false;
@@ -567,6 +615,7 @@ const toggleRole = (id: string) => {
   const next = roleFilter.value === id ? null : id;
   showMyCases.value = false;
   showTopics.value = false;
+  showParticipant.value = false;
   if (next) {
     showHidden.value = false;
   }
@@ -619,6 +668,7 @@ const onDocumentsScroll = () => {
 
 const loadDocuments = async () => {
   const loadId = ++documentsLoadId;
+  const previousCase = selectedCase.value;
   documents.value = [];
   caseSearch.value = false;
   selectedCase.value = null;
@@ -646,6 +696,36 @@ const loadDocuments = async () => {
   }
   blocks.value = [];
   selectedBlock.value = null;
+  if (showParticipant.value) {
+    await loadPendingCount();
+    if (!participantCases.value) {
+      return;
+    }
+    await store.dispatch(actions.INC_LOADING);
+    try {
+      const data = await api('document-manager/documents/list', {
+        participant: true,
+        cases: true,
+        dateFrom: toApiDate(dateRange.value[0]),
+        dateTo: toApiDate(dateRange.value[1]),
+      });
+      if (loadId !== documentsLoadId) {
+        return;
+      }
+      if (data?.message) {
+        root.$emit('msg', 'error', data.message);
+      }
+      documents.value = data?.result || [];
+      caseSearch.value = true;
+      pendingReviewCount.value = Number(data?.pendingReviewCount) || 0;
+      if (previousCase && documents.value.some(row => row.id === previousCase)) {
+        selectedCase.value = previousCase;
+      }
+    } finally {
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    return;
+  }
   if (!hasListFilter && !showHidden.value && !showMyCases.value) {
     await loadPendingCount();
     return;
@@ -686,6 +766,7 @@ const toggleHidden = () => {
   if (next) {
     showMyCases.value = false;
     showTopics.value = false;
+    showParticipant.value = false;
   }
   if (next && roleFilter.value) {
     roleFilter.value = null;
@@ -701,6 +782,31 @@ const toggleMyCases = () => {
   selectedDocument.value = null;
   if (next) {
     showHidden.value = false;
+    showTopics.value = false;
+    showParticipant.value = false;
+    if (roleFilter.value) {
+      roleFilter.value = null;
+      return;
+    }
+  }
+  loadDocuments();
+};
+
+const toggleParticipantCases = () => {
+  participantCases.value = !participantCases.value;
+  loadDocuments();
+};
+
+const toggleParticipant = () => {
+  listQuery.value = '';
+  const next = !showParticipant.value;
+  showParticipant.value = next;
+  selectedDocument.value = null;
+  if (next) {
+    participantDocuments.value = true;
+    participantCases.value = true;
+    showHidden.value = false;
+    showMyCases.value = false;
     showTopics.value = false;
     if (roleFilter.value) {
       roleFilter.value = null;
@@ -719,6 +825,7 @@ const toggleTopics = () => {
   if (next) {
     showHidden.value = false;
     showMyCases.value = false;
+    showParticipant.value = false;
     if (roleFilter.value) {
       roleFilter.value = null;
       return;
@@ -1021,13 +1128,20 @@ watch(roleFilter, () => {
   loadDocuments();
 });
 
-watch([roleFilter, showHidden, showMyCases, showTopics], () => {
+watch(dateRange, () => {
+  if (showParticipant.value) {
+    loadDocuments();
+  }
+}, { deep: true });
+
+watch([roleFilter, showHidden, showMyCases, showTopics, showParticipant], () => {
   try {
     localStorage.setItem(LIST_FILTER_STORAGE_KEY, JSON.stringify({
       role: roleFilter.value,
       hidden: showHidden.value,
       myCases: showMyCases.value,
       topics: showTopics.value,
+      participant: showParticipant.value,
     }));
   } catch {
     // ignore storage errors
@@ -1258,14 +1372,35 @@ const onReviewed = () => {
   overflow-y: auto;
 }
 
-.list-filter {
+.list-filter-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
   flex: 0 0 34px;
-  width: 100%;
+  box-sizing: border-box;
   height: 34px;
+  min-width: 0;
+  border-top: 1px solid #b1b1b1;
+}
+
+.list-filter-kinds {
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.list-filter {
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  margin: 0;
   border-color: #b1b1b1;
+  border-top: 0;
   border-right: 0;
   border-bottom: 0;
   border-radius: 0;
+  box-shadow: none;
 }
 
 .doc-row {
