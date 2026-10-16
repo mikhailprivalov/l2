@@ -30,8 +30,22 @@
       <span slot="header">{{ header }}</span>
       <div
         slot="body"
-        class="addressee-modal"
+        class="addressee-modal-wrap"
       >
+        <Treeselect
+          class="treeselect-wide treeselect-34px addressee-modal__hospital"
+          :multiple="false"
+          :options="hospitalOptions"
+          :append-to-body="true"
+          :clearable="false"
+          :value="hospitalId"
+          :z-index="5001"
+          placeholder="Организация"
+          no-results-text="Не найдено"
+          no-options-text="Нет организаций"
+          @input="onHospitalInput"
+        />
+        <div class="addressee-modal">
         <div class="addressee-modal__groups">
           <div
             v-for="group in groups"
@@ -145,6 +159,7 @@
             </button>
           </div>
         </div>
+        </div>
       </div>
       <div
         slot="footer"
@@ -182,6 +197,8 @@ import {
   computed, nextTick, ref, watch,
 } from 'vue';
 import debounce from 'lodash/debounce';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import api from '@/api';
 import Modal from '@/ui-cards/Modal.vue';
@@ -196,6 +213,12 @@ type Group = {
   id: number;
   title: string;
   own?: boolean;
+};
+
+type Hospital = {
+  id: number;
+  title: string;
+  isDefault?: boolean;
 };
 
 const props = withDefaults(defineProps<{
@@ -214,6 +237,12 @@ const emit = defineEmits<{
 }>();
 
 const opened = ref(false);
+const hospitals = ref<Hospital[]>([]);
+const hospitalId = ref<number | null>(null);
+const hospitalOptions = computed(() => hospitals.value.map(row => ({
+  id: row.id,
+  label: row.title,
+})));
 const groups = ref<Group[]>([]);
 const selectedGroupId = ref(0);
 const query = ref('');
@@ -283,6 +312,7 @@ const mergeEmployees = (incoming: Employee[]) => {
 const loadAllEmployees = async (groupId = selectedGroupId.value, search = query.value) => {
   const data = await api('document-manager/addressees/employees', {
     groupId,
+    hospitalId: hospitalId.value,
     query: search,
     all: true,
   });
@@ -338,6 +368,7 @@ const loadEmployees = async (append = false) => {
     const nextPage = append ? page.value + 1 : 1;
     const data = await api('document-manager/addressees/employees', {
       groupId: selectedGroupId.value,
+      hospitalId: hospitalId.value,
       query: query.value,
       page: nextPage,
       pageSize: PAGE_SIZE,
@@ -375,6 +406,25 @@ const reloadGroups = async () => {
   groups.value = result || [];
 };
 
+const loadHospitals = async () => {
+  const { result } = await api('document-manager/addressees/hospitals');
+  hospitals.value = result || [];
+  const preferred = hospitals.value.find(row => row.isDefault) || hospitals.value[0];
+  hospitalId.value = preferred ? preferred.id : null;
+};
+
+const onHospitalInput = (value: number | null) => {
+  if (value == null || value === hospitalId.value) {
+    return;
+  }
+  hospitalId.value = value;
+  if (!opened.value) {
+    return;
+  }
+  allMatchingSelected.value = false;
+  loadEmployees(false);
+};
+
 const openModal = async () => {
   draft.value = parseValue(props.value);
   query.value = '';
@@ -383,6 +433,7 @@ const openModal = async () => {
   employees.value = [];
   opened.value = true;
   await reloadGroups();
+  await loadHospitals();
   selectedGroupId.value = groups.value[0] ? groups.value[0].id : -1;
   await loadEmployees(false);
 };
@@ -491,11 +542,26 @@ watch([allLoadedSelected, someLoadedSelected, employees, draft], async () => {
   height: 34px;
 }
 
+.addressee-modal-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 430px;
+  min-height: 0;
+}
+
+.addressee-modal__hospital {
+  flex: 0 0 34px;
+  width: 100%;
+  height: 34px;
+}
+
 .addressee-modal {
   display: grid;
   grid-template-columns: 180px 1fr 220px;
   gap: 8px;
-  height: 430px;
+  flex: 1 1 auto;
+  height: auto;
   min-height: 0;
 }
 

@@ -700,14 +700,19 @@ def addressees_groups_delete(request):
 
 @login_required
 @group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def addressees_hospitals(request):
+    return JsonResponse({"result": AddresseeGroup.get_hospitals()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def addressees_employees(request):
     data = _request_data(request)
-    hospital_id = request.user.doctorprofile.get_hospital_id()
     page_size = None if data.get("all") else data.get("pageSize", 100)
     return JsonResponse(
         AddresseeGroup.get_employees(
             data.get("groupId", AddresseeGroup.ALL_ID),
-            hospital_id,
+            data.get("hospitalId"),
             data.get("query", ""),
             data.get("page", 1),
             page_size,

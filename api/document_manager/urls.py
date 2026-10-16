@@ -55,5 +55,6 @@ urlpatterns = [
     path('addressees/groups/update', views.addressees_groups_update),
     path('addressees/groups/save-personal', views.addressees_groups_save_personal),
     path('addressees/groups/delete', views.addressees_groups_delete),
+    path('addressees/hospitals', views.addressees_hospitals),
     path('addressees/employees', views.addressees_employees),
 ]
