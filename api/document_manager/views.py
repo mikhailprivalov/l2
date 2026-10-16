@@ -519,6 +519,14 @@ def documents_list(request):
     doctor = request.user.doctorprofile
     if data.get("countOnly"):
         return JsonResponse({"pendingReviewCount": DocumentReview.pending_count(doctor)})
+    if data.get("participant"):
+        found = {"ok": True, "result": []}
+        if data.get("cases"):
+            found = Documents.participant_cases(doctor, data.get("dateFrom"), data.get("dateTo"))
+        payload = {"result": found.get("result") or [], "pendingReviewCount": DocumentReview.pending_count(doctor)}
+        if not found.get("ok"):
+            payload["message"] = found.get("message")
+        return JsonResponse(payload)
     return JsonResponse(
         {
             "result": Documents.get_list(data.get("typeId"), data.get("groupId"), data.get("filter"), doctor, data.get("hidden"), data.get("myCases")),
