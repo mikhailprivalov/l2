@@ -227,14 +227,33 @@ class AddresseeGroup(models.Model):
         return {"ok": True}
 
     @classmethod
+    def get_hospitals(cls):
+        rows = Hospitals.objects.filter(hide=False).order_by("-is_default", "short_title", "title", "pk")
+        return [{"id": row.pk, "title": row.short_title or row.title, "isDefault": row.is_default} for row in rows]
+
+    @classmethod
+    def _hospital_pk(cls, hospital_id):
+        try:
+            hospital_pk = int(hospital_id)
+        except (TypeError, ValueError):
+            hospital_pk = 0
+        if hospital_pk > 0 and Hospitals.objects.filter(pk=hospital_pk, hide=False).exists():
+            return hospital_pk
+        default = Hospitals.get_default_hospital()
+        return default.pk if default else None
+
+    @classmethod
     def get_employees(cls, group_id, hospital_id, query="", page=1, page_size=100, allow_all=False):
         try:
             group_id = int(group_id)
         except (TypeError, ValueError):
             group_id = cls.ALL_ID
+        hospital_pk = cls._hospital_pk(hospital_id)
+        if not hospital_pk:
+            return cls.empty_employees(page, page_size)
         if (not group_id or group_id <= 0) and not allow_all:
             return cls.empty_employees(page, page_size)
-        doctors = DoctorProfile.objects.filter(user__is_active=True, is_system_user=False).select_related("user", "podrazdeleniye")
+        doctors = DoctorProfile.objects.filter(user__is_active=True, is_system_user=False, podrazdeleniye__hospital_id=hospital_pk).select_related("user", "podrazdeleniye")
         if group_id and group_id > 0:
             doctors = doctors.filter(addressee_group_members__group_id=group_id)
         query = (query or "").strip()
