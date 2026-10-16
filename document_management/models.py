@@ -2954,9 +2954,7 @@ class Documents(models.Model):
         cases = list(qs.order_by("-created_at", "-pk"))
         case_ids = [case.pk for case in cases]
         mine_ids = set(UserMyCase.objects.filter(doctor=who, document_case_id__in=case_ids).values_list("document_case_id", flat=True))
-        favorite_ids = set(
-            UserFavoriteCase.objects.filter(doctor=who, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True)
-        )
+        favorite_ids = set(UserFavoriteCase.objects.filter(doctor=who, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True))
         rows = []
         for case in cases:
             is_mine = case.who_create_id == who.pk
