@@ -3646,7 +3646,7 @@ class DocumentRecent(models.Model):
         except IntegrityError:
             cls.objects.filter(doctor=who, document=document).update(**defaults)
             return
-        extra_ids = list(cls.objects.filter(doctor=who).order_by("-opened_at", "-pk").values_list("pk", flat=True)[cls.MAX_ITEMS:])
+        extra_ids = list(cls.objects.filter(doctor=who).order_by("-opened_at", "-pk").values_list("pk", flat=True)[cls.MAX_ITEMS :])
         if extra_ids:
             cls.objects.filter(pk__in=extra_ids).delete()
 
