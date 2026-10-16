@@ -14,6 +14,7 @@ urlpatterns = [
     path('cases/details', views.cases_details),
     path('cases/update', views.cases_update),
     path('cases/access', views.cases_access),
+    path('cases/my', views.cases_my),
     path('cases/comment', views.cases_comment),
     path('cases/topic', views.cases_topic),
     path('cases/close', views.cases_close),

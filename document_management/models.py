@@ -1359,6 +1359,39 @@ class DocumentCase(models.Model):
         return {"ok": True, "access": self.access_json()}
 
 
+class UserMyCase(models.Model):
+    doctor = models.ForeignKey(DoctorProfile, related_name="added_my_cases", on_delete=models.CASCADE)
+    document_case = models.ForeignKey(DocumentCase, related_name="user_my_cases", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Добавленное моё дело"
+        verbose_name_plural = "Добавленные мои дела"
+        unique_together = ("doctor", "document_case")
+
+    def __str__(self):
+        return f"{self.doctor_id} {self.document_case_id}"
+
+    @staticmethod
+    def toggle(who, case_id):
+        if not who:
+            return {"ok": False, "message": "Пользователь не найден"}
+        try:
+            case_pk = int(case_id)
+        except (TypeError, ValueError):
+            return {"ok": False, "message": "Дело не найдено"}
+        case = DocumentCase.objects.filter(pk=case_pk).first()
+        if not case or not case.can_access(who):
+            return {"ok": False, "message": "Дело не найдено"}
+        if case.who_create_id == who.pk:
+            return {"ok": True, "inMyCases": True, "isMine": True}
+        row = UserMyCase.objects.filter(doctor=who, document_case=case).first()
+        if row:
+            row.delete()
+            return {"ok": True, "inMyCases": False, "isMine": False}
+        UserMyCase.objects.create(doctor=who, document_case=case)
+        return {"ok": True, "inMyCases": True, "isMine": False}
+
+
 class DocumentCaseAccess(models.Model):
     document_case = models.ForeignKey(DocumentCase, related_name="access_rows", on_delete=models.CASCADE)
     doctor = models.ForeignKey(DoctorProfile, related_name="document_case_access", on_delete=models.CASCADE)
@@ -1754,6 +1787,27 @@ def record_favorite_status(doctor, document):
     if not doctor or not document:
         return False
     return _record_favorite_model(document).objects.filter(doctor=doctor, document=document).exists()
+
+
+def toggle_favorite_case(doctor, case_id):
+    if not doctor:
+        return {"ok": False, "message": "Пользователь не найден"}
+    try:
+        case_pk = int(case_id)
+    except (TypeError, ValueError):
+        return {"ok": False, "message": "Дело не найдено"}
+    case = DocumentCase.objects.filter(pk=case_pk).first()
+    if not case or not case.can_access(doctor):
+        return {"ok": False, "message": "Дело не найдено"}
+    existing = UserFavoriteCase.objects.filter(doctor=doctor, document__document_case_id=case.pk)
+    if existing.exists():
+        existing.delete()
+        return {"ok": True, "favorite": False, "isCase": True}
+    document = Documents.objects.filter(document_case_id=case.pk).order_by("pk").first()
+    if not document:
+        return {"ok": False, "message": "В деле нет документа"}
+    UserFavoriteCase.objects.create(doctor=doctor, document=document)
+    return {"ok": True, "favorite": True, "isCase": True}
 
 
 def toggle_case_favorite(doctor, document_id):
@@ -2897,7 +2951,25 @@ class Documents(models.Model):
             qs = qs.filter(created_at__date__gte=start)
         if end:
             qs = qs.filter(created_at__date__lte=end)
-        rows = [{"id": case.pk, "title": Documents.title_with_id(case.pk, case.topic or ""), "isCase": True} for case in qs.order_by("-created_at", "-pk")]
+        cases = list(qs.order_by("-created_at", "-pk"))
+        case_ids = [case.pk for case in cases]
+        mine_ids = set(UserMyCase.objects.filter(doctor=who, document_case_id__in=case_ids).values_list("document_case_id", flat=True))
+        favorite_ids = set(
+            UserFavoriteCase.objects.filter(doctor=who, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True)
+        )
+        rows = []
+        for case in cases:
+            is_mine = case.who_create_id == who.pk
+            rows.append(
+                {
+                    "id": case.pk,
+                    "title": Documents.title_with_id(case.pk, case.topic or ""),
+                    "isCase": True,
+                    "isMine": is_mine,
+                    "inMyCases": is_mine or case.pk in mine_ids,
+                    "isFavorite": case.pk in favorite_ids,
+                }
+            )
         return {"ok": True, "result": rows}
 
     @staticmethod
@@ -2906,7 +2978,7 @@ class Documents(models.Model):
         if my_cases:
             if not who:
                 return []
-            qs = qs.filter(models.Q(document_case__who_create_id=who.pk) | models.Q(document_case__access_rows__doctor_id=who.pk)).distinct()
+            qs = qs.filter(models.Q(document_case__who_create_id=who.pk) | models.Q(document_case__user_my_cases__doctor_id=who.pk))
         elif role_filter == "toReview":
             if not who:
                 return []
@@ -2937,8 +3009,15 @@ class Documents(models.Model):
             iss_by_doc.setdefault(iss.document_id, iss)
 
         topic_by_doc = {}
+        favorite_case_ids = set()
         if not my_cases:
             topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
+        elif who:
+            case_ids = [doc.document_case_id for doc in docs if doc.document_case_id]
+            if case_ids:
+                favorite_case_ids = set(
+                    UserFavoriteCase.objects.filter(doctor=who, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True)
+                )
 
         result = []
         for doc in docs:
@@ -2948,6 +3027,8 @@ class Documents(models.Model):
                 if doc.document_case_id and doc.document_case:
                     case_topic = (doc.document_case.topic or "").strip()
                 payload["title"] = f"{case_topic} {doc.pk}".strip() if case_topic else str(doc.pk)
+                payload["caseId"] = doc.document_case_id
+                payload["isFavorite"] = bool(doc.document_case_id and doc.document_case_id in favorite_case_ids)
             else:
                 topic = (topic_by_doc.get(doc.pk) or "").strip()
                 type_doc = doc.type_document.title if doc.type_document else ""

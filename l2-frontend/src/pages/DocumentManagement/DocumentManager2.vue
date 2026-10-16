@@ -203,6 +203,26 @@
             >
               <span class="doc-title">{{ row.title }}</span>
             </button>
+            <button
+              v-if="showParticipant && row.isMine === false"
+              class="case-mark"
+              :class="{ 'case-mark--on': row.inMyCases }"
+              type="button"
+              :title="row.inMyCases ? 'Убрать из моих дел' : 'В мои дела'"
+              @click="toggleMyCase(row)"
+            >
+              <i :class="row.inMyCases ? 'fa-solid fa-briefcase' : 'fa-regular fa-briefcase'" />
+            </button>
+            <button
+              v-if="showParticipant && row.isFavorite !== undefined"
+              class="case-mark"
+              :class="{ 'case-mark--on': row.isFavorite }"
+              type="button"
+              :title="row.isFavorite ? 'Убрать из избранного' : 'В избранное'"
+              @click="toggleCaseStar(row)"
+            >
+              <i class="fa fa-star" />
+            </button>
           </div>
         </template>
         <template v-else>
@@ -222,6 +242,16 @@
               v-if="roleFilter === 'created' && !document.confirmed"
               class="fa-solid fa-pen doc-draft"
             />
+          </button>
+          <button
+            v-if="showMyCases && document.caseId"
+            class="case-mark"
+            :class="{ 'case-mark--on': document.isFavorite }"
+            type="button"
+            :title="document.isFavorite ? 'Убрать из избранного' : 'В избранное'"
+            @click="toggleCaseStar(document)"
+          >
+            <i class="fa fa-star" />
           </button>
           </div>
         </template>
@@ -549,7 +579,16 @@ const showParticipant = ref(storedListFilter.participant);
 const participantDocuments = ref(true);
 const participantCases = ref(true);
 const pendingReviewCount = ref(0);
-const documents = ref<{ id: number; title: string; confirmed?: boolean }[]>([]);
+type ListRow = {
+  id: number;
+  title: string;
+  confirmed?: boolean;
+  caseId?: number;
+  isMine?: boolean;
+  inMyCases?: boolean;
+  isFavorite?: boolean;
+};
+const documents = ref<ListRow[]>([]);
 const listQuery = ref('');
 const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
 const selectedDocument = ref<number | null>(null);
@@ -1021,6 +1060,40 @@ const selectCase = (id: number) => {
   selectedDocument.value = null;
 };
 
+const patchListRow = (id: number, patch: Partial<ListRow>) => {
+  const index = documents.value.findIndex(item => item.id === id);
+  if (index < 0) {
+    return;
+  }
+  documents.value.splice(index, 1, { ...documents.value[index], ...patch });
+};
+
+const toggleMyCase = async (row: ListRow) => {
+  const result = await api('document-manager/cases/my', { id: row.id });
+  if (!result?.ok) {
+    root.$emit('msg', 'error', result?.message || 'Не удалось изменить мои дела');
+    return;
+  }
+  patchListRow(row.id, { inMyCases: Boolean(result.inMyCases) });
+};
+
+const patchCaseFavorite = (caseId: number, favorite: boolean) => {
+  documents.value = documents.value.map(item => (
+    item.id === caseId || item.caseId === caseId ? { ...item, isFavorite: favorite } : item
+  ));
+};
+
+const toggleCaseStar = async (row: ListRow) => {
+  const caseId = row.caseId || row.id;
+  const result = await api('document-manager/record-favorites/toggle', { caseId });
+  if (!result?.ok) {
+    root.$emit('msg', 'error', result?.message || 'Не удалось изменить избранное');
+    return;
+  }
+  patchCaseFavorite(caseId, Boolean(result.favorite));
+  root.$emit('dou-favorites-changed', { caseId, favorite: result.favorite, case: true });
+};
+
 const blockLabel = (block: { title: string; creator: string; createdAt: string }) => (
   [block.title, block.creator, block.createdAt].filter(part => (part || '').trim()).join(', ')
 );
@@ -1101,13 +1174,22 @@ const openDocumentFromQuery = () => {
   }
 };
 
+const onCaseFavoriteChanged = (payload?: { caseId?: number; favorite?: boolean; case?: boolean }) => {
+  if (!payload?.case || !payload.caseId) {
+    return;
+  }
+  patchCaseFavorite(Number(payload.caseId), Boolean(payload.favorite));
+};
+
 onMounted(() => {
   openDocumentFromQuery();
   root.$on('open-dou-document', openFavorite);
+  root.$on('dou-favorites-changed', onCaseFavoriteChanged);
 });
 
 onUnmounted(() => {
   root.$off('open-dou-document', openFavorite);
+  root.$off('dou-favorites-changed', onCaseFavoriteChanged);
 });
 
 onMounted(async () => {
@@ -1404,6 +1486,8 @@ const onReviewed = () => {
 }
 
 .doc-row {
+  display: flex;
+  align-items: stretch;
   min-height: 34px;
   border-bottom: 1px solid #b1b1b1;
 
@@ -1412,11 +1496,25 @@ const onReviewed = () => {
   }
 }
 
+.case-mark {
+  flex: 0 0 28px;
+  border: none;
+  background: transparent;
+  color: #aab2bd;
+  cursor: pointer;
+}
+
+.case-mark--on {
+  color: #93046d;
+}
+
 .doc-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  width: 100%;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
   min-height: 34px;
   padding: 1px 8px 1px 10px;
   border: none;
