@@ -260,7 +260,7 @@ class AddresseeGroup(models.Model):
             except (TypeError, ValueError):
                 page_size = 100
             start = (page - 1) * page_size
-            rows = doctors[start: start + page_size]
+            rows = doctors[start : start + page_size]
             has_more = start + page_size < total
         return {
             "result": [cls._employee_json(row) for row in rows],
