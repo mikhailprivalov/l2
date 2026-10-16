@@ -3670,7 +3670,7 @@ class DocumentRecent(models.Model):
             .distinct()
         )
         offset = (page - 1) * page_size
-        rows = list(qs[offset: offset + page_size + 1])
+        rows = list(qs[offset : offset + page_size + 1])
         has_more = len(rows) > page_size
         rows = rows[:page_size]
         from directions.models import Issledovaniya
