@@ -260,7 +260,7 @@ class AddresseeGroup(models.Model):
             except (TypeError, ValueError):
                 page_size = 100
             start = (page - 1) * page_size
-            rows = doctors[start : start + page_size]
+            rows = doctors[start: start + page_size]
             has_more = start + page_size < total
         return {
             "result": [cls._employee_json(row) for row in rows],
@@ -2883,12 +2883,7 @@ class Documents(models.Model):
 
     @staticmethod
     def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False):
-        qs = Documents.objects.select_related(
-            "type_document",
-            "type_document__group_document",
-            "schema",
-            "document_case",
-        ).filter(Documents.case_access_q(who)).order_by("-pk")
+        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case").filter(Documents.case_access_q(who)).order_by("-pk")
         if my_cases:
             if not who:
                 return []
@@ -3651,7 +3646,7 @@ class DocumentRecent(models.Model):
         except IntegrityError:
             cls.objects.filter(doctor=who, document=document).update(**defaults)
             return
-        extra_ids = list(cls.objects.filter(doctor=who).order_by("-opened_at", "-pk").values_list("pk", flat=True)[cls.MAX_ITEMS :])
+        extra_ids = list(cls.objects.filter(doctor=who).order_by("-opened_at", "-pk").values_list("pk", flat=True)[cls.MAX_ITEMS:])
         if extra_ids:
             cls.objects.filter(pk__in=extra_ids).delete()
 
@@ -3675,7 +3670,7 @@ class DocumentRecent(models.Model):
             .distinct()
         )
         offset = (page - 1) * page_size
-        rows = list(qs[offset : offset + page_size + 1])
+        rows = list(qs[offset: offset + page_size + 1])
         has_more = len(rows) > page_size
         rows = rows[:page_size]
         from directions.models import Issledovaniya
