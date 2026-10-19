@@ -428,8 +428,9 @@ def create_request(request):
             research_pk = int(research_id)
         except (TypeError, ValueError):
             research_pk = None
-        if not research_pk or not TitleResearchHospital.get_titles_for_hospital(hospital.pk, [research_pk]).get(research_pk):
-            return status_response(False, "Услуга недоступна: для больницы не задан синоним")
+        synonyms = TitleResearchHospital.priced_synonyms_for_hospital(hospital.pk)
+        if not research_pk or research_pk not in synonyms:
+            return status_response(False, "Услуга недоступна: нет в действующем прайсе больницы или не задан синоним")
 
     if not request_fields.get('date') or not request_fields.get('time'):
         return status_response(False, "Не указана дата или время исследования")

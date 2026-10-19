@@ -43,6 +43,7 @@ urlpatterns = [
     path('documents/hide', views.documents_hide),
     path('documents/case', views.documents_case),
     path('documents/block', views.documents_block),
+    path('documents/approvers', views.documents_approvers),
     path('blocks/list', views.blocks_list),
     path('blocks/create', views.blocks_create),
     path('blocks/details', views.blocks_details),

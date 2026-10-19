@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 from typing import Optional
@@ -329,6 +330,63 @@ class TitleResearchHospital(models.Model):
             synonym = synonyms.get(pk)
             if synonym:
                 item["hospitalTitle"] = synonym
+
+    @staticmethod
+    def priced_synonyms_for_hospital(hospital_id):
+        from django.core.cache import cache
+        from django.utils import timezone
+
+        if not hospital_id:
+            return {}
+        key = f"hospital_priced_synonyms:{hospital_id}"
+        cached = cache.get(key)
+        if isinstance(cached, str):
+            loaded = json.loads(cached)
+            return {int(pk): title for pk, title in loaded.items() if title}
+        today = timezone.localdate()
+        rows = (
+            TitleResearchHospital.objects.filter(hospital__id=hospital_id)
+            .exclude(title="")
+            .filter(
+                research__pricecoast__price_name__hospital_id=hospital_id,
+                research__pricecoast__price_name__subcontract=True,
+                research__pricecoast__price_name__external_performer=False,
+                research__pricecoast__price_name__doctor__isnull=True,
+                research__pricecoast__price_name__active_status=True,
+                research__pricecoast__price_name__date_start__lte=today,
+                research__pricecoast__price_name__date_end__gte=today,
+            )
+            .values_list("research__id", "title")
+            .distinct()
+        )
+        result = {}
+        for research_id, title in rows:
+            title = (title or "").strip()
+            if research_id and title:
+                result[int(research_id)] = title
+        cache.set(key, json.dumps({str(pk): title for pk, title in result.items()}), 3600)
+        return result
+
+    @staticmethod
+    def apply_priced_synonyms(researches_map, synonyms):
+        if not researches_map:
+            return
+        allowed = {int(pk) for pk in (synonyms or {})}
+        for key, group in list(researches_map.items()):
+            kept = []
+            for item in group or []:
+                if item.get("auto_deselect"):
+                    continue
+                try:
+                    pk = int(item.get("pk"))
+                except (TypeError, ValueError):
+                    continue
+                title = (synonyms or {}).get(pk)
+                if pk not in allowed or not title:
+                    continue
+                item["hospitalTitle"] = title
+                kept.append(item)
+            researches_map[key] = kept
 
     @staticmethod
     def set_title_for_research(hospital, research, title):

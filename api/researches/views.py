@@ -47,7 +47,7 @@ from slog.models import Log
 from users.models import AssignmentTemplates, Speciality
 from utils.nsi_directories import NSI
 from utils.response import status_response
-from hospitals.models import Hospitals, HospitalsGroup, TitleResearchHospital
+from hospitals.models import HospitalsGroup, TitleResearchHospital
 
 
 @login_required
@@ -289,10 +289,15 @@ def get_researches(request, last_used=False):
     get_params = getattr(request, "GET", None) or {}
     with_hospital_synonym = str(get_params.get("withHospitalSynonym") or "").lower() in ("1", "true")
     if with_hospital_synonym:
-        hospital_id = doctorprofile.get_hospital_id()
-        TitleResearchHospital.apply_to_researches_map(hospital_id, result.get("researches") or {})
-        hospital = Hospitals.objects.filter(pk=hospital_id).only("only_services_with_hospital_synonym").first() if hospital_id else None
-        result["onlyServicesWithSynonym"] = bool(hospital and hospital.only_services_with_hospital_synonym)
+        hospital = doctorprofile.get_hospital()
+        hospital_id = hospital.pk if hospital else None
+        only_priced = bool(hospital and hospital.only_services_with_hospital_synonym)
+        result["onlyServicesWithSynonym"] = only_priced
+        researches_map = result.get("researches") or {}
+        if only_priced:
+            TitleResearchHospital.apply_priced_synonyms(researches_map, TitleResearchHospital.priced_synonyms_for_hospital(hospital_id))
+        else:
+            TitleResearchHospital.apply_to_researches_map(hospital_id, researches_map)
     if not last_used:
         from document_management.models import PlaceSection
 
