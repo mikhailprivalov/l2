@@ -707,6 +707,17 @@ def addressees_groups_save_personal(request):
 
 @login_required
 @group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def addressees_groups_add_member(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    result = AddresseeGroup.add_personal_member(data.get("id"), doctor, data.get("memberId"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def addressees_groups_delete(request):
     data = _request_data(request)
     doctor = getattr(request.user, "doctorprofile", None)
@@ -727,6 +738,7 @@ def addressees_hospitals(request):
 def addressees_employees(request):
     data = _request_data(request)
     page_size = None if data.get("all") else data.get("pageSize", 100)
+    allow_all = AddresseeGroup.can_list_all_employees(request.user, request.user.doctorprofile) or bool(data.get("hospitalScope"))
     return JsonResponse(
         AddresseeGroup.get_employees(
             data.get("groupId", AddresseeGroup.ALL_ID),
@@ -734,6 +746,6 @@ def addressees_employees(request):
             data.get("query", ""),
             data.get("page", 1),
             page_size,
-            AddresseeGroup.can_list_all_employees(request.user, request.user.doctorprofile),
+            allow_all,
         )
     )
