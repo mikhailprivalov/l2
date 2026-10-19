@@ -332,13 +332,16 @@ class TitleResearchHospital(models.Model):
                 item["hospitalTitle"] = synonym
 
     @staticmethod
-    def priced_synonyms_for_hospital(hospital_id):
+    def priced_synonyms_for_hospital(hospital_id, doctor_id=None):
         from django.core.cache import cache
         from django.utils import timezone
 
+        from laboratory.settings import RESEARCHES_CACHE_PER_USER
+
         if not hospital_id:
             return {}
-        key = f"hospital_priced_synonyms:{hospital_id}"
+        user_part = f":{int(doctor_id)}" if RESEARCHES_CACHE_PER_USER and doctor_id else ""
+        key = f"hospital_priced_synonyms:{hospital_id}{user_part}"
         cached = cache.get(key)
         if isinstance(cached, str):
             loaded = json.loads(cached)

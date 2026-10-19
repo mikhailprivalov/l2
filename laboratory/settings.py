@@ -681,6 +681,10 @@ PERIOD_DEFAULT_HOSPITALI = 3
 # Переопределение: REQUESTS_JOURNAL_MAX_PERIOD_DAYS = N в laboratory/local_settings.py
 REQUESTS_JOURNAL_MAX_PERIOD_DAYS = 40
 
+# Кэш каталога услуг. False — общий для всех. True — отдельный кэш на каждого пользователя.
+# Переопределение: RESEARCHES_CACHE_PER_USER = True в laboratory/local_settings.py
+RESEARCHES_CACHE_PER_USER = False
+
 # Календарь годов на странице Садоводство (/ui/gardening).
 # Переопределение в laboratory/local_settings.py
 GARDENING_YEAR_MIN = 2000
