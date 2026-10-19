@@ -3299,6 +3299,10 @@ class Documents(models.Model):
                     "issledovaniya_set",
                     queryset=Issledovaniya.objects.only("pk", "time_confirmation", "document_id", "research_id").order_by("pk"),
                 ),
+                Prefetch(
+                    "documentemployeeapprove_set",
+                    queryset=DocumentEmployeeApprove.objects.filter(is_cancel=False, employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye"),
+                ),
             )
             .filter(pk=pk)
             .first()
@@ -3331,6 +3335,8 @@ class Documents(models.Model):
         payload["blockId"] = obj.block_id
         payload["availableBlocks"] = block_options
         payload["canChangeBlock"] = (not obj.block_id) or obj.block.can_write(who)
+        payload["approvers"] = DocumentEmployeeApprove.approvers_json(obj)
+        payload["canEditApprovers"] = DocumentEmployeeApprove.can_edit(obj, who)
         payload["isFavorite"] = record_favorite_status(who, obj)
         payload["hasPrintTemplate"] = bool(obj.type_document_id and obj.type_document.print_docx)
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
@@ -3596,6 +3602,83 @@ class DocumentEmployeeApprove(models.Model):
 
     def __str__(self):
         return f"{self.document} {self.employee} {self.time_approve} {self.is_cancel}"
+
+    @staticmethod
+    def can_edit(document, who):
+        if not document or not who:
+            return False
+        if DocumentCase._is_superuser(who):
+            return True
+        return document.who_create_id == who.pk
+
+    @classmethod
+    def _active_rows(cls, document):
+        cache = getattr(document, "_prefetched_objects_cache", None) or {}
+        prefetched = cache.get("documentemployeeapprove_set")
+        if prefetched is not None:
+            return [row for row in prefetched if not row.is_cancel and row.employee_id]
+        return list(cls.objects.filter(document=document, is_cancel=False, employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye"))
+
+    @classmethod
+    def approvers_json(cls, document):
+        seen = set()
+        result = []
+        for row in cls._active_rows(document):
+            if row.employee_id in seen or not row.employee:
+                continue
+            seen.add(row.employee_id)
+            result.append(AddresseeGroup._employee_json(row.employee))
+        return result
+
+    @classmethod
+    def set_approvers(cls, document, who, members):
+        if not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if not cls.can_edit(document, who):
+            return {"ok": False, "message": "Нет прав"}
+        if not isinstance(members, list):
+            return {"ok": False, "message": "Некорректный список"}
+        ids = []
+        seen = set()
+        for item in members:
+            raw = item.get("id") if isinstance(item, dict) else item
+            try:
+                doctor_id = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if doctor_id > 0 and doctor_id not in seen:
+                seen.add(doctor_id)
+                ids.append(doctor_id)
+        found = set(DoctorProfile.objects.filter(pk__in=ids).values_list("pk", flat=True))
+        valid_ids = [doctor_id for doctor_id in ids if doctor_id in found]
+        valid_set = set(valid_ids)
+        from django.utils import timezone
+
+        now = timezone.now()
+        with transaction.atomic():
+            active = cls.objects.filter(document=document, is_cancel=False)
+            if valid_set:
+                active.exclude(employee_id__in=valid_set).delete()
+            else:
+                active.delete()
+            existing = set(cls.objects.filter(document=document, is_cancel=False, employee_id__in=valid_set).values_list("employee_id", flat=True)) if valid_set else set()
+            cls.objects.bulk_create(
+                [
+                    cls(
+                        document=document,
+                        employee_id=doctor_id,
+                        who_create=who,
+                        create_at_approve=now,
+                        is_cancel=False,
+                    )
+                    for doctor_id in valid_ids
+                    if doctor_id not in existing
+                ]
+            )
+        cache = getattr(document, "_prefetched_objects_cache", None)
+        if cache is not None:
+            cache.pop("documentemployeeapprove_set", None)
+        return {"ok": True, "approvers": cls.approvers_json(document)}
 
 
 class DocumentResolution(models.Model):

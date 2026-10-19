@@ -389,6 +389,19 @@
           @input="onMainBlock"
         />
       </div>
+      <div
+        v-if="!caseListMode && (research || loaded)"
+        class="doc-case-select doc-approvers"
+      >
+        <span>Согласовать</span>
+        <AddresseeField
+          class="doc-case-select__field"
+          header="Согласовать"
+          :value="approvers"
+          :disabled="!canEditApprovers"
+          @input="onApprovers"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -452,6 +465,8 @@ const availableCases = ref<{ id: number; label: string }[]>([]);
 const selectedBlockId = ref<number | null>(null);
 const availableBlocks = ref<{ id: number; label: string }[]>([]);
 const canChangeBlock = ref(true);
+const approvers = ref('[]');
+const canEditApprovers = ref(false);
 const whoConfirmed = ref('');
 const patient = {};
 
@@ -695,6 +710,8 @@ const load = async () => {
   selectedBlockId.value = null;
   availableBlocks.value = [];
   canChangeBlock.value = true;
+  approvers.value = '[]';
+  canEditApprovers.value = false;
   caseDocuments.value = [];
   whoConfirmed.value = '';
   if (props.caseId && !props.documentId) {
@@ -733,6 +750,8 @@ const load = async () => {
       selectedBlockId.value = result.blockId || null;
       availableBlocks.value = result.availableBlocks || [];
       canChangeBlock.value = result.canChangeBlock !== false;
+      approvers.value = JSON.stringify(result.approvers || []);
+      canEditApprovers.value = Boolean(result.canEditApprovers);
       whoConfirmed.value = result.whoConfirmed || '';
       if (result.reviewedNow) {
         emit('reviewed');
@@ -1000,6 +1019,28 @@ onMounted(() => {
 onUnmounted(() => {
   root.$off('dou-favorites-changed', onFavoritesChanged);
 });
+
+const onApprovers = async (value: string) => {
+  if (!props.documentId || !canEditApprovers.value || value === approvers.value) {
+    return;
+  }
+  const previous = approvers.value;
+  approvers.value = value;
+  let members = [];
+  try {
+    members = JSON.parse(value);
+  } catch {
+    members = [];
+  }
+  const result = await api('document-manager/documents/approvers', { id: props.documentId, members });
+  if (result?.ok) {
+    approvers.value = JSON.stringify(result.approvers || members);
+    root.$emit('msg', 'ok', 'Согласующие сохранены');
+  } else {
+    approvers.value = previous;
+    root.$emit('msg', 'error', result?.message || 'Не удалось сохранить согласующих');
+  }
+};
 
 const onCaseAccess = async (value: string) => {
   const anchored = Boolean(props.documentId || props.caseId);
@@ -1426,6 +1467,14 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
 .doc-case-select__field {
   flex: 1;
   min-width: 0;
+}
+
+.doc-approvers {
+  align-items: stretch;
+
+  > span {
+    padding-top: 6px;
+  }
 }
 
 .case-docs__body {

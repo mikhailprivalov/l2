@@ -17,6 +17,7 @@ from document_management.models import (  # noqa: I001
     DocumentPickerFavorite,
     DocumentCase,
     DocumentBlock,
+    DocumentEmployeeApprove,
     Documents,
     GroupDocuments,
     PlaceSection,
@@ -465,6 +466,20 @@ def documents_block(request):
     if not document or not Documents.can_see_document(document, doctor):
         return status_response(False, "Документ не найден")
     result = DocumentBlock.assign_document(document, doctor, data.get("blockId"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_approvers(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.filter(pk=data.get("id")).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = DocumentEmployeeApprove.set_approvers(document, doctor, data.get("members"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
