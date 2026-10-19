@@ -356,7 +356,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         limit_visual = f"{data.get('пр-Ограничения визуализации', '')}"
         peroral_amount = f"{data.get('пр-Пероральный контраст', '')}"
         allergy = f"{data.get('пр-Аллергическая реакция', '')}"
-        text_contrast = direction.text_contrast
+        text_contrast = direction.type_contrast.title if direction.type_contrast else ""
         meta_info = {
             "contrast_amount": f"{text_contrast} {contrast_amount}",
             "area": anatomical_area,
