@@ -39,7 +39,7 @@ from directory.models import (
 from directory.sql_func import get_constructor_edit_access_by_research_id, get_constructor_edit_access_by_department_or_doctor, get_lab_researches_with_tests_params
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
-from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, DISABLED_RESULT_FORMS
+from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, DISABLED_RESULT_FORMS, RESEARCHES_CACHE_PER_USER
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from rmis_integration.client import get_md5
@@ -131,7 +131,8 @@ def get_researches(request, last_used=False):
         cache.set(k, json.dumps(restricted_to_direct), 30)
     else:
         restricted_to_direct = json.loads(restricted_to_direct)
-    mk = f'get_researches:result:{get_md5(";".join([str(x) for x in restricted_to_direct]))}'
+    researches_cache_user = f":{doctorprofile.pk}" if RESEARCHES_CACHE_PER_USER else ""
+    mk = f'get_researches:result{researches_cache_user}:{get_md5(";".join([str(x) for x in restricted_to_direct]))}'
     result = cache.get(mk) if not last_used else None
 
     if not result:
@@ -183,7 +184,7 @@ def get_researches(request, last_used=False):
         for r in res:
             if r.is_layout_template or r.is_indicator:
                 continue
-            k = f'get_researches:research:{r.pk}'
+            k = f'get_researches:research{researches_cache_user}:{r.pk}'
             research_data = cache.get(k)
 
             if not research_data:
@@ -295,7 +296,10 @@ def get_researches(request, last_used=False):
         result["onlyServicesWithSynonym"] = only_priced
         researches_map = result.get("researches") or {}
         if only_priced:
-            TitleResearchHospital.apply_priced_synonyms(researches_map, TitleResearchHospital.priced_synonyms_for_hospital(hospital_id))
+            TitleResearchHospital.apply_priced_synonyms(
+                researches_map,
+                TitleResearchHospital.priced_synonyms_for_hospital(hospital_id, doctorprofile.pk),
+            )
         else:
             TitleResearchHospital.apply_to_researches_map(hospital_id, researches_map)
     if not last_used:
