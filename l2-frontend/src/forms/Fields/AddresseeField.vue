@@ -21,9 +21,9 @@
       v-if="opened"
       show-footer="true"
       white-bg="true"
-      width="920px"
+      width="1200px"
       max-width="96vw"
-      height="560px"
+      height="620px"
       margin-left-right="auto"
       @close="opened = false"
     >
@@ -78,48 +78,110 @@
             class="form-control"
             placeholder="Поиск по ФИО"
           >
-          <label class="addressee-modal__select-all">
-            <input
-              ref="selectAllEl"
-              type="checkbox"
-              :checked="allLoadedSelected"
-              :disabled="isTogglingAll || (employees.length === 0 && !hasMore)"
-              @change="toggleSelectAll"
-            >
-            Выделить все
-          </label>
           <div
-            ref="rowsEl"
-            class="addressee-modal__rows"
-            @scroll="onRowsScroll"
+            class="addressee-modal__columns"
+            :class="{ 'addressee-modal__columns--split': showSetSplit }"
           >
-            <label
-              v-for="row in employees"
-              :key="row.id"
-              class="addressee-modal__row"
+            <div
+              v-if="showSetSplit"
+              class="addressee-modal__col"
             >
-              <input
-                type="checkbox"
-                :checked="isSelected(row.id)"
-                @change="toggleEmployee(row)"
+              <div class="addressee-modal__col-title">
+                Все
+              </div>
+              <div
+                ref="allRowsEl"
+                class="addressee-modal__rows"
+                @scroll="onAllRowsScroll"
               >
-              <span>{{ row.fio }}</span>
-              <span
-                v-if="row.department"
-                class="addressee-modal__dep"
-              >{{ row.department }}</span>
-            </label>
-            <div
-              v-if="isLoadingMore"
-              class="addressee-modal__empty"
-            >
-              Загрузка...
+                <div
+                  v-for="row in allEmployees"
+                  :key="row.id"
+                  class="addressee-modal__row"
+                >
+                  <span class="addressee-modal__fio">{{ row.fio }}</span>
+                  <span class="addressee-modal__tail">
+                    <span
+                      v-if="row.department"
+                      class="addressee-modal__dep"
+                    >{{ row.department }}</span>
+                    <button
+                      v-if="canAddToSelectedSet && !isInSet(row.id)"
+                      class="addressee-modal__to-set"
+                      type="button"
+                      title="Включить в набор"
+                      :disabled="addingMemberId === row.id"
+                      @click="addToSelectedSet(row)"
+                    >
+                      <i class="fa fa-arrow-right" />
+                    </button>
+                  </span>
+                </div>
+                <div
+                  v-if="isLoadingAllMore"
+                  class="addressee-modal__empty"
+                >
+                  Загрузка...
+                </div>
+                <div
+                  v-else-if="allEmployees.length === 0"
+                  class="addressee-modal__empty"
+                >
+                  Нет сотрудников
+                </div>
+              </div>
             </div>
-            <div
-              v-else-if="employees.length === 0"
-              class="addressee-modal__empty"
-            >
-              Нет сотрудников
+            <div class="addressee-modal__col">
+              <div
+                v-if="showSetSplit"
+                class="addressee-modal__col-title"
+              >
+                {{ selectedGroupTitle }}
+              </div>
+              <label class="addressee-modal__select-all">
+                <input
+                  ref="selectAllEl"
+                  type="checkbox"
+                  :checked="allLoadedSelected"
+                  :disabled="isTogglingAll || (employees.length === 0 && !hasMore)"
+                  @change="toggleSelectAll"
+                >
+                Выделить все
+              </label>
+              <div
+                ref="rowsEl"
+                class="addressee-modal__rows"
+                @scroll="onRowsScroll"
+              >
+                <label
+                  v-for="row in employees"
+                  :key="row.id"
+                  class="addressee-modal__row"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="isSelected(row.id)"
+                    @change="toggleEmployee(row)"
+                  >
+                  <span>{{ row.fio }}</span>
+                  <span
+                    v-if="row.department"
+                    class="addressee-modal__dep"
+                  >{{ row.department }}</span>
+                </label>
+                <div
+                  v-if="isLoadingMore"
+                  class="addressee-modal__empty"
+                >
+                  Загрузка...
+                </div>
+                <div
+                  v-else-if="employees.length === 0"
+                  class="addressee-modal__empty"
+                >
+                  Нет сотрудников
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -194,7 +256,7 @@
 
 <script setup lang="ts">
 import {
-  computed, nextTick, ref, watch,
+  computed, getCurrentInstance, nextTick, ref, watch,
 } from 'vue';
 import debounce from 'lodash/debounce';
 import Treeselect from '@riophae/vue-treeselect';
@@ -236,6 +298,8 @@ const emit = defineEmits<{
   (e: 'input', value: string): void;
 }>();
 
+const root = getCurrentInstance().proxy.$root;
+
 const opened = ref(false);
 const hospitals = ref<Hospital[]>([]);
 const hospitalId = ref<number | null>(null);
@@ -247,16 +311,24 @@ const groups = ref<Group[]>([]);
 const selectedGroupId = ref(0);
 const query = ref('');
 const employees = ref<Employee[]>([]);
+const allEmployees = ref<Employee[]>([]);
+const setMemberIds = ref<Set<number>>(new Set());
 const draft = ref<Employee[]>([]);
 const newSetTitle = ref('');
 const page = ref(1);
 const hasMore = ref(false);
+const allPage = ref(1);
+const allHasMore = ref(false);
 const isLoading = ref(false);
 const isLoadingMore = ref(false);
+const isLoadingAll = ref(false);
+const isLoadingAllMore = ref(false);
 const isTogglingAll = ref(false);
 const isSavingSet = ref(false);
+const addingMemberId = ref<number | null>(null);
 const allMatchingSelected = ref(false);
 const rowsEl = ref<HTMLElement | null>(null);
+const allRowsEl = ref<HTMLElement | null>(null);
 const selectAllEl = ref<HTMLInputElement | null>(null);
 const PAGE_SIZE = 100;
 
@@ -287,6 +359,16 @@ const parseValue = (raw?: string): Employee[] => {
 };
 
 const preview = computed(() => parseValue(props.value).map(row => row.fio).filter(Boolean).join(', '));
+
+const selectedGroup = computed(() => groups.value.find(row => row.id === selectedGroupId.value) || null);
+
+const showSetSplit = computed(() => selectedGroupId.value > 0);
+
+const selectedGroupTitle = computed(() => selectedGroup.value?.title || '');
+
+const canAddToSelectedSet = computed(() => Boolean(selectedGroup.value?.own));
+
+const isInSet = (id: number) => setMemberIds.value.has(id);
 
 const isSelected = (id: number) => draft.value.some(row => row.id === id);
 
@@ -383,6 +465,69 @@ const loadEmployees = async (append = false) => {
   }
 };
 
+const loadEveryone = async (append = false) => {
+  if (selectedGroupId.value <= 0) {
+    allEmployees.value = [];
+    allHasMore.value = false;
+    return;
+  }
+  if (append) {
+    if (!allHasMore.value || isLoadingAllMore.value || isLoadingAll.value) {
+      return;
+    }
+    isLoadingAllMore.value = true;
+  } else {
+    isLoadingAll.value = true;
+    allPage.value = 1;
+    allHasMore.value = false;
+  }
+  try {
+    const nextPage = append ? allPage.value + 1 : 1;
+    const data = await api('document-manager/addressees/employees', {
+      groupId: 0,
+      hospitalId: hospitalId.value,
+      hospitalScope: true,
+      query: query.value,
+      page: nextPage,
+      pageSize: PAGE_SIZE,
+    });
+    const rows = data.result || [];
+    allPage.value = data.page || nextPage;
+    allHasMore.value = Boolean(data.hasMore);
+    allEmployees.value = append ? [...allEmployees.value, ...rows] : rows;
+  } finally {
+    isLoadingAll.value = false;
+    isLoadingAllMore.value = false;
+  }
+};
+
+let memberRequest = 0;
+
+const refreshMemberIds = async () => {
+  const requestId = memberRequest + 1;
+  memberRequest = requestId;
+  const groupId = selectedGroupId.value;
+  if (groupId <= 0) {
+    setMemberIds.value = new Set();
+    return;
+  }
+  const rows = await loadAllEmployees(groupId, '');
+  if (requestId !== memberRequest || selectedGroupId.value !== groupId) {
+    return;
+  }
+  setMemberIds.value = new Set(rows.map(row => row.id));
+};
+
+const reloadMiddle = () => {
+  loadEmployees(false);
+  if (selectedGroupId.value > 0) {
+    loadEveryone(false);
+    return;
+  }
+  allEmployees.value = [];
+  allHasMore.value = false;
+};
+
 const onRowsScroll = () => {
   const el = rowsEl.value;
   if (!el || !hasMore.value || isLoadingMore.value) {
@@ -393,12 +538,26 @@ const onRowsScroll = () => {
   }
 };
 
-const debouncedLoad = debounce(() => loadEmployees(false), 250);
+const onAllRowsScroll = () => {
+  const el = allRowsEl.value;
+  if (!el || !allHasMore.value || isLoadingAllMore.value) {
+    return;
+  }
+  if (el.scrollHeight - el.scrollTop - el.clientHeight < 80) {
+    loadEveryone(true);
+  }
+};
+
+const debouncedLoad = debounce(() => reloadMiddle(), 250);
 
 const selectGroup = (id: number) => {
   selectedGroupId.value = id;
   allMatchingSelected.value = false;
-  loadEmployees(false);
+  setMemberIds.value = new Set();
+  reloadMiddle();
+  if (id > 0) {
+    refreshMemberIds();
+  }
 };
 
 const reloadGroups = async () => {
@@ -422,7 +581,11 @@ const onHospitalInput = (value: number | null) => {
     return;
   }
   allMatchingSelected.value = false;
-  loadEmployees(false);
+  setMemberIds.value = new Set();
+  reloadMiddle();
+  if (selectedGroupId.value > 0) {
+    refreshMemberIds();
+  }
 };
 
 const openModal = async () => {
@@ -431,11 +594,17 @@ const openModal = async () => {
   newSetTitle.value = '';
   allMatchingSelected.value = false;
   employees.value = [];
+  allEmployees.value = [];
   opened.value = true;
   await reloadGroups();
   await loadHospitals();
   selectedGroupId.value = groups.value[0] ? groups.value[0].id : -1;
-  await loadEmployees(false);
+  setMemberIds.value = new Set();
+  await Promise.all([
+    loadEmployees(false),
+    selectedGroupId.value > 0 ? loadEveryone(false) : Promise.resolve(),
+    selectedGroupId.value > 0 ? refreshMemberIds() : Promise.resolve(),
+  ]);
 };
 
 const addCurrentSet = async () => {
@@ -462,11 +631,34 @@ const savePersonalSet = async () => {
       await reloadGroups();
       if (result.id) {
         selectedGroupId.value = result.id;
-        await loadEmployees(false);
+        await Promise.all([loadEmployees(false), loadEveryone(false), refreshMemberIds()]);
       }
     }
   } finally {
     isSavingSet.value = false;
+  }
+};
+
+const addToSelectedSet = async (row: Employee) => {
+  if (!canAddToSelectedSet.value || selectedGroupId.value <= 0 || isInSet(row.id) || addingMemberId.value != null) {
+    return;
+  }
+  addingMemberId.value = row.id;
+  try {
+    const result = await api('document-manager/addressees/groups/add-member', {
+      id: selectedGroupId.value,
+      memberId: row.id,
+    });
+    if (result?.ok) {
+      const nextIds = new Set(setMemberIds.value);
+      nextIds.add(row.id);
+      setMemberIds.value = nextIds;
+      await Promise.all([loadEmployees(false), refreshMemberIds()]);
+    } else {
+      root.$emit('msg', 'error', result?.message || 'Не удалось добавить в набор');
+    }
+  } finally {
+    addingMemberId.value = null;
   }
 };
 
@@ -484,6 +676,9 @@ const deletePersonalSet = async (group: Group) => {
   groups.value = groups.value.filter(row => row.id !== group.id);
   if (selectedGroupId.value === group.id) {
     selectedGroupId.value = 0;
+    setMemberIds.value = new Set();
+    allEmployees.value = [];
+    allHasMore.value = false;
     await loadEmployees(false);
   }
 };
@@ -546,7 +741,7 @@ watch([allLoadedSelected, someLoadedSelected, employees, draft], async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 430px;
+  height: 490px;
   min-height: 0;
 }
 
@@ -619,6 +814,36 @@ watch([allLoadedSelected, someLoadedSelected, employees, draft], async () => {
   gap: 6px;
 }
 
+.addressee-modal__columns {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 8px;
+}
+
+.addressee-modal__columns--split .addressee-modal__col:first-child {
+  flex: 1.35;
+}
+
+.addressee-modal__columns--split .addressee-modal__col + .addressee-modal__col {
+  border-left: 1px solid #ddd;
+  padding-left: 8px;
+}
+
+.addressee-modal__col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  gap: 6px;
+}
+
+.addressee-modal__col-title {
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+
 .addressee-modal__select-all {
   display: flex;
   align-items: center;
@@ -641,10 +866,44 @@ watch([allLoadedSelected, someLoadedSelected, employees, draft], async () => {
   cursor: pointer;
 }
 
+.addressee-modal__fio {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.addressee-modal__tail {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  margin-left: auto;
+}
+
 .addressee-modal__dep {
   margin-left: auto;
   color: #888;
   font-size: 12px;
+}
+
+.addressee-modal__tail .addressee-modal__dep {
+  margin-left: 0;
+}
+
+.addressee-modal__to-set {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: #049372;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.addressee-modal__to-set:disabled {
+  cursor: default;
+  opacity: 0.5;
 }
 
 .addressee-modal__empty {

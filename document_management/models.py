@@ -4,7 +4,9 @@ import uuid
 import simplejson as json
 from django.contrib.postgres.fields import ArrayField
 from django.db import IntegrityError, models, transaction
+from django.db.models.functions import Lower
 
+from document_management.sql_func import CYRILLIC_LOWER, CYRILLIC_UPPER
 from hospitals.models import Hospitals
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
@@ -58,6 +60,14 @@ class GroupDocuments(models.Model):
             obj.title = title
         obj.save()
         return {"ok": True, "id": obj.pk, "title": obj.title}
+
+
+def _fold_doctor_name(field_name):
+    return Lower(models.Func(models.F(field_name), models.Value(CYRILLIC_UPPER), models.Value(CYRILLIC_LOWER), function="TRANSLATE", output_field=models.CharField()))
+
+
+def _fold_search(search):
+    return search.translate(str.maketrans(CYRILLIC_UPPER, CYRILLIC_LOWER)).lower()
 
 
 class AddresseeGroup(models.Model):
@@ -227,6 +237,23 @@ class AddresseeGroup(models.Model):
         return {"ok": True}
 
     @classmethod
+    def add_personal_member(cls, pk, who_create, doctor_id):
+        if not who_create:
+            return {"ok": False, "message": "Нет пользователя"}
+        obj = cls.objects.filter(pk=pk, who_create=who_create).first()
+        if not obj:
+            return {"ok": False, "message": "Набор не найден"}
+        try:
+            doctor_id = int(doctor_id)
+        except (TypeError, ValueError):
+            doctor_id = 0
+        doctor = DoctorProfile.objects.filter(pk=doctor_id, user__is_active=True, is_system_user=False).first()
+        if not doctor:
+            return {"ok": False, "message": "Сотрудник не найден"}
+        AddresseeGroupMember.objects.get_or_create(group=obj, doctor_id=doctor.pk)
+        return {"ok": True, "id": obj.pk}
+
+    @classmethod
     def get_hospitals(cls):
         rows = Hospitals.objects.filter(hide=False).order_by("-is_default", "short_title", "title", "pk")
         return [{"id": row.pk, "title": row.short_title or row.title, "isDefault": row.is_default} for row in rows]
@@ -258,10 +285,17 @@ class AddresseeGroup(models.Model):
             doctors = doctors.filter(addressee_group_members__group_id=group_id)
         query = (query or "").strip()
         if query:
+            doctors = doctors.annotate(
+                family_fold=_fold_doctor_name("family"),
+                name_fold=_fold_doctor_name("name"),
+                patronymic_fold=_fold_doctor_name("patronymic"),
+                fio_fold=_fold_doctor_name("fio"),
+            )
             parts = [p for p in query.split() if p]
             q_filter = models.Q()
             for part in parts:
-                q_filter &= models.Q(family__icontains=part) | models.Q(name__icontains=part) | models.Q(patronymic__icontains=part) | models.Q(fio__icontains=part)
+                needle = _fold_search(part)
+                q_filter &= models.Q(family_fold__contains=needle) | models.Q(name_fold__contains=needle) | models.Q(patronymic_fold__contains=needle) | models.Q(fio_fold__contains=needle)
             doctors = doctors.filter(q_filter)
         doctors = doctors.distinct().order_by("family", "name", "patronymic", "pk")
         total = doctors.count()
