@@ -2571,6 +2571,7 @@ class Documents(models.Model):
 
     HIDDEN_DOCS_GROUP = "Скрытие документа"
     RESET_GROUP = "Сброс документов"
+    CANCEL_APPROVE_GROUP = "ДОУ: отмена согласования"
     HISTORY_GROUP = "История документа"
     LOG_CREATE = 260000
     LOG_SAVE = 260001
@@ -2578,7 +2579,11 @@ class Documents(models.Model):
     LOG_RESET = 260003
     LOG_HIDE = 260004
     LOG_SHOW = 260005
-    LOG_TYPES = (LOG_CREATE, LOG_SAVE, LOG_CONFIRM, LOG_RESET, LOG_HIDE, LOG_SHOW)
+    LOG_APPROVERS = 260006
+    LOG_APPROVE = 260007
+    LOG_REJECT = 260008
+    LOG_APPROVE_CANCEL = 260009
+    LOG_TYPES = (LOG_CREATE, LOG_SAVE, LOG_CONFIRM, LOG_RESET, LOG_HIDE, LOG_SHOW, LOG_APPROVERS, LOG_APPROVE, LOG_REJECT, LOG_APPROVE_CANCEL)
 
     class Meta:
         verbose_name = "Документ-экземпляр"
@@ -2775,7 +2780,8 @@ class Documents(models.Model):
             if case is None or case.pk != obj.document_case_id:
                 case = DocumentCase.objects.filter(pk=obj.document_case_id).first()
             if not case or not case.can_access(who):
-                return False
+                if not DocumentEmployeeApprove.is_assigned(obj, who):
+                    return False
         if not obj.is_hidden:
             return True
         return cls.can_view_all_hidden(who)
@@ -2969,9 +2975,7 @@ class Documents(models.Model):
 
     @classmethod
     def log_action(cls, pk, log_type, who, extra=None):
-        from slog.models import Log
-
-        Log.log(str(pk), log_type, who, extra or {})
+        DocumentManagerLog.write(log_type, who, extra or {}, document_id=pk)
 
     @staticmethod
     def participant_cases(who, date_from=None, date_to=None):
@@ -3006,30 +3010,41 @@ class Documents(models.Model):
 
     @staticmethod
     def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False):
-        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case").filter(Documents.case_access_q(who)).order_by("-pk")
-        if my_cases:
+        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case").order_by("-pk")
+        if role_filter == "toBeAgreed":
             if not who:
                 return []
-            qs = qs.filter(models.Q(document_case__who_create_id=who.pk) | models.Q(document_case__user_my_cases__doctor_id=who.pk))
-        elif role_filter == "toReview":
-            if not who:
-                return []
-            qs = qs.filter(pk__in=DocumentReview.pending_document_ids(who))
+            qs = qs.filter(
+                is_hidden=False,
+                documentemployeeapprove__employee_id=who.pk,
+                documentemployeeapprove__is_cancel=False,
+                documentemployeeapprove__time_approve__isnull=True,
+            )
         else:
-            if type_id not in (None, "", -1, "-1"):
-                qs = qs.filter(type_document_id=type_id)
-            elif group_id in (-1, "-1"):
-                qs = qs.filter(models.Q(type_document__isnull=True) | models.Q(type_document__group_document__isnull=True))
-            elif group_id not in (None, "", 0, "0"):
-                qs = qs.filter(type_document__group_document_id=group_id)
-            if role_filter == "created" and who:
-                qs = qs.filter(who_create=who)
-        if hidden:
-            if not Documents.can_view_all_hidden(who):
-                return []
-            qs = qs.filter(is_hidden=True)
-        else:
-            qs = qs.filter(is_hidden=False)
+            qs = qs.filter(Documents.case_access_q(who))
+            if my_cases:
+                if not who:
+                    return []
+                qs = qs.filter(models.Q(document_case__who_create_id=who.pk) | models.Q(document_case__user_my_cases__doctor_id=who.pk))
+            elif role_filter == "toReview":
+                if not who:
+                    return []
+                qs = qs.filter(pk__in=DocumentReview.pending_document_ids(who))
+            else:
+                if type_id not in (None, "", -1, "-1"):
+                    qs = qs.filter(type_document_id=type_id)
+                elif group_id in (-1, "-1"):
+                    qs = qs.filter(models.Q(type_document__isnull=True) | models.Q(type_document__group_document__isnull=True))
+                elif group_id not in (None, "", 0, "0"):
+                    qs = qs.filter(type_document__group_document_id=group_id)
+                if role_filter == "created" and who:
+                    qs = qs.filter(who_create=who)
+            if hidden:
+                if not Documents.can_view_all_hidden(who):
+                    return []
+                qs = qs.filter(is_hidden=True)
+            else:
+                qs = qs.filter(is_hidden=False)
         docs = list(qs.distinct())
         if not docs:
             return []
@@ -3301,7 +3316,7 @@ class Documents(models.Model):
                 ),
                 Prefetch(
                     "documentemployeeapprove_set",
-                    queryset=DocumentEmployeeApprove.objects.filter(is_cancel=False, employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye"),
+                    queryset=DocumentEmployeeApprove.objects.filter(is_cancel=False, employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye", "who_create"),
                 ),
             )
             .filter(pk=pk)
@@ -3336,7 +3351,9 @@ class Documents(models.Model):
         payload["availableBlocks"] = block_options
         payload["canChangeBlock"] = (not obj.block_id) or obj.block.can_write(who)
         payload["approvers"] = DocumentEmployeeApprove.approvers_json(obj)
+        payload["approvalStatuses"] = DocumentEmployeeApprove.statuses_json(obj)
         payload["canEditApprovers"] = DocumentEmployeeApprove.can_edit(obj, who)
+        payload["canCancelApproval"] = DocumentEmployeeApprove.can_cancel(who)
         payload["isFavorite"] = record_favorite_status(who, obj)
         payload["hasPrintTemplate"] = bool(obj.type_document_id and obj.type_document.print_docx)
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
@@ -3552,12 +3569,29 @@ class Documents(models.Model):
             "issPk": "Исследование",
             "confirmed": "Подтверждён",
             "isHidden": "Скрыт",
+            "added": "Добавлены",
+            "removed": "Сняты",
+            "employeeFio": "Согласующий",
+            "status": "Статус",
+            "comment": "Комментарий",
+            "caseId": "Дело",
+            "blockId": "Блок",
+            "favorite": "Избранное",
+            "topic": "Тема",
+            "fileName": "Файл",
+            "error": "Ошибка",
+            "message": "Сообщение",
+            "id": "Код",
+            "isPublished": "Опубликован",
+            "inMyCases": "В моих делах",
+            "deleted": "Удалён",
+            "memberId": "Участник",
+            "closedAt": "Закрыто",
         }
         yesno = {True: "да", False: "нет"}
-        events = []
-        logs = Log.objects.filter(key=str(pk), type__in=cls.LOG_TYPES).select_related("user__user", "user__podrazdeleniye").order_by("time", "pk")
-        for lg in logs:
-            event = [["title", f"{strdatetime(lg.time)} {lg.get_type_display()}"]]
+
+        def one(lg, label):
+            event = [["title", f"{strdatetime(lg.time)} {label}"]]
             if lg.user:
                 podr = lg.user.podrazdeleniye.title if lg.user.podrazdeleniye else ""
                 username = lg.user.user.username if lg.user.user else ""
@@ -3581,8 +3615,17 @@ class Documents(models.Model):
                     event.append(["json_data", lg.body])
                 else:
                     event.append(["Данные", lg.body])
-            events.append(event)
-        return [{"type": f"Документ №{pk}", "events": events}]
+            return event
+
+        packed = []
+        fresh = DocumentManagerLog.objects.filter(document_id=pk).select_related("user__user", "user__podrazdeleniye")
+        for lg in fresh:
+            packed.append((lg.time, lg.pk, one(lg, lg.get_action_display())))
+        logs = Log.objects.filter(key=str(pk), type__in=cls.LOG_TYPES).select_related("user__user", "user__podrazdeleniye")
+        for lg in logs:
+            packed.append((lg.time, lg.pk, one(lg, lg.get_type_display())))
+        packed.sort(key=lambda item: (item[0], item[1]))
+        return [{"type": f"Документ №{pk}", "events": [item[2] for item in packed]}]
 
 
 class DocumentEmployeeApprove(models.Model):
@@ -3603,9 +3646,147 @@ class DocumentEmployeeApprove(models.Model):
     def __str__(self):
         return f"{self.document} {self.employee} {self.time_approve} {self.is_cancel}"
 
+    @classmethod
+    def is_assigned(cls, document, who):
+        if not document or not who:
+            return False
+        return cls.objects.filter(document=document, employee_id=who.pk).filter(models.Q(is_cancel=False) | models.Q(time_approve__isnull=False)).exists()
+
+    @staticmethod
+    def _status_code(row):
+        if row.time_approve and not row.is_cancel:
+            return "approved"
+        if row.is_cancel:
+            return "rejected"
+        return "waiting"
+
+    @staticmethod
+    def _prefer(prev, row):
+        if prev is None:
+            return row
+        if prev.is_cancel != row.is_cancel:
+            return row if not row.is_cancel else prev
+        if bool(row.time_approve) != bool(prev.time_approve):
+            return row if row.time_approve else prev
+        return row if row.pk > prev.pk else prev
+
+    @classmethod
+    def can_cancel(cls, who):
+        if not who:
+            return False
+        return Documents.CANCEL_APPROVE_GROUP in Documents._who_group_names(who, Documents.CANCEL_APPROVE_GROUP)
+
+    @classmethod
+    def chosen_row(cls, document, employee_id):
+        chosen = None
+        rows = cls.objects.filter(document=document, employee_id=employee_id).select_related("employee").order_by("pk")
+        for row in rows:
+            chosen = cls._prefer(chosen, row)
+        return chosen
+
+    @classmethod
+    def statuses_json(cls, document):
+        rows = list(cls.objects.filter(document=document, employee_id__isnull=False).select_related("employee").order_by("pk"))
+        from laboratory.utils import strdatetimeru
+
+        chosen = {}
+        order = []
+        for row in rows:
+            prev = chosen.get(row.employee_id)
+            if prev is None:
+                chosen[row.employee_id] = row
+                order.append(row.employee_id)
+                continue
+            chosen[row.employee_id] = cls._prefer(prev, row)
+        result = []
+        for employee_id in order:
+            row = chosen[employee_id]
+            if not row.employee:
+                continue
+            status = cls._status_code(row)
+            decided_at = ""
+            if status != "waiting":
+                decided_at = strdatetimeru(row.time_approve) or ""
+            result.append(
+                {
+                    "id": row.employee_id,
+                    "fio": row.employee.get_fio(),
+                    "status": status,
+                    "decidedAt": decided_at,
+                    "comment": (row.note_cancel or "") if status == "rejected" else "",
+                }
+            )
+        return result
+
+    @classmethod
+    def approve(cls, document, who, comment=None):
+        if not document or not who or not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        text = comment.strip() if isinstance(comment, str) else ""
+        if len(text) > 130:
+            return {"ok": False, "message": "Комментарий длиннее 130 символов"}
+        from django.utils import timezone
+
+        now = timezone.now()
+        waiting = cls.objects.filter(document=document, employee=who, is_cancel=False, time_approve__isnull=True)
+        if not waiting.exists():
+            return {"ok": False, "message": "Согласование не требуется"}
+        if text:
+            waiting.update(time_approve=now, is_cancel=True, note_cancel=text)
+        else:
+            waiting.update(time_approve=now, is_cancel=False, note_cancel="")
+        cache = getattr(document, "_prefetched_objects_cache", None)
+        if cache is not None:
+            cache.pop("documentemployeeapprove_set", None)
+        extra = {"employeeFio": who.get_fio()}
+        log_type = Documents.LOG_APPROVE
+        if text:
+            extra["comment"] = text
+            log_type = Documents.LOG_REJECT
+        Documents.log_action(document.pk, log_type, who, extra)
+        return {"ok": True, "approvalStatuses": cls.statuses_json(document)}
+
+    @classmethod
+    def cancel(cls, document, who, employee_id):
+        if not document or not who or not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if not cls.can_cancel(who):
+            return {"ok": False, "message": "Нет прав"}
+        try:
+            employee_id = int(employee_id)
+        except (TypeError, ValueError):
+            return {"ok": False, "message": "Согласующий не найден"}
+        row = cls.chosen_row(document, employee_id)
+        if not row or not row.employee_id:
+            return {"ok": False, "message": "Согласующий не найден"}
+        status = cls._status_code(row)
+        if status == "waiting":
+            return {"ok": False, "message": "Решения ещё нет"}
+        status_label = "Согласовано" if status == "approved" else "Не согласовано"
+        extra = {"employeeFio": row.employee.get_fio() if row.employee else "", "status": status_label}
+        if row.note_cancel:
+            extra["comment"] = row.note_cancel
+        cls.objects.filter(document=document, employee_id=employee_id, is_cancel=False).update(time_approve=None, note_cancel="")
+        if status == "rejected":
+            cls.objects.filter(pk=row.pk).update(is_cancel=False, time_approve=None, note_cancel="")
+        cache = getattr(document, "_prefetched_objects_cache", None)
+        if cache is not None:
+            cache.pop("documentemployeeapprove_set", None)
+        Documents.log_action(document.pk, Documents.LOG_APPROVE_CANCEL, who, extra)
+        return {"ok": True, "approvalStatuses": cls.statuses_json(document)}
+
     @staticmethod
     def can_edit(document, who):
         if not document or not who:
+            return False
+        if document.time_confirm:
+            return False
+        cache = getattr(document, "_prefetched_objects_cache", None) or {}
+        prefetched_iss = cache.get("issledovaniya_set")
+        if prefetched_iss is not None:
+            if any(iss.time_confirmation for iss in prefetched_iss):
+                return False
+        elif Documents.document_is_confirmed(document):
             return False
         if DocumentCase._is_superuser(who):
             return True
@@ -3617,17 +3798,22 @@ class DocumentEmployeeApprove(models.Model):
         prefetched = cache.get("documentemployeeapprove_set")
         if prefetched is not None:
             return [row for row in prefetched if not row.is_cancel and row.employee_id]
-        return list(cls.objects.filter(document=document, is_cancel=False, employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye"))
+        return list(cls.objects.filter(document=document, is_cancel=False, employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye", "who_create"))
 
     @classmethod
     def approvers_json(cls, document):
+        from laboratory.utils import strdatetimeru
+
         seen = set()
         result = []
         for row in cls._active_rows(document):
             if row.employee_id in seen or not row.employee:
                 continue
             seen.add(row.employee_id)
-            result.append(AddresseeGroup._employee_json(row.employee))
+            item = AddresseeGroup._employee_json(row.employee)
+            item["whoCreate"] = row.who_create.get_fio() if row.who_create_id and row.who_create else ""
+            item["createAtApprove"] = strdatetimeru(row.create_at_approve) or ""
+            result.append(item)
         return result
 
     @classmethod
@@ -3635,6 +3821,8 @@ class DocumentEmployeeApprove(models.Model):
         if not Documents.can_see_document(document, who):
             return {"ok": False, "message": "Документ не найден"}
         if not cls.can_edit(document, who):
+            if Documents.document_is_confirmed(document):
+                return {"ok": False, "message": "Документ подтверждён"}
             return {"ok": False, "message": "Нет прав"}
         if not isinstance(members, list):
             return {"ok": False, "message": "Некорректный список"}
@@ -3652,6 +3840,11 @@ class DocumentEmployeeApprove(models.Model):
         found = set(DoctorProfile.objects.filter(pk__in=ids).values_list("pk", flat=True))
         valid_ids = [doctor_id for doctor_id in ids if doctor_id in found]
         valid_set = set(valid_ids)
+        before_rows = cls.objects.filter(document=document, is_cancel=False, employee_id__isnull=False).order_by("pk").values_list("employee_id", flat=True)
+        before_ids = list(dict.fromkeys(before_rows))
+        before_set = set(before_ids)
+        added_ids = [doctor_id for doctor_id in valid_ids if doctor_id not in before_set]
+        removed_ids = [doctor_id for doctor_id in before_ids if doctor_id not in valid_set]
         from django.utils import timezone
 
         now = timezone.now()
@@ -3678,7 +3871,15 @@ class DocumentEmployeeApprove(models.Model):
         cache = getattr(document, "_prefetched_objects_cache", None)
         if cache is not None:
             cache.pop("documentemployeeapprove_set", None)
-        return {"ok": True, "approvers": cls.approvers_json(document)}
+        if added_ids or removed_ids:
+            fio_by_id = {doctor.pk: doctor.get_fio() for doctor in DoctorProfile.objects.filter(pk__in=added_ids + removed_ids)}
+            extra = {}
+            if added_ids:
+                extra["added"] = ", ".join(fio_by_id.get(doctor_id) or str(doctor_id) for doctor_id in added_ids)
+            if removed_ids:
+                extra["removed"] = ", ".join(fio_by_id.get(doctor_id) or str(doctor_id) for doctor_id in removed_ids)
+            Documents.log_action(document.pk, Documents.LOG_APPROVERS, who, extra)
+        return {"ok": True, "approvers": cls.approvers_json(document), "approvalStatuses": cls.statuses_json(document)}
 
 
 class DocumentResolution(models.Model):
@@ -3937,6 +4138,121 @@ class DocumentResult(models.Model):
 
 def get_file_path(instance: "DocumentFiles", filename):
     return os.path.join("document_files", str(instance.document.pk), str(uuid.uuid4()), filename)
+
+
+class DocumentManagerLog(models.Model):
+    CREATE = 260000
+    SAVE = 260001
+    CONFIRM = 260002
+    RESET = 260003
+    HIDE = 260004
+    SHOW = 260005
+    APPROVERS = 260006
+    APPROVE = 260007
+    REJECT = 260008
+    APPROVE_CANCEL = 260009
+    CASE_ASSIGN = 260010
+    BLOCK_ASSIGN = 260011
+    CASE_TYPE = 260012
+    CASE_ACCESS = 260013
+    CASE_COMMENT = 260014
+    CASE_TOPIC = 260015
+    CASE_CLOSE = 260016
+    MY_CASE = 260017
+    BLOCK_CREATE = 260018
+    BLOCK_UPDATE = 260019
+    BLOCK_READ = 260020
+    BLOCK_WRITE = 260021
+    FAVORITE = 260022
+    CASE_FAVORITE = 260023
+    GROUP = 260024
+    TYPE = 260025
+    PRINT_TEMPLATE = 260026
+    SECTION_TYPE = 260027
+    PLACE = 260028
+    PLAN = 260029
+    STRUCTURE = 260030
+    ADDRESSEE_GROUP = 260031
+    ADDRESSEE_MEMBER = 260032
+    PRINT_ERROR = 260033
+    PICKER_FAVORITE = 260034
+    ACTIONS = (
+        (CREATE, "ДОУ: создание"),
+        (SAVE, "ДОУ: сохранение"),
+        (CONFIRM, "ДОУ: подтверждение"),
+        (RESET, "ДОУ: сброс подтверждения"),
+        (HIDE, "ДОУ: скрытие"),
+        (SHOW, "ДОУ: показ"),
+        (APPROVERS, "ДОУ: согласующие"),
+        (APPROVE, "ДОУ: согласование"),
+        (REJECT, "ДОУ: несогласие"),
+        (APPROVE_CANCEL, "ДОУ: отмена согласования"),
+        (CASE_ASSIGN, "ДОУ: дело документа"),
+        (BLOCK_ASSIGN, "ДОУ: блок документа"),
+        (CASE_TYPE, "ДОУ: вид дела"),
+        (CASE_ACCESS, "ДОУ: доступ к делу"),
+        (CASE_COMMENT, "ДОУ: комментарий дела"),
+        (CASE_TOPIC, "ДОУ: тема дела"),
+        (CASE_CLOSE, "ДОУ: закрытие дела"),
+        (MY_CASE, "ДОУ: мои дела"),
+        (BLOCK_CREATE, "ДОУ: создание блока"),
+        (BLOCK_UPDATE, "ДОУ: изменение блока"),
+        (BLOCK_READ, "ДОУ: чтение блока"),
+        (BLOCK_WRITE, "ДОУ: запись блока"),
+        (FAVORITE, "ДОУ: избранное"),
+        (CASE_FAVORITE, "ДОУ: избранное дела"),
+        (GROUP, "ДОУ: группа документов"),
+        (TYPE, "ДОУ: вид документа"),
+        (PRINT_TEMPLATE, "ДОУ: шаблон печати"),
+        (SECTION_TYPE, "ДОУ: тип раздела"),
+        (PLACE, "ДОУ: место"),
+        (PLAN, "ДОУ: план"),
+        (STRUCTURE, "ДОУ: структура"),
+        (ADDRESSEE_GROUP, "ДОУ: набор адресатов"),
+        (ADDRESSEE_MEMBER, "ДОУ: участник набора"),
+        (PRINT_ERROR, "ДОУ: ошибка печати"),
+        (PICKER_FAVORITE, "ДОУ: избранное подбора"),
+    )
+
+    action = models.IntegerField(choices=ACTIONS, db_index=True)
+    document = models.ForeignKey(Documents, related_name="manager_logs", blank=True, null=True, on_delete=models.SET_NULL)
+    document_case = models.ForeignKey(DocumentCase, related_name="manager_logs", blank=True, null=True, on_delete=models.SET_NULL)
+    block = models.ForeignKey(DocumentBlock, related_name="manager_logs", blank=True, null=True, on_delete=models.SET_NULL)
+    object_key = models.CharField(max_length=64, blank=True, default="", db_index=True)
+    body = models.TextField(blank=True, default="")
+    user = models.ForeignKey(DoctorProfile, related_name="document_manager_logs", blank=True, null=True, on_delete=models.SET_NULL)
+    time = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "Журнал ДОУ"
+        verbose_name_plural = "Журнал ДОУ"
+        ordering = ("-time", "-pk")
+
+    def __str__(self):
+        return f"{self.get_action_display()} {self.document_id or self.object_key}"
+
+    @staticmethod
+    def _pk(value):
+        if value in (None, "", 0, "0"):
+            return None
+        try:
+            number = int(value)
+        except (TypeError, ValueError):
+            return None
+        return number if number > 0 else None
+
+    @classmethod
+    def write(cls, action, who=None, body=None, document_id=None, case_id=None, block_id=None, object_key=""):
+        payload = body if isinstance(body, dict) else {}
+        cls.objects.create(
+            action=action,
+            user=who if getattr(who, "pk", None) else None,
+            body=json.dumps(payload, ensure_ascii=False),
+            document_id=cls._pk(document_id),
+            document_case_id=cls._pk(case_id),
+            block_id=cls._pk(block_id),
+            object_key=str(object_key or "")[:64],
+        )
 
 
 class DocumentFiles(models.Model):

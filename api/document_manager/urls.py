@@ -44,6 +44,8 @@ urlpatterns = [
     path('documents/case', views.documents_case),
     path('documents/block', views.documents_block),
     path('documents/approvers', views.documents_approvers),
+    path('documents/approve', views.documents_approve),
+    path('documents/approve-cancel', views.documents_approve_cancel),
     path('blocks/list', views.blocks_list),
     path('blocks/create', views.blocks_create),
     path('blocks/details', views.blocks_details),

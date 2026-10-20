@@ -10,12 +10,11 @@ from django.http import HttpResponse
 from docxtpl import DocxTemplate
 
 from appconf.manager import SettingManager
-from document_management.models import Documents
+from document_management.models import DocumentManagerLog, Documents
 from employees.models import EmployeePosition
 from laboratory.settings import COMMAND_DOCX_2_PDF
 from results.schema_docx.forms100 import transform_value
 from results.sql_func import get_paraclinic_result_by_iss
-from slog.models import Log
 
 MENTEE_FIELD_TYPE = 46
 MENTOR_FIELD_TYPE = 47
@@ -208,13 +207,13 @@ def render_document_print(document_id, output_format, doctor):
     try:
         docx_bytes = _render_docx_bytes(document)
     except Exception as exc:
-        Log.log(key=document.pk, type=997, body={document.pk: {"error": str(exc), "message": "Печать ДОУ docx"}})
+        DocumentManagerLog.write(DocumentManagerLog.PRINT_ERROR, doctor, {"error": str(exc), "message": "Печать ДОУ docx"}, document_id=document.pk)
         return _error("Не удалось заполнить шаблон")
     if output_format == "docx":
         return _file_response(docx_bytes, _file_name(document, "docx"), DOCX_CONTENT_TYPE, True)
     try:
         pdf_bytes = _docx_bytes_to_pdf(docx_bytes)
     except Exception as exc:
-        Log.log(key=document.pk, type=997, body={document.pk: {"error": str(exc), "message": "Печать ДОУ pdf"}})
+        DocumentManagerLog.write(DocumentManagerLog.PRINT_ERROR, doctor, {"error": str(exc), "message": "Печать ДОУ pdf"}, document_id=document.pk)
         return _error("Не удалось сделать PDF")
     return _file_response(pdf_bytes, _file_name(document, "pdf"), "application/pdf", False)

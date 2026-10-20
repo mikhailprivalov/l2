@@ -350,8 +350,10 @@
           :document-id="caseSearch ? null : selectedDocument"
           :case-id="caseSearch ? selectedCase : null"
           :show-case-documents="showCaseDocuments || caseSearch"
+          :approval-mode="roleFilter === 'toBeAgreed'"
           @visibility-change="onVisibilityChange"
           @reviewed="onReviewed"
+          @approved="onApproved"
         />
       </div>
     </div>
@@ -705,7 +707,7 @@ const onDocumentsScroll = () => {
   }
 };
 
-const loadDocuments = async () => {
+const loadDocuments = async (keepSelection = false) => {
   const loadId = ++documentsLoadId;
   const previousCase = selectedCase.value;
   documents.value = [];
@@ -713,7 +715,10 @@ const loadDocuments = async () => {
   selectedCase.value = null;
   recentPage.value = 1;
   recentHasMore.value = false;
-  const hasListFilter = roleFilter.value === 'created' || roleFilter.value === 'toReview' || roleFilter.value === 'recent';
+  const hasListFilter = roleFilter.value === 'created'
+    || roleFilter.value === 'toReview'
+    || roleFilter.value === 'recent'
+    || roleFilter.value === 'toBeAgreed';
   if (showTopics.value) {
     selectedDocument.value = null;
     await loadPendingCount();
@@ -776,8 +781,13 @@ const loadDocuments = async () => {
       await loadPendingCount();
       return;
     }
+    const listFilter = roleFilter.value === 'created'
+      || roleFilter.value === 'toReview'
+      || roleFilter.value === 'toBeAgreed'
+      ? roleFilter.value
+      : null;
     const { result, pendingReviewCount: count } = await api('document-manager/documents/list', {
-      filter: roleFilter.value === 'created' || roleFilter.value === 'toReview' ? roleFilter.value : null,
+      filter: listFilter,
       hidden: Boolean(canViewHidden.value && showHidden.value),
       myCases: Boolean(showMyCases.value),
     });
@@ -786,12 +796,16 @@ const loadDocuments = async () => {
     }
     documents.value = result || [];
     pendingReviewCount.value = Number(count) || 0;
-    if (selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
+    if (!keepSelection && selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
       selectedDocument.value = null;
     }
   } finally {
     await store.dispatch(actions.DEC_LOADING);
   }
+};
+
+const onApproved = () => {
+  loadDocuments(true);
 };
 
 const toggleHidden = () => {

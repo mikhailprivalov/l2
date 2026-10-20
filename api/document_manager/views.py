@@ -18,6 +18,7 @@ from document_management.models import (  # noqa: I001
     DocumentCase,
     DocumentBlock,
     DocumentEmployeeApprove,
+    DocumentManagerLog,
     Documents,
     GroupDocuments,
     PlaceSection,
@@ -34,6 +35,18 @@ def _request_data(request):
     if not request.body:
         return {}
     return json.loads(request.body)
+
+
+def _audit(request, action, body=None, document_id=None, case_id=None, block_id=None, object_key=""):
+    DocumentManagerLog.write(
+        action,
+        getattr(request.user, "doctorprofile", None),
+        body,
+        document_id=document_id,
+        case_id=case_id,
+        block_id=block_id,
+        object_key=object_key,
+    )
 
 
 def _load_save_request(request):
@@ -80,6 +93,7 @@ def groups_update(request):
     data = _request_data(request)
     result = GroupDocuments.save_group(data.get("id", -1), data.get("title", ""))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.GROUP, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -108,6 +122,7 @@ def types_update(request):
         data.get("placeSectionId"),
     )
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.TYPE, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -124,6 +139,7 @@ def types_print_template(request):
         return status_response(False, "Файл не выбран")
     result = obj.save_print_docx(uploaded)
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.PRINT_TEMPLATE, {"id": obj.pk, "fileName": result.get("fileName")}, object_key=obj.pk)
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -136,6 +152,7 @@ def types_print_template_delete(request):
     if not obj:
         return status_response(False, "Вид документа не найден")
     result = obj.clear_print_docx()
+    _audit(request, DocumentManagerLog.PRINT_TEMPLATE, {"id": obj.pk, "fileName": ""}, object_key=obj.pk)
     return status_response(True, data=result)
 
 
@@ -206,10 +223,21 @@ def record_favorites_toggle(request):
     doctor = getattr(request.user, "doctorprofile", None)
     if data.get("caseId"):
         result = toggle_favorite_case(doctor, data.get("caseId"))
+        if result.get("ok"):
+            _audit(request, DocumentManagerLog.CASE_FAVORITE, {"favorite": result.get("favorite")}, case_id=data.get("caseId"))
     elif data.get("case"):
         result = toggle_case_favorite(doctor, data.get("id"))
+        if result.get("ok"):
+            _audit(
+                request,
+                DocumentManagerLog.CASE_FAVORITE,
+                {"favorite": result.get("favorite")},
+                document_id=data.get("id"),
+            )
     else:
         result = toggle_record_favorite(doctor, data.get("id"))
+        if result.get("ok"):
+            _audit(request, DocumentManagerLog.FAVORITE, {"favorite": result.get("favorite")}, document_id=data.get("id"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -227,6 +255,7 @@ def favorites_toggle(request):
     doctor = getattr(request.user, "doctorprofile", None)
     result = DocumentPickerFavorite.toggle(doctor, data.get("pk"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.PICKER_FAVORITE, {"id": data.get("pk"), "favorite": result.get("favorite")}, object_key=data.get("pk"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -252,6 +281,7 @@ def section_types_update(request):
         data.get("accessMemberIds"),
     )
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.SECTION_TYPE, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -275,6 +305,7 @@ def places_update(request):
         data.get("accessMemberIds"),
     )
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.PLACE, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -291,6 +322,7 @@ def cases_update(request):
         data.get("placeSectionId"),
     )
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.CASE_TYPE, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -319,6 +351,7 @@ def cases_my(request):
     doctor = getattr(request.user, "doctorprofile", None)
     result = UserMyCase.toggle(who=doctor, case_id=data.get("id"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.MY_CASE, {"inMyCases": result.get("inMyCases")}, case_id=data.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -333,6 +366,7 @@ def cases_access(request):
         return status_response(False, "Дело не найдено")
     result = case.set_access(doctor, data.get("members"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.CASE_ACCESS, {"caseId": case.pk}, case_id=case.pk)
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -347,6 +381,7 @@ def cases_comment(request):
         return status_response(False, "Дело не найдено")
     result = case.set_comment(doctor, data.get("comment"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.CASE_COMMENT, {"comment": result.get("comment")}, case_id=case.pk)
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -361,6 +396,7 @@ def cases_topic(request):
         return status_response(False, "Дело не найдено")
     result = case.set_topic(doctor, data.get("topic"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.CASE_TOPIC, {"topic": result.get("topic")}, case_id=case.pk)
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -375,6 +411,7 @@ def cases_close(request):
         return status_response(False, "Дело не найдено")
     result = case.close_case(doctor)
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.CASE_CLOSE, {"closedAt": result.get("closedAt")}, case_id=case.pk)
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -400,6 +437,7 @@ def blocks_create(request):
     doctor = getattr(request.user, "doctorprofile", None)
     result = DocumentBlock.create_block(doctor, data.get("title"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.BLOCK_CREATE, {"id": result.get("id"), "title": data.get("title")}, block_id=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -425,6 +463,7 @@ def blocks_update(request):
         return status_response(False, "Блок не найден")
     result = block.save_settings(doctor, data.get("title"), data.get("isPublished"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.BLOCK_UPDATE, {"title": result.get("title"), "isPublished": result.get("isPublished")}, block_id=block.pk)
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -439,6 +478,7 @@ def blocks_read_access(request):
         return status_response(False, "Блок не найден")
     result = block.set_read_access(doctor, data.get("members"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.BLOCK_READ, {"blockId": block.pk}, block_id=block.pk)
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -453,6 +493,7 @@ def blocks_write_access(request):
         return status_response(False, "Блок не найден")
     result = block.set_write_access(doctor, data.get("members"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.BLOCK_WRITE, {"blockId": block.pk}, block_id=block.pk)
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -467,6 +508,7 @@ def documents_block(request):
         return status_response(False, "Документ не найден")
     result = DocumentBlock.assign_document(document, doctor, data.get("blockId"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.BLOCK_ASSIGN, {"blockId": result.get("blockId")}, document_id=document.pk, block_id=result.get("blockId"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -487,6 +529,34 @@ def documents_approvers(request):
 
 @login_required
 @group_required("ДОУ: просмотр документов")
+def documents_approve(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.filter(pk=data.get("id")).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = DocumentEmployeeApprove.approve(document, doctor, data.get("comment"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_approve_cancel(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.filter(pk=data.get("id")).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = DocumentEmployeeApprove.cancel(document, doctor, data.get("employeeId"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
 def documents_case(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
@@ -495,6 +565,7 @@ def documents_case(request):
         return status_response(False, "Документ не найден")
     result = DocumentCase.assign_document(document, doctor, data.get("caseId"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.CASE_ASSIGN, {"caseId": result.get("caseId")}, document_id=document.pk, case_id=result.get("caseId"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -521,6 +592,7 @@ def plans_update(request):
     data = _request_data(request)
     result = Plans.save_plan(data.get("id", -1), data.get("title", ""), data.get("groups"), data.get("indicators"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.PLAN, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -541,6 +613,7 @@ def structure_update(request):
     data = _request_data(request)
     result = DocumentFieldGroups.save_structure(data.get("id"), data.get("groups"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.STRUCTURE, {"id": result.get("id")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -705,6 +778,7 @@ def addressees_groups_update(request):
     data = _request_data(request)
     result = AddresseeGroup.save_group(data.get("id", -1), data.get("title", ""), data.get("hide", False), data.get("memberIds"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.ADDRESSEE_GROUP, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -716,6 +790,7 @@ def addressees_groups_save_personal(request):
     doctor = getattr(request.user, "doctorprofile", None)
     result = AddresseeGroup.save_personal(doctor, data.get("title", ""), data.get("memberIds"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.ADDRESSEE_GROUP, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -727,6 +802,7 @@ def addressees_groups_add_member(request):
     doctor = getattr(request.user, "doctorprofile", None)
     result = AddresseeGroup.add_personal_member(data.get("id"), doctor, data.get("memberId"))
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.ADDRESSEE_MEMBER, {"id": result.get("id"), "memberId": data.get("memberId")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -738,6 +814,7 @@ def addressees_groups_delete(request):
     doctor = getattr(request.user, "doctorprofile", None)
     result = AddresseeGroup.delete_personal(data.get("id"), doctor)
     if result.get("ok"):
+        _audit(request, DocumentManagerLog.ADDRESSEE_GROUP, {"id": data.get("id"), "deleted": True}, object_key=data.get("id"))
         return status_response(True)
     return status_response(False, result.get("message"))
 
