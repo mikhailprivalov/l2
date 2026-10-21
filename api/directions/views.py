@@ -17,6 +17,7 @@ from directions.sql_func import get_patient_result_by_main_research_for_dependen
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from external_system.models import ProfessionsWorkersPositionsRefbook, CdaFields
 from integration_framework.common_func import directions_pdf_result
+from integration_framework.models import EquipmentReceiveLink
 from l2vi.integration import gen_cda_xml, send_cda_xml, send_lab_direction_to_ecp, get_directions_from_ecp
 import collections
 
@@ -43,7 +44,7 @@ from django.http import JsonResponse
 from django.utils import dateformat
 from django.utils import timezone
 from api import sql_func
-from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid, check_sum_ean13
+from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid, check_sum_ean13, multi_study_viewer_url
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result, get_field_result_by_cda, get_field_lab_result_by_research_and_test
 from api.chambers.discharge_sync import sync_patient_to_bed_discharge_date_from_extract
@@ -1885,6 +1886,8 @@ def directions_paraclinic_form(request):
             }
 
             response["researches"] = []
+            linked_study_uids = EquipmentReceiveLink.study_uids_for_direction(d) if d.is_request else []
+            pacs_studies_url = None
             tube = None
             medical_certificates = []
             tmp_certificates = []
@@ -1930,6 +1933,10 @@ def directions_paraclinic_form(request):
                 for cert in general_certificate:
                     medical_certificates.append({"form": cert.certificate_form, "title": cert.title})
 
+                pacs_url = None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else search_dicom_study(d.pk)
+                if pacs_studies_url is None and pacs_url and len(linked_study_uids) > 1:
+                    pacs_studies_url = multi_study_viewer_url(pacs_url, linked_study_uids)
+
                 iss = {
                     "pk": i.pk,
                     "amd": d.amd_status,
@@ -1964,7 +1971,8 @@ def directions_paraclinic_form(request):
                         "enabled_add_files": i.research.enabled_add_files,
                         "is_need_send_egisz": i.research.is_need_send_egisz,
                     },
-                    "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else search_dicom_study(d.pk),
+                    "pacs": pacs_url,
+                    "pacsStudies": pacs_studies_url if pacs_url else None,
                     "examination_date": i.get_medical_examination(),
                     "templates": [],
                     "saved": i.time_save is not None,
@@ -2972,11 +2980,7 @@ def directions_paraclinic_result(request):
                 price = PriceName.get_company_price_by_date(company.pk, current_time(only_date=True), current_time(only_date=True))
                 patient['uuid'] = str(uuid.uuid4())
 
-                data = {
-                    "company": Company.as_json(company),
-                    "contract": PriceName.as_json(price),
-                    "patient": patient
-                }
+                data = {"company": Company.as_json(company), "contract": PriceName.as_json(price), "patient": patient}
                 field_titles = [
                     "СНИЛС",
                     "Дата осмотра",
@@ -3783,13 +3787,7 @@ def field_get_link_data(
     return result
 
 
-def field_get_link_data_by_cda(
-    field_pks,
-    client_pk,
-    parent_iss=(-1,),
-    use_parent_iss='-1',
-    days_ago=-1
-):
+def field_get_link_data_by_cda(field_pks, client_pk, parent_iss=(-1,), use_parent_iss='-1', days_ago=-1):
     result, value, temp_value = None, None, None
     rows = get_field_result_by_cda(client_pk, field_pks, count=1, parent_iss=parent_iss, use_parent_iss=use_parent_iss)
     date_confirm = None

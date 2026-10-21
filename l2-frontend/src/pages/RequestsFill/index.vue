@@ -272,7 +272,7 @@
                     <span class="info-label">Изображение</span>
                     <span class="info-value">
                       <template v-if="requestParams.hasImage">
-                        Привязано
+                        Привязано<span v-if="requestImages.length > 1"> ({{ requestImages.length }})</span>
                         <a
                           class="a-under"
                           href="#"
@@ -341,106 +341,118 @@
       </template>
     </TwoSidedLayout>
     <Modal
-      v-if="showImageModal && requestParams?.imageData"
+      v-if="showImageModal && requestImages.length"
       show-footer="true"
       white-bg="true"
       max-width="700px"
       margin-left-right="auto"
       @close="showImageModal = false"
     >
-      <span slot="header">Детали изображения #{{ requestParams.imageData.id }}</span>
+      <span slot="header">{{ imageModalTitle }}</span>
       <div
         slot="body"
         class="image-modal-body"
       >
-        <div class="details-section">
-          <div class="section-title">
-            Данные пациента
+        <div
+          v-for="image in requestImages"
+          :key="image.id"
+          class="image-detail-card"
+        >
+          <div
+            v-if="requestImages.length > 1"
+            class="section-title"
+          >
+            Изображение #{{ image.id }}
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Фамилия:</span>
-            <span
-              class="detail-value"
-              :class="{ 'empty-value': !requestParams.imageData.family }"
-            >{{ requestParams.imageData.family || '(не указана)' }}</span>
+          <div class="details-section">
+            <div class="section-title">
+              Данные пациента
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Фамилия:</span>
+              <span
+                class="detail-value"
+                :class="{ 'empty-value': !image.family }"
+              >{{ image.family || '(не указана)' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Имя:</span>
+              <span
+                class="detail-value"
+                :class="{ 'empty-value': !image.name }"
+              >{{ image.name || '(не указано)' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Отчество:</span>
+              <span
+                class="detail-value"
+                :class="{ 'empty-value': !image.patronymic }"
+              >{{ image.patronymic || '(не указано)' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Дата рождения:</span>
+              <span
+                class="detail-value"
+                :class="{ 'empty-value': !image.birthday }"
+              >{{ image.birthday || '(не указана)' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Пол:</span>
+              <span
+                class="detail-value"
+                :class="{ 'empty-value': !image.sex }"
+              >{{ image.sex || '(не указан)' }}</span>
+            </div>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Имя:</span>
-            <span
-              class="detail-value"
-              :class="{ 'empty-value': !requestParams.imageData.name }"
-            >{{ requestParams.imageData.name || '(не указано)' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Отчество:</span>
-            <span
-              class="detail-value"
-              :class="{ 'empty-value': !requestParams.imageData.patronymic }"
-            >{{ requestParams.imageData.patronymic || '(не указано)' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Дата рождения:</span>
-            <span
-              class="detail-value"
-              :class="{ 'empty-value': !requestParams.imageData.birthday }"
-            >{{ requestParams.imageData.birthday || '(не указана)' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Пол:</span>
-            <span
-              class="detail-value"
-              :class="{ 'empty-value': !requestParams.imageData.sex }"
-            >{{ requestParams.imageData.sex || '(не указан)' }}</span>
-          </div>
-        </div>
 
-        <div class="details-section">
-          <div class="section-title">
-            Идентификаторы
+          <div class="details-section">
+            <div class="section-title">
+              Идентификаторы
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">ID пациента:</span>
+              <span
+                class="detail-value"
+                :class="{ 'empty-value': !image.patientId }"
+              >{{ image.patientId || '(отсутствует)' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">ID заказа:</span>
+              <span
+                class="detail-value"
+                :class="{ 'empty-value': !image.orderId }"
+              >{{ image.orderId || '(отсутствует)' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Study Instance UID:</span>
+              <span
+                class="detail-value small-text"
+                :class="{ 'empty-value': !image.studyInstanceUidTag }"
+              >{{ image.studyInstanceUidTag || '(отсутствует)' }}</span>
+            </div>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">ID пациента:</span>
-            <span
-              class="detail-value"
-              :class="{ 'empty-value': !requestParams.imageData.patientId }"
-            >{{ requestParams.imageData.patientId || '(отсутствует)' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">ID заказа:</span>
-            <span
-              class="detail-value"
-              :class="{ 'empty-value': !requestParams.imageData.orderId }"
-            >{{ requestParams.imageData.orderId || '(отсутствует)' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Study Instance UID:</span>
-            <span
-              class="detail-value small-text"
-              :class="{ 'empty-value': !requestParams.imageData.studyInstanceUidTag }"
-            >{{ requestParams.imageData.studyInstanceUidTag || '(отсутствует)' }}</span>
-          </div>
-        </div>
 
-        <div class="details-section">
-          <div class="section-title">
-            Оборудование
+          <div class="details-section">
+            <div class="section-title">
+              Оборудование
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Название:</span>
+              <span
+                class="detail-value"
+                :class="{ 'empty-value': !image.equipmentTitle }"
+              >{{ image.equipmentTitle || '(не определено)' }}</span>
+            </div>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Название:</span>
-            <span
-              class="detail-value"
-              :class="{ 'empty-value': !requestParams.imageData.equipmentTitle }"
-            >{{ requestParams.imageData.equipmentTitle || '(не определено)' }}</span>
-          </div>
-        </div>
 
-        <div class="details-section">
-          <div class="section-title">
-            Даты
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Создано:</span>
-            <span class="detail-value">{{ requestParams.imageData.createdAt }}</span>
+          <div class="details-section">
+            <div class="section-title">
+              Даты
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Создано:</span>
+              <span class="detail-value">{{ image.createdAt }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -541,6 +553,26 @@ const selectedRequest = ref<Request | null>(null);
 const formData = ref<any>(null);
 const formLoading = ref(false);
 const requestParams = ref<any>(null);
+const requestImages = computed(() => {
+  const images = requestParams.value?.images;
+  if (Array.isArray(images) && images.length) {
+    return images;
+  }
+  if (requestParams.value?.imageData) {
+    return [requestParams.value.imageData];
+  }
+  return [];
+});
+const imageModalTitle = computed(() => {
+  if (requestImages.value.length > 1) {
+    return 'Детали изображений';
+  }
+  const imageId = requestImages.value[0]?.id;
+  if (imageId) {
+    return `Детали изображения #${imageId}`;
+  }
+  return 'Детали изображения';
+});
 const numberToSearch = ref<string>('');
 const isSearchMode = ref(false);
 const patientQuery = ref<string>('');
@@ -1422,6 +1454,12 @@ onBeforeUnmount(() => {
   padding: 15px;
   max-height: 500px;
   overflow-y: auto;
+}
+
+.image-detail-card + .image-detail-card {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
 }
 
 .details-section {

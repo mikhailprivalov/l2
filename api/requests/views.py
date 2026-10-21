@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
-from django.db.models import Case, IntegerField, Q, Value, When
+from django.db.models import Case, IntegerField, Prefetch, Q, Value, When
 from django.core.files.base import ContentFile
 import base64
 import uuid
@@ -20,7 +20,7 @@ from laboratory.utils import strfdatetime
 from utils.response import status_response
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, NapravleniyaFiles
 from clients.models import Card
-from integration_framework.models import EquipmentReceive
+from integration_framework.models import EquipmentReceive, EquipmentReceiveLink
 from hospitals.models import Hospitals, TitleResearchHospital
 from users.models import DoctorProfile, DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
 from slog.models import Log
@@ -160,7 +160,7 @@ def get_requests(request):
     directions_list = list(directions[offset : offset + limit])
 
     direction_ids = [d.pk for d in directions_list]
-    equipment_receives = set(EquipmentReceive.objects.filter(napravleniye_id__in=direction_ids).values_list('napravleniye_id', flat=True))
+    equipment_receives = set(EquipmentReceiveLink.objects.filter(napravleniye_id__in=direction_ids).values_list('napravleniye_id', flat=True))
 
     hospital_id = request.user.doctorprofile.get_hospital_id()
     synonyms = _titles_for_hospital_from_directions(hospital_id, directions_list)
@@ -250,7 +250,14 @@ def get_request_images(request):
             base_queryset = EquipmentReceive.objects.filter(
                 created_at__date=search_date,
                 equipment_model=equipment,
-            ).select_related('napravleniye__client__individual', 'doc_save_link', 'doc_reset_link')
+            ).prefetch_related(
+                Prefetch(
+                    'request_links',
+                    queryset=EquipmentReceiveLink.objects.filter(napravleniye__is_request=True)
+                    .select_related('napravleniye__client__individual', 'doc_save_link')
+                    .order_by('time_save_link', 'pk'),
+                )
+            )
 
             total = base_queryset.count()
 
@@ -271,14 +278,11 @@ def get_request_images(request):
                 has_more = False
 
             for equipment_receive in equipment_receives_list:
-                is_linked = equipment_receive.napravleniye and equipment_receive.napravleniye.is_request
-
-                patient_fio = ""
-                if equipment_receive.napravleniye and equipment_receive.napravleniye.client:
-                    patient_fio = equipment_receive.napravleniye.client.individual.fio()
-                else:
-                    # patient_fio = f"{equipment_receive.family} {equipment_receive.name} {equipment_receive.patronymic}".strip()
-                    patient_fio = equipment_receive.tag_patient_name
+                links = list(equipment_receive.request_links.all())
+                request_ids = [link.napravleniye_id for link in links]
+                patient_fio = equipment_receive.tag_patient_name or ""
+                if links and links[0].napravleniye_id and links[0].napravleniye.client_id:
+                    patient_fio = links[0].napravleniye.client.individual.fio()
 
                 rows.append(
                     {
@@ -292,8 +296,9 @@ def get_request_images(request):
                         "orderId": equipment_receive.order_id,
                         "patient": patient_fio,
                         "datetime": strfdatetime(equipment_receive.created_at),
-                        "linked": is_linked,
-                        "requestId": equipment_receive.napravleniye_id or None,
+                        "linked": bool(request_ids),
+                        "requestId": request_ids[0] if request_ids else None,
+                        "requestIds": request_ids,
                         "equipmentId": str(equipment_receive.id),
                     }
                 )
@@ -313,7 +318,16 @@ def get_image_details(request):
     if not image_id:
         return JsonResponse({"success": False, "message": "ID изображения не указан"})
 
-    equipment_receive = EquipmentReceive.objects.select_related('napravleniye__client__individual', 'napravleniye__doc', 'doc_save_link', 'doc_reset_link').get(pk=image_id)
+    equipment_receive = (
+        EquipmentReceive.objects.select_related('doc_save_link', 'doc_reset_link', 'equipment_model')
+        .prefetch_related(
+            Prefetch(
+                'request_links',
+                queryset=EquipmentReceiveLink.objects.filter(napravleniye__is_request=True).select_related('doc_save_link').order_by('time_save_link', 'pk'),
+            )
+        )
+        .get(pk=image_id)
+    )
 
     equipment = equipment_receive.equipment_model
 
@@ -325,12 +339,21 @@ def get_image_details(request):
     if not doctor_equipment:
         return JsonResponse({"success": False, "message": "Нет доступа к этому изображению"})
 
-    is_linked = equipment_receive.napravleniye and equipment_receive.napravleniye.is_request
+    request_links = [
+        {
+            "id": link.napravleniye_id,
+            "docSaveLink": link.doc_save_link.get_fio() if link.doc_save_link else None,
+            "timeSaveLink": strfdatetime(link.time_save_link) if link.time_save_link else None,
+        }
+        for link in equipment_receive.request_links.all()
+    ]
+    first_link = request_links[0] if request_links else None
 
     details = {
         "id": equipment_receive.pk,
         "studyInstanceUidTag": equipment_receive.study_instance_uid_tag,
-        "napravleniyeId": equipment_receive.napravleniye_id,
+        "napravleniyeId": first_link["id"] if first_link else None,
+        "requests": request_links,
         "family": equipment_receive.family,
         "name": equipment_receive.name,
         "patronymic": equipment_receive.patronymic,
@@ -338,13 +361,13 @@ def get_image_details(request):
         "sex": equipment_receive.sex,
         "patientId": equipment_receive.tag_patient_id,
         "orderId": equipment_receive.order_id,
-        "docSaveLink": equipment_receive.doc_save_link.get_fio() if equipment_receive.doc_save_link else None,
-        "timeSaveLink": strfdatetime(equipment_receive.time_save_link) if equipment_receive.time_save_link else None,
+        "docSaveLink": first_link["docSaveLink"] if first_link else None,
+        "timeSaveLink": first_link["timeSaveLink"] if first_link else None,
         "docResetLink": equipment_receive.doc_reset_link.get_fio() if equipment_receive.doc_reset_link else None,
         "timeResetLink": strfdatetime(equipment_receive.time_reset_link) if equipment_receive.time_reset_link else None,
         "createdAt": strfdatetime(equipment_receive.created_at),
         "updatedAt": strfdatetime(equipment_receive.updated_at),
-        "linked": is_linked,
+        "linked": bool(request_links),
         "equipmentTitle": equipment.title if equipment else None,
     }
 
@@ -525,15 +548,43 @@ def create_request(request):
     return status_response(True, "Заявка успешно создана", {"requestId": direction_id})
 
 
+def _direction_image_rows(direction):
+    links = EquipmentReceiveLink.objects.filter(napravleniye=direction).select_related('equipment_receive', 'equipment_receive__equipment_model').order_by('time_save_link', 'pk')
+    rows = []
+    for link in links:
+        equipment_receive = link.equipment_receive
+        rows.append(
+            {
+                "id": equipment_receive.pk,
+                "studyInstanceUidTag": equipment_receive.study_instance_uid_tag,
+                "family": equipment_receive.family,
+                "name": equipment_receive.name,
+                "patronymic": equipment_receive.patronymic,
+                "birthday": equipment_receive.birthday.strftime('%d.%m.%Y') if equipment_receive.birthday else None,
+                "sex": equipment_receive.sex,
+                "patientId": equipment_receive.tag_patient_id,
+                "orderId": equipment_receive.order_id,
+                "patient": equipment_receive.tag_patient_name or "",
+                "datetime": strfdatetime(equipment_receive.created_at),
+                "createdAt": strfdatetime(equipment_receive.created_at),
+                "equipmentTitle": equipment_receive.equipment_model.title if equipment_receive.equipment_model else None,
+            }
+        )
+    return rows
+
+
 @login_required
 @group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def link_image_to_request(request):
     request_data = json.loads(request.body)
     image_id = request_data.get('imageId')
     request_id = request_data.get('requestId')
+    unlink = bool(request_data.get('unlink'))
 
     if not image_id:
         return status_response(False, "ID изображения не указан")
+    if not request_id:
+        return status_response(False, "ID заявки не указан")
 
     try:
         equipment_receive = EquipmentReceive.objects.get(pk=image_id)
@@ -550,49 +601,44 @@ def link_image_to_request(request):
     if not doctor_equipment:
         return status_response(False, "Нет доступа к этому изображению")
 
+    try:
+        napravleniye = Napravleniya.objects.select_related('client__individual').get(pk=request_id, is_request=True, doc=request.user.doctorprofile)
+    except Napravleniya.DoesNotExist:
+        return status_response(False, "Заявка не найдена")
+
     with transaction.atomic():
-        if request_id:
-            try:
-                napravleniye = Napravleniya.objects.select_related('client__individual').get(pk=request_id, is_request=True, doc=request.user.doctorprofile)
-            except Napravleniya.DoesNotExist:
-                return status_response(False, "Заявка не найдена")
+        if unlink:
+            if not EquipmentReceiveLink.detach(equipment_receive, napravleniye, request.user.doctorprofile):
+                return status_response(False, "Изображение не привязано к этой заявке")
+            Log.log(
+                str(napravleniye.pk),
+                250003,
+                request.user.doctorprofile,
+                {
+                    "imageId": equipment_receive.pk,
+                    "requestId": napravleniye.pk,
+                    "studyInstanceUid": equipment_receive.study_instance_uid_tag,
+                },
+            )
+            has_image = EquipmentReceiveLink.objects.filter(napravleniye=napravleniye).exists()
+            return status_response(True, "Изображение отвязано от заявки", {"requestId": napravleniye.pk, "requestHasImage": has_image})
 
-            patient_family = napravleniye.client.individual.family if napravleniye.client_id else ''
-            if not _equipment_receive_matches_patient_family(equipment_receive, patient_family):
-                return status_response(False, "Фамилия пациента не совпадает с данными снимка")
+        patient_family = napravleniye.client.individual.family if napravleniye.client_id else ''
+        if not _equipment_receive_matches_patient_family(equipment_receive, patient_family):
+            return status_response(False, "Фамилия пациента не совпадает с данными снимка")
 
-            for iss in napravleniye.issledovaniya_set.all():
-                iss.study_instance_uid = equipment_receive.study_instance_uid_tag
-                iss.study_instance_uid_tag = equipment_receive.study_instance_uid_tag
-                iss.save(update_fields=['study_instance_uid', 'study_instance_uid_tag'])
+        _, created = EquipmentReceiveLink.attach(equipment_receive, napravleniye, request.user.doctorprofile)
+        if not created:
+            return status_response(True, "Изображение уже привязано к заявке", {"requestId": napravleniye.pk, "requestHasImage": True})
 
-            equipment_receive.napravleniye = napravleniye
-            equipment_receive.doc_save_link = request.user.doctorprofile
-            equipment_receive.time_save_link = timezone.now()
-            equipment_receive.doc_reset_link = None
-            equipment_receive.time_reset_link = None
-            equipment_receive.save(update_fields=['napravleniye', 'doc_save_link', 'time_save_link', 'doc_reset_link', 'time_reset_link'])
+        send_study_link_to_rentgen_rmq(napravleniye, equipment_receive, request.user.doctorprofile)
 
-            send_study_link_to_rentgen_rmq(napravleniye, equipment_receive, request.user.doctorprofile)
+        try:
+            spool_study_link_json(napravleniye, equipment_receive)
+        except Exception:
+            logger.exception('Failed to spool study link json for request %s', napravleniye.pk)
 
-            try:
-                spool_study_link_json(napravleniye, equipment_receive)
-            except Exception:
-                logger.exception('Failed to spool study link json for request %s', napravleniye.pk)
-
-            return status_response(True, "Изображение успешно привязано к заявке")
-        else:
-            if equipment_receive.napravleniye:
-                for iss in equipment_receive.napravleniye.issledovaniya_set.all():
-                    iss.study_instance_uid = None
-                    iss.study_instance_uid_tag = None
-                    iss.save(update_fields=['study_instance_uid', 'study_instance_uid_tag'])
-                equipment_receive.napravleniye = None
-            equipment_receive.doc_reset_link = request.user.doctorprofile
-            equipment_receive.time_reset_link = timezone.now()
-            equipment_receive.save(update_fields=['napravleniye', 'doc_reset_link', 'time_reset_link'])
-
-            return status_response(True, "Изображение отвязано от заявки")
+        return status_response(True, "Изображение успешно привязано к заявке", {"requestId": napravleniye.pk, "requestHasImage": True})
 
 
 def _is_request_editable(direction):
@@ -686,7 +732,8 @@ def get_request_details(request):
             }
         )
 
-    has_image = EquipmentReceive.objects.filter(napravleniye_id=direction.pk).exists()
+    images = _direction_image_rows(direction)
+    has_image = bool(images)
 
     details = {
         "id": direction.pk,
@@ -706,6 +753,7 @@ def get_request_details(request):
         "isCito": direction.is_cito,
         "isDynamic": direction.is_dynamic,
         "hasImage": has_image,
+        "images": images,
         "researches": researches,
         "files": files,
         "contrastText": direction.text_contrast or '',
@@ -893,23 +941,12 @@ def get_request_params(request):
 
     params["isCito"] = direction.is_cito
 
-    equipment_receive = EquipmentReceive.objects.filter(napravleniye_id=direction.pk).first()
-    params["hasImage"] = equipment_receive is not None
-    if equipment_receive:
-        params["imageId"] = equipment_receive.pk
-        params["imageData"] = {
-            "id": equipment_receive.pk,
-            "studyInstanceUidTag": equipment_receive.study_instance_uid_tag,
-            "family": equipment_receive.family,
-            "name": equipment_receive.name,
-            "patronymic": equipment_receive.patronymic,
-            "birthday": equipment_receive.birthday.strftime('%d.%m.%Y') if equipment_receive.birthday else None,
-            "sex": equipment_receive.sex,
-            "patientId": equipment_receive.tag_patient_id,
-            "orderId": equipment_receive.order_id,
-            "createdAt": strfdatetime(equipment_receive.created_at),
-            "equipmentTitle": equipment_receive.equipment_model.title if equipment_receive.equipment_model else None,
-        }
+    images = _direction_image_rows(direction)
+    params["hasImage"] = bool(images)
+    params["images"] = images
+    if images:
+        params["imageId"] = images[0]["id"]
+        params["imageData"] = images[0]
 
     if direction.anamnesis:
         params["anamnesis"] = direction.anamnesis
@@ -1346,9 +1383,9 @@ def get_requests_by_status(request):
                 return JsonResponse({"rows": [], "error": "Период не может превышать 40 дней"})
             if SettingManager.get('show_directions_with_link_image', default='true', default_type='b'):
                 date_filter = {
-                    'equipment_receive__isnull': False,
-                    'equipment_receive__time_save_link__date__gte': search_date_from,
-                    'equipment_receive__time_save_link__date__lte': search_date_to,
+                    'equipment_receive_links__isnull': False,
+                    'equipment_receive_links__time_save_link__date__gte': search_date_from,
+                    'equipment_receive_links__time_save_link__date__lte': search_date_to,
                 }
             else:
                 date_filter = {
@@ -1361,8 +1398,8 @@ def get_requests_by_status(request):
         search_date = '-'.join(request_data.get("date").split(".")[::-1])
         if SettingManager.get('show_directions_with_link_image', default='true', default_type='b'):
             date_filter = {
-                'equipment_receive__isnull': False,
-                'equipment_receive__time_save_link__date': search_date,
+                'equipment_receive_links__isnull': False,
+                'equipment_receive_links__time_save_link__date': search_date,
             }
         else:
             date_filter = {'data_sozdaniya__date': search_date}

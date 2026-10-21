@@ -96,10 +96,25 @@
             </button>
             <div class="bottom-row">
               <div
-                v-if="image.linked && image.requestId"
-                class="image-request-number"
+                v-if="image.requestIds && image.requestIds.length"
+                class="image-request-links"
               >
-                {{ image.requestId }}
+                <span
+                  v-for="requestId in image.requestIds"
+                  :key="requestId"
+                  class="image-request-number"
+                >
+                  {{ requestId }}
+                  <a
+                    href="#"
+                    class="request-unlink"
+                    :class="{ disabled: props.isSelectionMode }"
+                    title="Отвязать"
+                    @click.prevent="!props.isSelectionMode && unlinkFromRequest(image, requestId)"
+                  >
+                    <i class="fa fa-times" />
+                  </a>
+                </span>
               </div>
               <a
                 href="#"
@@ -219,11 +234,11 @@
                   >{{ imageDetails.orderId || '(отсутствует)' }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">ID направления:</span>
+                  <span class="detail-label">Заявки:</span>
                   <span
                     class="detail-value"
-                    :class="{ 'empty-value': !imageDetails.napravleniyeId }"
-                  >{{ imageDetails.napravleniyeId || '(не привязано)' }}</span>
+                    :class="{ 'empty-value': !imageDetails.requests || !imageDetails.requests.length }"
+                  >{{ imageRequestIds(imageDetails) || '(не привязано)' }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Study Instance UID Tag:</span>
@@ -274,19 +289,16 @@
                   <span class="detail-label">Статус:</span>
                   <span class="detail-value">{{ imageDetails.linked ? 'Привязано' : 'Не привязано' }}</span>
                 </div>
-                <div class="detail-row">
-                  <span class="detail-label">Привязал:</span>
-                  <span
-                    class="detail-value"
-                    :class="{ 'empty-value': !imageDetails.docSaveLink }"
-                  >{{ imageDetails.docSaveLink || '(никто)' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Время привязки:</span>
-                  <span
-                    class="detail-value"
-                    :class="{ 'empty-value': !imageDetails.timeSaveLink }"
-                  >{{ imageDetails.timeSaveLink || '(не привязывалось)' }}</span>
+                <div
+                  v-for="linkedRequest in imageDetails.requests || []"
+                  :key="linkedRequest.id"
+                  class="detail-row"
+                >
+                  <span class="detail-label">Заявка {{ linkedRequest.id }}:</span>
+                  <span class="detail-value">
+                    {{ linkedRequest.docSaveLink || '(не указан)' }}
+                    <template v-if="linkedRequest.timeSaveLink">, {{ linkedRequest.timeSaveLink }}</template>
+                  </span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Отвязал:</span>
@@ -357,6 +369,7 @@ type Image = {
   equipmentId: string;
   linked: boolean;
   requestId: string | null;
+  requestIds?: Array<number | string>;
 };
 
 const emit = defineEmits(['image-linked', 'image-unlinked', 'request-link-needed', 'cancel-selection', 'image-hover']);
@@ -537,37 +550,40 @@ const stopAutoRefresh = () => {
   }
 };
 
-const toggleLink = async (image: Image) => {
-  if (image.linked) {
-    try {
-      await root.$dialog.confirm('Вы уверены, что хотите отвязать это изображение от заявки?');
-    } catch (_) {
-      return;
-    }
+const imageRequestIds = (details: { requests?: Array<{ id: number | string }> } | null) => (
+  (details?.requests || []).map(item => item.id).join(', ')
+);
 
-    try {
-      const response = await api('requests/link-image', {
-        imageId: image.id,
-        requestId: null,
-      });
-
-      if (response.ok) {
-        notify.ok(response.message || 'Изображение отвязано');
-        if (image.requestId) {
-          emit('image-unlinked', image.requestId);
-        }
-        await getImages();
-      } else {
-        notify.error(response.message || 'Ошибка при отвязывании изображения');
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
-      notify.error('Ошибка при отвязывании изображения');
-    }
-  } else {
-    emit('request-link-needed', image);
+const unlinkFromRequest = async (image: Image, requestId: number | string) => {
+  try {
+    await root.$dialog.confirm(`Отвязать изображение от заявки ${requestId}?`);
+  } catch (_) {
+    return;
   }
+
+  try {
+    const response = await api('requests/link-image', {
+      imageId: image.id,
+      requestId,
+      unlink: true,
+    });
+
+    if (response.ok) {
+      notify.ok(response.message || 'Изображение отвязано');
+      emit('image-unlinked', { requestId, hasImage: !!response.requestHasImage });
+      await getImages();
+    } else {
+      notify.error(response.message || 'Ошибка при отвязывании изображения');
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+    notify.error('Ошибка при отвязывании изображения');
+  }
+};
+
+const toggleLink = (image: Image) => {
+  emit('request-link-needed', image);
 };
 
 const linkImageToRequest = async (image: Image, request: any) => {
@@ -623,12 +639,21 @@ const getButtonText = (image: Image) => {
   if (props.currentImageForLink && props.currentImageForLink.id === image.id) {
     return 'Отмена';
   }
-  return image.linked ? 'Отвязать' : 'Привязать';
+  return 'Привязать';
 };
 
-const isImageHighlighted = (image: Image) => (
-  props.highlightedImageId && image.requestId && image.requestId.toString() === props.highlightedImageId.toString()
-);
+const isImageHighlighted = (image: Image) => {
+  if (!props.highlightedImageId) {
+    return false;
+  }
+  let ids: Array<number | string> = [];
+  if (image.requestIds?.length) {
+    ids = image.requestIds;
+  } else if (image.requestId) {
+    ids = [image.requestId];
+  }
+  return ids.some(id => id.toString() === String(props.highlightedImageId));
+};
 
 const onImageMouseEnter = (image: Image) => {
   emit('image-hover', image);
@@ -804,6 +829,12 @@ defineExpose({
   color: #666;
   line-height: 1.2;
 }
+.image-request-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
 .image-request-number {
   font-size: 12px;
   color: #049372;
@@ -812,6 +843,14 @@ defineExpose({
   padding: 1px 4px;
   border-radius: 3px;
   display: inline-block;
+}
+.request-unlink {
+  margin-left: 4px;
+  color: #049372;
+}
+.request-unlink.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .image-actions {
   width: 110px;

@@ -1,9 +1,9 @@
 from django.db import connection
-from django.db.models import Q
+from django.db.models import F, Q
 from django.utils import timezone
 
 from clients.models import Individual, Phones
-from directions.models import Napravleniya
+from directions.models import Issledovaniya, Napravleniya
 import uuid
 
 from django.db import models
@@ -254,9 +254,7 @@ class EquipmentReceive(models.Model):
         return query
 
     @staticmethod
-    def get_equipment_receive(
-        manufacturer_param='', manufacturer_model_name_param='', institution_name_param='', ip_address_param='', station_name_param='', pacs_property_param=''
-    ):
+    def get_equipment_receive(manufacturer_param='', manufacturer_model_name_param='', institution_name_param='', ip_address_param='', station_name_param='', pacs_property_param=''):
         params = {
             'manufacturer_param': manufacturer_param,
             'manufacturer_model_name_param': manufacturer_model_name_param,
@@ -333,3 +331,105 @@ class EquipmentReceive(models.Model):
                 ).save()
                 cache.set(cache_key, data.get('study_instance_uid_tag'), 60 * 60 * 24)
         return eqr
+
+    def sync_primary_direction(self, reset_doctor=None):
+        link = self.request_links.order_by(F('time_save_link').asc(nulls_last=True), 'pk').first()
+        if link:
+            self.napravleniye_id = link.napravleniye_id
+            self.doc_save_link_id = link.doc_save_link_id
+            self.time_save_link = link.time_save_link
+            self.doc_reset_link = None
+            self.time_reset_link = None
+        else:
+            self.napravleniye = None
+            self.doc_save_link = None
+            self.time_save_link = None
+            if reset_doctor is not None:
+                self.doc_reset_link = reset_doctor
+                self.time_reset_link = timezone.now()
+        self.save(
+            update_fields=[
+                'napravleniye',
+                'doc_save_link',
+                'time_save_link',
+                'doc_reset_link',
+                'time_reset_link',
+            ]
+        )
+
+
+class EquipmentReceiveLink(models.Model):
+    equipment_receive = models.ForeignKey(EquipmentReceive, db_index=True, related_name='request_links', on_delete=models.CASCADE)
+    napravleniye = models.ForeignKey(Napravleniya, db_index=True, related_name='equipment_receive_links', on_delete=models.CASCADE)
+    doc_save_link = models.ForeignKey(
+        DoctorProfile,
+        null=True,
+        blank=True,
+        default=None,
+        related_name='equipment_receive_link_saves',
+        db_index=True,
+        help_text='Пользователь, связавший снимок с заявкой',
+        on_delete=models.SET_NULL,
+    )
+    time_save_link = models.DateTimeField(null=True, blank=True, default=None, db_index=True, help_text='Время создания связи')
+
+    class Meta:
+        unique_together = (('equipment_receive', 'napravleniye'),)
+
+    def __str__(self):
+        return f'{self.equipment_receive_id} → {self.napravleniye_id}'
+
+    @staticmethod
+    def study_uids_for_direction(direction):
+        uids = []
+        links = EquipmentReceiveLink.objects.filter(napravleniye=direction).select_related('equipment_receive').order_by(F('time_save_link').asc(nulls_last=True), 'pk')
+        for link in links:
+            uid = (link.equipment_receive.study_instance_uid_tag or '').strip()
+            if uid and uid not in uids:
+                uids.append(uid)
+        return uids
+
+    @staticmethod
+    def fill_empty_study_uid(direction, uid):
+        uid = (uid or '').strip()
+        if not uid:
+            return
+        for iss in Issledovaniya.objects.filter(napravleniye=direction):
+            if iss.study_instance_uid or iss.study_instance_uid_tag:
+                continue
+            iss.study_instance_uid = uid
+            iss.study_instance_uid_tag = uid
+            iss.save(update_fields=['study_instance_uid', 'study_instance_uid_tag'])
+
+    @staticmethod
+    def refresh_direction_study_uid(direction):
+        uids = EquipmentReceiveLink.study_uids_for_direction(direction)
+        next_uid = uids[0] if uids else None
+        for iss in Issledovaniya.objects.filter(napravleniye=direction):
+            current = iss.study_instance_uid_tag or iss.study_instance_uid
+            if current and current in uids:
+                continue
+            iss.study_instance_uid = next_uid
+            iss.study_instance_uid_tag = next_uid
+            iss.save(update_fields=['study_instance_uid', 'study_instance_uid_tag'])
+
+    @classmethod
+    def attach(cls, equipment_receive, direction, doctor):
+        link, created = cls.objects.get_or_create(
+            equipment_receive=equipment_receive,
+            napravleniye=direction,
+            defaults={'doc_save_link': doctor, 'time_save_link': timezone.now()},
+        )
+        if created:
+            cls.fill_empty_study_uid(direction, equipment_receive.study_instance_uid_tag)
+            equipment_receive.sync_primary_direction()
+        return link, created
+
+    @classmethod
+    def detach(cls, equipment_receive, direction, doctor):
+        deleted, _ = cls.objects.filter(equipment_receive=equipment_receive, napravleniye=direction).delete()
+        if not deleted:
+            return False
+        cls.refresh_direction_study_uid(direction)
+        equipment_receive.sync_primary_direction(reset_doctor=doctor)
+        return True

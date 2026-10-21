@@ -20,7 +20,7 @@ from equipment.models import Equipment
 from ftp_orders.json_export import FILE_TYPE_ORDER, FILE_TYPE_RESULT, FILE_TYPE_STUDY, connect_ftp
 from ftp_orders.main import FailedCreatingDirectionsException
 from hospitals.models import Hospitals
-from integration_framework.models import EquipmentReceive
+from integration_framework.models import EquipmentReceive, EquipmentReceiveLink
 from laboratory.settings import FTP_JSON_ORDERS_INTERVAL_SECONDS, FTP_JSON_ORDERS_PULL_URL, FTP_JSON_RESULTS_PULL_URL
 from slog.models import Log
 from users.models import DoctorProfile
@@ -429,20 +429,14 @@ def link_study_from_dcm_payload(payload):
         return _result(False, f"Оборудование с uuid {equipment_uuid} не найдено")
 
     with transaction.atomic():
-        EquipmentReceive.objects.filter(study_instance_uid_tag=study_instance_uid, equipment_model=equipment).delete()
+        equipment_receive = EquipmentReceive.objects.filter(study_instance_uid_tag=study_instance_uid, equipment_model=equipment).first()
+        if not equipment_receive:
+            equipment_receive = _create_equipment_receive_from_payload(payload, equipment, study_instance_uid)
+            equipment_receive.save()
 
-        equipment_receive = _create_equipment_receive_from_payload(payload, equipment, study_instance_uid)
-        equipment_receive.napravleniye = direction
-        equipment_receive.doc_save_link = direction.doc
-        equipment_receive.time_save_link = timezone.now()
-        equipment_receive.save()
-
-        for iss in direction.issledovaniya_set.all():
-            iss.study_instance_uid = study_instance_uid
-            iss.study_instance_uid_tag = study_instance_uid
-            iss.save(update_fields=["study_instance_uid", "study_instance_uid_tag"])
-
-        Log.log(source_id, 190013, direction.doc, {"org": hospital.safe_short_title, "study_instance_uid": study_instance_uid, "direction": direction.pk, "uuid": equipment_uuid})
+        _, created = EquipmentReceiveLink.attach(equipment_receive, direction, direction.doc)
+        if created:
+            Log.log(source_id, 190013, direction.doc, {"org": hospital.safe_short_title, "study_instance_uid": study_instance_uid, "direction": direction.pk, "uuid": equipment_uuid})
 
     return _result(True, "", directions=[direction.pk])
 
