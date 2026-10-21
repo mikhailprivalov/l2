@@ -22,6 +22,7 @@ from document_management.models import (  # noqa: I001
     Documents,
     GroupDocuments,
     PlaceSection,
+    DouTest,
     Plans,
     TypeCases,
     TypeDocuments,
@@ -594,6 +595,55 @@ def plans_update(request):
     if result.get("ok"):
         _audit(request, DocumentManagerLog.PLAN, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def tests_list(request):
+    return JsonResponse({"result": DouTest.get_list()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def tests_details(request):
+    data = _request_data(request)
+    result = DouTest.get_details(data.get("id"))
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def tests_update(request):
+    data = _request_data(request)
+    result = DouTest.save_test(
+        data.get("id", -1),
+        data.get("title", ""),
+        data.get("questions"),
+        data.get("orderMode"),
+        data.get("questionLimit"),
+        data.get("questionPick"),
+    )
+    if result.get("ok"):
+        _audit(request, DocumentManagerLog.TEST, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def tests_import(request):
+    uploaded = request.FILES.get("file")
+    if not uploaded:
+        return status_response(False, "Файл не выбран")
+    name = (uploaded.name or "").lower()
+    if not name.endswith(".xlsx"):
+        return status_response(False, "Нужен файл .xlsx")
+    result = DouTest.parse_xlsx(uploaded)
+    if result.get("ok"):
+        return JsonResponse(result)
     return status_response(False, result.get("message"))
 
 

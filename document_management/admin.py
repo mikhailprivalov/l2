@@ -16,6 +16,9 @@ from document_management.models import (
     TypeSectionAccess,
     PlanIndicator,
     PlanIndicatorGroup,
+    DouTest,
+    DouTestAnswer,
+    DouTestQuestion,
     Plans,
     DocumentCase,
     DocumentCaseAccess,
@@ -132,6 +135,32 @@ class TypeCasesAdmin(admin.ModelAdmin):
 class PlansAdmin(admin.ModelAdmin):
     list_display = ("pk", "title")
     search_fields = ("title",)
+
+
+class DouTestAnswerInline(admin.TabularInline):
+    model = DouTestAnswer
+    extra = 0
+    ordering = ("order", "pk")
+
+
+@admin.register(DouTest)
+class DouTestAdmin(admin.ModelAdmin):
+    list_display = ("pk", "title", "order_mode", "question_limit", "question_pick")
+    search_fields = ("title",)
+
+
+@admin.register(DouTestQuestion)
+class DouTestQuestionAdmin(admin.ModelAdmin):
+    list_display = ("pk", "test", "text", "order")
+    search_fields = ("text",)
+    list_filter = ("test",)
+    inlines = (DouTestAnswerInline,)
+
+
+@admin.register(DouTestAnswer)
+class DouTestAnswerAdmin(admin.ModelAdmin):
+    list_display = ("pk", "question", "text", "is_correct", "order")
+    list_filter = ("is_correct",)
 
 
 @admin.register(PlanIndicatorGroup)

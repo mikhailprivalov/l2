@@ -2100,6 +2100,239 @@ class PlanIndicator(models.Model):
         }, None
 
 
+class DouTest(models.Model):
+    ORDER_SEQUENTIAL = "sequential"
+    ORDER_RANDOM = "random"
+    PICK_ALL = "all"
+    PICK_RANDOM = "random"
+
+    title = models.CharField(max_length=128, blank=True, null=True)
+    order_mode = models.CharField(max_length=16, default=ORDER_SEQUENTIAL)
+    question_limit = models.PositiveIntegerField(null=True, blank=True)
+    question_pick = models.CharField(max_length=16, default=PICK_ALL)
+
+    class Meta:
+        verbose_name = "Тест"
+        verbose_name_plural = "Тесты"
+
+    def __str__(self):
+        return f"{self.title}"
+
+    @property
+    def json(self):
+        return {"id": self.id, "title": self.title or ""}
+
+    @staticmethod
+    def get_list():
+        return [row.json for row in DouTest.objects.all().order_by("title", "pk")]
+
+    @staticmethod
+    def get_details(pk):
+        if pk in (None, -1, "-1"):
+            return {"ok": True, "id": -1, "title": "", "questions": [], **DouTest.empty_settings()}
+        test = DouTest.objects.filter(pk=pk).prefetch_related("questions__answers").first()
+        if not test:
+            return {"ok": False, "message": "Тест не найден"}
+        questions = []
+        for question in test.questions.all().order_by("order", "pk"):
+            questions.append(
+                {
+                    "id": question.pk,
+                    "text": question.text or "",
+                    "order": question.order,
+                    "answers": [row.as_json() for row in question.answers.all().order_by("order", "pk")],
+                }
+            )
+        return {"ok": True, "id": test.pk, "title": test.title or "", "questions": questions, **test.settings_json()}
+
+    @staticmethod
+    def empty_settings():
+        return {"orderMode": DouTest.ORDER_SEQUENTIAL, "questionLimit": None, "questionPick": DouTest.PICK_ALL}
+
+    def settings_json(self):
+        order_mode = self.order_mode if self.order_mode in (self.ORDER_SEQUENTIAL, self.ORDER_RANDOM) else self.ORDER_SEQUENTIAL
+        question_pick = self.question_pick if self.question_pick in (self.PICK_ALL, self.PICK_RANDOM) else self.PICK_ALL
+        return {"orderMode": order_mode, "questionLimit": self.question_limit, "questionPick": question_pick}
+
+    @staticmethod
+    def clean_settings(order_mode, question_limit, question_pick, question_count):
+        if order_mode not in (DouTest.ORDER_SEQUENTIAL, DouTest.ORDER_RANDOM):
+            return None, "Укажите порядок вопросов"
+        if question_pick not in (DouTest.PICK_ALL, DouTest.PICK_RANDOM):
+            return None, "Укажите набор вопросов"
+        if question_limit in (None, ""):
+            limit = None
+        else:
+            try:
+                limit = int(question_limit)
+            except (TypeError, ValueError):
+                return None, "Укажите количество вопросов"
+            if limit < 1:
+                return None, "Укажите количество вопросов"
+            if limit > question_count:
+                return None, "Количество вопросов больше, чем в тесте"
+        return {"order_mode": order_mode, "question_limit": limit, "question_pick": question_pick}, None
+
+    @staticmethod
+    def save_test(pk, title, questions, order_mode=None, question_limit=None, question_pick=None):
+        from django.db import transaction
+
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        cleaned_questions = []
+        for index, question in enumerate(questions or []):
+            text = (question.get("text") or "").strip()
+            if not text:
+                return {"ok": False, "message": "Укажите текст вопроса"}
+            cleaned_answers = []
+            has_correct = False
+            for answer_index, answer in enumerate(question.get("answers") or []):
+                answer_text = (answer.get("text") or "").strip()
+                if not answer_text:
+                    return {"ok": False, "message": "Укажите текст варианта ответа"}
+                is_correct = bool(answer.get("isCorrect"))
+                if is_correct:
+                    has_correct = True
+                cleaned_answers.append({"text": answer_text, "is_correct": is_correct, "order": answer_index})
+            if not cleaned_answers:
+                return {"ok": False, "message": "Добавьте вариант ответа"}
+            if not has_correct:
+                return {"ok": False, "message": "Отметьте правильный ответ"}
+            cleaned_questions.append({"text": text, "order": index, "answers": cleaned_answers})
+        settings, error = DouTest.clean_settings(order_mode or DouTest.ORDER_SEQUENTIAL, question_limit, question_pick or DouTest.PICK_ALL, len(cleaned_questions))
+        if error:
+            return {"ok": False, "message": error}
+        with transaction.atomic():
+            if pk in (None, -1, "-1"):
+                test = DouTest(title=title)
+            else:
+                test = DouTest.objects.filter(pk=pk).first()
+                if not test:
+                    return {"ok": False, "message": "Тест не найден"}
+                test.title = title
+            test.order_mode = settings["order_mode"]
+            test.question_limit = settings["question_limit"]
+            test.question_pick = settings["question_pick"]
+            test.save()
+            DouTestQuestion.objects.filter(test=test).delete()
+            for row in cleaned_questions:
+                question = DouTestQuestion.objects.create(test=test, text=row["text"], order=row["order"])
+                for answer in row["answers"]:
+                    DouTestAnswer.objects.create(question=question, **answer)
+        return {"ok": True, "id": test.pk, "title": test.title}
+
+    @staticmethod
+    def _cell_text(value):
+        if value is None:
+            return ""
+        if isinstance(value, float) and value.is_integer():
+            return str(int(value))
+        return str(value).strip()
+
+    @staticmethod
+    def _is_correct_mark(value):
+        return DouTest._cell_text(value) == "1"
+
+    @staticmethod
+    def _question_error(question, message):
+        text = question["text"]
+        short = text if len(text) <= 80 else f"{text[:80]}…"
+        return {"ok": False, "message": f"{message}: {short}"}
+
+    @staticmethod
+    def parse_xlsx(uploaded):
+        from openpyxl import load_workbook
+
+        try:
+            workbook = load_workbook(filename=uploaded, data_only=True, read_only=True)
+        except Exception:
+            return {"ok": False, "message": "Не удалось прочитать файл"}
+        try:
+            if not workbook.sheetnames:
+                return {"ok": False, "message": "В файле нет листа"}
+            sheet = workbook[workbook.sheetnames[0]]
+            questions = []
+            current = None
+            for row in sheet.iter_rows(max_col=3, values_only=True):
+                cells = list(row) + [None, None, None]
+                question_text = DouTest._cell_text(cells[0])
+                answer_text = DouTest._cell_text(cells[1])
+                if not questions and not current and question_text.lower() == "вопрос":
+                    continue
+                if not question_text and not answer_text:
+                    continue
+                if question_text:
+                    if current is not None:
+                        error = DouTest._closed_question(current)
+                        if error:
+                            return error
+                    current = {"text": question_text, "order": len(questions), "answers": []}
+                    questions.append(current)
+                if not answer_text:
+                    continue
+                if current is None:
+                    return {"ok": False, "message": "Вариант ответа без вопроса"}
+                if len(answer_text) > 512:
+                    return DouTest._question_error(current, "Вариант ответа длиннее 512 символов")
+                current["answers"].append(
+                    {
+                        "text": answer_text,
+                        "isCorrect": DouTest._is_correct_mark(cells[2]),
+                        "order": len(current["answers"]),
+                    }
+                )
+            if current is not None:
+                error = DouTest._closed_question(current)
+                if error:
+                    return error
+            if not questions:
+                return {"ok": False, "message": "В файле нет вопросов"}
+            return {"ok": True, "questions": questions}
+        finally:
+            workbook.close()
+
+    @staticmethod
+    def _closed_question(question):
+        if not question["answers"]:
+            return DouTest._question_error(question, "Добавьте вариант ответа")
+        if not any(row["isCorrect"] for row in question["answers"]):
+            return DouTest._question_error(question, "Отметьте правильный ответ")
+        return None
+
+
+class DouTestQuestion(models.Model):
+    test = models.ForeignKey(DouTest, related_name="questions", on_delete=models.CASCADE)
+    text = models.TextField(blank=True, default="")
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Вопрос теста"
+        verbose_name_plural = "Вопросы теста"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return f"{self.test} – {self.text}"
+
+
+class DouTestAnswer(models.Model):
+    question = models.ForeignKey(DouTestQuestion, related_name="answers", on_delete=models.CASCADE)
+    text = models.CharField(max_length=512, blank=True, default="")
+    is_correct = models.BooleanField(default=False)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Вариант ответа"
+        verbose_name_plural = "Варианты ответа"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return f"{self.question_id} – {self.text}"
+
+    def as_json(self):
+        return {"id": self.pk, "text": self.text or "", "isCorrect": self.is_correct, "order": self.order}
+
+
 class DocumentFieldGroups(models.Model):
     title = models.CharField(max_length=550, help_text="Название группы")
     show_title = models.BooleanField(default=True, blank=True)
@@ -4176,6 +4409,7 @@ class DocumentManagerLog(models.Model):
     ADDRESSEE_MEMBER = 260032
     PRINT_ERROR = 260033
     PICKER_FAVORITE = 260034
+    TEST = 260035
     ACTIONS = (
         (CREATE, "ДОУ: создание"),
         (SAVE, "ДОУ: сохранение"),
@@ -4212,6 +4446,7 @@ class DocumentManagerLog(models.Model):
         (ADDRESSEE_MEMBER, "ДОУ: участник набора"),
         (PRINT_ERROR, "ДОУ: ошибка печати"),
         (PICKER_FAVORITE, "ДОУ: избранное подбора"),
+        (TEST, "ДОУ: тест"),
     )
 
     action = models.IntegerField(choices=ACTIONS, db_index=True)

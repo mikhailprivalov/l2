@@ -118,6 +118,13 @@
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
       />
+      <DouTestEditor
+        v-else-if="showTestEditor"
+        :key="`test-${selectedId}`"
+        :test-id="selectedId || -1"
+        @saved="onCatalogSaved"
+        @cancel="selectedId = null"
+      />
       <ParaclinicResearchEditor
         v-else-if="showResearchEditor"
         :key="`${selectedNavId}-${selectedId}`"
@@ -146,6 +153,7 @@ import DouCatalogEditor from '@/construct/DouCatalogEditor.vue';
 import DouDocumentStructureEditor from '@/construct/DouDocumentStructureEditor.vue';
 import DouAddresseeEditor from '@/construct/DouAddresseeEditor.vue';
 import DouPlanEditor from '@/construct/DouPlanEditor.vue';
+import DouTestEditor from '@/construct/DouTestEditor.vue';
 import ParaclinicResearchEditor from '@/construct/ParaclinicResearchEditor.vue';
 
 interface NavButton {
@@ -180,7 +188,7 @@ const LAYOUT_TEMPLATE_DEPARTMENT = -17;
 const INDICATOR_DEPARTMENT = -18;
 const WORKING_NAV = [
   'document_groups', 'document_types', 'document_templates', 'indicators',
-  'plans', 'skeleton', 'addressees', 'cases', 'place_section', 'type_section',
+  'plans', 'tests', 'skeleton', 'addressees', 'cases', 'place_section', 'type_section',
 ];
 
 const store = useStore();
@@ -206,6 +214,7 @@ const canAdd = computed(() => (
   || selectedNavId.value === 'document_templates'
   || selectedNavId.value === 'indicators'
   || selectedNavId.value === 'plans'
+  || selectedNavId.value === 'tests'
   || selectedNavId.value === 'addressees'
   || selectedNavId.value === 'cases'
   || selectedNavId.value === 'place_section'
@@ -271,6 +280,10 @@ const showAddresseeEditor = computed(
 
 const showPlanEditor = computed(
   () => selectedNavId.value === 'plans' && selectedId.value !== null,
+);
+
+const showTestEditor = computed(
+  () => selectedNavId.value === 'tests' && selectedId.value !== null,
 );
 
 const loadNavButtons = async () => {
@@ -347,6 +360,9 @@ const loadItems = async () => {
       items.value = result || [];
     } else if (selectedNavId.value === 'plans') {
       const { result } = await api('document-manager/plans/list');
+      items.value = result || [];
+    } else if (selectedNavId.value === 'tests') {
+      const { result } = await api('document-manager/tests/list');
       items.value = result || [];
     } else {
       await loadGroups();
