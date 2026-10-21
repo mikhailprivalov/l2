@@ -4,6 +4,7 @@ from document_management.models import (
     AddresseeGroup,
     AddresseeGroupMember,
     DocumentFieldGroups,
+    DocumentManagerLog,
     DocumentFields,
     DocumentPickerFavorite,
     DocumentRecent,
@@ -15,6 +16,9 @@ from document_management.models import (
     TypeSectionAccess,
     PlanIndicator,
     PlanIndicatorGroup,
+    DouTest,
+    DouTestAnswer,
+    DouTestQuestion,
     Plans,
     DocumentCase,
     DocumentCaseAccess,
@@ -133,6 +137,32 @@ class PlansAdmin(admin.ModelAdmin):
     search_fields = ("title",)
 
 
+class DouTestAnswerInline(admin.TabularInline):
+    model = DouTestAnswer
+    extra = 0
+    ordering = ("order", "pk")
+
+
+@admin.register(DouTest)
+class DouTestAdmin(admin.ModelAdmin):
+    list_display = ("pk", "title", "order_mode", "question_limit", "question_pick")
+    search_fields = ("title",)
+
+
+@admin.register(DouTestQuestion)
+class DouTestQuestionAdmin(admin.ModelAdmin):
+    list_display = ("pk", "test", "text", "order")
+    search_fields = ("text",)
+    list_filter = ("test",)
+    inlines = (DouTestAnswerInline,)
+
+
+@admin.register(DouTestAnswer)
+class DouTestAnswerAdmin(admin.ModelAdmin):
+    list_display = ("pk", "question", "text", "is_correct", "order")
+    list_filter = ("is_correct",)
+
+
 @admin.register(PlanIndicatorGroup)
 class PlanIndicatorGroupAdmin(admin.ModelAdmin):
     list_display = ("pk", "plan", "title", "order")
@@ -178,6 +208,21 @@ class AddresseeGroupAdmin(admin.ModelAdmin):
     search_fields = ("title",)
     list_filter = ("hide",)
     inlines = (AddresseeGroupMemberInline,)
+
+
+@admin.register(DocumentManagerLog)
+class DocumentManagerLogAdmin(admin.ModelAdmin):
+    list_display = ("pk", "time", "action", "document", "document_case", "block", "object_key", "user")
+    list_filter = ("action", "time")
+    search_fields = ("object_key", "body", "user__fio", "user__family")
+    readonly_fields = ("time", "action", "document", "document_case", "block", "object_key", "body", "user")
+    raw_id_fields = ("document", "document_case", "block", "user")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(DocumentRecent)

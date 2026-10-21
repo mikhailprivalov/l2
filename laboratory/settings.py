@@ -371,6 +371,7 @@ DOU_CONSTRUCTOR_NAV_BUTTONS = [
     {"id": "addressees", "title": "Адресаты"},
     {"id": "cases", "title": "Виды дел"},
     {"id": "plans", "title": "Планы"},
+    {"id": "tests", "title": "Тесты"},
     {"id": "indicators", "title": "Показатели"},
     {"id": "element", "title": "Элементы"},
     {"id": "group_element", "title": "Группировка Элементов"},

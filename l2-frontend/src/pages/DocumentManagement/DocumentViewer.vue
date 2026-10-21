@@ -25,6 +25,14 @@
             <i class="fa fa-star" />
           </button>
           <span class="research-title-text">{{ title || '' }}</span>
+          <span
+            v-if="anyApproverRejected"
+            class="doc-agreed doc-agreed--no"
+          >Не согласован</span>
+          <span
+            v-else-if="allApproversAgreed"
+            class="doc-agreed"
+          >Согласован</span>
         </div>
         <div class="research-right">
           <button
@@ -357,7 +365,81 @@
         </button>
       </div>
       <div
-        v-if="!caseListMode && (research || loaded)"
+        v-if="!caseListMode && approvalMode && (research || loaded)"
+        class="group"
+      >
+        <div class="group-title">
+          Согласование
+        </div>
+        <div class="fields">
+          <div class="approval-status">
+            <div
+              v-for="row in approvalStatuses"
+              :key="row.id"
+              class="approval-status__row"
+            >
+              <span class="approval-status__fio">{{ row.fio }}</span>
+              <span
+                class="approval-status__state"
+                :class="`approval-status__state--${row.status}`"
+              >{{ approvalStatusText(row.status) }}</span>
+              <span class="approval-status__date">{{ row.decidedAt }}</span>
+              <span class="approval-status__comment">
+                <input
+                  v-if="canDecideRow(row)"
+                  v-model="approvalComment"
+                  class="approval-status__comment-input"
+                  type="text"
+                  maxlength="130"
+                >
+                <template v-else>{{ row.comment }}</template>
+              </span>
+              <span class="approval-status__action">
+                <button
+                  v-if="canDecideRow(row)"
+                  class="btn approval-status__btn"
+                  :class="approvalComment.trim() ? 'btn-danger' : 'approval-status__btn--agree'"
+                  type="button"
+                  @click="approveMine"
+                >
+                  {{ approvalButtonLabel }}
+                </button>
+                <button
+                  v-else-if="canCancelRow(row)"
+                  class="btn btn-blue-nb approval-status__btn"
+                  type="button"
+                  @click="cancelApproval(row)"
+                >
+                  Отменить
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        v-if="!caseListMode && !approvalMode && (research || loaded)"
+        class="doc-case-select doc-approvers"
+      >
+        <span>Согласовать</span>
+        <div class="doc-case-select__field doc-approvers__body">
+          <AddresseeField
+            header="Согласовать"
+            :value="approvers"
+            :disabled="!canEditApprovers"
+            @input="onApprovers"
+          />
+          <div
+            v-for="(line, index) in approvalSentLines"
+            :key="`${line}-${index}`"
+            class="doc-approvers__sent"
+          >
+            Отправил: {{ line }}
+          </div>
+        </div>
+      </div>
+      <div
+        v-if="!caseListMode && !approvalMode && (research || loaded)"
         class="doc-case-select"
       >
         <span>Дело</span>
@@ -373,7 +455,7 @@
         />
       </div>
       <div
-        v-if="!caseListMode && (research || loaded)"
+        v-if="!caseListMode && !approvalMode && (research || loaded)"
         class="doc-case-select"
       >
         <span>Блок</span>
@@ -390,17 +472,45 @@
         />
       </div>
       <div
-        v-if="!caseListMode && (research || loaded)"
-        class="doc-case-select doc-approvers"
+        v-if="!caseListMode && !approvalMode && approvalStatuses.length"
+        class="group"
       >
-        <span>Согласовать</span>
-        <AddresseeField
-          class="doc-case-select__field"
-          header="Согласовать"
-          :value="approvers"
-          :disabled="!canEditApprovers"
-          @input="onApprovers"
-        />
+        <div class="group-title">
+          Согласование
+        </div>
+        <div class="fields">
+          <div
+            class="approval-status"
+            :class="{ 'approval-status--view': !canCancelApproval }"
+          >
+            <div
+              v-for="row in approvalStatuses"
+              :key="row.id"
+              class="approval-status__row"
+            >
+              <span class="approval-status__fio">{{ row.fio }}</span>
+              <span
+                class="approval-status__state"
+                :class="`approval-status__state--${row.status}`"
+              >{{ approvalStatusText(row.status) }}</span>
+              <span class="approval-status__date">{{ row.decidedAt }}</span>
+              <span class="approval-status__comment">{{ row.comment }}</span>
+              <span
+                v-if="canCancelApproval"
+                class="approval-status__action"
+              >
+                <button
+                  v-if="canCancelRow(row)"
+                  class="btn btn-blue-nb approval-status__btn"
+                  type="button"
+                  @click="cancelApproval(row)"
+                >
+                  Отменить
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -426,12 +536,14 @@ const props = defineProps<{
   documentId?: number | null;
   caseId?: number | null;
   showCaseDocuments?: boolean;
+  approvalMode?: boolean;
 }>();
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
   (e: 'visibility-change'): void;
   (e: 'reviewed'): void;
+  (e: 'approved'): void;
 }>();
 
 const store = useStore();
@@ -466,7 +578,71 @@ const selectedBlockId = ref<number | null>(null);
 const availableBlocks = ref<{ id: number; label: string }[]>([]);
 const canChangeBlock = ref(true);
 const approvers = ref('[]');
+const approvalSentSource = ref('[]');
 const canEditApprovers = ref(false);
+const canCancelApproval = ref(false);
+type ApprovalStatusRow = {
+  id: number;
+  fio: string;
+  status: string;
+  decidedAt?: string;
+  comment?: string;
+};
+const approvalStatuses = ref<ApprovalStatusRow[]>([]);
+const anyApproverRejected = computed(() => (
+  approvalStatuses.value.some(row => row.status === 'rejected')
+));
+const allApproversAgreed = computed(() => (
+  approvalStatuses.value.length > 0
+  && approvalStatuses.value.every(row => row.status === 'approved')
+));
+const approvalComment = ref('');
+const currentDocPk = computed(() => Number(store.getters.currentDocPk) || 0);
+const approvalButtonLabel = computed(() => (
+  approvalComment.value.trim() ? 'Не согласен' : 'Согласен'
+));
+const canDecideRow = (row: ApprovalStatusRow) => (
+  row.id === currentDocPk.value && row.status === 'waiting'
+);
+const canCancelRow = (row: ApprovalStatusRow) => (
+  canCancelApproval.value && row.status !== 'waiting'
+);
+const approvalStatusText = (status: string) => {
+  if (status === 'approved') {
+    return 'Согласовано';
+  }
+  if (status === 'rejected') {
+    return 'Не согласовано';
+  }
+  return 'Ожидает';
+};
+const approvalSentLines = computed(() => {
+  let rows: { whoCreate?: string; createAtApprove?: string }[] = [];
+  try {
+    const parsed = JSON.parse(approvalSentSource.value);
+    if (Array.isArray(parsed)) {
+      rows = parsed;
+    }
+  } catch {
+    rows = [];
+  }
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  rows.forEach((row) => {
+    const who = (row?.whoCreate || '').trim();
+    const at = (row?.createAtApprove || '').trim();
+    if (!who && !at) {
+      return;
+    }
+    const line = [who, at].filter(Boolean).join(', ');
+    if (seen.has(line)) {
+      return;
+    }
+    seen.add(line);
+    lines.push(line);
+  });
+  return lines;
+});
 const whoConfirmed = ref('');
 const patient = {};
 
@@ -711,7 +887,11 @@ const load = async () => {
   availableBlocks.value = [];
   canChangeBlock.value = true;
   approvers.value = '[]';
+  approvalSentSource.value = '[]';
   canEditApprovers.value = false;
+  canCancelApproval.value = false;
+  approvalStatuses.value = [];
+  approvalComment.value = '';
   caseDocuments.value = [];
   whoConfirmed.value = '';
   if (props.caseId && !props.documentId) {
@@ -751,7 +931,10 @@ const load = async () => {
       availableBlocks.value = result.availableBlocks || [];
       canChangeBlock.value = result.canChangeBlock !== false;
       approvers.value = JSON.stringify(result.approvers || []);
+      approvalSentSource.value = approvers.value;
       canEditApprovers.value = Boolean(result.canEditApprovers);
+      canCancelApproval.value = Boolean(result.canCancelApproval);
+      approvalStatuses.value = result.approvalStatuses || [];
       whoConfirmed.value = result.whoConfirmed || '';
       if (result.reviewedNow) {
         emit('reviewed');
@@ -1020,6 +1203,42 @@ onUnmounted(() => {
   root.$off('dou-favorites-changed', onFavoritesChanged);
 });
 
+const approveMine = async () => {
+  if (!props.documentId) {
+    return;
+  }
+  const comment = approvalComment.value.trim();
+  const result = await api('document-manager/documents/approve', {
+    id: props.documentId,
+    comment,
+  });
+  if (result?.ok) {
+    approvalStatuses.value = result.approvalStatuses || [];
+    approvalComment.value = '';
+    root.$emit('msg', 'ok', comment ? 'Не согласовано' : 'Согласовано');
+    emit('approved');
+  } else {
+    root.$emit('msg', 'error', result?.message || 'Не удалось согласовать');
+  }
+};
+
+const cancelApproval = async (row: ApprovalStatusRow) => {
+  if (!props.documentId || !canCancelRow(row)) {
+    return;
+  }
+  const result = await api('document-manager/documents/approve-cancel', {
+    id: props.documentId,
+    employeeId: row.id,
+  });
+  if (result?.ok) {
+    approvalStatuses.value = result.approvalStatuses || [];
+    root.$emit('msg', 'ok', 'Согласование отменено');
+    emit('approved');
+  } else {
+    root.$emit('msg', 'error', result?.message || 'Не удалось отменить согласование');
+  }
+};
+
 const onApprovers = async (value: string) => {
   if (!props.documentId || !canEditApprovers.value || value === approvers.value) {
     return;
@@ -1035,6 +1254,10 @@ const onApprovers = async (value: string) => {
   const result = await api('document-manager/documents/approvers', { id: props.documentId, members });
   if (result?.ok) {
     approvers.value = JSON.stringify(result.approvers || members);
+    approvalSentSource.value = approvers.value;
+    if (result.approvalStatuses) {
+      approvalStatuses.value = result.approvalStatuses;
+    }
     root.$emit('msg', 'ok', 'Согласующие сохранены');
   } else {
     approvers.value = previous;
@@ -1289,6 +1512,22 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
   white-space: nowrap;
 }
 
+.doc-agreed {
+  flex: 0 0 auto;
+  margin-left: 10px;
+  padding: 0 8px;
+  height: 23px;
+  line-height: 23px;
+  background-color: #049372;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.doc-agreed--no {
+  background-color: #da4453;
+}
+
 .favorite-star {
   flex: 0 0 auto;
   margin-right: 6px;
@@ -1475,6 +1714,86 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
   > span {
     padding-top: 6px;
   }
+}
+
+.doc-approvers__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.doc-approvers__sent {
+  line-height: 1.3;
+}
+
+.approval-status {
+  display: grid;
+  grid-template-columns: max-content max-content max-content 180px max-content;
+  column-gap: 24px;
+  row-gap: 6px;
+  justify-content: start;
+  align-items: center;
+  margin: 4px 0;
+  text-align: left;
+}
+
+.approval-status--view {
+  grid-template-columns: max-content max-content max-content max-content;
+}
+
+.approval-status__row {
+  display: contents;
+}
+
+.approval-status__fio,
+.approval-status__state,
+.approval-status__date,
+.approval-status__comment,
+.approval-status__action {
+  justify-self: start;
+  text-align: left;
+}
+
+.approval-status__comment-input {
+  width: 180px;
+  height: 23px;
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 21px;
+}
+
+.approval-status__btn {
+  height: 23px;
+  min-height: 23px;
+  padding: 0 8px;
+  line-height: 21px;
+  font-size: 12px;
+}
+
+.approval-status__btn--agree,
+.approval-status__btn--agree:focus,
+.approval-status__btn--agree:active {
+  background-color: #049372;
+  border-color: #049372;
+  color: #fff;
+}
+
+.approval-status__btn--agree:hover {
+  background-color: #0c8b6e;
+  border-color: #0c8b6e;
+  color: #fff;
+}
+
+.approval-status__state--approved {
+  color: #1b7f3a;
+}
+
+.approval-status__state--rejected {
+  color: #c0392b;
+}
+
+.approval-status__state--waiting {
+  color: #000;
 }
 
 .case-docs__body {
