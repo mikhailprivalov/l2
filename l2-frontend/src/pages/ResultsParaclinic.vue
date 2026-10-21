@@ -730,6 +730,16 @@
                   &nbsp;<i class="fa fa-camera" />&nbsp;
                 </a>
                 <a
+                  v-if="forcedResultsTop && !!row.pacsStudies"
+                  v-tippy
+                  :href="row.pacsStudies"
+                  class="btn btn-blue-nb"
+                  target="_blank"
+                  title="Все снимки"
+                >
+                  &nbsp;<i class="fa-regular fa-eye" />&nbsp;
+                </a>
+                <a
                   v-if="forcedResultsTop && !!row.pacs && showRequestsFillDicomDownload"
                   v-tippy
                   :href="`/api/dicom-download?pk=${data.direction.pk}`"

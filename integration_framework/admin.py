@@ -127,7 +127,16 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.IntegrationResearches, ResIntertationResearches)
+
+
+class EquipmentReceiveLinkAdmin(admin.ModelAdmin):
+    list_display = ('equipment_receive', 'napravleniye', 'doc_save_link', 'time_save_link')
+    raw_id_fields = ('equipment_receive', 'napravleniye', 'doc_save_link')
+    search_fields = ('napravleniye__pk', 'equipment_receive__study_instance_uid_tag')
+
+
 admin.site.register(models.EquipmentReceive, EquipmentReceiveAdmin)
+admin.site.register(models.EquipmentReceiveLink, EquipmentReceiveLinkAdmin)
 admin.site.register(models.ExternalService, ExternalServiceAdmin)
 admin.site.register(models.CrieOrder, CrieOrderAdmin)
 admin.site.register(models.ExternalServiceRights)

@@ -50,7 +50,7 @@
               ref="requestHistoryRef"
               key="requestHistoryKey"
               :card-id="cardId"
-              :highlighted-request-id="hoveredImageId"
+              :highlighted-request-ids="hoveredRequestIds"
               @request-selected="onRequestSelectedForLink"
               @cancel-selection="onCancelSelection"
               @request-hover="onRequestHover"
@@ -100,7 +100,7 @@ const requestImageBindingRef = ref();
 const isSelectionMode = ref(false);
 const currentImageForLink = ref(null);
 const hoveredRequestId = ref(null);
-const hoveredImageId = ref(null);
+const hoveredRequestIds = ref<Array<number | string>>([]);
 
 const loader = useLoader();
 const notify = useNotify();
@@ -170,9 +170,11 @@ const onImageLinked = (requestId: number | string) => {
   }
 };
 
-const onImageUnlinked = (requestId: number | string) => {
+const onImageUnlinked = (payload: { requestId: number | string; hasImage: boolean } | number | string) => {
+  const requestId = typeof payload === 'object' ? payload.requestId : payload;
+  const hasImage = typeof payload === 'object' ? payload.hasImage : false;
   if (requestHistoryRef.value?.updateRequestImageStatus) {
-    requestHistoryRef.value.updateRequestImageStatus(requestId, false);
+    requestHistoryRef.value.updateRequestImageStatus(requestId, hasImage);
   }
 };
 
@@ -207,11 +209,15 @@ const onRequestHover = (request: any) => {
 };
 
 const onImageHover = (image: any) => {
-  if (image?.linked && image?.requestId) {
-    hoveredImageId.value = image.requestId;
-  } else {
-    hoveredImageId.value = null;
+  if (image?.requestIds?.length) {
+    hoveredRequestIds.value = image.requestIds;
+    return;
   }
+  if (image?.requestId) {
+    hoveredRequestIds.value = [image.requestId];
+    return;
+  }
+  hoveredRequestIds.value = [];
 };
 
 watch(cardId, () => {

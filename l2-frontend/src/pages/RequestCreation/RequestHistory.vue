@@ -75,8 +75,8 @@
             :key="item.id"
             class="direction"
             :class="{
-              'selectable': isSelectionMode && !item.hasImage,
-              'selection-disabled': isSelectionMode && item.hasImage,
+              'selectable': isSelectionMode && !isLinkedToCurrentImage(item),
+              'selection-disabled': isSelectionMode && isLinkedToCurrentImage(item),
               'highlighted': isHighlighted(item),
             }"
             @click="onRequestClick(item)"
@@ -541,8 +541,24 @@
                   </div>
                 </template>
                 <div class="detail-row">
-                  <span class="detail-label">Привязанное изображение:</span>
-                  <span class="detail-value">{{ requestDetails.hasImage ? 'Есть' : 'Отсутствует' }}</span>
+                  <span class="detail-label">Привязанные изображения:</span>
+                  <span
+                    v-if="!requestDetails.images || !requestDetails.images.length"
+                    class="detail-value"
+                  >Отсутствует</span>
+                  <span
+                    v-else
+                    class="detail-value"
+                  >
+                    <span
+                      v-for="image in requestDetails.images"
+                      :key="image.id"
+                      class="linked-image-line"
+                    >
+                      #{{ image.id }} {{ image.datetime }} {{ image.patient }}
+                      <span v-if="image.studyInstanceUidTag"> — {{ image.studyInstanceUidTag }}</span>
+                    </span>
+                  </span>
                 </div>
               </div>
 
@@ -680,7 +696,7 @@ import {
 
 const props = defineProps<{
   cardId?: number | null;
-  highlightedRequestId?: number | string | null;
+  highlightedRequestIds?: Array<number | string> | null;
 }>();
 const notify = useNotify();
 const loader = useLoader();
@@ -994,10 +1010,22 @@ const exitSelectionMode = () => {
   emit('cancel-selection');
 };
 
+const currentImageRequestIds = (image: { requestIds?: Array<number | string>; requestId?: number | string | null } | null) => {
+  if (image?.requestIds?.length) {
+    return image.requestIds;
+  }
+  if (image?.requestId) {
+    return [image.requestId];
+  }
+  return [];
+};
+
+const isLinkedToCurrentImage = (item: Request) => (
+  currentImageRequestIds(currentImageForLink.value).some(id => id.toString() === item.id.toString())
+);
+
 const isHighlighted = (item: Request) => (
-  props.highlightedRequestId
-  && item.id
-  && item.id.toString() === props.highlightedRequestId.toString()
+  (props.highlightedRequestIds || []).some(id => item.id && id.toString() === item.id.toString())
 );
 
 const cancelDirection = async (pk: number) => {
@@ -1192,7 +1220,7 @@ const saveRequestDetails = async () => {
 };
 
 const onRequestClick = (request: Request) => {
-  if (isSelectionMode.value && !request.hasImage) {
+  if (isSelectionMode.value && !isLinkedToCurrentImage(request)) {
     emit('request-selected', request);
   } else if (!isSelectionMode.value) {
     showRequestDetails(request.id);
@@ -1202,7 +1230,7 @@ const onRequestClick = (request: Request) => {
 const onFileClick = (event: Event, item: Request) => {
   if (isSelectionMode.value) {
     event.preventDefault();
-    if (!item.hasImage) {
+    if (!isLinkedToCurrentImage(item)) {
       emit('request-selected', item);
     }
   }
@@ -1883,6 +1911,10 @@ defineExpose({
   color: #333;
   flex: 1;
   text-align: right;
+}
+
+.linked-image-line {
+  display: block;
 }
 
 .detail-value.empty-value {

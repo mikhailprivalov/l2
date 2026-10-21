@@ -1,6 +1,7 @@
 import logging
 import socket
 from functools import reduce
+from urllib.parse import quote
 from directions.models import Issledovaniya, Napravleniya
 from laboratory.settings import (
     DICOM_SEARCH_TAGS,
@@ -199,7 +200,17 @@ def find_orthanc_study_id(server, uid):
     return None
 
 
+def multi_study_viewer_url(pacs_url, uids):
+    if not pacs_url or not uids or len(uids) < 2:
+        return None
+    base = str(pacs_url).split('?', 1)[0]
+    query = '&'.join(f"StudyInstanceUIDs={quote(str(uid), safe='.')}" for uid in uids)
+    return f'{base}?{query}'
+
+
 def study_uids_for_direction(napravleniye):
+    from integration_framework.models import EquipmentReceiveLink
+
     iss = Issledovaniya.objects.filter(napravleniye=napravleniye).select_related('research', 'research__podrazdeleniye').first()
     if not iss or not iss.research or not iss.research.podrazdeleniye or not iss.research.podrazdeleniye.can_has_pacs:
         return []
@@ -208,16 +219,17 @@ def study_uids_for_direction(napravleniye):
         uids.append(iss.study_instance_uid)
     if iss.study_instance_uid_tag and iss.study_instance_uid_tag not in uids:
         uids.append(iss.study_instance_uid_tag)
-    if uids:
-        return uids
-    search_dicom_study(napravleniye.pk)
-    iss = Issledovaniya.objects.filter(napravleniye=napravleniye).only('study_instance_uid', 'study_instance_uid_tag').first()
-    if not iss:
-        return []
-    if iss.study_instance_uid:
-        uids.append(iss.study_instance_uid)
-    if iss.study_instance_uid_tag and iss.study_instance_uid_tag not in uids:
-        uids.append(iss.study_instance_uid_tag)
+    if not uids:
+        search_dicom_study(napravleniye.pk)
+        iss = Issledovaniya.objects.filter(napravleniye=napravleniye).only('study_instance_uid', 'study_instance_uid_tag').first()
+        if iss:
+            if iss.study_instance_uid:
+                uids.append(iss.study_instance_uid)
+            if iss.study_instance_uid_tag and iss.study_instance_uid_tag not in uids:
+                uids.append(iss.study_instance_uid_tag)
+    for uid in EquipmentReceiveLink.study_uids_for_direction(napravleniye):
+        if uid not in uids:
+            uids.append(uid)
     return uids
 
 
