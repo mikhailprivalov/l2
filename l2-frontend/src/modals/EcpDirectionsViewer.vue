@@ -3,9 +3,9 @@
     ref="modal"
     show-footer="true"
     white-bg="true"
-    min-width="640px"
-    max-width="860px"
-    width="70%"
+    min-width="860px"
+    max-width="1120px"
+    width="84%"
     margin-left-right="auto"
     margin-top
     @close="hideModal"
@@ -21,118 +21,119 @@
         :key="direction.direction_id"
         class="ecp-direction"
       >
-        <div class="ecp-meta">
-          <div v-if="direction.direction_id">
-            Направление ЕЦП №{{ direction.direction_id }}<template v-if="direction.setDate"> - {{ direction.setDate }}</template>
-          </div>
-          <div v-if="direction.evnLabRequestId">
-            Заявка: {{ direction.evnLabRequestId }}
-          </div>
-        </div>
-        <div
-          v-if="direction.alreadyExists"
-          class="ecp-notice"
-        >
-          Направление уже зарегистрировано в системе - {{ direction.localDirectionId }}
-        </div>
-        <div
-          v-else-if="validResearchIds(direction).length === 0"
-          class="ecp-notice"
-        >
-          Нет услуг для создания направления
-        </div>
-        <ol class="ecp-services">
-          <li
-            v-for="(research, idx) in direction.researches"
-            :key="research.missing ? `missing-${idx}-${research.ecpTitle || research.title}` : research.id"
-            :class="{ missing: research.missing }"
-          >
-            <template v-if="research.missing">
-              Услуга «{{ research.ecpTitle || research.title }}» не найдена в L2
-            </template>
-            <template v-else>
-              {{ research.title }}
-              <span
-                v-if="research.ecpTitle && research.ecpTitle !== research.title"
-                class="ecp-title"
-              > (ЕЦП: {{ research.ecpTitle }})</span>
-            </template>
-          </li>
-        </ol>
-        <div
-          v-if="directions.length > 1 && canCreate(direction)"
-          class="row ecp-actions"
-        >
-          <div class="col-xs-6">
-            <button
-              type="button"
-              class="btn btn-primary-nb btn-blue-nb"
-              :disabled="saving"
-              @click="createDirection(direction, false)"
+        <table class="ecp-table">
+          <colgroup>
+            <col class="ecp-col-meta">
+            <col>
+            <col>
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Направление</th>
+              <th>Услуги в ЕЦП</th>
+              <th>Услуги в L2</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(research, idx) in rowsOf(direction)"
+              :key="rowKey(direction, research, idx)"
             >
-              Сохранить
-            </button>
-          </div>
-          <div class="col-xs-6">
-            <button
-              type="button"
-              class="btn btn-primary-nb btn-blue-nb"
-              :disabled="saving"
-              @click="createDirection(direction, true)"
-            >
-              Сохранить и печать
-            </button>
-          </div>
-        </div>
+              <td
+                v-if="idx === 0"
+                :rowspan="rowsOf(direction).length"
+                class="ecp-meta"
+              >
+                <div v-if="direction.direction_id">
+                  Направление ЕЦП №{{ direction.direction_id }}
+                  <template v-if="direction.setDate">
+                    - {{ direction.setDate }}
+                  </template>
+                </div>
+                <div v-if="direction.evnLabRequestId">
+                  Заявка: {{ direction.evnLabRequestId }}
+                </div>
+                <div
+                  v-if="isRegistered(direction)"
+                  class="ecp-notice"
+                >
+                  Направление уже зарегистрировано в системе - {{ registeredId(direction) }}
+                </div>
+                <div
+                  v-if="isRegistered(direction) && direction.localCancelled"
+                  class="ecp-notice"
+                >
+                  Направление отменено
+                </div>
+                <div
+                  v-if="isRegistered(direction) && missingTitles(direction)"
+                  class="ecp-notice"
+                >
+                  В ЕЦП есть, в направлении нет: {{ missingTitles(direction) }}
+                </div>
+                <div
+                  v-if="isRegistered(direction) && extraTitles(direction)"
+                  class="ecp-notice"
+                >
+                  В направлении есть, в ЕЦП нет: {{ extraTitles(direction) }}
+                </div>
+                <button
+                  v-if="canAddMissing(direction)"
+                  type="button"
+                  class="btn btn-blue-nb ecp-btn ecp-add"
+                  :disabled="saving"
+                  @click="addMissing(direction)"
+                >
+                  Добавить недостающие
+                </button>
+                <div
+                  v-if="!isRegistered(direction) && validResearchIds(direction).length === 0"
+                  class="ecp-notice"
+                >
+                  Нет услуг для создания направления
+                </div>
+              </td>
+              <td>
+                <template v-if="!isEmptyRow(direction)">
+                  {{ research.ecpTitle || research.title }}
+                </template>
+              </td>
+              <td :class="{ missing: research.missing && !isEmptyRow(direction) }">
+                <template v-if="!isEmptyRow(direction)">
+                  {{ research.missing ? 'не найдена' : research.title }}
+                </template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
     <div slot="footer">
-      <div class="row">
-        <template v-if="singleDirection && canCreate(singleDirection)">
-          <div class="col-xs-4">
-            <button
-              type="button"
-              class="btn btn-primary-nb btn-blue-nb"
-              :disabled="saving"
-              @click="createDirection(singleDirection, false)"
-            >
-              Сохранить
-            </button>
-          </div>
-          <div class="col-xs-4">
-            <button
-              type="button"
-              class="btn btn-primary-nb btn-blue-nb"
-              :disabled="saving"
-              @click="createDirection(singleDirection, true)"
-            >
-              Сохранить и печать
-            </button>
-          </div>
-          <div class="col-xs-4">
-            <button
-              type="button"
-              class="btn btn-primary-nb btn-blue-nb"
-              :disabled="saving"
-              @click="hideModal"
-            >
-              Закрыть
-            </button>
-          </div>
-        </template>
-        <div
-          v-else
-          class="col-xs-12"
+      <div class="ecp-footer">
+        <button
+          type="button"
+          class="btn btn-blue-nb ecp-btn"
+          :disabled="saving || !canSave"
+          @click="createDirections(true)"
         >
-          <button
-            type="button"
-            class="btn btn-primary-nb btn-blue-nb"
-            :disabled="saving"
-            @click="hideModal"
-          >
-            Закрыть
-          </button>
-        </div>
+          Сохранить и печать
+        </button>
+        <button
+          type="button"
+          class="btn btn-blue-nb ecp-btn"
+          :disabled="saving || !canSave"
+          @click="createDirections(false)"
+        >
+          Сохранить
+        </button>
+        <button
+          type="button"
+          class="btn btn-blue-nb ecp-btn"
+          :disabled="saving"
+          @click="hideModal"
+        >
+          Закрыть
+        </button>
       </div>
     </div>
   </Modal>
@@ -152,6 +153,13 @@ interface EcpResearch {
   missing: boolean;
 }
 
+interface EcpServiceRef {
+  id: number;
+  title: string | null;
+  ecpTitle?: string | null;
+  count?: number;
+}
+
 interface EcpDirectionData {
   direction_id: string;
   evnLabRequestId: string;
@@ -160,6 +168,9 @@ interface EcpDirectionData {
   researches: EcpResearch[];
   alreadyExists: boolean;
   localDirectionId?: number | null;
+  localCancelled?: boolean;
+  missingResearches?: EcpServiceRef[];
+  extraResearches?: EcpServiceRef[];
 }
 
 const props = defineProps<{
@@ -175,14 +186,97 @@ const store = instance.proxy.$store;
 const notify = useNotify();
 
 const saving = ref(false);
+const createdByEcpId = ref<Record<string, number>>({});
+const addedResearchIds = ref<Record<string, number[]>>({});
 
-const singleDirection = computed(() => (props.directions.length === 1 ? props.directions[0] : null));
+const rowsOf = (direction: EcpDirectionData) => (
+  direction.researches?.length
+    ? direction.researches
+    : [{
+      id: 0, title: '', ecpTitle: '', missing: false,
+    }]
+);
+
+const isEmptyRow = (direction: EcpDirectionData) => !direction.researches?.length;
+
+const rowKey = (direction: EcpDirectionData, research: EcpResearch, idx: number) => {
+  if (isEmptyRow(direction)) {
+    return 'empty';
+  }
+  return research.missing
+    ? `missing-${idx}-${research.ecpTitle || research.title}`
+    : `${research.id}-${idx}`;
+};
 
 const validResearchIds = (direction: EcpDirectionData) => (direction.researches || [])
   .filter(research => !research.missing)
   .map(research => research.id);
 
-const canCreate = (direction: EcpDirectionData) => !direction.alreadyExists && validResearchIds(direction).length > 0;
+const registeredId = (direction: EcpDirectionData) => (
+  createdByEcpId.value[direction.direction_id] || direction.localDirectionId || null
+);
+
+const isRegistered = (direction: EcpDirectionData) => (
+  direction.alreadyExists || Boolean(createdByEcpId.value[direction.direction_id])
+);
+
+const canCreate = (direction: EcpDirectionData) => (
+  !isRegistered(direction) && validResearchIds(direction).length > 0
+);
+
+const missingOf = (direction: EcpDirectionData) => {
+  const added = new Set(addedResearchIds.value[direction.direction_id] || []);
+  return (direction.missingResearches || []).filter(item => !added.has(item.id));
+};
+
+const titlesOf = (items: EcpServiceRef[]) => items
+  .map(item => item.title || item.ecpTitle || '')
+  .filter(Boolean)
+  .join(', ');
+
+const missingTitles = (direction: EcpDirectionData) => titlesOf(missingOf(direction));
+
+const extraTitles = (direction: EcpDirectionData) => titlesOf(direction.extraResearches || []);
+
+const canAddMissing = (direction: EcpDirectionData) => (
+  isRegistered(direction) && !direction.localCancelled && missingOf(direction).length > 0
+);
+
+const creatableDirections = computed(() => props.directions.filter(canCreate));
+const canSave = computed(() => creatableDirections.value.length > 0);
+
+const addMissing = async (direction: EcpDirectionData) => {
+  const localId = registeredId(direction);
+  const missing = missingOf(direction);
+  if (saving.value || !localId || !missing.length || direction.localCancelled) {
+    return;
+  }
+  saving.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { ok, message, added } = await api('directions/update-from-ecp', {
+      direction_pk: localId,
+      researches: missing.map(item => item.id),
+    });
+    if (!ok) {
+      notify.error(message || 'Не удалось добавить услуги');
+      return;
+    }
+    const ids = (added || []).map(item => item.id).filter(Boolean);
+    addedResearchIds.value = {
+      ...addedResearchIds.value,
+      [direction.direction_id]: [
+        ...(addedResearchIds.value[direction.direction_id] || []),
+        ...ids,
+      ],
+    };
+    notify.ok(message || 'Услуги добавлены');
+    root.$emit('researches-picker:refresh');
+  } finally {
+    saving.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
 
 const hideModal = () => {
   root.$emit('hide_ecp_directions');
@@ -191,29 +285,44 @@ const hideModal = () => {
   }
 };
 
-const createDirection = async (direction: EcpDirectionData, printAfter: boolean) => {
-  if (saving.value || !canCreate(direction)) {
+const createDirections = async (printAfter: boolean) => {
+  if (saving.value || !canSave.value) {
     return;
   }
   saving.value = true;
   await store.dispatch(actions.INC_LOADING);
+  const createdIds: number[] = [];
   try {
-    const {
-      ok, message, direction: createdId, directions,
-    } = await api('directions/create-from-ecp', {
-      card_pk: props.card.pk,
-      researches: validResearchIds(direction),
-      EvnDirectionId: direction.direction_id,
-      EvnLabRequest_id: direction.evnLabRequestId,
-    });
-    if (!ok) {
-      notify.error(message || 'Не удалось создать направление');
-      return;
+    for (const direction of creatableDirections.value) {
+      const {
+        ok, message, direction: createdId, directions: created,
+      } = await api('directions/create-from-ecp', {
+        card_pk: props.card.pk,
+        researches: validResearchIds(direction),
+        EvnDirectionId: direction.direction_id,
+        EvnLabRequest_id: direction.evnLabRequestId,
+      });
+      if (!ok) {
+        notify.error(message || 'Не удалось создать направление');
+        if (createdIds.length) {
+          root.$emit('researches-picker:refresh');
+        }
+        return;
+      }
+      const ids = (created?.length ? created : [createdId]).filter(Boolean);
+      createdIds.push(...ids);
+      createdByEcpId.value = {
+        ...createdByEcpId.value,
+        [direction.direction_id]: createdId,
+      };
     }
-    notify.ok(message || `Направление создано: ${createdId}`);
+    const createdText = createdIds.join(', ');
+    notify.ok(createdIds.length > 1
+      ? `Направления созданы: ${createdText}`
+      : `Направление создано: ${createdText}`);
     root.$emit('researches-picker:refresh');
-    if (printAfter && directions?.length) {
-      root.$emit('print:directions', directions);
+    if (printAfter && createdIds.length) {
+      root.$emit('print:directions', createdIds);
     }
     hideModal();
   } finally {
@@ -235,43 +344,67 @@ const createDirection = async (direction: EcpDirectionData, printAfter: boolean)
   border-top: 1px solid #ddd;
 }
 
+.ecp-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th,
+  td {
+    border: 1px solid #e6e9ed;
+    padding: 8px 10px;
+    vertical-align: top;
+    font-weight: normal;
+  }
+
+  th {
+    font-weight: 600;
+    background: #f5f7fa;
+  }
+}
+
+.ecp-col-meta {
+  width: 42%;
+}
+
 .ecp-meta {
-  margin-bottom: 10px;
   font-weight: 600;
 }
 
-.ecp-actions {
-  margin-top: 12px;
+.ecp-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .ecp-notice {
-  margin-bottom: 10px;
+  margin-top: 10px;
+  font-weight: normal;
   color: #a94442;
 }
 
-.ecp-services {
-  padding-left: 22px;
-  margin: 0;
+.ecp-add {
+  margin-top: 8px;
+}
 
-  li {
-    margin-bottom: 6px;
-  }
+.missing {
+  color: #a94442;
+}
 
-  .missing {
-    color: #a94442;
-  }
-
-  .ecp-title {
-    font-weight: normal;
-    color: #666;
-  }
+.ecp-btn.btn,
+.ecp-btn.btn:hover,
+.ecp-btn.btn:focus,
+.ecp-btn.btn:active {
+  width: auto;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 0;
+  font-size: 12px;
+  line-height: 32px;
+  color: #fff !important;
+  box-sizing: border-box;
 }
 
 ::v-deep .panel-flt {
   margin: 41px auto;
-}
-
-.btn + .btn {
-  margin-left: 8px;
 }
 </style>

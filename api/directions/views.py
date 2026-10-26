@@ -5105,6 +5105,58 @@ def _ecp_usluga_names_from_row(row):
     return names
 
 
+def _ecp_local_service_counts(direction_pks):
+    counts = {pk: {} for pk in direction_pks}
+    titles = {pk: {} for pk in direction_pks}
+    if not direction_pks:
+        return counts, titles
+    rows = Issledovaniya.objects.filter(napravleniye_id__in=direction_pks, cancel=False).values_list("napravleniye_id", "research_id", "research__title", "how_many")
+    for direction_pk, research_id, title, how_many in rows:
+        if not research_id:
+            continue
+        qty = how_many or 1
+        bucket = counts[direction_pk]
+        bucket[research_id] = bucket.get(research_id, 0) + qty
+        titles[direction_pk][research_id] = title or ""
+    return counts, titles
+
+
+def _ecp_service_diff(local_counts, local_titles, researches):
+    ecp_counts = {}
+    ecp_by_id = {}
+    for research in researches:
+        research_id = research.get("id") or 0
+        if research.get("missing") or not research_id:
+            continue
+        ecp_counts[research_id] = ecp_counts.get(research_id, 0) + 1
+        ecp_by_id[research_id] = research
+    missing = []
+    for research_id, ecp_qty in ecp_counts.items():
+        lack = ecp_qty - local_counts.get(research_id, 0)
+        if lack > 0:
+            research = ecp_by_id[research_id]
+            missing.append(
+                {
+                    "id": research_id,
+                    "title": research.get("title") or "",
+                    "ecpTitle": research.get("ecpTitle") or "",
+                    "count": lack,
+                }
+            )
+    extra = []
+    for research_id, local_qty in local_counts.items():
+        over = local_qty - ecp_counts.get(research_id, 0)
+        if over > 0:
+            extra.append(
+                {
+                    "id": research_id,
+                    "title": local_titles.get(research_id) or "",
+                    "count": over,
+                }
+            )
+    return missing, extra
+
+
 @login_required
 def directions_get_from_ecp(request):
     data = json.loads(request.body)
@@ -5175,13 +5227,17 @@ def directions_get_from_ecp(request):
     existing_by_number = {}
     direction_ids = [direction_id for direction_id in grouped if direction_id]
     if direction_ids:
-        for pk, ecp_number, rmis_number in Napravleniya.objects.filter(Q(ecp_direction_number__in=direction_ids) | Q(rmis_number__in=direction_ids)).values_list(
-            "pk", "ecp_direction_number", "rmis_number"
+        for pk, ecp_number, rmis_number, is_cancel in Napravleniya.objects.filter(Q(ecp_direction_number__in=direction_ids) | Q(rmis_number__in=direction_ids)).values_list(
+            "pk", "ecp_direction_number", "rmis_number", "cancel"
         ):
+            info = {"pk": pk, "cancel": is_cancel}
             if ecp_number:
-                existing_by_number[ecp_number] = pk
+                existing_by_number[ecp_number] = info
             if rmis_number and rmis_number not in existing_by_number:
-                existing_by_number[rmis_number] = pk
+                existing_by_number[rmis_number] = info
+
+    local_pks = list({info["pk"] for info in existing_by_number.values()})
+    local_counts, local_titles = _ecp_local_service_counts(local_pks)
 
     directions = []
     for item in grouped.values():
@@ -5196,7 +5252,17 @@ def directions_get_from_ecp(request):
                     "missing": research is None,
                 }
             )
-        local_direction_id = existing_by_number.get(item["direction_id"])
+        info = existing_by_number.get(item["direction_id"])
+        local_direction_id = info["pk"] if info else None
+        local_cancelled = bool(info and info["cancel"])
+        missing_researches = []
+        extra_researches = []
+        if local_direction_id:
+            missing_researches, extra_researches = _ecp_service_diff(
+                local_counts.get(local_direction_id, {}),
+                local_titles.get(local_direction_id, {}),
+                researches,
+            )
         directions.append(
             {
                 "direction_id": item["direction_id"],
@@ -5206,6 +5272,9 @@ def directions_get_from_ecp(request):
                 "researches": researches,
                 "alreadyExists": local_direction_id is not None,
                 "localDirectionId": local_direction_id,
+                "localCancelled": local_cancelled,
+                "missingResearches": missing_researches,
+                "extraResearches": extra_researches,
             }
         )
 
@@ -5280,6 +5349,58 @@ def directions_create_from_ecp(request):
         direction.save(update_fields=["rmis_number", "ecp_direction_number", "request_code", "is_external"])
 
     return JsonResponse({"ok": True, "message": f"Направление создано: {direction_id}", "direction": direction_id, "directions": [direction_id]})
+
+
+@login_required
+def directions_update_from_ecp(request):
+    data = json.loads(request.body)
+    direction_pk = data.get("direction_pk") or data.get("localDirectionId")
+    research_ids = data.get("researches") or []
+    if not direction_pk:
+        return JsonResponse({"ok": False, "message": "Не указано направление"})
+
+    direction = Napravleniya.objects.filter(pk=direction_pk).select_related("client", "client__work_place_db", "istochnik_f").first()
+    if not direction:
+        return JsonResponse({"ok": False, "message": "Направление не найдено"})
+    if direction.cancel:
+        return JsonResponse({"ok": False, "message": "Направление отменено"})
+
+    research_pks = []
+    for pk in research_ids:
+        try:
+            research_pks.append(int(pk))
+        except (TypeError, ValueError):
+            continue
+    research_pks = list(dict.fromkeys(research_pks))
+    title_by_id = dict(Researches.objects.filter(pk__in=research_pks).values_list("pk", "title"))
+    research_pks = [pk for pk in research_pks if pk in title_by_id]
+    if not research_pks:
+        return JsonResponse({"ok": False, "message": "Нет услуг для добавления"})
+
+    local_counts, _titles = _ecp_local_service_counts([direction.pk])
+    present = local_counts.get(direction.pk, {})
+    to_add = [pk for pk in research_pks if present.get(pk, 0) < 1]
+    if not to_add:
+        return JsonResponse({"ok": False, "message": "Недостающих услуг нет"})
+
+    price_obj = IstochnikiFinansirovaniya.get_price_modifier(direction.istochnik_f, direction.client.work_place_db)
+    who_add = getattr(request.user, "doctorprofile", None)
+    added = []
+    with transaction.atomic():
+        for research_pk in to_add:
+            coast = PriceCoast.get_coast_from_price(research_pk, price_obj, is_cito=direction.is_cito)
+            iss = Issledovaniya(
+                napravleniye=direction,
+                research_id=research_pk,
+                coast=coast,
+                how_many=1,
+                doc_add_additional=who_add,
+            )
+            iss.save()
+            added.append({"id": research_pk, "title": title_by_id.get(research_pk) or ""})
+
+    titles = ", ".join(item["title"] for item in added if item["title"])
+    return JsonResponse({"ok": True, "message": f"Добавлены услуги: {titles}", "added": added})
 
 
 @login_required

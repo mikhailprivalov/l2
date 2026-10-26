@@ -24,7 +24,7 @@ class Hospitals(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие больницы', db_index=True)
     is_default = models.BooleanField(default=False, blank=True, help_text='Больница по умолчанию для пустых полей', db_index=True)
     strict_tube_numbers = models.BooleanField(default=False, blank=True, help_text='Требовать наличия выделенного генератора номеров ёмкостей')
-    strict_data_ownership = models.BooleanField(default=False, blank=True, help_text='Доступ к данным только с явным указанием владения')
+    strict_data_ownership = models.BooleanField(default=True, blank=True, help_text='Доступ к данным только с явным указанием владения')
     strict_external_numbers = models.BooleanField(default=True, blank=True, help_text='Требовать наличия выделенного генератора номеров заказов')
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес больницы")
     phones = models.CharField(max_length=128, blank=True, default='', help_text="Телефон больницы")
