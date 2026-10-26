@@ -2419,7 +2419,7 @@ def organization_data_update(request):
             "ordersPushFtpServerUrl": None,
             "isExternalPerformingOrganization": False,
             "strictTubeNumbers": False,
-            "strictDataOwnership": False,
+            "strictDataOwnership": True,
             "strictExternalNumbers": False,
             "resultPullFtpServerUrl": None,
             "hl7SenderApplication": None,
