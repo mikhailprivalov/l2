@@ -119,6 +119,17 @@
             >
             <span>Блоки</span>
           </label>
+          <label
+            class="filter-check side-check side-check-hidden"
+            @click.prevent="toggleTests"
+          >
+            <input
+              type="checkbox"
+              :checked="showTests"
+              tabindex="-1"
+            >
+            <span>Тесты</span>
+          </label>
           <button
             v-if="showTopics && canCreateBlocks"
             class="blocks-add"
@@ -173,7 +184,23 @@
         class="doc-list"
         @scroll="onDocumentsScroll"
       >
-        <template v-if="showTopics">
+        <template v-if="showTests">
+          <div
+            v-for="test in visibleTests"
+            :key="`test-${test.id}`"
+            class="doc-row"
+          >
+            <button
+              class="doc-btn"
+              :class="{ 'active-button': selectedTest === test.id }"
+              type="button"
+              @click="selectTest(test.id)"
+            >
+              <span class="doc-title">{{ test.title }}</span>
+            </button>
+          </div>
+        </template>
+        <template v-else-if="showTopics">
           <div
             v-for="block in visibleBlocks"
             :key="`block-${block.id}`"
@@ -228,7 +255,7 @@
         <template v-else>
           <div
             v-for="document in visibleDocuments"
-            :key="document.id"
+            :key="`${document.id}-${document.caseId || 0}`"
             class="doc-row"
           >
           <button
@@ -341,15 +368,21 @@
         </button>
       </div>
       <div class="viewer">
+        <DocumentTestPanel
+          v-if="showTests && !showCreatedForm"
+          :test-id="selectedTest"
+          answerable
+        />
         <DocumentBlockPanel
-          v-if="showTopics"
+          v-else-if="showTopics && !showCreatedForm"
           :block-id="selectedBlock"
         />
         <DocumentViewer
           v-else
-          :document-id="caseSearch ? null : selectedDocument"
-          :case-id="caseSearch ? selectedCase : null"
-          :show-case-documents="showCaseDocuments || caseSearch"
+          :document-id="viewerDocumentId"
+          :case-id="viewerCaseId"
+          :show-case-documents="showCaseDocumentsOnViewer"
+          :focus-form="showCreatedForm"
           :approval-mode="roleFilter === 'toBeAgreed'"
           @visibility-change="onVisibilityChange"
           @reviewed="onReviewed"
@@ -499,6 +532,7 @@ import * as actions from '@/store/action-types';
 import DateRange from '@/ui-cards/DateRange.vue';
 import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
 import DocumentBlockPanel from '@/pages/DocumentManagement/DocumentBlockPanel.vue';
+import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import Modal from '@/ui-cards/Modal.vue';
@@ -529,27 +563,28 @@ const MIN_LEFT_WIDTH_PX = 448;
 const LIST_ROLE_FILTERS = ['created', 'doing', 'wrote', 'onControl', 'toReview', 'recent', 'toBeAgreed', 'onSignature'];
 
 const readStoredListFilter = (): {
-  role: string | null; hidden: boolean; myCases: boolean; topics: boolean; participant: boolean;
+  role: string | null; hidden: boolean; myCases: boolean; topics: boolean; tests: boolean; participant: boolean;
 } => {
   try {
     const raw = localStorage.getItem(LIST_FILTER_STORAGE_KEY);
     if (!raw) {
       return {
-        role: 'recent', hidden: false, myCases: false, topics: false, participant: false,
+        role: 'recent', hidden: false, myCases: false, topics: false, tests: false, participant: false,
       };
     }
     const data = JSON.parse(raw);
     const role = LIST_ROLE_FILTERS.includes(data?.role) ? data.role : null;
     const topics = Boolean(data?.topics) && !role;
-    const hidden = Boolean(data?.hidden) && !role && !topics;
-    const myCases = Boolean(data?.myCases) && !hidden && !role && !topics;
-    const participant = Boolean(data?.participant) && !role && !topics && !hidden && !myCases;
+    const tests = Boolean(data?.tests) && !role && !topics;
+    const hidden = Boolean(data?.hidden) && !role && !topics && !tests;
+    const myCases = Boolean(data?.myCases) && !hidden && !role && !topics && !tests;
+    const participant = Boolean(data?.participant) && !role && !topics && !tests && !hidden && !myCases;
     return {
-      role, hidden, myCases, topics, participant,
+      role, hidden, myCases, topics, tests, participant,
     };
   } catch {
     return {
-      role: 'recent', hidden: false, myCases: false, topics: false, participant: false,
+      role: 'recent', hidden: false, myCases: false, topics: false, tests: false, participant: false,
     };
   }
 };
@@ -577,6 +612,7 @@ const roleFilter = ref<string | null>(storedListFilter.role);
 const showHidden = ref(storedListFilter.hidden);
 const showMyCases = ref(storedListFilter.myCases);
 const showTopics = ref(storedListFilter.topics);
+const showTests = ref(storedListFilter.tests);
 const showParticipant = ref(storedListFilter.participant);
 const participantDocuments = ref(true);
 const participantCases = ref(true);
@@ -593,14 +629,29 @@ type ListRow = {
 const documents = ref<ListRow[]>([]);
 const listQuery = ref('');
 const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
+const tests = ref<{ id: number; title: string }[]>([]);
 const selectedDocument = ref<number | null>(null);
 const selectedCase = ref<number | null>(null);
 const caseSearch = ref(false);
+const showCreatedForm = ref(false);
 const selectedBlock = ref<number | null>(null);
+const selectedTest = ref<number | null>(null);
 const blockModalOpen = ref(false);
 const blockTitleDraft = ref('');
 const openedFromCaseFavorite = ref(false);
 const showCaseDocuments = computed(() => showMyCases.value || openedFromCaseFavorite.value);
+const viewerDocumentId = computed(() => (
+  showCreatedForm.value || !caseSearch.value ? selectedDocument.value : null
+));
+const viewerCaseId = computed(() => {
+  if (showCreatedForm.value) {
+    return selectedDocument.value ? null : selectedCase.value;
+  }
+  return caseSearch.value ? selectedCase.value : null;
+});
+const showCaseDocumentsOnViewer = computed(() => (
+  (showCaseDocuments.value || caseSearch.value) && !showCreatedForm.value
+));
 const docsEl = ref<HTMLElement | null>(null);
 const recentPage = ref(1);
 const recentHasMore = ref(false);
@@ -645,7 +696,7 @@ const userGroups = computed(() => store.getters.user_groups || []);
 const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
 const canCreateBlocks = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Создание блоков'));
 const listFilterActive = computed(() => Boolean(
-  roleFilter.value || showHidden.value || showMyCases.value || showTopics.value || showParticipant.value,
+  roleFilter.value || showHidden.value || showMyCases.value || showTopics.value || showTests.value || showParticipant.value,
 ));
 if (!canViewHidden.value) {
   showHidden.value = false;
@@ -656,6 +707,7 @@ const toggleRole = (id: string) => {
   const next = roleFilter.value === id ? null : id;
   showMyCases.value = false;
   showTopics.value = false;
+  showTests.value = false;
   showParticipant.value = false;
   if (next) {
     showHidden.value = false;
@@ -719,6 +771,29 @@ const loadDocuments = async (keepSelection = false) => {
     || roleFilter.value === 'toReview'
     || roleFilter.value === 'recent'
     || roleFilter.value === 'toBeAgreed';
+  if (showTests.value) {
+    selectedDocument.value = null;
+    selectedBlock.value = null;
+    blocks.value = [];
+    await loadPendingCount();
+    await store.dispatch(actions.INC_LOADING);
+    try {
+      const { result } = await api('document-manager/tests/list');
+      if (loadId !== documentsLoadId) {
+        return;
+      }
+      tests.value = result || [];
+      const stillThere = tests.value.some(row => row.id === selectedTest.value);
+      if (selectedTest.value && !stillThere) {
+        selectedTest.value = null;
+      }
+    } finally {
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    return;
+  }
+  tests.value = [];
+  selectedTest.value = null;
   if (showTopics.value) {
     selectedDocument.value = null;
     await loadPendingCount();
@@ -819,6 +894,7 @@ const toggleHidden = () => {
   if (next) {
     showMyCases.value = false;
     showTopics.value = false;
+    showTests.value = false;
     showParticipant.value = false;
   }
   if (next && roleFilter.value) {
@@ -836,6 +912,7 @@ const toggleMyCases = () => {
   if (next) {
     showHidden.value = false;
     showTopics.value = false;
+    showTests.value = false;
     showParticipant.value = false;
     if (roleFilter.value) {
       roleFilter.value = null;
@@ -861,6 +938,7 @@ const toggleParticipant = () => {
     showHidden.value = false;
     showMyCases.value = false;
     showTopics.value = false;
+    showTests.value = false;
     if (roleFilter.value) {
       roleFilter.value = null;
       return;
@@ -878,6 +956,26 @@ const toggleTopics = () => {
   if (next) {
     showHidden.value = false;
     showMyCases.value = false;
+    showTests.value = false;
+    showParticipant.value = false;
+    if (roleFilter.value) {
+      roleFilter.value = null;
+      return;
+    }
+  }
+  loadDocuments();
+};
+
+const toggleTests = () => {
+  listQuery.value = '';
+  const next = !showTests.value;
+  showTests.value = next;
+  selectedDocument.value = null;
+  openedFromCaseFavorite.value = false;
+  if (next) {
+    showHidden.value = false;
+    showMyCases.value = false;
+    showTopics.value = false;
     showParticipant.value = false;
     if (roleFilter.value) {
       roleFilter.value = null;
@@ -926,11 +1024,14 @@ const searchDocuments = async () => {
       return;
     }
     if (result?.ok) {
+      showCreatedForm.value = false;
       if (listSearch) {
         const rows = result.result || [];
         const searchingCases = byCase.value;
         showTopics.value = false;
+        showTests.value = false;
         selectedBlock.value = null;
+        selectedTest.value = null;
         documents.value = rows;
         recentPage.value = 1;
         recentHasMore.value = false;
@@ -1007,13 +1108,15 @@ const runCreate = async (payload: { typeId: number | null; caseId: number | null
       topic: payload.topic || '',
     });
     if (result?.ok) {
+      openedFromCaseFavorite.value = false;
+      showCreatedForm.value = true;
       if (result.emptyCase) {
         root.$emit('msg', 'ok', 'Дело создано');
-        openedFromCaseFavorite.value = false;
         selectedDocument.value = null;
+        selectedCase.value = result.caseId;
       } else {
         root.$emit('msg', 'ok', 'Документ создан');
-        openedFromCaseFavorite.value = false;
+        selectedCase.value = null;
         selectedDocument.value = result.id;
       }
     } else {
@@ -1063,6 +1166,7 @@ const confirmCaseTopic = async () => {
 };
 
 const selectDocument = (id: number) => {
+  showCreatedForm.value = false;
   openedFromCaseFavorite.value = false;
   caseSearch.value = false;
   selectedCase.value = null;
@@ -1070,6 +1174,7 @@ const selectDocument = (id: number) => {
 };
 
 const selectCase = (id: number) => {
+  showCreatedForm.value = false;
   selectedCase.value = id;
   selectedDocument.value = null;
 };
@@ -1131,7 +1236,21 @@ const visibleBlocks = computed(() => {
 });
 
 const selectBlock = (id: number) => {
+  showCreatedForm.value = false;
   selectedBlock.value = id;
+};
+
+const visibleTests = computed(() => {
+  const filterText = folded(listQuery.value.trim());
+  if (!filterText) {
+    return tests.value;
+  }
+  return tests.value.filter(row => folded(row.title).includes(filterText));
+});
+
+const selectTest = (id: number) => {
+  showCreatedForm.value = false;
+  selectedTest.value = id;
 };
 
 const openBlockModal = () => {
@@ -1164,9 +1283,12 @@ const openFavorite = (payload: number | { id?: number; cases?: boolean }) => {
   const id = typeof payload === 'number' ? payload : Number(payload?.id);
   openedFromCaseFavorite.value = typeof payload === 'object' && Boolean(payload?.cases);
   if (id) {
-    const topicsWereOn = showTopics.value;
+    showCreatedForm.value = false;
+    const topicsWereOn = showTopics.value || showTests.value;
     showTopics.value = false;
+    showTests.value = false;
     selectedBlock.value = null;
+    selectedTest.value = null;
     caseSearch.value = false;
     selectedCase.value = null;
     selectedDocument.value = id;
@@ -1179,9 +1301,12 @@ const openFavorite = (payload: number | { id?: number; cases?: boolean }) => {
 const openDocumentFromQuery = () => {
   const id = Number(new URLSearchParams(window.location.search).get('document'));
   if (id > 0) {
+    showCreatedForm.value = false;
     openedFromCaseFavorite.value = false;
     showTopics.value = false;
+    showTests.value = false;
     selectedBlock.value = null;
+    selectedTest.value = null;
     caseSearch.value = false;
     selectedCase.value = null;
     selectedDocument.value = id;
@@ -1230,13 +1355,14 @@ watch(dateRange, () => {
   }
 }, { deep: true });
 
-watch([roleFilter, showHidden, showMyCases, showTopics, showParticipant], () => {
+watch([roleFilter, showHidden, showMyCases, showTopics, showTests, showParticipant], () => {
   try {
     localStorage.setItem(LIST_FILTER_STORAGE_KEY, JSON.stringify({
       role: roleFilter.value,
       hidden: showHidden.value,
       myCases: showMyCases.value,
       topics: showTopics.value,
+      tests: showTests.value,
       participant: showParticipant.value,
     }));
   } catch {

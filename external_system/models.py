@@ -103,8 +103,10 @@ class CdaFields(models.Model):
         return f"{self.code} - {self.title} - {self.pk}"
 
     @staticmethod
-    def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract, is_layout_template=False):
-        if is_layout_template:
+    def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract, is_layout_template=False, is_monitoring=False):
+        if is_monitoring:
+            qs = CdaFields.objects.filter(models.Q(is_indicator=True) | models.Q(is_doc_refferal=True)).order_by("title").distinct()
+        elif is_layout_template:
             qs = CdaFields.objects.filter(models.Q(is_template=True) | models.Q(is_doc_refferal=True)).order_by("title").distinct()
         elif is_doc_refferal:
             qs = CdaFields.objects.filter(is_doc_refferal=True).order_by("title")

@@ -16,12 +16,18 @@ from document_management.models import (
     TypeSectionAccess,
     PlanIndicator,
     PlanIndicatorGroup,
+    PlanTest,
     DouTest,
     DouTestAnswer,
+    DouTestAttempt,
     DouTestQuestion,
+    DouIndicator,
+    DouIndicatorGroup,
     Plans,
     DocumentCase,
     DocumentCaseAccess,
+    DocumentCaseLink,
+    DocumentBlockLink,
     TypeCases,
     TypeDocumentCreator,
     TypeDocumentLayoutTemplate,
@@ -80,7 +86,8 @@ class TypeDocumentCreatorInline(admin.TabularInline):
 
 @admin.register(TypeDocuments)
 class TypeDocumentsAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "code", "group_document", "place_section", "layout_template")
+    list_display = ("pk", "title", "code", "group_document", "place_section", "layout_template", "monitoring", "test", "is_plan")
+    raw_id_fields = ("monitoring", "test")
     search_fields = ("title", "code")
     list_filter = ("group_document", "place_section")
     inlines = (TypeDocumentLayoutTemplateInline, TypeDocumentCreatorInline)
@@ -100,8 +107,20 @@ class UserMyCaseAdmin(admin.ModelAdmin):
 
 @admin.register(UserFavoriteCase)
 class UserFavoriteCaseAdmin(admin.ModelAdmin):
-    list_display = ("pk", "doctor", "document")
-    raw_id_fields = ("doctor", "document")
+    list_display = ("pk", "doctor", "document", "document_case")
+    raw_id_fields = ("doctor", "document", "document_case")
+
+
+@admin.register(DocumentCaseLink)
+class DocumentCaseLinkAdmin(admin.ModelAdmin):
+    list_display = ("pk", "document", "document_case")
+    raw_id_fields = ("document", "document_case")
+
+
+@admin.register(DocumentBlockLink)
+class DocumentBlockLinkAdmin(admin.ModelAdmin):
+    list_display = ("pk", "document", "block")
+    raw_id_fields = ("document", "block")
 
 
 @admin.register(DocumentPickerFavorite)
@@ -133,7 +152,8 @@ class TypeCasesAdmin(admin.ModelAdmin):
 
 @admin.register(Plans)
 class PlansAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title")
+    list_display = ("pk", "title", "user_created", "who_create")
+    raw_id_fields = ("who_create",)
     search_fields = ("title",)
 
 
@@ -163,6 +183,25 @@ class DouTestAnswerAdmin(admin.ModelAdmin):
     list_filter = ("is_correct",)
 
 
+@admin.register(DouTestAttempt)
+class DouTestAttemptAdmin(admin.ModelAdmin):
+    list_display = ("pk", "test", "doctor", "document", "confirmed_at")
+    raw_id_fields = ("test", "doctor", "document")
+    list_filter = ("test",)
+
+
+@admin.register(DouIndicatorGroup)
+class DouIndicatorGroupAdmin(admin.ModelAdmin):
+    list_display = ("pk", "title", "order", "who_create")
+    raw_id_fields = ("who_create",)
+
+
+@admin.register(DouIndicator)
+class DouIndicatorAdmin(admin.ModelAdmin):
+    list_display = ("pk", "title", "group", "order", "who_create")
+    raw_id_fields = ("group", "who_create")
+
+
 @admin.register(PlanIndicatorGroup)
 class PlanIndicatorGroupAdmin(admin.ModelAdmin):
     list_display = ("pk", "plan", "title", "order")
@@ -174,6 +213,13 @@ class PlanIndicatorGroupAdmin(admin.ModelAdmin):
 class PlanIndicatorAdmin(admin.ModelAdmin):
     list_display = ("pk", "plan", "group", "indicator", "due_kind", "due_date", "offset_value", "offset_unit", "order")
     list_filter = ("plan", "due_kind")
+
+
+@admin.register(PlanTest)
+class PlanTestAdmin(admin.ModelAdmin):
+    list_display = ("pk", "plan", "group", "test", "due_kind", "due_date", "offset_value", "offset_unit", "order")
+    list_filter = ("plan", "due_kind")
+    raw_id_fields = ("test",)
 
 
 @admin.register(DocumentFieldGroups)

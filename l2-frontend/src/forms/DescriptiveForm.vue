@@ -48,7 +48,7 @@
               :class="{
                 disabled: confirmed,
                 empty: notFilled.includes(field.pk),
-                'field-vertical-simple': [16, 17, 43].includes(field.field_type) && pk,
+                'field-vertical-simple': [16, 17, 43, 48].includes(field.field_type) && pk,
                 required: field.required,
               }"
               :title="field.required && 'обязательно для заполнения'"
@@ -88,6 +88,7 @@
                       43: 1,
                       46: 1,
                       47: 1,
+                      48: 1,
                     }[field.field_type]
                 "
                 :pk="field.pk"
@@ -556,6 +557,16 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 48"
+                class="field-value"
+              >
+                <PlanField
+                  v-model="field.value"
+                  :document-id="documentId"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -582,6 +593,7 @@ import FileResultField from '@/forms/Fields/FileResultField.vue';
 import ParagraphResultField from '@/forms/Fields/ParagraphResultField.vue';
 import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 import MenteeMentorField from '@/forms/Fields/MenteeMentorField.vue';
+import PlanField from '@/forms/Fields/PlanField.vue';
 
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
@@ -618,6 +630,15 @@ function isFieldValueEmpty(field: { value: string; field_type: number }): boolea
     }
   }
 
+  if (field.field_type === 48) {
+    try {
+      const arr = JSON.parse(field.value);
+      return !Array.isArray(arr) || arr.length === 0;
+    } catch {
+      return true;
+    }
+  }
+
   if (field.field_type === 46 || field.field_type === 47) {
     try {
       const data = JSON.parse(field.value);
@@ -637,6 +658,7 @@ export default {
     ParagraphResultField,
     AddresseeField,
     MenteeMentorField,
+    PlanField,
     FastTemplates,
     InputTemplates,
     VisibilityGroupWrapper,
@@ -686,6 +708,10 @@ export default {
     confirmed: {
       type: Boolean,
       required: true,
+    },
+    documentId: {
+      type: Number,
+      required: false,
     },
     change_mkb: {
       type: Function,
@@ -779,6 +805,9 @@ export default {
         // eslint-disable-next-line no-param-reassign
         field.value = JSON.stringify({ address: '', fias: null });
       } else if (field.field_type === 44 || field.field_type === 45) {
+        // eslint-disable-next-line no-param-reassign
+        field.value = '[]';
+      } else if (field.field_type === 48) {
         // eslint-disable-next-line no-param-reassign
         field.value = '[]';
       } else if (field.field_type === 46 || field.field_type === 47) {

@@ -1247,6 +1247,10 @@
                         <option value="45">Адресат</option>
                         <option value="46">Наставляемый</option>
                         <option value="47">Наставник</option>
+                        <option
+                          v-if="Number(department) === -17 || Number(row.field_type) === 48"
+                          value="48"
+                        >План</option>
                       </select>
                     </label>
                   </div>

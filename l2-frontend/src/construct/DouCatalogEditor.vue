@@ -99,7 +99,57 @@
         v-if="kind === 'type'"
         class="templates-block"
       >
-        <div class="template-row">
+        <div
+          class="template-row"
+          :class="{ 'is-locked': planLocked }"
+        >
+          <span class="input-group-addon">План</span>
+          <label class="plan-flag">
+            <input
+              v-model="isPlan"
+              type="checkbox"
+              :disabled="planLocked"
+            >
+          </label>
+        </div>
+        <div
+          class="template-row"
+          :class="{ 'is-locked': monitoringLocked }"
+        >
+          <span class="input-group-addon">Ссылка на мониторинг</span>
+          <Treeselect
+            v-model="monitoringId"
+            class="treeselect-wide treeselect-34px template-select"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="monitoringOptions"
+            placeholder="Не выбрана"
+            :append-to-body="true"
+            :clearable="true"
+            :disabled="monitoringLocked"
+          />
+        </div>
+        <div
+          class="template-row"
+          :class="{ 'is-locked': testLocked }"
+        >
+          <span class="input-group-addon">Ссылка на тест</span>
+          <Treeselect
+            v-model="testId"
+            class="treeselect-wide treeselect-34px template-select"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="testOptions"
+            placeholder="Не выбран"
+            :append-to-body="true"
+            :clearable="true"
+            :disabled="testLocked"
+          />
+        </div>
+        <div
+          class="template-row"
+          :class="{ 'is-locked': templatesLocked }"
+        >
           <span class="input-group-addon">Шаблоны документа</span>
           <Treeselect
             v-model="templateToAdd"
@@ -110,6 +160,7 @@
             placeholder="Добавить шаблон"
             :append-to-body="true"
             :clearable="true"
+            :disabled="templatesLocked"
             @select="onSelectTemplate"
           />
         </div>
@@ -123,12 +174,13 @@
           v-for="(row, index) in selectedTemplates"
           :key="row.id"
           class="template-item"
+          :class="{ 'is-locked': templatesLocked }"
         >
           <span class="template-item-title">{{ row.label }}</span>
           <button
             class="btn btn-blue-nb template-item-btn"
             type="button"
-            :disabled="index === 0"
+            :disabled="templatesLocked || index === 0"
             title="Выше"
             @click="moveTemplate(index, -1)"
           >
@@ -137,7 +189,7 @@
           <button
             class="btn btn-blue-nb template-item-btn"
             type="button"
-            :disabled="index === selectedTemplates.length - 1"
+            :disabled="templatesLocked || index === selectedTemplates.length - 1"
             title="Ниже"
             @click="moveTemplate(index, 1)"
           >
@@ -147,6 +199,7 @@
             class="btn btn-blue-nb template-item-btn"
             type="button"
             title="Удалить"
+            :disabled="templatesLocked"
             @click="removeTemplate(index)"
           >
             <i class="glyphicon glyphicon-remove" />
@@ -360,6 +413,11 @@ const props = defineProps<{
   layoutTemplateIdValue?: number | null;
   layoutTemplateIdsValue?: number[];
   layoutTemplatesValue?: LayoutTemplateOption[];
+  monitoringIdValue?: number | null;
+  monitoringTitleValue?: string;
+  testIdValue?: number | null;
+  testTitleValue?: string;
+  isPlanValue?: boolean;
   creatorsValue?: CreatorPerson[];
   defaultTypeDocumentIdValue?: number | null;
   placeSectionIdValue?: number | null;
@@ -389,6 +447,11 @@ const groupId = ref<number>(-1);
 const templateToAdd = ref<number | null>(null);
 const layoutTemplates = ref<LayoutTemplateOption[]>([]);
 const selectedTemplates = ref<LayoutTemplateOption[]>([]);
+const monitoringId = ref<number | null>(null);
+const monitoringOptions = ref<LayoutTemplateOption[]>([]);
+const testId = ref<number | null>(null);
+const testOptions = ref<LayoutTemplateOption[]>([]);
+const isPlan = ref(false);
 const creators = ref<CreatorPerson[]>([]);
 const defaultTypeDocumentId = ref<number>(-1);
 const placeSectionId = ref<number>(-1);
@@ -434,6 +497,11 @@ const sectionTypeOptions = computed(() => (props.sectionTypes || []).map(row => 
   label: row.title,
 })));
 
+const templatesLocked = computed(() => Boolean(monitoringId.value || testId.value || isPlan.value));
+const planLocked = computed(() => (Boolean(monitoringId.value) || Boolean(testId.value)) && !isPlan.value);
+const monitoringLocked = computed(() => (Boolean(testId.value) || isPlan.value) && !monitoringId.value);
+const testLocked = computed(() => (Boolean(monitoringId.value) || isPlan.value) && !testId.value);
+
 const availableTemplates = computed(() => {
   const selected = new Set(selectedTemplates.value.map(row => row.id));
   return layoutTemplates.value
@@ -462,11 +530,40 @@ const applySelectedTemplates = () => {
   });
 };
 
+const ensureMonitoringOption = () => {
+  const id = monitoringId.value;
+  if (!id || monitoringOptions.value.some(row => row.id === id)) {
+    return;
+  }
+  monitoringOptions.value = [
+    { id, label: props.monitoringTitleValue || String(id) },
+    ...monitoringOptions.value,
+  ];
+};
+
+const ensureTestOption = () => {
+  const id = testId.value;
+  if (!id || testOptions.value.some(row => row.id === id)) {
+    return;
+  }
+  testOptions.value = [
+    { id, label: props.testTitleValue || String(id) },
+    ...testOptions.value,
+  ];
+};
+
 const fill = () => {
   title.value = props.titleValue || '';
   code.value = props.codeValue || '';
   groupId.value = props.groupIdValue ?? -1;
   applySelectedTemplates();
+  const linkedMonitoring = Number(props.monitoringIdValue);
+  monitoringId.value = Number.isFinite(linkedMonitoring) && linkedMonitoring > 0 ? linkedMonitoring : null;
+  ensureMonitoringOption();
+  const linkedTest = Number(props.testIdValue);
+  testId.value = Number.isFinite(linkedTest) && linkedTest > 0 ? linkedTest : null;
+  ensureTestOption();
+  isPlan.value = Boolean(props.isPlanValue);
   creators.value = (props.creatorsValue || []).map(row => ({
     id: row.id,
     fio: row.fio || '',
@@ -497,6 +594,11 @@ watch(
     props.layoutTemplateIdValue,
     props.layoutTemplateIdsValue,
     props.layoutTemplatesValue,
+    props.monitoringIdValue,
+    props.monitoringTitleValue,
+    props.testIdValue,
+    props.testTitleValue,
+    props.isPlanValue,
     props.creatorsValue,
     props.defaultTypeDocumentIdValue,
     props.placeSectionIdValue,
@@ -530,6 +632,9 @@ const addTemplateById = (id: number) => {
 };
 
 const onSelectTemplate = (node: LayoutTemplateOption) => {
+  if (templatesLocked.value) {
+    return;
+  }
   if (node?.id) {
     addTemplateById(node.id);
   }
@@ -539,6 +644,9 @@ const onSelectTemplate = (node: LayoutTemplateOption) => {
 };
 
 const moveTemplate = (index: number, delta: number) => {
+  if (templatesLocked.value) {
+    return;
+  }
   const nextIndex = index + delta;
   if (nextIndex < 0 || nextIndex >= selectedTemplates.value.length) {
     return;
@@ -550,6 +658,9 @@ const moveTemplate = (index: number, delta: number) => {
 };
 
 const removeTemplate = (index: number) => {
+  if (templatesLocked.value) {
+    return;
+  }
   selectedTemplates.value = selectedTemplates.value.filter((_, current) => current !== index);
 };
 
@@ -677,6 +788,27 @@ const removePrintTemplate = async () => {
   }
 };
 
+const loadTests = async () => {
+  if (props.kind !== 'type') {
+    return;
+  }
+  const { result } = await api('document-manager/tests/list');
+  testOptions.value = (result || []).map((row: { id: number; title: string }) => ({
+    id: row.id,
+    label: row.title,
+  }));
+  ensureTestOption();
+};
+
+const loadMonitorings = async () => {
+  if (props.kind !== 'type') {
+    return;
+  }
+  const { rows } = await api('document-manager/monitorings/list');
+  monitoringOptions.value = rows || [];
+  ensureMonitoringOption();
+};
+
 const loadLayoutTemplates = async () => {
   if (props.kind !== 'type') {
     return;
@@ -702,6 +834,8 @@ const loadDocumentTypes = async () => {
 
 onMounted(() => {
   loadLayoutTemplates();
+  loadMonitorings();
+  loadTests();
   loadDocumentTypes();
 });
 
@@ -747,6 +881,9 @@ const save = async () => {
         placeSectionId: placeSectionId.value,
         layoutTemplateId: selectedTemplates.value[0]?.id ?? null,
         layoutTemplateIds: selectedTemplates.value.map(row => row.id),
+        monitoringId: monitoringId.value,
+        testId: testId.value,
+        isPlan: isPlan.value,
         creatorIds: creators.value.map(row => row.id),
       };
     }
@@ -892,6 +1029,23 @@ const save = async () => {
     margin: 0;
     pointer-events: none;
   }
+}
+
+.template-row,
+.template-item {
+  &.is-locked {
+    opacity: 0.55;
+  }
+}
+
+.plan-flag {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 10px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-left: 0;
 }
 
 .template-row {

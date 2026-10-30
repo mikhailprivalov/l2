@@ -196,14 +196,24 @@
               class="form-control"
               placeholder="Название набора"
             >
-            <button
-              class="btn btn-blue-nb"
-              type="button"
-              :disabled="!draft.length || !newSetTitle.trim() || isSavingSet"
-              @click="savePersonalSet"
-            >
-              Сохранить набор
-            </button>
+            <div class="addressee-modal__save-set-actions">
+              <button
+                class="btn btn-blue-nb"
+                type="button"
+                :disabled="!draft.length || !newSetTitle.trim() || isSavingSet"
+                @click="savePersonalSet"
+              >
+                В набор
+              </button>
+              <button
+                class="btn btn-blue-nb"
+                type="button"
+                :disabled="!draft.length"
+                @click="clearDraft"
+              >
+                Очистить
+              </button>
+            </div>
           </div>
           <div
             v-for="row in draft"
@@ -413,6 +423,11 @@ const toggleEmployee = (row: Employee) => {
 const removeEmployee = (id: number) => {
   allMatchingSelected.value = false;
   draft.value = draft.value.filter(row => row.id !== id);
+};
+
+const clearDraft = () => {
+  allMatchingSelected.value = false;
+  draft.value = [];
 };
 
 const toggleSelectAll = async (event: Event) => {
@@ -926,6 +941,15 @@ watch([allLoadedSelected, someLoadedSelected, employees, draft], async () => {
   flex-direction: column;
   gap: 6px;
   margin-bottom: 8px;
+}
+
+.addressee-modal__save-set-actions {
+  display: flex;
+  gap: 6px;
+
+  .btn {
+    flex: 1 1 auto;
+  }
 }
 
 .addressee-modal__picked {

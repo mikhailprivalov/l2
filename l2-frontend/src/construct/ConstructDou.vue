@@ -31,7 +31,7 @@
             type="button"
             @click="addItem"
           >
-            Добавить
+            {{ selectedNavId === 'indicators' ? '+ группу' : 'Добавить' }}
           </button>
         </div>
         <div
@@ -82,6 +82,11 @@
         :layout-template-id-value="selectedItem?.layoutTemplateId"
         :layout-template-ids-value="selectedItem?.layoutTemplateIds"
         :layout-templates-value="selectedItem?.layoutTemplates"
+        :monitoring-id-value="selectedItem?.monitoringId"
+        :monitoring-title-value="selectedItem?.monitoringTitle"
+        :test-id-value="selectedItem?.testId"
+        :test-title-value="selectedItem?.testTitle"
+        :is-plan-value="selectedItem?.isPlan"
         :creators-value="selectedItem?.creators"
         :default-type-document-id-value="selectedItem?.defaultTypeDocumentId"
         :place-section-id-value="selectedItem?.placeSectionId"
@@ -125,6 +130,13 @@
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
       />
+      <DouIndicatorEditor
+        v-else-if="showIndicatorEditor"
+        :key="`indicator-${selectedId}`"
+        :item-id="selectedId ?? -1"
+        @saved="onCatalogSaved"
+        @cancel="selectedId = null"
+      />
       <ParaclinicResearchEditor
         v-else-if="showResearchEditor"
         :key="`${selectedNavId}-${selectedId}`"
@@ -154,6 +166,7 @@ import DouDocumentStructureEditor from '@/construct/DouDocumentStructureEditor.v
 import DouAddresseeEditor from '@/construct/DouAddresseeEditor.vue';
 import DouPlanEditor from '@/construct/DouPlanEditor.vue';
 import DouTestEditor from '@/construct/DouTestEditor.vue';
+import DouIndicatorEditor from '@/construct/DouIndicatorEditor.vue';
 import ParaclinicResearchEditor from '@/construct/ParaclinicResearchEditor.vue';
 
 interface NavButton {
@@ -170,6 +183,11 @@ interface CatalogItem {
   layoutTemplateId?: number | null;
   layoutTemplateIds?: number[];
   layoutTemplates?: { id: number; label: string }[];
+  monitoringId?: number | null;
+  monitoringTitle?: string;
+  testId?: number | null;
+  testTitle?: string;
+  isPlan?: boolean;
   creators?: { id: number; fio: string; department?: string }[];
   defaultTypeDocumentId?: number | null;
   defaultTypeDocumentTitle?: string;
@@ -185,7 +203,6 @@ interface CatalogItem {
 }
 
 const LAYOUT_TEMPLATE_DEPARTMENT = -17;
-const INDICATOR_DEPARTMENT = -18;
 const WORKING_NAV = [
   'document_groups', 'document_types', 'document_templates', 'indicators',
   'plans', 'tests', 'skeleton', 'addressees', 'cases', 'place_section', 'type_section',
@@ -264,15 +281,14 @@ const showStructureEditor = computed(
 );
 
 const showResearchEditor = computed(
-  () => (
-    selectedNavId.value === 'document_templates'
-    || selectedNavId.value === 'indicators'
-  ) && selectedId.value !== null,
+  () => selectedNavId.value === 'document_templates' && selectedId.value !== null,
 );
 
-const researchDepartment = computed(() => (
-  selectedNavId.value === 'indicators' ? INDICATOR_DEPARTMENT : LAYOUT_TEMPLATE_DEPARTMENT
-));
+const showIndicatorEditor = computed(
+  () => selectedNavId.value === 'indicators' && selectedId.value !== null,
+);
+
+const researchDepartment = computed(() => LAYOUT_TEMPLATE_DEPARTMENT);
 
 const showAddresseeEditor = computed(
   () => selectedNavId.value === 'addressees' && selectedId.value !== null,
@@ -325,9 +341,11 @@ const loadItems = async () => {
     if (selectedNavId.value === 'document_groups') {
       const { result } = await api('document-manager/groups/list');
       items.value = result || [];
-    } else if (selectedNavId.value === 'document_templates' || selectedNavId.value === 'indicators') {
-      const department = selectedNavId.value === 'indicators' ? INDICATOR_DEPARTMENT : LAYOUT_TEMPLATE_DEPARTMENT;
-      const data = await api('researches/by-department', { department, isConstructor: true });
+    } else if (selectedNavId.value === 'indicators') {
+      const { result } = await api('document-manager/indicators/list');
+      items.value = result || [];
+    } else if (selectedNavId.value === 'document_templates') {
+      const data = await api('researches/by-department', { department: LAYOUT_TEMPLATE_DEPARTMENT, isConstructor: true });
       items.value = (data.researches || []).map((row: { pk: number; title: string; hide?: boolean }) => ({
         id: row.pk,
         title: row.title,
@@ -401,7 +419,7 @@ const onStructureSaved = async () => {
 };
 
 const onTemplateCancel = async () => {
-  if (selectedNavId.value !== 'document_templates' && selectedNavId.value !== 'indicators') {
+  if (selectedNavId.value !== 'document_templates') {
     return;
   }
   await loadItems();

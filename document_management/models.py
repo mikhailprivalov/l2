@@ -15,6 +15,7 @@ LAYOUT_TEMPLATE_FIELD_TYPE = 41
 ADDRESSEE_FIELD_TYPE = 45
 MENTEE_FIELD_TYPE = 46
 MENTOR_FIELD_TYPE = 47
+PLAN_FIELD_TYPE = 48
 
 
 def layout_template_is_simple(research):
@@ -763,6 +764,27 @@ class TypeDocuments(models.Model):
         help_text="Шаблон документа",
         on_delete=models.SET_NULL,
     )
+    monitoring = models.ForeignKey(
+        "directory.Researches",
+        related_name="monitoring_document_types",
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Ссылка на мониторинг",
+        on_delete=models.SET_NULL,
+    )
+    test = models.ForeignKey(
+        "DouTest",
+        related_name="document_types",
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Ссылка на тест",
+        on_delete=models.SET_NULL,
+    )
+    is_plan = models.BooleanField(default=False, blank=True, help_text="План")
     print_docx = models.FileField(upload_to=get_print_docx_path, default=None, null=True, blank=True, help_text="Шаблон печати docx")
 
     class Meta:
@@ -815,6 +837,11 @@ class TypeDocuments(models.Model):
             "layoutTemplateId": template_ids[0] if template_ids else self.layout_template_id,
             "layoutTemplateIds": template_ids,
             "layoutTemplates": [{"id": row.pk, "label": row.title} for row in templates],
+            "monitoringId": self.monitoring_id,
+            "monitoringTitle": self.monitoring.title if self.monitoring_id and self.monitoring else "",
+            "testId": self.test_id,
+            "testTitle": self.test.title if self.test_id and self.test else "",
+            "isPlan": bool(self.is_plan),
             "creators": self.get_creators(),
             "hasPrintTemplate": bool(self.print_docx),
             "printTemplateName": os.path.basename(self.print_docx.name) if self.print_docx else "",
@@ -840,7 +867,7 @@ class TypeDocuments(models.Model):
     @staticmethod
     def get_list(group_id=None, doctor=None, available_only=False):
         qs = (
-            TypeDocuments.objects.select_related("group_document", "layout_template", "place_section")
+            TypeDocuments.objects.select_related("group_document", "layout_template", "monitoring", "test", "place_section")
             .prefetch_related(
                 models.Prefetch(
                     "layout_template_links",
@@ -962,8 +989,31 @@ class TypeDocuments(models.Model):
             qs = qs.filter(~models.Exists(has_creators) | models.Exists(is_creator))
         return [row.as_picker_research() for row in qs]
 
+    def form_research(self):
+        if self.is_plan or self.test_id:
+            return None
+        monitoring = self.monitoring if self.monitoring_id else None
+        if monitoring and monitoring.is_monitoring:
+            return monitoring
+        templates = self.get_layout_templates()
+        if templates:
+            return templates[0]
+        return self.layout_template if self.layout_template_id else None
+
     @staticmethod
-    def save_type(pk, title, group_id=None, code="", layout_template_id=None, layout_template_ids=None, creator_ids=None, place_section_id=None):
+    def save_type(
+        pk,
+        title,
+        group_id=None,
+        code="",
+        layout_template_id=None,
+        layout_template_ids=None,
+        creator_ids=None,
+        place_section_id=None,
+        monitoring_id=None,
+        test_id=None,
+        is_plan=False,
+    ):
         from directory.models import Researches
 
         title = (title or "").strip()
@@ -989,6 +1039,21 @@ class TypeDocuments(models.Model):
                 return {"ok": False, "message": f"Шаблон «{layout_template.title}» содержит вложенный шаблон"}
             templates.append(layout_template)
         first_template = templates[0] if templates else None
+        monitoring = None
+        if monitoring_id not in (None, "", -1, "-1"):
+            monitoring = Researches.objects.filter(pk=monitoring_id, is_monitoring=True).first()
+            if not monitoring:
+                return {"ok": False, "message": "Мониторинг не найден"}
+        test = None
+        if test_id not in (None, "", -1, "-1"):
+            test = DouTest.objects.filter(pk=test_id).first()
+            if not test:
+                return {"ok": False, "message": "Тест не найден"}
+        plan_flag = bool(is_plan)
+        if plan_flag and (monitoring or test):
+            return {"ok": False, "message": "Укажите либо план, либо мониторинг, либо тест"}
+        if monitoring and test:
+            return {"ok": False, "message": "Укажите либо мониторинг, либо тест"}
         with transaction.atomic():
             if pk in (None, -1, "-1"):
                 obj = TypeDocuments(
@@ -997,6 +1062,9 @@ class TypeDocuments(models.Model):
                     place_section=place,
                     code=code or "",
                     layout_template=first_template,
+                    monitoring=monitoring,
+                    test=test,
+                    is_plan=plan_flag,
                 )
             else:
                 obj = TypeDocuments.objects.filter(pk=pk).first()
@@ -1007,13 +1075,15 @@ class TypeDocuments(models.Model):
                 obj.place_section = place
                 obj.code = code or ""
                 obj.layout_template = first_template
+                obj.monitoring = monitoring
+                obj.test = test
+                obj.is_plan = plan_flag
             obj.save()
             TypeDocumentLayoutTemplate.objects.filter(type_document=obj).delete()
             TypeDocumentLayoutTemplate.objects.bulk_create([TypeDocumentLayoutTemplate(type_document=obj, layout_template=row, order=index) for index, row in enumerate(templates)])
             if creator_ids is not None:
                 TypeDocuments._set_creators(obj, creator_ids)
-            if templates:
-                TypeDocumentsSchema.get_or_create_for_type(obj)
+            TypeDocumentsSchema.get_or_create_for_type(obj)
         return {"ok": True, "id": obj.pk, "title": obj.title}
 
 
@@ -1225,7 +1295,9 @@ class DocumentCase(models.Model):
         data["canEdit"] = data["canEditAccess"]
         data["canEditTopic"] = data["canEditAccess"] and not self.closed_at
         data["canClose"] = data["canEditAccess"] and not self.closed_at
-        data["isFavorite"] = bool(who and UserFavoriteCase.objects.filter(doctor=who, document__document_case_id=self.pk).exists())
+        data["isFavorite"] = bool(
+            who and UserFavoriteCase.objects.filter(doctor=who).filter(models.Q(document_case=self) | models.Q(document_case__isnull=True, document__document_case=self)).exists()
+        )
         data["documents"] = self.documents_rows(who)
         return data
 
@@ -1280,7 +1352,15 @@ class DocumentCase(models.Model):
 
         from directions.models import Issledovaniya
 
-        docs = [doc for doc in self.documents.filter(is_hidden=False).select_related("type_document", "who_create").order_by("pk") if Documents.can_see_document(doc, who)]
+        docs = [
+            doc
+            for doc in Documents.objects.filter(models.Q(case_links__document_case=self) | models.Q(document_case=self), is_hidden=False)
+            .select_related("type_document", "who_create", "document_case", "block")
+            .prefetch_related("case_links__document_case", "block_links__block")
+            .distinct()
+            .order_by("pk")
+            if Documents.can_see_document(doc, who)
+        ]
         if not docs:
             return []
         iss_by_doc = {}
@@ -1347,23 +1427,31 @@ class DocumentCase(models.Model):
         return [{"id": row.pk, "label": f"{row.pk} {row.topic}".strip() or f"Дело {row.pk}"} for row in qs.order_by("-pk")]
 
     @staticmethod
-    def assign_document(document, who, case_id):
+    def assign_document(document, who, case_ids):
         if not Documents.can_see_document(document, who):
             return {"ok": False, "message": "Документ не найден"}
-        if case_id in (None, "", 0, "0"):
-            document.document_case = None
-            document.save(update_fields=["document_case"])
-            return {"ok": True, "caseId": None, "case": None}
-        try:
-            case_pk = int(case_id)
-        except (TypeError, ValueError):
+        posted = _link_id_list(case_ids)
+        if posted is None:
             return {"ok": False, "message": "Дело недоступно"}
-        case = DocumentCase.objects.filter(pk=case_pk, closed_at__isnull=True).select_related("who_create", "who_close").first()
-        if not case or not case.can_access(who):
-            return {"ok": False, "message": "Дело недоступно"}
-        document.document_case = case
-        document.save(update_fields=["document_case"])
-        return {"ok": True, "caseId": case.pk, "case": case.as_json(who)}
+        Documents.ensure_case_link(document)
+        existing = {link.document_case_id: link.document_case for link in document.case_links.select_related("document_case")}
+        final_ids = list(existing.keys())
+        seen = set(final_ids)
+        for pk in posted:
+            if pk in seen:
+                continue
+            case = DocumentCase.objects.filter(pk=pk, closed_at__isnull=True).first()
+            if not case or not case.can_access(who):
+                return {"ok": False, "message": "Дело недоступно"}
+            seen.add(pk)
+            final_ids.append(pk)
+        with transaction.atomic():
+            have = set(document.case_links.values_list("document_case_id", flat=True))
+            DocumentCaseLink.objects.bulk_create([DocumentCaseLink(document=document, document_case_id=pk) for pk in final_ids if pk not in have])
+            Documents.sync_case_field(document)
+        cases = Documents.linked_cases(document)
+        case_payload = cases[0].as_json(who) if len(cases) == 1 else None
+        return {"ok": True, "caseIds": [case.pk for case in cases], "caseId": document.document_case_id, "case": case_payload}
 
     def set_access(self, who, members):
         if not self.can_edit_access(who):
@@ -1532,7 +1620,13 @@ class DocumentBlock(models.Model):
 
         from directions.models import Issledovaniya
 
-        linked = self.documents.select_related("type_document", "who_create").order_by("pk")
+        linked = (
+            Documents.objects.filter(models.Q(block_links__block=self) | models.Q(block=self))
+            .select_related("type_document", "who_create", "document_case", "block")
+            .prefetch_related("case_links__document_case", "block_links__block")
+            .distinct()
+            .order_by("pk")
+        )
         docs = [doc for doc in linked if Documents.can_see_document(doc, who)]
         if not docs:
             return []
@@ -1647,26 +1741,40 @@ class DocumentBlock(models.Model):
         return {"ok": True, key: self._access_json(relation_name)}
 
     @staticmethod
-    def assign_document(document, who, block_id):
+    def assign_document(document, who, block_ids):
         if not Documents.can_see_document(document, who):
             return {"ok": False, "message": "Документ не найден"}
-        current = document.block if document.block_id else None
-        if current and not current.can_write(who):
+        posted = _link_id_list(block_ids)
+        if posted is None:
+            return {"ok": False, "message": "Блок недоступен"}
+        Documents.ensure_block_link(document)
+        existing = {link.block_id: link.block for link in document.block_links.select_related("block")}
+        locked = [pk for pk, block in existing.items() if block and not block.can_write(who)]
+        posted_set = set(posted)
+        if any(pk not in posted_set for pk in locked):
             return {"ok": False, "message": "Нет прав"}
-        if block_id in (None, "", 0, "0"):
-            document.block = None
-            document.save(update_fields=["block"])
-            return {"ok": True, "blockId": None}
-        try:
-            block_pk = int(block_id)
-        except (TypeError, ValueError):
-            return {"ok": False, "message": "Блок недоступен"}
-        block = DocumentBlock.objects.filter(pk=block_pk).first()
-        if not block or not block.can_write(who):
-            return {"ok": False, "message": "Блок недоступен"}
-        document.block = block
-        document.save(update_fields=["block"])
-        return {"ok": True, "blockId": block.pk}
+        desired = []
+        seen = set()
+        for pk in posted:
+            if pk in seen:
+                continue
+            seen.add(pk)
+            if pk in locked:
+                desired.append(pk)
+                continue
+            block = existing.get(pk) or DocumentBlock.objects.filter(pk=pk).first()
+            if not block:
+                return {"ok": False, "message": "Блок недоступен"}
+            if not block.can_write(who):
+                return {"ok": False, "message": "Нет прав"}
+            desired.append(pk)
+        with transaction.atomic():
+            document.block_links.exclude(block_id__in=desired).delete()
+            have = set(document.block_links.values_list("block_id", flat=True))
+            DocumentBlockLink.objects.bulk_create([DocumentBlockLink(document=document, block_id=pk) for pk in desired if pk not in have])
+            Documents.sync_block_field(document)
+        blocks = Documents.linked_blocks(document)
+        return {"ok": True, "blockIds": [block.pk for block in blocks], "blockId": document.block_id}
 
 
 class DocumentBlockWriteAccess(models.Model):
@@ -1803,11 +1911,12 @@ class UserFavoriteDocument(models.Model):
 class UserFavoriteCase(models.Model):
     doctor = models.ForeignKey(DoctorProfile, related_name="favorite_cases", on_delete=models.CASCADE)
     document = models.ForeignKey("Documents", related_name="user_case_favorites", on_delete=models.CASCADE)
+    document_case = models.ForeignKey(DocumentCase, related_name="favorite_rows", blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = "Избранное дело"
         verbose_name_plural = "Избранные дела"
-        unique_together = ("doctor", "document")
+        unique_together = ("doctor", "document", "document_case")
 
     def __str__(self):
         return f"{self.doctor_id} {self.document_id}"
@@ -1833,14 +1942,14 @@ def toggle_favorite_case(doctor, case_id):
     case = DocumentCase.objects.filter(pk=case_pk).first()
     if not case or not case.can_access(doctor):
         return {"ok": False, "message": "Дело не найдено"}
-    existing = UserFavoriteCase.objects.filter(doctor=doctor, document__document_case_id=case.pk)
+    existing = UserFavoriteCase.objects.filter(doctor=doctor).filter(models.Q(document_case=case) | models.Q(document_case__isnull=True, document__document_case=case))
     if existing.exists():
         existing.delete()
         return {"ok": True, "favorite": False, "isCase": True}
-    document = Documents.objects.filter(document_case_id=case.pk).order_by("pk").first()
+    document = Documents.objects.filter(models.Q(case_links__document_case=case) | models.Q(document_case=case)).order_by("pk").distinct().first()
     if not document:
         return {"ok": False, "message": "В деле нет документа"}
-    UserFavoriteCase.objects.create(doctor=doctor, document=document)
+    UserFavoriteCase.objects.create(doctor=doctor, document=document, document_case=case)
     return {"ok": True, "favorite": True, "isCase": True}
 
 
@@ -1848,14 +1957,16 @@ def toggle_case_favorite(doctor, document_id):
     if not doctor:
         return {"ok": False, "message": "Пользователь не найден"}
     document = Documents.objects.filter(pk=document_id).first()
-    if not document or not document.document_case_id or not Documents.can_see_document(document, doctor):
+    cases = Documents.linked_cases(document) if document else []
+    case = cases[0] if len(cases) == 1 else None
+    if not document or not case or not Documents.can_see_document(document, doctor):
         return {"ok": False, "message": "Дело не найдено"}
-    existing = UserFavoriteCase.objects.filter(doctor=doctor, document__document_case_id=document.document_case_id)
+    existing = UserFavoriteCase.objects.filter(doctor=doctor).filter(models.Q(document_case=case) | models.Q(document_case__isnull=True, document__document_case=case))
     if existing.exists():
         existing.delete()
         favorite = False
     else:
-        UserFavoriteCase.objects.create(doctor=doctor, document=document)
+        UserFavoriteCase.objects.create(doctor=doctor, document=document, document_case=case)
         favorite = True
     return {"ok": True, "favorite": favorite, "isCase": True}
 
@@ -1908,6 +2019,17 @@ def list_record_favorites(doctor, cases=False):
 
 class Plans(models.Model):
     title = models.CharField(max_length=128, blank=True, null=True)
+    user_created = models.BooleanField(default=False, db_index=True, help_text="Создан пользователем")
+    who_create = models.ForeignKey(
+        DoctorProfile,
+        related_name="created_plans",
+        null=True,
+        blank=True,
+        default=None,
+        db_index=True,
+        help_text="Автор плана",
+        on_delete=models.SET_NULL,
+    )
 
     class Meta:
         verbose_name = "План"
@@ -1922,21 +2044,174 @@ class Plans(models.Model):
 
     @staticmethod
     def get_list():
-        return [row.json for row in Plans.objects.all().order_by("title", "pk")]
+        return [row.json for row in Plans.objects.filter(user_created=False).order_by("title", "pk")]
+
+    @staticmethod
+    def parse_ids(value):
+        if value in (None, ""):
+            return []
+        raw = value
+        if isinstance(value, str):
+            try:
+                raw = json.loads(value)
+            except (TypeError, ValueError):
+                return None
+        if not isinstance(raw, list):
+            return None
+        ids = []
+        for item in raw:
+            if isinstance(item, dict):
+                item = item.get("id")
+            try:
+                pk = int(item)
+            except (TypeError, ValueError):
+                return None
+            if pk > 0 and pk not in ids:
+                ids.append(pk)
+        return ids
+
+    @staticmethod
+    def choice_lists(who):
+        global_rows = Plans.objects.filter(user_created=False).order_by("title", "pk")
+        mine_rows = Plans.objects.none()
+        if who and getattr(who, "pk", None):
+            mine_rows = Plans.objects.filter(user_created=True, who_create=who).order_by("title", "pk")
+        return {"global": [row.json for row in global_rows], "mine": [row.json for row in mine_rows]}
+
+    @staticmethod
+    def allowed_ids(who):
+        ids = set(Plans.objects.filter(user_created=False).values_list("pk", flat=True))
+        if who and getattr(who, "pk", None):
+            ids.update(Plans.objects.filter(user_created=True, who_create=who).values_list("pk", flat=True))
+        return ids
+
+    @staticmethod
+    def ids_on_document(document):
+        from directions.models import ParaclinicResult
+
+        found = set()
+        rows = ParaclinicResult.objects.filter(issledovaniye__document=document, field_type=PLAN_FIELD_TYPE).only("value")
+        for row in rows:
+            parsed = Plans.parse_ids(row.value)
+            if parsed:
+                found.update(parsed)
+        return found
+
+    @staticmethod
+    def preview_one(plan):
+        def indicator_row(row):
+            data = row.as_json()
+            data["title"] = row.indicator.title if row.indicator_id and getattr(row, "indicator", None) else ""
+            return data
+
+        def test_row(row):
+            data = row.as_json()
+            data["title"] = row.test.title if row.test_id and getattr(row, "test", None) else ""
+            return data
+
+        groups = []
+        for group in plan.indicator_groups.all():
+            groups.append(
+                {
+                    "id": group.pk,
+                    "title": group.title or "",
+                    "order": group.order,
+                    "indicators": [indicator_row(row) for row in group.indicators.all()],
+                    "tests": [test_row(row) for row in group.tests.all()],
+                }
+            )
+        loose_indicators = [indicator_row(row) for row in plan.indicators.all() if row.group_id is None]
+        loose_tests = [test_row(row) for row in plan.tests.all() if row.group_id is None]
+        return {
+            "id": plan.pk,
+            "title": plan.title or "",
+            "groups": groups,
+            "indicators": loose_indicators,
+            "tests": loose_tests,
+        }
+
+    @staticmethod
+    def preview_for(ids, who, document=None):
+        from django.db.models import Prefetch
+
+        allowed = Plans.allowed_ids(who)
+        if document is not None:
+            allowed |= Plans.ids_on_document(document)
+        wanted = [pk for pk in ids if pk in allowed]
+        if not wanted:
+            return []
+        plans = Plans.objects.filter(pk__in=wanted).prefetch_related(
+            Prefetch(
+                "indicator_groups",
+                queryset=PlanIndicatorGroup.objects.order_by("order", "pk").prefetch_related(
+                    Prefetch("indicators", queryset=PlanIndicator.objects.select_related("indicator").order_by("order", "pk")),
+                    Prefetch("tests", queryset=PlanTest.objects.select_related("test").order_by("order", "pk")),
+                ),
+            ),
+            Prefetch("indicators", queryset=PlanIndicator.objects.select_related("indicator").order_by("order", "pk")),
+            Prefetch("tests", queryset=PlanTest.objects.select_related("test").order_by("order", "pk")),
+        )
+        by_id = {plan.pk: plan for plan in plans}
+        return [Plans.preview_one(by_id[pk]) for pk in wanted if pk in by_id]
+
+    @staticmethod
+    def validate_document_fields(groups, iss, who):
+        from directions.models import ParaclinicResult
+
+        allowed = Plans.allowed_ids(who)
+        for group in groups or []:
+            for field in group.get("fields") or []:
+                if field.get("field_type") != PLAN_FIELD_TYPE:
+                    continue
+                ids = Plans.parse_ids(field.get("value"))
+                if ids is None:
+                    return "Некорректный список планов"
+                previous = []
+                existing = ParaclinicResult.objects.filter(issledovaniye=iss, field_id=field.get("pk")).only("value").first()
+                if existing:
+                    previous = Plans.parse_ids(existing.value) or []
+                if any(pk not in allowed and pk not in previous for pk in ids):
+                    return "План недоступен"
+                field["value"] = json.dumps(ids)
+        return None
 
     @staticmethod
     def indicator_options():
-        from directory.models import Researches
-
-        rows = Researches.objects.filter(is_indicator=True).order_by("title", "pk")
-        return [{"id": row.pk, "label": row.title} for row in rows]
+        options = []
+        for group in DouIndicator.catalog()["globalGroups"]:
+            options.extend(group["indicators"])
+        return options
 
     @staticmethod
-    def get_details(pk):
+    def indicator_catalog(who=None, extra_ids=None):
+        return DouIndicator.catalog(who, extra_ids)
+
+    @staticmethod
+    def create_user_indicator(who, title):
+        return DouIndicator.create_for_user(who, title)
+
+    @staticmethod
+    def test_options():
+        rows = DouTest.objects.all().order_by("title", "pk")
+        return [{"id": row.pk, "label": row.title or ""} for row in rows]
+
+    @staticmethod
+    def get_details(pk, who=None):
         options = Plans.indicator_options()
+        test_options = Plans.test_options()
         if pk in (None, -1, "-1"):
-            return {"ok": True, "id": -1, "title": "", "groups": [], "indicators": [], "indicatorOptions": options}
-        plan = Plans.objects.filter(pk=pk).prefetch_related("indicator_groups__indicators", "indicators").first()
+            return {
+                "ok": True,
+                "id": -1,
+                "title": "",
+                "groups": [],
+                "indicators": [],
+                "tests": [],
+                "indicatorOptions": options,
+                "indicatorCatalog": Plans.indicator_catalog(who),
+                "testOptions": test_options,
+            }
+        plan = Plans.objects.filter(pk=pk).prefetch_related("indicator_groups__indicators", "indicator_groups__tests", "indicators", "tests").first()
         if not plan:
             return {"ok": False, "message": "План не найден"}
         groups = []
@@ -1947,13 +2222,26 @@ class Plans(models.Model):
                     "title": group.title or "",
                     "order": group.order,
                     "indicators": [row.as_json() for row in group.indicators.all().order_by("order", "pk")],
+                    "tests": [row.as_json() for row in group.tests.all().order_by("order", "pk")],
                 }
             )
         loose = [row.as_json() for row in plan.indicators.filter(group__isnull=True).order_by("order", "pk")]
-        return {"ok": True, "id": plan.pk, "title": plan.title or "", "groups": groups, "indicators": loose, "indicatorOptions": options}
+        loose_tests = [row.as_json() for row in plan.tests.filter(group__isnull=True).order_by("order", "pk")]
+        return {
+            "ok": True,
+            "id": plan.pk,
+            "title": plan.title or "",
+            "groups": groups,
+            "indicators": loose,
+            "tests": loose_tests,
+            "indicatorOptions": options,
+            "indicatorCatalog": Plans.indicator_catalog(who, plan.indicators.values_list("indicator_id", flat=True)),
+            "testOptions": test_options,
+            "userCreated": bool(plan.user_created),
+        }
 
     @staticmethod
-    def save_plan(pk, title, groups, indicators):
+    def save_plan(pk, title, groups, indicators, tests=None, allow_user=False, who=None):
         from django.db import transaction
 
         title = (title or "").strip()
@@ -1961,6 +2249,10 @@ class Plans(models.Model):
             return {"ok": False, "message": "Укажите название"}
         groups = groups or []
         indicators = indicators or []
+        tests = tests or []
+        kept_ids = set()
+        if pk not in (None, -1, "-1"):
+            kept_ids = set(PlanIndicator.objects.filter(plan_id=pk).values_list("indicator_id", flat=True))
         cleaned_groups = []
         for index, group in enumerate(groups):
             group_title = (group.get("title") or "").strip()
@@ -1968,35 +2260,268 @@ class Plans(models.Model):
                 return {"ok": False, "message": "Укажите название группы"}
             cleaned_rows = []
             for row_index, row in enumerate(group.get("indicators") or []):
-                cleaned, error = PlanIndicator.clean_row(row, row_index)
+                cleaned, error = PlanIndicator.clean_row(row, row_index, who=who, allow_user=allow_user, kept_ids=kept_ids)
                 if error:
                     return {"ok": False, "message": error}
                 cleaned_rows.append(cleaned)
-            cleaned_groups.append({"title": group_title, "order": index, "indicators": cleaned_rows})
+            cleaned_tests = []
+            for row_index, row in enumerate(group.get("tests") or []):
+                cleaned, error = PlanTest.clean_row(row, row_index)
+                if error:
+                    return {"ok": False, "message": error}
+                cleaned_tests.append(cleaned)
+            cleaned_groups.append({"title": group_title, "order": index, "indicators": cleaned_rows, "tests": cleaned_tests})
         cleaned_loose = []
         for row_index, row in enumerate(indicators):
-            cleaned, error = PlanIndicator.clean_row(row, row_index)
+            cleaned, error = PlanIndicator.clean_row(row, row_index, who=who, allow_user=allow_user, kept_ids=kept_ids)
             if error:
                 return {"ok": False, "message": error}
             cleaned_loose.append(cleaned)
+        cleaned_loose_tests = []
+        for row_index, row in enumerate(tests):
+            cleaned, error = PlanTest.clean_row(row, row_index)
+            if error:
+                return {"ok": False, "message": error}
+            cleaned_loose_tests.append(cleaned)
         with transaction.atomic():
             if pk in (None, -1, "-1"):
-                plan = Plans(title=title)
+                if allow_user:
+                    return {"ok": False, "message": "План не найден"}
+                plan = Plans(title=title, user_created=False)
             else:
                 plan = Plans.objects.filter(pk=pk).first()
-                if not plan:
+                if not plan or bool(plan.user_created) != bool(allow_user):
                     return {"ok": False, "message": "План не найден"}
                 plan.title = title
             plan.save()
+            PlanTest.objects.filter(plan=plan).delete()
             PlanIndicator.objects.filter(plan=plan).delete()
             PlanIndicatorGroup.objects.filter(plan=plan).delete()
             for group_row in cleaned_groups:
                 group = PlanIndicatorGroup.objects.create(plan=plan, title=group_row["title"], order=group_row["order"])
                 for row in group_row["indicators"]:
                     PlanIndicator.objects.create(plan=plan, group=group, **row)
+                for row in group_row["tests"]:
+                    PlanTest.objects.create(plan=plan, group=group, **row)
             for row in cleaned_loose:
                 PlanIndicator.objects.create(plan=plan, group=None, **row)
+            for row in cleaned_loose_tests:
+                PlanTest.objects.create(plan=plan, group=None, **row)
         return {"ok": True, "id": plan.pk, "title": plan.title}
+
+
+class DouIndicatorGroup(models.Model):
+    title = models.CharField(max_length=255, blank=True, default="")
+    order = models.IntegerField(default=0)
+    who_create = models.ForeignKey(
+        "users.DoctorProfile",
+        related_name="created_dou_indicator_groups",
+        null=True,
+        blank=True,
+        default=None,
+        db_index=True,
+        on_delete=models.SET_NULL,
+        help_text="Автор группы",
+    )
+
+    class Meta:
+        verbose_name = "Группа показателей"
+        verbose_name_plural = "Группы показателей"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return self.title or ""
+
+
+class DouIndicator(models.Model):
+    title = models.CharField(max_length=255, blank=True, default="")
+    group = models.ForeignKey(DouIndicatorGroup, related_name="indicators", null=True, blank=True, default=None, on_delete=models.CASCADE)
+    order = models.IntegerField(default=0)
+    who_create = models.ForeignKey(
+        "users.DoctorProfile",
+        related_name="created_dou_indicators",
+        null=True,
+        blank=True,
+        default=None,
+        db_index=True,
+        on_delete=models.SET_NULL,
+        help_text="Автор своей задачи",
+    )
+
+    class Meta:
+        verbose_name = "Показатель"
+        verbose_name_plural = "Показатели"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return self.title or ""
+
+    @staticmethod
+    def _label(row):
+        return {"id": row.pk, "label": row.title or ""}
+
+    @staticmethod
+    def _ids(raw_ids):
+        found = []
+        for raw in raw_ids or []:
+            try:
+                pk = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if pk > 0 and pk not in found:
+                found.append(pk)
+        return found
+
+    @staticmethod
+    def catalog(who=None, extra_ids=None):
+        groups = list(DouIndicatorGroup.objects.filter(who_create__isnull=True).order_by("order", "title", "pk"))
+        rows = list(DouIndicator.objects.filter(who_create__isnull=True).order_by("order", "title", "pk"))
+        by_group = {}
+        loose = []
+        for row in rows:
+            if row.group_id:
+                by_group.setdefault(row.group_id, []).append(DouIndicator._label(row))
+            else:
+                loose.append(DouIndicator._label(row))
+        global_groups = [{"id": 0, "title": "Без группы", "indicators": loose}]
+        for group in groups:
+            global_groups.append({"id": group.pk, "title": group.title or "", "indicators": by_group.get(group.pk, [])})
+        known = {row.pk for row in rows}
+        mine_rows = []
+        if getattr(who, "pk", None):
+            mine_rows = list(DouIndicator.objects.filter(who_create_id=who.pk).order_by("title", "pk"))
+            known.update(row.pk for row in mine_rows)
+        missing = [pk for pk in DouIndicator._ids(extra_ids) if pk not in known]
+        extra_rows = list(DouIndicator.objects.filter(pk__in=missing).order_by("title", "pk")) if missing else []
+        return {
+            "globalGroups": global_groups,
+            "mine": [DouIndicator._label(row) for row in mine_rows],
+            "extra": [DouIndicator._label(row) for row in extra_rows],
+        }
+
+    @staticmethod
+    def create_for_user(who, title):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название задачи"}
+        if len(title) > 255:
+            return {"ok": False, "message": "Название слишком длинное"}
+        if not getattr(who, "pk", None):
+            return {"ok": False, "message": "Задача недоступна"}
+        row = DouIndicator.objects.create(title=title, group=None, who_create=who, order=0)
+        return {"ok": True, "id": row.pk, "label": row.title}
+
+    @staticmethod
+    def get_list():
+        groups = DouIndicatorGroup.objects.filter(who_create__isnull=True).order_by("order", "title", "pk")
+        return [{"id": 0, "title": "Без группы"}, *[{"id": group.pk, "title": group.title or ""} for group in groups]]
+
+    @staticmethod
+    def get_details(pk):
+        if pk in (0, "0"):
+            rows = DouIndicator.objects.filter(group__isnull=True, who_create__isnull=True).order_by("order", "title", "pk")
+            return {"ok": True, "id": 0, "title": "Без группы", "loose": True, "indicators": [DouIndicator._editor_row(row) for row in rows]}
+        if pk in (None, -1, "-1"):
+            return {"ok": True, "id": -1, "title": "", "loose": False, "indicators": []}
+        group = DouIndicatorGroup.objects.filter(pk=pk, who_create__isnull=True).first()
+        if not group:
+            return {"ok": False, "message": "Группа не найдена"}
+        rows = group.indicators.filter(who_create__isnull=True).order_by("order", "title", "pk")
+        return {"ok": True, "id": group.pk, "title": group.title or "", "loose": False, "indicators": [DouIndicator._editor_row(row) for row in rows]}
+
+    @staticmethod
+    def _editor_row(row):
+        return {"id": row.pk, "title": row.title or ""}
+
+    @staticmethod
+    def _clean_titles(rows):
+        cleaned = []
+        for index, row in enumerate(rows or []):
+            title = (row.get("title") or "").strip()
+            if not title:
+                return None, "Укажите название задачи"
+            if len(title) > 255:
+                return None, "Название слишком длинное"
+            try:
+                row_id = int(row.get("id") or 0)
+            except (TypeError, ValueError):
+                row_id = 0
+            cleaned.append({"id": row_id if row_id > 0 else None, "title": title, "order": index})
+        return cleaned, None
+
+    @staticmethod
+    def save_catalog(pk, title, rows):
+        from django.db import transaction
+
+        cleaned, error = DouIndicator._clean_titles(rows)
+        if error:
+            return {"ok": False, "message": error}
+        loose = pk in (0, "0")
+        title = (title or "").strip()
+        if not loose and not title:
+            return {"ok": False, "message": "Укажите название группы"}
+        if not loose and len(title) > 255:
+            return {"ok": False, "message": "Название слишком длинное"}
+
+        class CatalogError(Exception):
+            def __init__(self, message):
+                super().__init__(message)
+                self.message = message
+
+        try:
+            with transaction.atomic():
+                if loose:
+                    group = None
+                    existing = DouIndicator.objects.filter(group__isnull=True, who_create__isnull=True)
+                elif pk in (None, -1, "-1"):
+                    order = DouIndicatorGroup.objects.filter(who_create__isnull=True).count()
+                    group = DouIndicatorGroup.objects.create(title=title, order=order, who_create=None)
+                    existing = DouIndicator.objects.none()
+                else:
+                    group = DouIndicatorGroup.objects.filter(pk=pk, who_create__isnull=True).first()
+                    if not group:
+                        raise CatalogError("Группа не найдена")
+                    group.title = title
+                    group.save(update_fields=["title"])
+                    existing = group.indicators.filter(who_create__isnull=True)
+                keep = []
+                for row in cleaned:
+                    obj = existing.filter(pk=row["id"]).first() if row["id"] else None
+                    moved = False
+                    if row["id"] and not obj and group is not None:
+                        obj = DouIndicator.objects.filter(pk=row["id"], group__isnull=True, who_create__isnull=True).first()
+                        moved = obj is not None
+                    if row["id"] and not obj:
+                        raise CatalogError("Показатель не найден")
+                    if obj and moved:
+                        obj.group = group
+                        obj.title = row["title"]
+                        obj.order = row["order"]
+                        obj.save(update_fields=["group", "title", "order"])
+                    elif obj:
+                        obj.title = row["title"]
+                        obj.order = row["order"]
+                        obj.save(update_fields=["title", "order"])
+                    else:
+                        obj = DouIndicator.objects.create(title=row["title"], group=group, order=row["order"], who_create=None)
+                    keep.append(obj.pk)
+                removed = existing.exclude(pk__in=keep)
+                if PlanIndicator.objects.filter(indicator_id__in=removed.values("pk")).exists():
+                    raise CatalogError("Показатель используется в плане")
+                removed.delete()
+        except CatalogError as exc:
+            return {"ok": False, "message": exc.message}
+        return {"ok": True, "id": 0 if loose else group.pk, "title": "Без группы" if loose else group.title}
+
+    @staticmethod
+    def delete_group(pk):
+        group = DouIndicatorGroup.objects.filter(pk=pk, who_create__isnull=True).first()
+        if not group:
+            return {"ok": False, "message": "Группа не найдена"}
+        if PlanIndicator.objects.filter(indicator__group=group).exists():
+            return {"ok": False, "message": "Показатель используется в плане"}
+        group.delete()
+        return {"ok": True, "id": group.pk}
 
 
 class PlanIndicatorGroup(models.Model):
@@ -2022,12 +2547,13 @@ class PlanIndicator(models.Model):
 
     plan = models.ForeignKey(Plans, related_name="indicators", on_delete=models.CASCADE)
     group = models.ForeignKey(PlanIndicatorGroup, related_name="indicators", null=True, blank=True, default=None, on_delete=models.CASCADE)
-    indicator = models.ForeignKey("directory.Researches", on_delete=models.PROTECT)
+    indicator = models.ForeignKey("DouIndicator", related_name="plan_rows", on_delete=models.PROTECT)
     order = models.IntegerField(default=0)
     due_kind = models.CharField(max_length=16, default=DUE_ABSOLUTE)
     due_date = models.DateField(null=True, blank=True)
     offset_value = models.IntegerField(null=True, blank=True)
     offset_unit = models.CharField(max_length=16, default=UNIT_DAYS, blank=True)
+    executors = models.JSONField(default=list, blank=True, help_text="Исполнители")
 
     class Meta:
         verbose_name = "Показатель плана"
@@ -2046,6 +2572,7 @@ class PlanIndicator(models.Model):
             "dueDate": self.due_date.strftime("%Y-%m-%d") if self.due_date else "",
             "offsetValue": self.offset_value,
             "offsetUnit": self.offset_unit or self.UNIT_DAYS,
+            "executors": self.executors if isinstance(self.executors, list) else [],
         }
 
     @staticmethod
@@ -2063,12 +2590,15 @@ class PlanIndicator(models.Model):
         return None
 
     @staticmethod
-    def clean_row(row, order):
-        from directory.models import Researches
-
-        research = Researches.objects.filter(pk=row.get("indicatorId"), is_indicator=True).first()
-        if not research:
+    def clean_row(row, order, who=None, allow_user=False, kept_ids=None):
+        indicator = DouIndicator.objects.filter(pk=row.get("indicatorId")).first()
+        if not indicator:
             return None, "Выберите показатель"
+        if indicator.who_create_id:
+            own = bool(allow_user and who is not None and indicator.who_create_id == getattr(who, "pk", None))
+            kept = bool(allow_user and indicator.pk in (kept_ids or set()))
+            if not own and not kept:
+                return None, "Задача недоступна"
         due_kind = row.get("dueKind") or PlanIndicator.DUE_ABSOLUTE
         if due_kind not in (PlanIndicator.DUE_ABSOLUTE, PlanIndicator.DUE_EMPLOYMENT):
             return None, "Укажите вид срока"
@@ -2091,7 +2621,90 @@ class PlanIndicator(models.Model):
             if offset_unit not in (PlanIndicator.UNIT_DAYS, PlanIndicator.UNIT_MONTHS, PlanIndicator.UNIT_YEARS):
                 return None, "Укажите единицу сдвига"
         return {
-            "indicator": research,
+            "indicator": indicator,
+            "order": order,
+            "due_kind": due_kind,
+            "due_date": due_date,
+            "offset_value": offset_value,
+            "offset_unit": offset_unit,
+            "executors": PlanIndicator.clean_executors(row.get("executors")),
+        }, None
+
+    @staticmethod
+    def clean_executors(value):
+        ids = DocumentReview.parse_addressee_ids(value)
+        if not ids:
+            return []
+        doctors = {item.pk: item for item in DoctorProfile.objects.filter(pk__in=ids).select_related("podrazdeleniye")}
+        result = []
+        for doctor_id in ids:
+            doctor = doctors.get(doctor_id)
+            if not doctor:
+                continue
+            department = ""
+            if doctor.podrazdeleniye_id and doctor.podrazdeleniye:
+                department = doctor.podrazdeleniye.title or ""
+            result.append({"id": doctor.pk, "fio": doctor.get_full_fio() or "", "department": department})
+        return result
+
+
+class PlanTest(models.Model):
+    plan = models.ForeignKey(Plans, related_name="tests", on_delete=models.CASCADE)
+    group = models.ForeignKey(PlanIndicatorGroup, related_name="tests", null=True, blank=True, default=None, on_delete=models.CASCADE)
+    test = models.ForeignKey("DouTest", related_name="plan_rows", on_delete=models.PROTECT)
+    order = models.IntegerField(default=0)
+    due_kind = models.CharField(max_length=16, default=PlanIndicator.DUE_ABSOLUTE)
+    due_date = models.DateField(null=True, blank=True)
+    offset_value = models.IntegerField(null=True, blank=True)
+    offset_unit = models.CharField(max_length=16, default=PlanIndicator.UNIT_DAYS, blank=True)
+
+    class Meta:
+        verbose_name = "Тест плана"
+        verbose_name_plural = "Тесты плана"
+        ordering = ("order", "pk")
+
+    def __str__(self):
+        return f"{self.plan} – {self.test_id}"
+
+    def as_json(self):
+        return {
+            "id": self.pk,
+            "testId": self.test_id,
+            "order": self.order,
+            "dueKind": self.due_kind,
+            "dueDate": self.due_date.strftime("%Y-%m-%d") if self.due_date else "",
+            "offsetValue": self.offset_value,
+            "offsetUnit": self.offset_unit or PlanIndicator.UNIT_DAYS,
+        }
+
+    @staticmethod
+    def clean_row(row, order):
+        test = DouTest.objects.filter(pk=row.get("testId")).first()
+        if not test:
+            return None, "Выберите тест"
+        due_kind = row.get("dueKind") or PlanIndicator.DUE_ABSOLUTE
+        if due_kind not in (PlanIndicator.DUE_ABSOLUTE, PlanIndicator.DUE_EMPLOYMENT):
+            return None, "Укажите вид срока"
+        due_date = None
+        offset_value = None
+        offset_unit = PlanIndicator.UNIT_DAYS
+        if due_kind == PlanIndicator.DUE_ABSOLUTE:
+            due_date = PlanIndicator._parse_date(row.get("dueDate"))
+            if not due_date:
+                return None, "Укажите дату выполнения"
+        else:
+            raw = row.get("offsetValue")
+            if raw in (None, ""):
+                return None, "Укажите сдвиг от даты приема на работу"
+            try:
+                offset_value = int(raw)
+            except (TypeError, ValueError):
+                return None, "Сдвиг должен быть числом"
+            offset_unit = row.get("offsetUnit") or PlanIndicator.UNIT_DAYS
+            if offset_unit not in (PlanIndicator.UNIT_DAYS, PlanIndicator.UNIT_MONTHS, PlanIndicator.UNIT_YEARS):
+                return None, "Укажите единицу сдвига"
+        return {
+            "test": test,
             "order": order,
             "due_kind": due_kind,
             "due_date": due_date,
@@ -2331,6 +2944,321 @@ class DouTestAnswer(models.Model):
 
     def as_json(self):
         return {"id": self.pk, "text": self.text or "", "isCorrect": self.is_correct, "order": self.order}
+
+
+class DouTestAttempt(models.Model):
+    test = models.ForeignKey(DouTest, related_name="attempts", db_index=True, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, related_name="dou_test_attempts", db_index=True, on_delete=models.CASCADE)
+    answer_ids = models.JSONField(default=list, blank=True, help_text="Отмеченные варианты")
+    confirmed_at = models.DateTimeField(null=True, blank=True, default=None)
+    document = models.OneToOneField("Documents", related_name="test_attempt", db_index=True, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = "Прохождение теста"
+        verbose_name_plural = "Прохождения тестов"
+        unique_together = ("test", "doctor")
+
+    def __str__(self):
+        return f"{self.test_id} – {self.doctor_id}"
+
+    @staticmethod
+    def _clean_ids(raw_ids, valid_ids):
+        cleaned = []
+        seen = set()
+        for raw in raw_ids or []:
+            try:
+                pk = int(raw)
+            except (TypeError, ValueError):
+                return None
+            if pk not in valid_ids or pk in seen:
+                if pk not in valid_ids:
+                    return None
+                continue
+            seen.add(pk)
+            cleaned.append(pk)
+        return cleaned
+
+    @staticmethod
+    def _score(questions, selected_ids):
+        selected = set(selected_ids)
+        correct = 0
+        for question in questions:
+            right = {row["id"] for row in question["answers"] if row["correct"]}
+            picked = {row["id"] for row in question["answers"] if row["id"] in selected}
+            if picked == right:
+                correct += 1
+        total = len(questions)
+        percent = 0 if total == 0 else int((correct * 100 + total // 2) // total)
+        return correct, total, percent
+
+    @staticmethod
+    def _questions(test):
+        questions = []
+        valid_ids = set()
+        for question in test.questions.all().order_by("order", "pk"):
+            answers = []
+            for row in question.answers.all().order_by("order", "pk"):
+                valid_ids.add(row.pk)
+                answers.append({"id": row.pk, "text": row.text or "", "correct": row.is_correct})
+            questions.append({"id": question.pk, "text": question.text or "", "answers": answers})
+        return questions, valid_ids
+
+    @staticmethod
+    def _can_reset(doctor):
+        user = getattr(doctor, "user", None) if doctor else None
+        return bool(user and getattr(user, "is_superuser", False))
+
+    @staticmethod
+    def as_quiz(test, attempt, questions, can_reset=False, document=None, editable=None):
+        selected = []
+        if attempt:
+            for raw in attempt.answer_ids or []:
+                try:
+                    pk = int(raw)
+                except (TypeError, ValueError):
+                    continue
+                if any(pk == row["id"] for question in questions for row in question["answers"]) and pk not in selected:
+                    selected.append(pk)
+        linked = document or (attempt.document if attempt and attempt.document_id else None)
+        confirmed = bool(attempt and attempt.confirmed_at) or bool(linked and linked.time_confirm)
+        if confirmed:
+            public_questions = [
+                {
+                    "id": question["id"],
+                    "text": question["text"],
+                    "answers": [{"id": row["id"], "text": row["text"], "isCorrect": bool(row["correct"])} for row in question["answers"]],
+                }
+                for question in questions
+            ]
+        else:
+            public_questions = [
+                {
+                    "id": question["id"],
+                    "text": question["text"],
+                    "answers": [{"id": row["id"], "text": row["text"]} for row in question["answers"]],
+                }
+                for question in questions
+            ]
+        payload = {
+            "ok": True,
+            "id": test.pk,
+            "title": test.title or "",
+            "questions": public_questions,
+            "selected": selected,
+            "confirmed": confirmed,
+            "canReset": bool(can_reset),
+            "documentId": linked.pk if linked else None,
+            "whoConfirmed": Documents.confirmation_text(linked) if confirmed and linked and linked.time_confirm else "",
+        }
+        if confirmed:
+            correct, total, percent = DouTestAttempt._score(questions, selected)
+            payload["correct"] = correct
+            payload["total"] = total
+            payload["percent"] = percent
+        if editable is None:
+            editable = bool(can_reset or not confirmed)
+        payload["editable"] = bool(editable)
+        return payload
+
+    @staticmethod
+    def _quiz(test, attempt, doctor, document=None, editable=None):
+        questions, _valid = DouTestAttempt._questions(test)
+        linked = document or (attempt.document if attempt and attempt.document_id else None)
+        return DouTestAttempt.as_quiz(test, attempt, questions, DouTestAttempt._can_reset(doctor), linked, editable)
+
+    @staticmethod
+    def get_for(test_id, doctor):
+        if not doctor:
+            return {"ok": False, "message": "Сотрудник не найден"}
+        test = DouTest.objects.filter(pk=test_id).prefetch_related("questions__answers").first()
+        if not test:
+            return {"ok": False, "message": "Тест не найден"}
+        attempt = DouTestAttempt.objects.filter(test=test, doctor=doctor).select_related("document", "document__who_confirm", "document__who_confirm__podrazdeleniye").first()
+        return DouTestAttempt._quiz(test, attempt, doctor)
+
+    @staticmethod
+    def get_for_document(document_id, doctor):
+        if not doctor:
+            return {"ok": False, "message": "Сотрудник не найден"}
+        document = Documents.objects.filter(pk=document_id).select_related("type_document", "type_document__test", "who_confirm", "who_confirm__podrazdeleniye").first()
+        if not document or not Documents.can_see_document(document, doctor):
+            return {"ok": False, "message": "Документ не найден"}
+        linked_test = document.type_document.test if document.type_document_id and document.type_document and document.type_document.test_id else None
+        test = DouTest.objects.filter(pk=linked_test.pk).prefetch_related("questions__answers").first() if linked_test else None
+        if not test:
+            return {"ok": False, "message": "Тест не найден"}
+        attempt = DouTestAttempt.objects.filter(document=document).first()
+        confirmed = bool(document.time_confirm or (attempt and attempt.confirmed_at))
+        owner_id = attempt.doctor_id if attempt else document.who_create_id
+        editable = bool(DouTestAttempt._can_reset(doctor) or (owner_id == doctor.pk and not confirmed))
+        return DouTestAttempt._quiz(test, attempt, doctor, document, editable)
+
+    @staticmethod
+    def _test_type(test):
+        return TypeDocuments.objects.filter(test=test).order_by("title", "pk").first()
+
+    @staticmethod
+    def _create_document(type_doc, doctor):
+        from directions.models import Issledovaniya
+
+        schema = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
+        if schema is None:
+            schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
+        obj = Documents.objects.create(type_document=type_doc, who_create=doctor, body_values={}, schema=schema)
+        Issledovaniya.objects.create(document=obj, research=None, creator=doctor)
+        title = f"{type_doc.title or 'Документ'} №{obj.pk}"
+        Documents.log_action(obj.pk, Documents.LOG_CREATE, doctor, {"title": title, "typeId": type_doc.pk, "typeTitle": type_doc.title or ""})
+        return obj
+
+    @staticmethod
+    def _bind_document(test, doctor, attempt):
+        if attempt and attempt.document_id:
+            return attempt.document, None
+        type_doc = DouTestAttempt._test_type(test)
+        if not type_doc:
+            return None, "Нет вида документа для этого теста"
+        existing = Documents.objects.filter(type_document=type_doc, who_create=doctor, test_attempt__isnull=True).order_by("-pk").first()
+        if existing:
+            return existing, None
+        return DouTestAttempt._create_document(type_doc, doctor), None
+
+    @staticmethod
+    def _log_title(document):
+        type_title = "Документ"
+        if document.type_document_id:
+            type_doc = TypeDocuments.objects.filter(pk=document.type_document_id).only("title").first()
+            if type_doc and type_doc.title:
+                type_title = type_doc.title
+        return f"{type_title} №{document.pk}", type_title
+
+    @staticmethod
+    def _stamp_confirm(document, doctor):
+        from django.utils import timezone
+
+        from directions.models import Issledovaniya
+
+        now = timezone.now()
+        document.time_confirm = now
+        document.who_confirm = doctor
+        document.save(update_fields=["time_confirm", "who_confirm"])
+        iss = Issledovaniya.objects.filter(document=document).order_by("pk").first()
+        if iss:
+            iss.doc_confirmation = doctor
+            iss.time_confirmation = now
+            iss.doc_save = doctor
+            iss.time_save = now
+            iss.save(update_fields=["doc_confirmation", "time_confirmation", "doc_save", "time_save"])
+        title, type_title = DouTestAttempt._log_title(document)
+        Documents.log_action(
+            document.pk,
+            Documents.LOG_CONFIRM,
+            doctor,
+            {"title": title, "typeId": document.type_document_id, "typeTitle": type_title, "confirmed": True},
+        )
+        return now
+
+    @staticmethod
+    def _clear_confirm(document_id, doctor):
+        from directions.models import Issledovaniya
+
+        document = Documents.objects.filter(pk=document_id).first()
+        if not document or not document.time_confirm:
+            return
+        iss = Issledovaniya.objects.filter(document=document).order_by("pk").first()
+        if iss:
+            iss.time_confirmation = None
+            iss.doc_confirmation = None
+            iss.executor_confirmation = None
+            iss.save(update_fields=["time_confirmation", "doc_confirmation", "executor_confirmation"])
+        document.time_confirm = None
+        document.who_confirm = None
+        document.save(update_fields=["time_confirm", "who_confirm"])
+        title, type_title = DouTestAttempt._log_title(document)
+        Documents.log_action(document.pk, Documents.LOG_RESET, doctor, {"title": title, "typeId": document.type_document_id, "typeTitle": type_title})
+
+    @staticmethod
+    def save_for(test_id, doctor, answer_ids, confirm, document_id=None):
+        if not doctor:
+            return {"ok": False, "message": "Сотрудник не найден"}
+        with transaction.atomic():
+            document = None
+            if document_id not in (None, "", -1, "-1"):
+                document = Documents.objects.select_for_update().filter(pk=document_id).first()
+                if not document or not Documents.can_see_document(document, doctor):
+                    return {"ok": False, "message": "Документ не найден"}
+                type_doc = TypeDocuments.objects.filter(pk=document.type_document_id).select_related("test").first()
+                test = type_doc.test if type_doc and type_doc.test_id else None
+                if not test:
+                    return {"ok": False, "message": "Тест не найден"}
+            else:
+                test = DouTest.objects.select_for_update().filter(pk=test_id).first()
+                if not test:
+                    return {"ok": False, "message": "Тест не найден"}
+            attempt = DouTestAttempt.objects.select_for_update().filter(document=document).first() if document is not None else None
+            if attempt is None:
+                attempt = DouTestAttempt.objects.select_for_update().filter(test=test, doctor=doctor).first()
+            if attempt and attempt.confirmed_at and not DouTestAttempt._can_reset(doctor):
+                return {"ok": False, "message": "Тест подтверждён"}
+            if attempt and document is not None and attempt.document_id and attempt.document_id != document.pk:
+                return {"ok": False, "message": "Прохождение уже сохранено в другом документе"}
+            valid_ids = set(DouTestAnswer.objects.filter(question__test=test).values_list("pk", flat=True))
+            cleaned = DouTestAttempt._clean_ids(answer_ids, valid_ids)
+            if cleaned is None:
+                return {"ok": False, "message": "Некорректный ответ"}
+            if attempt is None:
+                attempt = DouTestAttempt(test=test, doctor=doctor)
+            attempt.answer_ids = cleaned
+            if confirm:
+                if document is not None:
+                    bound, error = document, None
+                else:
+                    bound, error = DouTestAttempt._bind_document(test, doctor, attempt)
+                if error:
+                    return {"ok": False, "message": error}
+                attempt.document = bound
+                if not bound.time_confirm:
+                    attempt.confirmed_at = DouTestAttempt._stamp_confirm(bound, doctor)
+                elif not attempt.confirmed_at:
+                    attempt.confirmed_at = bound.time_confirm
+            elif document is not None:
+                attempt.document = document
+            attempt.save()
+            if not confirm and attempt.document_id:
+                title, type_title = DouTestAttempt._log_title(attempt.document)
+                Documents.log_action(
+                    attempt.document_id,
+                    Documents.LOG_SAVE,
+                    doctor,
+                    {"title": title, "typeId": attempt.document.type_document_id, "typeTitle": type_title, "confirmed": bool(attempt.confirmed_at)},
+                )
+            saved_id = attempt.document_id
+        test = DouTest.objects.filter(pk=test.pk).prefetch_related("questions__answers").first()
+        attempt = DouTestAttempt.objects.filter(pk=attempt.pk).select_related("document", "document__who_confirm", "document__who_confirm__podrazdeleniye").first()
+        linked = attempt.document if attempt and attempt.document_id else None
+        editable = None
+        if saved_id and linked:
+            confirmed = bool(linked.time_confirm or (attempt and attempt.confirmed_at))
+            owner_id = attempt.doctor_id if attempt else linked.who_create_id
+            editable = bool(DouTestAttempt._can_reset(doctor) or (owner_id == doctor.pk and not confirmed))
+        return DouTestAttempt._quiz(test, attempt, doctor, linked, editable)
+
+    @staticmethod
+    def reset_for(test_id, doctor):
+        if not doctor:
+            return {"ok": False, "message": "Сотрудник не найден"}
+        if not DouTestAttempt._can_reset(doctor):
+            return {"ok": False, "message": "Недостаточно прав"}
+        with transaction.atomic():
+            test = DouTest.objects.select_for_update().filter(pk=test_id).first()
+            if not test:
+                return {"ok": False, "message": "Тест не найден"}
+            rows = list(DouTestAttempt.objects.select_for_update().filter(test=test))
+            for row in rows:
+                if row.document_id:
+                    DouTestAttempt._clear_confirm(row.document_id, doctor)
+            DouTestAttempt.objects.filter(pk__in=[row.pk for row in rows]).delete()
+        test = DouTest.objects.filter(pk=test.pk).prefetch_related("questions__answers").first()
+        return DouTestAttempt._quiz(test, None, doctor)
 
 
 class DocumentFieldGroups(models.Model):
@@ -2674,6 +3602,7 @@ class TypeDocumentsSchema(models.Model):
             "hide": group.hide,
             "visibility": group.visibility or "",
             "fieldsInline": group.fields_inline,
+            "cdaOption": group.cda_option_id if group.cda_option_id else -1,
             "fields": fields,
         }
 
@@ -2683,12 +3612,36 @@ class TypeDocumentsSchema(models.Model):
 
         from directory.models import ParaclinicInputField, ParaclinicInputGroups
 
-        templates = type_doc.get_layout_templates() if type_doc else []
-        if not templates:
+        monitoring = None
+        if type_doc and type_doc.is_plan:
+            return {
+                "pk": None,
+                "title": type_doc.title or "",
+                "wide_headers": False,
+                "layoutTemplateIds": [],
+                "isPlan": True,
+                "groups": [],
+            }
+        if type_doc and type_doc.test_id and type_doc.test:
+            return {
+                "pk": None,
+                "title": type_doc.test.title or "",
+                "wide_headers": False,
+                "layoutTemplateIds": [],
+                "testId": type_doc.test_id,
+                "groups": [],
+            }
+        if type_doc and type_doc.monitoring_id:
+            linked = type_doc.monitoring
+            if linked and linked.is_monitoring:
+                monitoring = linked
+        templates = [] if monitoring else (type_doc.get_layout_templates() if type_doc else [])
+        sources = [monitoring] if monitoring else templates
+        if not sources:
             return None
         groups = []
         group_order = 0
-        for template in templates:
+        for template in sources:
             group_qs = (
                 ParaclinicInputGroups.objects.filter(research=template)
                 .order_by("order")
@@ -2708,21 +3661,35 @@ class TypeDocumentsSchema(models.Model):
                 serialized["order"] = group_order
                 group_order += 1
                 groups.append(serialized)
-        first = templates[0]
-        return {
+        first = sources[0]
+        result = {
             "pk": first.pk,
             "title": first.title,
-            "wide_headers": any(bool(getattr(row, "wide_headers", False)) for row in templates),
-            "layoutTemplateIds": [row.pk for row in templates],
+            "wide_headers": any(bool(getattr(row, "wide_headers", False)) for row in sources),
+            "layoutTemplateIds": [] if monitoring else [row.pk for row in templates],
             "groups": groups,
         }
+        if monitoring:
+            result["monitoringId"] = monitoring.pk
+        return result
 
     @staticmethod
     def get_or_create_for_type(type_doc):
         dumped = TypeDocumentsSchema.dump_from_type(type_doc)
-        if not dumped:
-            return None
         latest = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
+        if not dumped:
+            if latest and isinstance(latest.schema, dict) and (latest.schema.get("monitoringId") or latest.schema.get("testId") or latest.schema.get("isPlan")):
+                dumped = {
+                    "pk": None,
+                    "title": type_doc.title if type_doc else "",
+                    "wide_headers": False,
+                    "layoutTemplateIds": [],
+                    "monitoringId": None,
+                    "testId": None,
+                    "groups": [],
+                }
+            else:
+                return None
         if latest and TypeDocumentsSchema._schema_key(latest.schema) == TypeDocumentsSchema._schema_key(dumped):
             return latest
         return TypeDocumentsSchema.objects.create(type_document=type_doc, schema=dumped)
@@ -2735,6 +3702,61 @@ class TypeDocumentsSchema(models.Model):
         qs = TypeDocuments.objects.filter(models.Q(pk__in=type_ids) | models.Q(layout_template=template)).distinct()
         for type_doc in qs:
             TypeDocumentsSchema.get_or_create_for_type(type_doc)
+
+    @staticmethod
+    def sync_for_monitoring(research):
+        if not research or not research.is_monitoring:
+            return
+        qs = TypeDocuments.objects.filter(monitoring=research).select_related("monitoring")
+        for type_doc in qs:
+            TypeDocumentsSchema.get_or_create_for_type(type_doc)
+
+
+def _link_id_list(raw):
+    if raw in (None, "", 0, "0"):
+        return []
+    if not isinstance(raw, (list, tuple)):
+        raw = [raw]
+    seen = set()
+    result = []
+    for item in raw:
+        if item in (None, "", 0, "0"):
+            continue
+        try:
+            value = int(item)
+        except (TypeError, ValueError):
+            return None
+        if value <= 0 or value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+    return result
+
+
+class DocumentCaseLink(models.Model):
+    document = models.ForeignKey("Documents", related_name="case_links", on_delete=models.CASCADE)
+    document_case = models.ForeignKey(DocumentCase, related_name="document_links", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Документ в деле"
+        verbose_name_plural = "Документы в делах"
+        unique_together = ("document", "document_case")
+
+    def __str__(self):
+        return f"{self.document_id} {self.document_case_id}"
+
+
+class DocumentBlockLink(models.Model):
+    document = models.ForeignKey("Documents", related_name="block_links", on_delete=models.CASCADE)
+    block = models.ForeignKey(DocumentBlock, related_name="document_links", on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Документ в блоке"
+        verbose_name_plural = "Документы в блоках"
+        unique_together = ("document", "block")
+
+    def __str__(self):
+        return f"{self.document_id} {self.block_id}"
 
 
 class Documents(models.Model):
@@ -2799,6 +3821,16 @@ class Documents(models.Model):
         default=None,
         db_index=True,
         help_text="Блок",
+        on_delete=models.SET_NULL,
+    )
+    plan = models.ForeignKey(
+        Plans,
+        related_name="documents",
+        blank=True,
+        null=True,
+        default=None,
+        db_index=True,
+        help_text="План, составленный в документе",
         on_delete=models.SET_NULL,
     )
 
@@ -3004,17 +4036,82 @@ class Documents(models.Model):
             return ""
         return f"{doctor}, {strdatetimeru(moment)}"
 
+    @staticmethod
+    def linked_cases(obj):
+        if not obj:
+            return []
+        prefetched = getattr(obj, "_prefetched_objects_cache", {}).get("case_links")
+        links = prefetched if prefetched is not None else obj.case_links.select_related("document_case").order_by("pk")
+        cases = []
+        seen = set()
+        for link in links:
+            case = link.document_case if link.document_case_id else None
+            if case and case.pk not in seen:
+                seen.add(case.pk)
+                cases.append(case)
+        if obj.document_case_id and obj.document_case_id not in seen:
+            case = obj.document_case if getattr(obj, "document_case", None) is not None and obj.document_case.pk == obj.document_case_id else None
+            if case is None:
+                case = DocumentCase.objects.filter(pk=obj.document_case_id).first()
+            if case:
+                cases.append(case)
+        return cases
+
+    @staticmethod
+    def linked_blocks(obj):
+        if not obj:
+            return []
+        prefetched = getattr(obj, "_prefetched_objects_cache", {}).get("block_links")
+        links = prefetched if prefetched is not None else obj.block_links.select_related("block").order_by("pk")
+        blocks = []
+        seen = set()
+        for link in links:
+            block = link.block if link.block_id else None
+            if block and block.pk not in seen:
+                seen.add(block.pk)
+                blocks.append(block)
+        if obj.block_id and obj.block_id not in seen:
+            block = obj.block if getattr(obj, "block", None) is not None and obj.block.pk == obj.block_id else None
+            if block is None:
+                block = DocumentBlock.objects.filter(pk=obj.block_id).first()
+            if block:
+                blocks.append(block)
+        return blocks
+
+    @staticmethod
+    def ensure_case_link(obj):
+        if obj.document_case_id and not obj.case_links.filter(document_case_id=obj.document_case_id).exists():
+            DocumentCaseLink.objects.get_or_create(document=obj, document_case_id=obj.document_case_id)
+
+    @staticmethod
+    def ensure_block_link(obj):
+        if obj.block_id and not obj.block_links.filter(block_id=obj.block_id).exists():
+            DocumentBlockLink.objects.get_or_create(document=obj, block_id=obj.block_id)
+
+    @staticmethod
+    def sync_case_field(obj):
+        ids = list(obj.case_links.order_by("pk").values_list("document_case_id", flat=True))
+        if obj.document_case_id in ids:
+            return
+        obj.document_case_id = ids[0] if ids else None
+        Documents.objects.filter(pk=obj.pk).update(document_case_id=obj.document_case_id)
+
+    @staticmethod
+    def sync_block_field(obj):
+        ids = list(obj.block_links.order_by("pk").values_list("block_id", flat=True))
+        if obj.block_id in ids:
+            return
+        obj.block_id = ids[0] if ids else None
+        Documents.objects.filter(pk=obj.pk).update(block_id=obj.block_id)
+
     @classmethod
     def can_see_document(cls, obj, who):
-        if who and obj.block_id and Documents._public_block(obj):
+        if who and any(block.is_public() for block in Documents.linked_blocks(obj)):
             return True
-        if obj.document_case_id:
-            case = obj.document_case if getattr(obj, "document_case", None) is not None else None
-            if case is None or case.pk != obj.document_case_id:
-                case = DocumentCase.objects.filter(pk=obj.document_case_id).first()
-            if not case or not case.can_access(who):
-                if not DocumentEmployeeApprove.is_assigned(obj, who):
-                    return False
+        cases = Documents.linked_cases(obj)
+        if cases and not any(case.can_access(who) for case in cases):
+            if not DocumentEmployeeApprove.is_assigned(obj, who):
+                return False
         if not obj.is_hidden:
             return True
         return cls.can_view_all_hidden(who)
@@ -3028,12 +4125,22 @@ class Documents(models.Model):
 
     @staticmethod
     def case_access_q(who, related=""):
-        base = f"{related}document_case" if related else "document_case"
+        case_field = f"{related}document_case"
+        link_field = f"{related}case_links__document_case"
         if DocumentCase._is_superuser(who):
             return models.Q()
+        owner = "pk" if not related else f"{related[:-2]}_id"
+        has_link = DocumentCaseLink.objects.filter(document_id=models.OuterRef(owner))
+        no_case = models.Q(**{f"{case_field}__isnull": True}) & ~models.Exists(has_link)
         if not who:
-            return models.Q(**{f"{base}__isnull": True})
-        return models.Q(**{f"{base}__isnull": True}) | models.Q(**{f"{base}__who_create_id": who.pk}) | models.Q(**{f"{base}__access_rows__doctor_id": who.pk})
+            return no_case
+        accessible = (
+            models.Q(**{f"{link_field}__who_create_id": who.pk})
+            | models.Q(**{f"{link_field}__access_rows__doctor_id": who.pk})
+            | models.Q(**{f"{case_field}__who_create_id": who.pk})
+            | models.Q(**{f"{case_field}__access_rows__doctor_id": who.pk})
+        )
+        return no_case | accessible
 
     @classmethod
     def can_set_hidden(cls, obj, who, confirmed=None):
@@ -3225,7 +4332,10 @@ class Documents(models.Model):
         cases = list(qs.order_by("-created_at", "-pk"))
         case_ids = [case.pk for case in cases]
         mine_ids = set(UserMyCase.objects.filter(doctor=who, document_case_id__in=case_ids).values_list("document_case_id", flat=True))
-        favorite_ids = set(UserFavoriteCase.objects.filter(doctor=who, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True))
+        favorite_ids = set(UserFavoriteCase.objects.filter(doctor=who, document_case_id__in=case_ids).values_list("document_case_id", flat=True))
+        favorite_ids.update(
+            UserFavoriteCase.objects.filter(doctor=who, document_case__isnull=True, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True)
+        )
         rows = []
         for case in cases:
             is_mine = case.who_create_id == who.pk
@@ -3243,7 +4353,11 @@ class Documents(models.Model):
 
     @staticmethod
     def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False):
-        qs = Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case").order_by("-pk")
+        qs = (
+            Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case")
+            .prefetch_related(models.Prefetch("case_links", queryset=DocumentCaseLink.objects.select_related("document_case").order_by("pk")))
+            .order_by("-pk")
+        )
         if role_filter == "toBeAgreed":
             if not who:
                 return []
@@ -3258,7 +4372,12 @@ class Documents(models.Model):
             if my_cases:
                 if not who:
                     return []
-                qs = qs.filter(models.Q(document_case__who_create_id=who.pk) | models.Q(document_case__user_my_cases__doctor_id=who.pk))
+                qs = qs.filter(
+                    models.Q(case_links__document_case__who_create_id=who.pk)
+                    | models.Q(case_links__document_case__user_my_cases__doctor_id=who.pk)
+                    | models.Q(document_case__who_create_id=who.pk)
+                    | models.Q(document_case__user_my_cases__doctor_id=who.pk)
+                )
             elif role_filter == "toReview":
                 if not who:
                     return []
@@ -3290,23 +4409,37 @@ class Documents(models.Model):
 
         topic_by_doc = {}
         favorite_case_ids = set()
+        mine_case_ids = set()
         if not my_cases:
             topic_by_doc = Documents.topics_for_documents(docs, iss_by_doc)
         elif who:
-            case_ids = [doc.document_case_id for doc in docs if doc.document_case_id]
+            case_ids = []
+            for doc in docs:
+                case_ids.extend(case.pk for case in Documents.linked_cases(doc))
             if case_ids:
-                favorite_case_ids = set(UserFavoriteCase.objects.filter(doctor=who, document__document_case_id__in=case_ids).values_list("document__document_case_id", flat=True))
+                favorite_case_ids = set(UserFavoriteCase.objects.filter(doctor=who, document_case_id__in=case_ids).values_list("document_case_id", flat=True))
+                favorite_case_ids.update(
+                    UserFavoriteCase.objects.filter(doctor=who, document_case__isnull=True, document__document_case_id__in=case_ids).values_list(
+                        "document__document_case_id",
+                        flat=True,
+                    )
+                )
+                mine_case_ids = set(UserMyCase.objects.filter(doctor=who, document_case_id__in=case_ids).values_list("document_case_id", flat=True))
 
         result = []
         for doc in docs:
             payload = doc.json
             if my_cases:
-                case_topic = ""
-                if doc.document_case_id and doc.document_case:
-                    case_topic = (doc.document_case.topic or "").strip()
-                payload["title"] = f"{case_topic} {doc.pk}".strip() if case_topic else str(doc.pk)
-                payload["caseId"] = doc.document_case_id
-                payload["isFavorite"] = bool(doc.document_case_id and doc.document_case_id in favorite_case_ids)
+                for case in Documents.linked_cases(doc):
+                    if case.who_create_id != getattr(who, "pk", None) and case.pk not in mine_case_ids:
+                        continue
+                    row = dict(payload)
+                    case_topic = (case.topic or "").strip()
+                    row["title"] = f"{case_topic} {doc.pk}".strip() if case_topic else str(doc.pk)
+                    row["caseId"] = case.pk
+                    row["isFavorite"] = case.pk in favorite_case_ids
+                    result.append(row)
+                continue
             else:
                 topic = (topic_by_doc.get(doc.pk) or "").strip()
                 type_doc = doc.type_document.title if doc.type_document else ""
@@ -3342,7 +4475,7 @@ class Documents(models.Model):
 
         if type_id in (None, "", -1, "-1"):
             return {"ok": False, "message": "Выберите вид документа"}
-        type_doc = TypeDocuments.objects.select_related("layout_template").filter(pk=type_id).first()
+        type_doc = TypeDocuments.objects.select_related("layout_template", "monitoring").filter(pk=type_id).first()
         if not type_doc:
             return {"ok": False, "message": "Вид документа не найден"}
         if not type_doc.can_create(who_create):
@@ -3350,11 +4483,13 @@ class Documents(models.Model):
         schema = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
         if schema is None:
             schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
-        templates = type_doc.get_layout_templates()
         with transaction.atomic():
             document_case = None
             if case is not None:
                 document_case = DocumentCase.objects.create(type_case=case, topic=(topic or "").strip(), who_create=who_create)
+            plan = None
+            if type_doc.is_plan:
+                plan = Plans.objects.create(title=type_doc.title or "", user_created=True, who_create=who_create)
             obj = Documents.objects.create(
                 type_document=type_doc,
                 who_create=who_create,
@@ -3362,10 +4497,13 @@ class Documents(models.Model):
                 schema=schema,
                 type_case=case,
                 document_case=document_case,
+                plan=plan,
             )
+            if document_case:
+                DocumentCaseLink.objects.create(document=obj, document_case=document_case)
             Issledovaniya.objects.create(
                 document=obj,
-                research=templates[0] if templates else type_doc.layout_template,
+                research=type_doc.form_research(),
                 creator=who_create,
             )
         type_title = type_doc.title or "Документ"
@@ -3378,6 +4516,42 @@ class Documents(models.Model):
         )
         return {"ok": True, "id": obj.pk, "title": title, "caseId": document_case.pk if document_case else None}
 
+    def save_user_plan(self, who, title, groups, indicators, tests, with_confirm=False):
+        from django.utils import timezone
+
+        if not Documents.can_see_document(self, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if not self.plan_id or not self.plan or not self.plan.user_created:
+            return {"ok": False, "message": "План не найден"}
+        if Documents.document_is_confirmed(self):
+            return {"ok": False, "message": "Документ подтверждён"}
+        result = Plans.save_plan(self.plan_id, title, groups, indicators, tests, allow_user=True, who=who)
+        if not result.get("ok"):
+            return result
+        if with_confirm:
+            now = timezone.now()
+            self.time_confirm = now
+            self.who_confirm = who
+            self.save(update_fields=["time_confirm", "who_confirm"])
+            iss = self.get_issledovaniye()
+            if iss:
+                iss.doc_confirmation = who
+                iss.time_confirmation = now
+                iss.save(update_fields=["doc_confirmation", "time_confirmation"])
+        Documents.log_action(
+            self.pk,
+            Documents.LOG_CONFIRM if with_confirm else Documents.LOG_SAVE,
+            who,
+            {
+                "title": self.json.get("title") if isinstance(self.json, dict) else "",
+                "typeId": self.type_document_id,
+                "typeTitle": self.type_document.title if self.type_document else "",
+                "planId": self.plan_id,
+                "confirmed": bool(with_confirm),
+            },
+        )
+        return {"ok": True, "id": self.pk, "planId": self.plan_id, "confirmed": bool(self.time_confirm)}
+
     def get_issledovaniye(self):
         from directions.models import Issledovaniya
 
@@ -3389,10 +4563,9 @@ class Documents(models.Model):
         if iss:
             return iss
         type_doc = self.type_document
-        templates = type_doc.get_layout_templates() if type_doc else []
         return Issledovaniya.objects.create(
             document=self,
-            research=templates[0] if templates else (type_doc.layout_template if type_doc else None),
+            research=type_doc.form_research() if type_doc else None,
             creator=self.who_create,
         )
 
@@ -3450,6 +4623,7 @@ class Documents(models.Model):
                 "fields": [],
                 "visibility": group.get("visibility") or "",
                 "fieldsInline": group.get("fieldsInline"),
+                "cdaOption": group.get("cdaOption", -1),
             }
             for field in group.get("fields") or []:
                 if field.get("hide") or field.get("field_type") == LAYOUT_TEMPLATE_FIELD_TYPE:
@@ -3475,6 +4649,8 @@ class Documents(models.Model):
                 else:
                     value = saved.get(field_pk, default_value)
                 if field_type == ADDRESSEE_FIELD_TYPE and not value:
+                    value = "[]"
+                if field_type == PLAN_FIELD_TYPE and not value:
                     value = "[]"
                 file_settings = field.get("file_settings")
                 files = []
@@ -3535,10 +4711,21 @@ class Documents(models.Model):
                 "document_case__who_create",
                 "document_case__who_close",
                 "block",
+                "plan",
                 "who_confirm",
                 "who_confirm__podrazdeleniye",
             )
             .prefetch_related(
+                Prefetch(
+                    "case_links",
+                    queryset=DocumentCaseLink.objects.select_related("document_case", "document_case__who_create", "document_case__who_close")
+                    .prefetch_related(Prefetch("document_case__access_rows", queryset=DocumentCaseAccess.objects.select_related("doctor", "doctor__podrazdeleniye")))
+                    .order_by("pk"),
+                ),
+                Prefetch(
+                    "block_links",
+                    queryset=DocumentBlockLink.objects.select_related("block").order_by("pk"),
+                ),
                 Prefetch(
                     "document_case__access_rows",
                     queryset=DocumentCaseAccess.objects.select_related("doctor", "doctor__podrazdeleniye"),
@@ -3566,6 +4753,7 @@ class Documents(models.Model):
         payload["ok"] = True
         payload["issPk"] = iss.pk if iss else None
         payload["research"] = research
+        payload["testId"] = obj.type_document.test_id if obj.type_document_id and obj.type_document and obj.type_document.test_id else None
         payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
         payload["whoConfirmed"] = Documents.confirmation_text(obj, iss) if payload["confirmed"] else ""
         can_hide = Documents.HIDDEN_DOCS_GROUP in group_names
@@ -3574,21 +4762,40 @@ class Documents(models.Model):
         payload["canHide"] = can_hide
         payload["canReset"] = Documents.RESET_GROUP in group_names
         payload["isCase"] = bool(obj.type_case_id)
-        payload["case"] = obj.document_case.as_json(who) if obj.document_case_id else None
-        payload["availableCases"] = DocumentCase.available_options(who)
+        cases = Documents.linked_cases(obj)
+        case_options = DocumentCase.available_options(who)
+        known_cases = {item["id"] for item in case_options}
+        for case in cases:
+            if case.pk not in known_cases:
+                case_options.insert(0, {"id": case.pk, "label": f"{case.pk} {case.topic}".strip()})
+                known_cases.add(case.pk)
+        payload["caseIds"] = [case.pk for case in cases]
+        payload["case"] = cases[0].as_json(who) if len(cases) == 1 else None
+        payload["availableCases"] = case_options
+        blocks = Documents.linked_blocks(obj)
         block_options = DocumentBlock.write_options(who)
-        if obj.block_id and obj.block and not any(item["id"] == obj.block_id for item in block_options):
-            block_label = obj.block.title or f"Блок {obj.block_id}"
-            block_options = [{"id": obj.block_id, "label": block_label}, *block_options]
+        known_blocks = {item["id"] for item in block_options}
+        for block in blocks:
+            if block.pk not in known_blocks:
+                block_options.insert(0, {"id": block.pk, "label": block.title or f"Блок {block.pk}"})
+                known_blocks.add(block.pk)
+        payload["blockIds"] = [block.pk for block in blocks]
         payload["blockId"] = obj.block_id
         payload["availableBlocks"] = block_options
-        payload["canChangeBlock"] = (not obj.block_id) or obj.block.can_write(who)
+        locked_block_ids = {block.pk for block in blocks if not block.can_write(who)}
+        payload["canChangeBlock"] = any(block.can_write(who) for block in blocks) or any(item["id"] not in locked_block_ids for item in block_options)
         payload["approvers"] = DocumentEmployeeApprove.approvers_json(obj)
         payload["approvalStatuses"] = DocumentEmployeeApprove.statuses_json(obj)
         payload["canEditApprovers"] = DocumentEmployeeApprove.can_edit(obj, who)
         payload["canCancelApproval"] = DocumentEmployeeApprove.can_cancel(who)
         payload["isFavorite"] = record_favorite_status(who, obj)
         payload["hasPrintTemplate"] = bool(obj.type_document_id and obj.type_document.print_docx)
+        plan = obj.plan if obj.plan_id and obj.plan and obj.plan.user_created else None
+        payload["isPlan"] = bool(plan) or bool(obj.type_document_id and obj.type_document.is_plan)
+        if plan:
+            plan_details = Plans.get_details(plan.pk, who)
+            if plan_details.get("ok"):
+                payload["plan"] = plan_details
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
         type_doc = obj.type_document.title if obj.type_document else ""
         DocumentRecent.remember(who, obj, topic=obj.topic_value(iss, research=research), type_doc=type_doc)
@@ -3620,6 +4827,9 @@ class Documents(models.Model):
         v_g = (visibility_state or {}).get("groups") or {}
         v_f = (visibility_state or {}).get("fields") or {}
         groups = (research or {}).get("groups") or []
+        plan_error = Plans.validate_document_fields(groups, iss, who)
+        if plan_error:
+            return {"ok": False, "message": plan_error}
         files_by_field = {}
         body_values = dict(document.body_values) if isinstance(document.body_values, dict) else {}
         addressee_ids = []
@@ -3671,7 +4881,7 @@ class Documents(models.Model):
                             if doctor_id not in addressee_seen:
                                 addressee_seen.add(doctor_id)
                                 addressee_ids.append(doctor_id)
-                    if field_type in [27, 28, 29, 32, 33, 34, 35, 44, ADDRESSEE_FIELD_TYPE, MENTEE_FIELD_TYPE, MENTOR_FIELD_TYPE]:
+                    if field_type in [27, 28, 29, 32, 33, 34, 35, 44, ADDRESSEE_FIELD_TYPE, MENTEE_FIELD_TYPE, MENTOR_FIELD_TYPE, PLAN_FIELD_TYPE]:
                         if isinstance(value, (dict, list)):
                             val = value
                         else:
