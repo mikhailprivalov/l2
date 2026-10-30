@@ -114,20 +114,31 @@
             >
               Загрузка...
             </div>
-            <div
-              v-else-if="row.loaded && !row.research"
-              class="empty"
-            >
-              У вида не выбран шаблон
-            </div>
-            <template v-else-if="row.research">
+            <template v-else-if="row.loaded">
+              <DocumentTestPanel
+                v-if="row.testId"
+                :test-id="row.testId"
+                :document-id="row.id"
+                review
+                @saved="onTestSaved(row.id, $event)"
+              />
+              <div
+                v-else-if="!row.research"
+                class="empty"
+              >
+                У вида не выбран шаблон
+              </div>
               <DescriptiveForm
+                v-else
                 :key="`${row.id}-${row.issPk}-${row.confirmed}`"
                 :research="row.research"
                 :confirmed="row.confirmed"
                 :patient="patient"
                 :pk="row.issPk"
+                :document-id="row.id"
               />
+            </template>
+            <template v-if="row.loaded && (row.research || row.testId)">
               <div
                 v-if="row.whoConfirmed"
                 class="group"
@@ -182,6 +193,7 @@ import {
 import api from '@/api';
 import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 import DescriptiveForm from '@/forms/DescriptiveForm.vue';
+import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
 
 type BlockDocumentRow = {
   id: number;
@@ -193,6 +205,7 @@ type BlockDocumentRow = {
   loading: boolean;
   loaded: boolean;
   research: any;
+  testId: number | null;
   issPk: number | null;
   confirmed: boolean;
   hasPrintTemplate: boolean;
@@ -222,6 +235,7 @@ const blankDocumentBody = () => ({
   loading: false,
   loaded: false,
   research: null,
+  testId: null as number | null,
   issPk: null as number | null,
   confirmed: false,
   hasPrintTemplate: false,
@@ -246,6 +260,16 @@ const patchDocument = (id: number, patch: Partial<BlockDocumentRow>) => {
   ));
 };
 
+const onTestSaved = (id: number, payload?: { confirmed?: boolean; whoConfirmed?: string }) => {
+  if (!payload) {
+    return;
+  }
+  patchDocument(id, {
+    confirmed: Boolean(payload.confirmed),
+    whoConfirmed: payload.whoConfirmed || '',
+  });
+};
+
 const loadDocumentBody = async (id: number) => {
   const current = documentById(id);
   if (!current || current.loaded || current.loading) {
@@ -261,6 +285,7 @@ const loadDocumentBody = async (id: number) => {
     }
     patchDocument(id, {
       research: result.research || null,
+      testId: result.testId || null,
       issPk: result.issPk || null,
       confirmed: Boolean(result.confirmed),
       hasPrintTemplate: Boolean(result.hasPrintTemplate),

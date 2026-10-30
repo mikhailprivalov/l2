@@ -81,6 +81,17 @@
         >
         <span>Блоки</span>
       </label>
+      <label
+        class="filter-check"
+        @click.prevent="toggleTests"
+      >
+        <input
+          type="checkbox"
+          :checked="showTests"
+          tabindex="-1"
+        >
+        <span>Тесты</span>
+      </label>
       <button
         v-if="showTopics && canCreateBlocks"
         class="blocks-add"
@@ -194,7 +205,23 @@
               class="doc-list"
               @scroll="onDocumentsScroll"
             >
-            <template v-if="showTopics">
+            <template v-if="showTests">
+              <div
+                v-for="test in visibleTests"
+                :key="`test-${test.id}`"
+                class="doc-row"
+              >
+                <button
+                  class="doc-btn"
+                  :class="{ 'active-button': selectedTest === test.id }"
+                  type="button"
+                  @click="selectTest(test.id)"
+                >
+                  <span class="doc-title">{{ test.title }}</span>
+                </button>
+              </div>
+            </template>
+            <template v-else-if="showTopics">
               <div
                 v-for="block in visibleBlocks"
                 :key="`block-${block.id}`"
@@ -213,7 +240,7 @@
             <template v-else>
               <div
                 v-for="document in visibleDocuments"
-                :key="document.id"
+                :key="`${document.id}-${document.caseId || 0}`"
                 class="doc-row"
               >
               <button
@@ -241,8 +268,12 @@
         </template>
         <template #right>
           <div class="split-right">
+            <DocumentTestPanel
+              v-if="showTests"
+              :test-id="selectedTest"
+            />
             <DocumentBlockPanel
-              v-if="showTopics"
+              v-else-if="showTopics"
               :block-id="selectedBlock"
             />
           </div>
@@ -391,6 +422,7 @@ import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import Modal from '@/ui-cards/Modal.vue';
 import DocumentBlockPanel from '@/pages/DocumentManagement/DocumentBlockPanel.vue';
+import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
 
 const LEFT_WIDTH_STORAGE_KEY = 'document-registrar-left-width';
 const MIN_SIDE_WIDTH_PX = 80;
@@ -444,25 +476,28 @@ const byText = ref(false);
 const LIST_FILTER_STORAGE_KEY = 'document-registrar-list-filter';
 const LIST_ROLE_FILTERS = ['created', 'doing', 'wrote', 'onControl', 'toReview', 'recent', 'onSignature'];
 
-const readStoredListFilter = (): { role: string | null; hidden: boolean; myCases: boolean; topics: boolean } => {
+const readStoredListFilter = (): {
+  role: string | null; hidden: boolean; myCases: boolean; topics: boolean; tests: boolean;
+} => {
   try {
     const raw = localStorage.getItem(LIST_FILTER_STORAGE_KEY);
     if (!raw) {
       return {
-        role: 'recent', hidden: false, myCases: false, topics: false,
+        role: 'recent', hidden: false, myCases: false, topics: false, tests: false,
       };
     }
     const data = JSON.parse(raw);
     const role = LIST_ROLE_FILTERS.includes(data?.role) ? data.role : null;
     const topics = Boolean(data?.topics) && !role;
-    const hidden = Boolean(data?.hidden) && !role && !topics;
-    const myCases = Boolean(data?.myCases) && !hidden && !role && !topics;
+    const tests = Boolean(data?.tests) && !role && !topics;
+    const hidden = Boolean(data?.hidden) && !role && !topics && !tests;
+    const myCases = Boolean(data?.myCases) && !hidden && !role && !topics && !tests;
     return {
-      role, hidden, myCases, topics,
+      role, hidden, myCases, topics, tests,
     };
   } catch {
     return {
-      role: 'recent', hidden: false, myCases: false, topics: false,
+      role: 'recent', hidden: false, myCases: false, topics: false, tests: false,
     };
   }
 };
@@ -472,12 +507,15 @@ const roleFilter = ref<string | null>(storedListFilter.role);
 const showHidden = ref(storedListFilter.hidden);
 const showMyCases = ref(storedListFilter.myCases);
 const showTopics = ref(storedListFilter.topics);
+const showTests = ref(storedListFilter.tests);
 const pendingReviewCount = ref(0);
 const documents = ref<{ id: number; title: string; confirmed?: boolean }[]>([]);
 const listQuery = ref('');
 const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
+const tests = ref<{ id: number; title: string }[]>([]);
 const selectedDocument = ref<number | null>(null);
 const selectedBlock = ref<number | null>(null);
+const selectedTest = ref<number | null>(null);
 const blockModalOpen = ref(false);
 const blockTitleDraft = ref('');
 const docsEl = ref<HTMLElement | null>(null);
@@ -524,7 +562,7 @@ const userGroups = computed(() => store.getters.user_groups || []);
 const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
 const canCreateBlocks = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Создание блоков'));
 const listFilterActive = computed(() => Boolean(
-  roleFilter.value || showHidden.value || showMyCases.value || showTopics.value,
+  roleFilter.value || showHidden.value || showMyCases.value || showTopics.value || showTests.value,
 ));
 if (!canViewHidden.value) {
   showHidden.value = false;
@@ -535,6 +573,7 @@ const toggleRole = (id: string) => {
   const next = roleFilter.value === id ? null : id;
   showMyCases.value = false;
   showTopics.value = false;
+  showTests.value = false;
   if (next) {
     showHidden.value = false;
   }
@@ -591,6 +630,29 @@ const loadDocuments = async () => {
   recentPage.value = 1;
   recentHasMore.value = false;
   const hasListFilter = roleFilter.value === 'created' || roleFilter.value === 'toReview' || roleFilter.value === 'recent';
+  if (showTests.value) {
+    selectedDocument.value = null;
+    selectedBlock.value = null;
+    blocks.value = [];
+    await loadPendingCount();
+    await store.dispatch(actions.INC_LOADING);
+    try {
+      const { result } = await api('document-manager/tests/list');
+      if (loadId !== documentsLoadId) {
+        return;
+      }
+      tests.value = result || [];
+      const stillThere = tests.value.some(row => row.id === selectedTest.value);
+      if (selectedTest.value && !stillThere) {
+        selectedTest.value = null;
+      }
+    } finally {
+      await store.dispatch(actions.DEC_LOADING);
+    }
+    return;
+  }
+  tests.value = [];
+  selectedTest.value = null;
   if (showTopics.value) {
     selectedDocument.value = null;
     await loadPendingCount();
@@ -652,6 +714,7 @@ const toggleHidden = () => {
   if (next) {
     showMyCases.value = false;
     showTopics.value = false;
+    showTests.value = false;
   }
   if (next && roleFilter.value) {
     roleFilter.value = null;
@@ -668,6 +731,7 @@ const toggleMyCases = () => {
   if (next) {
     showHidden.value = false;
     showTopics.value = false;
+    showTests.value = false;
     if (roleFilter.value) {
       roleFilter.value = null;
       return;
@@ -684,6 +748,24 @@ const toggleTopics = () => {
   if (next) {
     showHidden.value = false;
     showMyCases.value = false;
+    showTests.value = false;
+    if (roleFilter.value) {
+      roleFilter.value = null;
+      return;
+    }
+  }
+  loadDocuments();
+};
+
+const toggleTests = () => {
+  listQuery.value = '';
+  const next = !showTests.value;
+  showTests.value = next;
+  selectedDocument.value = null;
+  if (next) {
+    showHidden.value = false;
+    showMyCases.value = false;
+    showTopics.value = false;
     if (roleFilter.value) {
       roleFilter.value = null;
       return;
@@ -734,7 +816,9 @@ const searchDocuments = async () => {
       if (listSearch) {
         const rows = result.result || [];
         showTopics.value = false;
+        showTests.value = false;
         selectedBlock.value = null;
+        selectedTest.value = null;
         documents.value = rows;
         recentPage.value = 1;
         recentHasMore.value = false;
@@ -782,6 +866,18 @@ const visibleBlocks = computed(() => {
 
 const selectBlock = (id: number) => {
   selectedBlock.value = id;
+};
+
+const visibleTests = computed(() => {
+  const filterText = folded(listQuery.value.trim());
+  if (!filterText) {
+    return tests.value;
+  }
+  return tests.value.filter(row => folded(row.title).includes(filterText));
+});
+
+const selectTest = (id: number) => {
+  selectedTest.value = id;
 };
 
 const openBlockModal = () => {
@@ -942,13 +1038,14 @@ watch(roleFilter, () => {
   loadDocuments();
 });
 
-watch([roleFilter, showHidden, showMyCases, showTopics], () => {
+watch([roleFilter, showHidden, showMyCases, showTopics, showTests], () => {
   try {
     localStorage.setItem(LIST_FILTER_STORAGE_KEY, JSON.stringify({
       role: roleFilter.value,
       hidden: showHidden.value,
       myCases: showMyCases.value,
       topics: showTopics.value,
+      tests: showTests.value,
     }));
   } catch {
     // ignore storage errors

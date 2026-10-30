@@ -827,10 +827,13 @@ def researches_update(request):
                             ParaclinicTemplateField.objects.filter(template_name=templat_obj, input_field=f).update(value=f.default_value)
 
                 response["ok"] = True
-                if res.is_layout_template:
+                if res.is_layout_template or res.is_monitoring:
                     from document_management.models import TypeDocumentsSchema
 
-                    TypeDocumentsSchema.sync_for_layout_template(res)
+                    if res.is_layout_template:
+                        TypeDocumentsSchema.sync_for_layout_template(res)
+                    if res.is_monitoring:
+                        TypeDocumentsSchema.sync_for_monitoring(res)
         Log(key=pk, type=10000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 

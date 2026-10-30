@@ -66,38 +66,35 @@ def search_indicator(request):
 
     result_extra = indicator_sql(tuple(fields_obj), datetime_start, datetime_end)
 
+    def _indicator_row(row):
+        group_id = field_to_group.get(row.field_id)
+        return {
+            "direction": row.document_id or row.direction_id,
+            "documentId": row.document_id,
+            "issledovaniye": row.issledovaniye_id,
+            "hospital": row.hospital_title,
+            "indicatorTitle": row.group_title,
+            "groupId": group_id,
+        }
+
     result = []
-    prev_direction, prev_group = None, None
+    prev_key = None
     step = 0
     current_result = {}
     for i in result_extra:
+        row_key = (i.document_id, i.direction_id, i.group_title)
         if step == 0:
-            group_id = field_to_group.get(i.field_id)
-            current_result = {
-                "direction": i.direction_id,
-                "issledovaniye": i.issledovaniye_id,
-                'hospital': i.hospital_title,
-                'indicatorTitle': i.group_title,
-                'groupId': group_id,
-            }
+            current_result = _indicator_row(i)
 
-        if (prev_direction != i.direction_id or prev_group != i.group_title) and step != 0:
+        if prev_key != row_key and step != 0:
             result.append(current_result.copy())
-            group_id = field_to_group.get(i.field_id)
-            current_result = {
-                "direction": i.direction_id,
-                "issledovaniye": i.issledovaniye_id,
-                'hospital': i.hospital_title,
-                'indicatorTitle': i.group_title,
-                'groupId': group_id,
-            }
+            current_result = _indicator_row(i)
         if "значение" in i.field_title.lower():
             current_result['hospitalValue'] = i.result_value
         if "балл" in i.field_title.lower():
             current_result['score'] = i.result_value
         step += 1
-        prev_direction = i.direction_id
-        prev_group = i.group_title
+        prev_key = row_key
     if current_result:
         result.append(current_result.copy())
 

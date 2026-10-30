@@ -8,6 +8,7 @@
     </div>
     <div
       v-else
+      ref="contentEl"
       class="results-content"
     >
       <div
@@ -50,6 +51,7 @@
       <div
         v-if="caseBlock"
         class="case-block"
+        :data-document-form="documentId ? null : ''"
       >
         <div class="case-block__label">
           <button
@@ -173,20 +175,31 @@
               >
                 Загрузка...
               </div>
-              <div
-                v-else-if="row.loaded && !row.research"
-                class="empty"
-              >
-                У вида не выбран шаблон
-              </div>
-              <template v-else-if="row.research">
+              <template v-else-if="row.loaded">
+                <DocumentTestPanel
+                  v-if="row.testId"
+                  :test-id="row.testId"
+                  :document-id="row.id"
+                  review
+                  @saved="onTestSaved(row.id, $event)"
+                />
+                <div
+                  v-else-if="!row.research"
+                  class="empty"
+                >
+                  У вида не выбран шаблон
+                </div>
                 <DescriptiveForm
+                  v-else
                   :key="`${row.id}-${row.issPk}-${row.confirmed}`"
                   :research="row.research"
                   :confirmed="row.confirmed"
                   :patient="patient"
                   :pk="row.issPk"
+                  :document-id="row.id"
                 />
+              </template>
+              <template v-if="row.loaded && (row.research || row.testId)">
                 <div
                   v-if="row.whoConfirmed"
                   class="group"
@@ -261,14 +274,14 @@
                 <div class="doc-case-select">
                   <span>Дело</span>
                   <Treeselect
-                    :value="row.caseId"
+                    :value="row.caseIds"
                     class="doc-case-select__field"
-                    :multiple="false"
+                    :multiple="true"
                     :options="row.availableCases"
                     placeholder="Выберите дело"
                     no-options-text="Нет доступных дел"
                     :append-to-body="true"
-                    @input="onRowCase(row.id, $event)"
+                    @input="onRowCases(row.id, $event)"
                   />
                 </div>
               </template>
@@ -276,20 +289,96 @@
           </div>
         </div>
       </div>
+      <DocumentTestPanel
+        v-if="!caseListMode && loaded && !isPlan && testId"
+        data-document-form
+        :test-id="testId"
+        :document-id="documentId"
+        review
+        @saved="onTestSaved(documentId, $event)"
+      />
       <div
-        v-if="!caseListMode && loaded && !research"
+        v-else-if="!caseListMode && loaded && !research && !isPlan"
         class="empty"
+        data-document-form
       >
         У вида не выбран шаблон
       </div>
-      <DescriptiveForm
-        v-else-if="!caseListMode && research"
-        :key="`${documentId}-${issPk}-${confirmed}`"
-        :research="research"
-        :confirmed="confirmed"
-        :patient="patient"
-        :pk="issPk"
-      />
+      <div
+        v-if="!caseListMode && isPlan && planPreset"
+        data-document-form
+      >
+        <DouPlanEditor
+          :plan-id="0"
+          document-mode
+          :document-id="documentId"
+          :readonly="confirmed"
+          :preset="planPreset"
+          @saved="onPlanSaved"
+        >
+          <template #leading>
+            <a
+              v-if="hasPrintTemplate && documentId"
+              class="print-link a-under"
+              :href="printHref(documentId, 'docx')"
+              download
+            >docx</a>
+            <a
+              v-if="hasPrintTemplate && documentId"
+              class="print-link a-under"
+              :href="printHref(documentId, 'pdf')"
+              target="_blank"
+              rel="noopener"
+            >pdf</a>
+          </template>
+          <template #trailing>
+            <button
+              v-if="confirmed && canReset"
+              class="btn btn-blue-nb"
+              type="button"
+              @click="resetConfirm"
+            >
+              Сброс подтверждения
+            </button>
+            <button
+              v-if="canHide && !isHidden"
+              class="btn btn-blue-nb"
+              type="button"
+              @click="setHidden(true)"
+            >
+              Скрыть
+            </button>
+            <button
+              v-if="canHide && isHidden"
+              class="btn btn-blue-nb"
+              type="button"
+              @click="setHidden(false)"
+            >
+              Показать
+            </button>
+          </template>
+        </DouPlanEditor>
+      </div>
+      <div
+        v-if="!caseListMode && loaded && isPlan && !planPreset"
+        class="empty"
+        data-document-form
+      >
+        План не найден
+      </div>
+      <div
+        v-if="!caseListMode && research && !isPlan && !testId"
+        data-document-form
+      >
+        <DescriptiveForm
+          :key="`${documentId}-${issPk}-${confirmed}`"
+          :research="research"
+          :confirmed="confirmed"
+          :patient="patient"
+          :pk="issPk"
+          :document-id="documentId"
+        />
+      </div>
       <div
         v-if="!caseListMode && whoConfirmed"
         class="group"
@@ -304,7 +393,7 @@
         </div>
       </div>
       <div
-        v-if="!caseListMode && research"
+        v-if="!caseListMode && research && !isPlan"
         class="control-row"
       >
         <div class="res-title">
@@ -444,14 +533,14 @@
       >
         <span>Дело</span>
         <Treeselect
-          :value="selectedCaseId"
+          :value="selectedCaseIds"
           class="doc-case-select__field"
-          :multiple="false"
+          :multiple="true"
           :options="availableCases"
           placeholder="Выберите дело"
           no-options-text="Нет доступных дел"
           :append-to-body="true"
-          @input="onMainCase"
+          @input="onMainCases"
         />
       </div>
       <div
@@ -460,15 +549,15 @@
       >
         <span>Блок</span>
         <Treeselect
-          :value="selectedBlockId"
+          :value="selectedBlockIds"
           class="doc-case-select__field"
-          :multiple="false"
+          :multiple="true"
           :options="availableBlocks"
           :disabled="!canChangeBlock"
           placeholder="Выберите блок"
           no-options-text="Нет доступных блоков"
           :append-to-body="true"
-          @input="onMainBlock"
+          @input="onMainBlocks"
         />
       </div>
       <div
@@ -518,7 +607,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, onUnmounted, ref, watch,
+  computed, getCurrentInstance, nextTick, onMounted, onUnmounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -528,6 +617,8 @@ import api from '@/api';
 import { buildParaclinicResultFormData } from '@/api/buildParaclinicResultFormData';
 import { vField, vGroup } from '@/components/visibility-triggers';
 import DescriptiveForm from '@/forms/DescriptiveForm.vue';
+import DouPlanEditor from '@/construct/DouPlanEditor.vue';
+import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
 import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -536,6 +627,7 @@ const props = defineProps<{
   documentId?: number | null;
   caseId?: number | null;
   showCaseDocuments?: boolean;
+  focusForm?: boolean;
   approvalMode?: boolean;
 }>();
 
@@ -549,8 +641,12 @@ const emit = defineEmits<{
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
+const contentEl = ref<HTMLElement | null>(null);
 const title = ref('');
 const research = ref(null);
+const isPlan = ref(false);
+const testId = ref<number | null>(null);
+const planPreset = ref(null);
 const issPk = ref<number | null>(null);
 const loaded = ref(false);
 const confirmed = ref(false);
@@ -572,9 +668,9 @@ const canEditCase = ref(false);
 const canEditCaseTopic = ref(false);
 const canCloseCase = ref(false);
 const caseInFavorite = ref(false);
-const selectedCaseId = ref<number | null>(null);
+const selectedCaseIds = ref<number[]>([]);
 const availableCases = ref<{ id: number; label: string }[]>([]);
-const selectedBlockId = ref<number | null>(null);
+const selectedBlockIds = ref<number[]>([]);
 const availableBlocks = ref<{ id: number; label: string }[]>([]);
 const canChangeBlock = ref(true);
 const approvers = ref('[]');
@@ -656,6 +752,7 @@ type CaseDocumentRow = {
   loading: boolean;
   loaded: boolean;
   research: any;
+  testId: number | null;
   issPk: number | null;
   confirmed: boolean;
   isHidden: boolean;
@@ -663,7 +760,7 @@ type CaseDocumentRow = {
   canReset: boolean;
   hasPrintTemplate: boolean;
   whoConfirmed: string;
-  caseId: number | null;
+  caseIds: number[];
   availableCases: { id: number; label: string }[];
 };
 
@@ -690,6 +787,7 @@ const blankDocumentBody = () => ({
   loading: false,
   loaded: false,
   research: null,
+  testId: null as number | null,
   issPk: null as number | null,
   confirmed: false,
   isHidden: false,
@@ -697,9 +795,36 @@ const blankDocumentBody = () => ({
   canReset: false,
   hasPrintTemplate: false,
   whoConfirmed: '',
-  caseId: null,
+  caseIds: [],
   availableCases: [],
 });
+
+const idList = (value: unknown): number[] => {
+  let raw: unknown[] = [];
+  if (Array.isArray(value)) {
+    raw = value;
+  } else if (value) {
+    raw = [value];
+  }
+  const ids: number[] = [];
+  const seen = new Set<number>();
+  raw.forEach(item => {
+    const id = Number(item);
+    if (Number.isFinite(id) && id > 0 && !seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
+    }
+  });
+  return ids;
+};
+
+const sameIds = (left: number[], right: number[]) => {
+  if (left.length !== right.length) {
+    return false;
+  }
+  const have = new Set(right);
+  return left.every(id => have.has(id));
+};
 
 const documentById = (id: number) => caseDocuments.value.find(item => item.id === id);
 
@@ -724,6 +849,7 @@ const loadDocumentBody = async (id: number) => {
     }
     patchDocument(id, {
       research: result.research || null,
+      testId: result.testId || null,
       issPk: result.issPk || null,
       confirmed: Boolean(result.confirmed),
       isHidden: Boolean(result.isHidden),
@@ -731,7 +857,7 @@ const loadDocumentBody = async (id: number) => {
       canReset: Boolean(result.canReset),
       hasPrintTemplate: Boolean(result.hasPrintTemplate),
       whoConfirmed: result.whoConfirmed || '',
-      caseId: result.case && !result.case.closedAt ? result.case.id : null,
+      caseIds: idList(result.caseIds),
       availableCases: result.availableCases || [],
       loaded: true,
       loading: false,
@@ -840,7 +966,6 @@ const fillCase = (caseData) => {
   canEditCaseTopic.value = Boolean(caseData.canEditTopic);
   canCloseCase.value = Boolean(caseData.canClose);
   caseInFavorite.value = Boolean(caseData.isFavorite);
-  selectedCaseId.value = caseData.closedAt ? null : caseData.id;
   caseDocuments.value = (caseData.documents || []).map(row => ({
     id: row.id,
     topic: row.topic || '',
@@ -857,9 +982,59 @@ const casePayload = (extra: Record<string, unknown> = {}) => (
     : { id: props.documentId, ...extra }
 );
 
+const onTestSaved = (id: number | null, payload?: { confirmed?: boolean; whoConfirmed?: string }) => {
+  if (!id || !payload) {
+    return;
+  }
+  if (id === props.documentId) {
+    confirmed.value = Boolean(payload.confirmed);
+    whoConfirmed.value = payload.whoConfirmed || '';
+  }
+  patchDocument(id, {
+    confirmed: Boolean(payload.confirmed),
+    whoConfirmed: payload.whoConfirmed || '',
+  });
+};
+
+const onPlanSaved = async () => {
+  if (!props.documentId) {
+    return;
+  }
+  const result = await api('document-manager/documents/details', { id: props.documentId });
+  if (!result?.ok) {
+    return;
+  }
+  confirmed.value = Boolean(result.confirmed);
+  whoConfirmed.value = result.whoConfirmed || '';
+  canReset.value = Boolean(result.canReset);
+  isPlan.value = Boolean(result.isPlan);
+  planPreset.value = result.plan || null;
+};
+
+const scrollToForm = async () => {
+  if (!props.focusForm) {
+    return;
+  }
+  await nextTick();
+  const rootEl = contentEl.value;
+  if (!rootEl) {
+    return;
+  }
+  const target = rootEl.querySelector('[data-document-form]');
+  if (!(target instanceof HTMLElement)) {
+    rootEl.scrollTop = 0;
+    return;
+  }
+  const delta = target.getBoundingClientRect().top - rootEl.getBoundingClientRect().top;
+  rootEl.scrollTop += delta;
+};
+
 const load = async () => {
   title.value = '';
   research.value = null;
+  isPlan.value = false;
+  testId.value = null;
+  planPreset.value = null;
   issPk.value = null;
   loaded.value = false;
   confirmed.value = false;
@@ -881,9 +1056,9 @@ const load = async () => {
   canEditCaseTopic.value = false;
   canCloseCase.value = false;
   caseInFavorite.value = false;
-  selectedCaseId.value = null;
+  selectedCaseIds.value = [];
   availableCases.value = [];
-  selectedBlockId.value = null;
+  selectedBlockIds.value = [];
   availableBlocks.value = [];
   canChangeBlock.value = true;
   approvers.value = '[]';
@@ -907,6 +1082,7 @@ const load = async () => {
       loaded.value = true;
       await store.dispatch(actions.DEC_LOADING);
     }
+    await scrollToForm();
     return;
   }
   if (!props.documentId) {
@@ -918,6 +1094,9 @@ const load = async () => {
     if (result?.ok) {
       title.value = result.title || '';
       research.value = result.research || null;
+      isPlan.value = Boolean(result.isPlan);
+      testId.value = result.testId || null;
+      planPreset.value = result.plan || null;
       issPk.value = result.issPk || null;
       confirmed.value = Boolean(result.confirmed);
       isHidden.value = Boolean(result.isHidden);
@@ -925,9 +1104,12 @@ const load = async () => {
       canReset.value = Boolean(result.canReset);
       hasPrintTemplate.value = Boolean(result.hasPrintTemplate);
       inFavorite.value = Boolean(result.isFavorite);
-      fillCase(result.case);
+      selectedCaseIds.value = idList(result.caseIds);
+      if (selectedCaseIds.value.length === 1) {
+        fillCase(result.case);
+      }
       availableCases.value = result.availableCases || [];
-      selectedBlockId.value = result.blockId || null;
+      selectedBlockIds.value = idList(result.blockIds);
       availableBlocks.value = result.availableBlocks || [];
       canChangeBlock.value = result.canChangeBlock !== false;
       approvers.value = JSON.stringify(result.approvers || []);
@@ -946,6 +1128,7 @@ const load = async () => {
     loaded.value = true;
     await store.dispatch(actions.DEC_LOADING);
   }
+  await scrollToForm();
 };
 
 const saveCaseTopic = async () => {
@@ -997,150 +1180,147 @@ const closeCase = async () => {
     canCloseCase.value = false;
     canEditCaseTopic.value = false;
     caseInFavorite.value = false;
-    const closedId = caseBlock.value.id;
-    availableCases.value = availableCases.value.filter(item => item.id !== closedId);
-    if (selectedCaseId.value === closedId) {
-      selectedCaseId.value = null;
-    }
     root.$emit('msg', 'ok', 'Дело закрыто');
   } else {
     root.$emit('msg', 'error', result?.message || 'Не удалось закрыть дело');
   }
 };
 
-const assignDocumentCase = async (documentId: number, caseId: number | null) => {
-  const result = await api('document-manager/documents/case', { id: documentId, caseId });
+const clearCaseCard = () => {
+  caseBlock.value = null;
+  caseTopic.value = '';
+  savedCaseTopic.value = '';
+  caseComment.value = '';
+  savedCaseComment.value = '';
+  caseClosedAt.value = '';
+  caseClosedBy.value = '';
+  canEditCase.value = false;
+  canEditCaseTopic.value = false;
+  canCloseCase.value = false;
+  caseInFavorite.value = false;
+  canEditCaseAccess.value = false;
+  caseAccess.value = '[]';
+};
+
+const applyCaseCard = (caseData) => {
+  if (!caseData) {
+    clearCaseCard();
+    return;
+  }
+  caseBlock.value = {
+    id: caseData.id,
+    createdAt: caseData.createdAt || '',
+    creator: caseData.creator || '',
+  };
+  caseTopic.value = caseData.topic || '';
+  savedCaseTopic.value = caseTopic.value;
+  caseAccess.value = JSON.stringify(caseData.access || []);
+  canEditCaseAccess.value = Boolean(caseData.canEditAccess);
+  caseComment.value = caseData.comment || '';
+  savedCaseComment.value = caseComment.value;
+  caseClosedAt.value = caseData.closedAt || '';
+  caseClosedBy.value = caseData.closedBy || '';
+  canEditCase.value = Boolean(caseData.canEdit);
+  canEditCaseTopic.value = Boolean(caseData.canEditTopic);
+  canCloseCase.value = Boolean(caseData.canClose);
+  caseInFavorite.value = Boolean(caseData.isFavorite);
+};
+
+const assignDocumentCases = async (documentId: number, caseIds: number[]) => {
+  const result = await api('document-manager/documents/case', { id: documentId, caseIds });
   if (!result?.ok) {
     root.$emit('msg', 'error', result?.message || 'Не удалось изменить дело');
     return null;
   }
-  root.$emit('msg', 'ok', caseId ? 'Документ добавлен в дело' : 'Документ убран из дела');
+  root.$emit('msg', 'ok', caseIds.length ? 'Документ добавлен в дело' : 'Документ убран из дела');
   return result;
 };
 
-const assignDocumentBlock = async (documentId: number, blockId: number | null) => {
-  const result = await api('document-manager/documents/block', { id: documentId, blockId });
+const assignDocumentBlocks = async (documentId: number, blockIds: number[]) => {
+  const result = await api('document-manager/documents/block', { id: documentId, blockIds });
   if (!result?.ok) {
     root.$emit('msg', 'error', result?.message || 'Не удалось изменить блок');
     return null;
   }
-  root.$emit('msg', 'ok', blockId ? 'Документ добавлен в блок' : 'Документ убран из блока');
+  root.$emit('msg', 'ok', blockIds.length ? 'Документ добавлен в блок' : 'Документ убран из блока');
   return result;
 };
 
-const onMainBlock = async (blockId: number | null) => {
-  const next = blockId || null;
-  if (!props.documentId || !canChangeBlock.value || next === selectedBlockId.value) {
+const onMainBlocks = async (value: unknown) => {
+  const next = idList(value);
+  if (!props.documentId || !canChangeBlock.value || sameIds(next, selectedBlockIds.value)) {
     return;
   }
-  const previous = selectedBlockId.value;
-  selectedBlockId.value = next;
-  const result = await assignDocumentBlock(props.documentId, next);
+  const previous = selectedBlockIds.value;
+  selectedBlockIds.value = next;
+  const result = await assignDocumentBlocks(props.documentId, next);
   if (!result) {
-    selectedBlockId.value = previous;
+    selectedBlockIds.value = previous;
+    return;
   }
+  selectedBlockIds.value = idList(result.blockIds);
 };
 
-const onMainCase = async (caseId: number | null) => {
-  const next = caseId || null;
-  if (!props.documentId || next === selectedCaseId.value) {
-    return;
+const keepSelectedCases = (previous: number[], next: number[]) => {
+  const removed = previous.some(id => !next.includes(id));
+  const added = next.filter(id => !previous.includes(id));
+  if (removed && !added.length) {
+    root.$emit('msg', 'error', 'Нельзя убрать документ из дела');
+    return null;
   }
-  const previous = selectedCaseId.value;
-  selectedCaseId.value = next;
-  const result = await assignDocumentCase(props.documentId, next);
-  if (!result) {
-    selectedCaseId.value = previous;
-    return;
+  if (!removed) {
+    return next;
   }
-  if (!result.case) {
-    caseBlock.value = null;
-    caseTopic.value = '';
-    savedCaseTopic.value = '';
-    caseComment.value = '';
-    savedCaseComment.value = '';
-    caseClosedAt.value = '';
-    caseClosedBy.value = '';
-    canEditCase.value = false;
-    canEditCaseTopic.value = false;
-    canCloseCase.value = false;
-    caseInFavorite.value = false;
-    canEditCaseAccess.value = false;
-    caseDocuments.value = [];
-    return;
-  }
-  caseBlock.value = {
-    id: result.case.id,
-    createdAt: result.case.createdAt || '',
-    creator: result.case.creator || '',
-  };
-  caseTopic.value = result.case.topic || '';
-  savedCaseTopic.value = caseTopic.value;
-  caseComment.value = result.case.comment || '';
-  savedCaseComment.value = caseComment.value;
-  caseClosedAt.value = result.case.closedAt || '';
-  caseClosedBy.value = result.case.closedBy || '';
-  canEditCase.value = Boolean(result.case.canEdit);
-  canEditCaseTopic.value = Boolean(result.case.canEditTopic);
-  canCloseCase.value = Boolean(result.case.canClose);
-  caseInFavorite.value = Boolean(result.case.isFavorite);
-  caseAccess.value = JSON.stringify(result.case.access || []);
-  canEditCaseAccess.value = Boolean(result.case.canEditAccess);
+  return [...previous, ...added];
 };
 
-const onRowCase = async (id: number, caseId: number | null) => {
+const onMainCases = async (value: unknown) => {
+  const next = idList(value);
+  if (!props.documentId || sameIds(next, selectedCaseIds.value)) {
+    return;
+  }
+  const previous = selectedCaseIds.value;
+  const kept = keepSelectedCases(previous, next);
+  if (!kept) {
+    selectedCaseIds.value = [...previous];
+    return;
+  }
+  selectedCaseIds.value = kept;
+  const result = await assignDocumentCases(props.documentId, kept);
+  if (!result) {
+    selectedCaseIds.value = [...previous];
+    return;
+  }
+  selectedCaseIds.value = idList(result.caseIds);
+  if (selectedCaseIds.value.length === 1 && result.case) {
+    applyCaseCard(result.case);
+    return;
+  }
+  clearCaseCard();
+};
+
+const onRowCases = async (id: number, value: unknown) => {
   const current = documentById(id);
   if (!current) {
     return;
   }
-  const next = caseId || null;
-  if (next === current.caseId) {
+  const next = idList(value);
+  if (sameIds(next, current.caseIds)) {
     return;
   }
-  const previous = current.caseId;
-  patchDocument(id, { caseId: next });
-  const result = await assignDocumentCase(id, next);
+  const previous = current.caseIds;
+  const kept = keepSelectedCases(previous, next);
+  if (!kept) {
+    patchDocument(id, { caseIds: [...previous] });
+    return;
+  }
+  patchDocument(id, { caseIds: kept });
+  const result = await assignDocumentCases(id, kept);
   if (!result) {
-    patchDocument(id, { caseId: previous });
+    patchDocument(id, { caseIds: [...previous] });
     return;
   }
-  if (Number(id) !== Number(props.documentId)) {
-    return;
-  }
-  selectedCaseId.value = result.case && !result.case.closedAt ? result.case.id : null;
-  if (!result.case) {
-    caseBlock.value = null;
-    caseTopic.value = '';
-    savedCaseTopic.value = '';
-    caseComment.value = '';
-    savedCaseComment.value = '';
-    caseClosedAt.value = '';
-    caseClosedBy.value = '';
-    canEditCase.value = false;
-    canEditCaseTopic.value = false;
-    canCloseCase.value = false;
-    caseInFavorite.value = false;
-    canEditCaseAccess.value = false;
-    caseDocuments.value = [];
-    return;
-  }
-  caseBlock.value = {
-    id: result.case.id,
-    createdAt: result.case.createdAt || '',
-    creator: result.case.creator || '',
-  };
-  caseTopic.value = result.case.topic || '';
-  savedCaseTopic.value = caseTopic.value;
-  caseComment.value = result.case.comment || '';
-  savedCaseComment.value = caseComment.value;
-  caseClosedAt.value = result.case.closedAt || '';
-  caseClosedBy.value = result.case.closedBy || '';
-  canEditCase.value = Boolean(result.case.canEdit);
-  canEditCaseTopic.value = Boolean(result.case.canEditTopic);
-  canCloseCase.value = Boolean(result.case.canClose);
-  caseInFavorite.value = Boolean(result.case.isFavorite);
-  caseAccess.value = JSON.stringify(result.case.access || []);
-  canEditCaseAccess.value = Boolean(result.case.canEditAccess);
+  patchDocument(id, { caseIds: idList(result.caseIds) });
 };
 
 const onFavoritesChanged = (payload?: { id?: number; caseId?: number; favorite?: boolean; case?: boolean }) => {

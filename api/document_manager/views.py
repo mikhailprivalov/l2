@@ -4,6 +4,7 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, HttpResponse, JsonResponse
 
+from directory.models import Researches
 from document_management.models import (  # noqa: I001
     list_record_favorites,
     toggle_record_favorite,
@@ -23,6 +24,8 @@ from document_management.models import (  # noqa: I001
     GroupDocuments,
     PlaceSection,
     DouTest,
+    DouTestAttempt,
+    DouIndicator,
     Plans,
     TypeCases,
     TypeDocuments,
@@ -121,11 +124,21 @@ def types_update(request):
         data.get("layoutTemplateIds"),
         data.get("creatorIds"),
         data.get("placeSectionId"),
+        data.get("monitoringId"),
+        data.get("testId"),
+        data.get("isPlan"),
     )
     if result.get("ok"):
         _audit(request, DocumentManagerLog.TYPE, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def monitorings_list(request):
+    rows = [{"id": row.pk, "label": row.title} for row in Researches.objects.filter(is_monitoring=True, hide=False).order_by("title", "pk")]
+    return JsonResponse({"rows": rows})
 
 
 @login_required
@@ -507,9 +520,9 @@ def documents_block(request):
     document = Documents.objects.select_related("block").filter(pk=data.get("id")).first()
     if not document or not Documents.can_see_document(document, doctor):
         return status_response(False, "Документ не найден")
-    result = DocumentBlock.assign_document(document, doctor, data.get("blockId"))
+    result = DocumentBlock.assign_document(document, doctor, data.get("blockIds", data.get("blockId")))
     if result.get("ok"):
-        _audit(request, DocumentManagerLog.BLOCK_ASSIGN, {"blockId": result.get("blockId")}, document_id=document.pk, block_id=result.get("blockId"))
+        _audit(request, DocumentManagerLog.BLOCK_ASSIGN, {"blockIds": result.get("blockIds")}, document_id=document.pk, block_id=result.get("blockId"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -564,9 +577,9 @@ def documents_case(request):
     document = Documents.objects.select_related("document_case").filter(pk=data.get("id")).first()
     if not document or not Documents.can_see_document(document, doctor):
         return status_response(False, "Документ не найден")
-    result = DocumentCase.assign_document(document, doctor, data.get("caseId"))
+    result = DocumentCase.assign_document(document, doctor, data.get("caseIds", data.get("caseId")))
     if result.get("ok"):
-        _audit(request, DocumentManagerLog.CASE_ASSIGN, {"caseId": result.get("caseId")}, document_id=document.pk, case_id=result.get("caseId"))
+        _audit(request, DocumentManagerLog.CASE_ASSIGN, {"caseIds": result.get("caseIds")}, document_id=document.pk, case_id=result.get("caseId"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 
@@ -578,10 +591,36 @@ def plans_list(request):
 
 
 @login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def plans_choices(request):
+    doctor = getattr(request.user, "doctorprofile", None)
+    return JsonResponse({"ok": True, **Plans.choice_lists(doctor)})
+
+
+@login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def plans_preview(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    ids = Plans.parse_ids(data.get("ids"))
+    if ids is None:
+        return status_response(False, "Некорректный список планов")
+    document = None
+    document_id = data.get("documentId")
+    if document_id not in (None, "", -1, "-1"):
+        document = Documents.objects.filter(pk=document_id).first()
+        if document and not Documents.can_see_document(document, doctor):
+            document = None
+    return JsonResponse({"ok": True, "result": Plans.preview_for(ids, doctor, document)})
+
+
+@login_required
 @group_required("Конструктор: ДОУ")
 def plans_details(request):
     data = _request_data(request)
     result = Plans.get_details(data.get("id"))
+    if result.get("userCreated"):
+        return status_response(False, "План не найден")
     if result.get("ok"):
         return JsonResponse(result)
     return status_response(False, result.get("message"))
@@ -591,7 +630,7 @@ def plans_details(request):
 @group_required("Конструктор: ДОУ")
 def plans_update(request):
     data = _request_data(request)
-    result = Plans.save_plan(data.get("id", -1), data.get("title", ""), data.get("groups"), data.get("indicators"))
+    result = Plans.save_plan(data.get("id", -1), data.get("title", ""), data.get("groups"), data.get("indicators"), data.get("tests"))
     if result.get("ok"):
         _audit(request, DocumentManagerLog.PLAN, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
@@ -599,16 +638,52 @@ def plans_update(request):
 
 
 @login_required
-@group_required("Конструктор: ДОУ")
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def tests_list(request):
     return JsonResponse({"result": DouTest.get_list()})
 
 
 @login_required
-@group_required("Конструктор: ДОУ")
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
 def tests_details(request):
     data = _request_data(request)
     result = DouTest.get_details(data.get("id"))
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def tests_attempt(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    if data.get("documentId") not in (None, "", -1, "-1"):
+        result = DouTestAttempt.get_for_document(data.get("documentId"), doctor)
+    else:
+        result = DouTestAttempt.get_for(data.get("id"), doctor)
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def tests_attempt_save(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    result = DouTestAttempt.save_for(data.get("id"), doctor, data.get("answerIds"), bool(data.get("confirm")), data.get("documentId"))
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def tests_attempt_reset(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    result = DouTestAttempt.reset_for(data.get("id"), doctor)
     if result.get("ok"):
         return JsonResponse(result)
     return status_response(False, result.get("message"))
@@ -759,6 +834,72 @@ def documents_save(request):
 @group_required("ДОУ: просмотр документов")
 def documents_confirm(request):
     result = _save_from_request(request, with_confirm=True)
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def indicators_list(request):
+    return JsonResponse({"result": DouIndicator.get_list()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def indicators_details(request):
+    data = _request_data(request)
+    result = DouIndicator.get_details(data.get("id"))
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def indicators_update(request):
+    data = _request_data(request)
+    result = DouIndicator.save_catalog(data.get("id", -1), data.get("title", ""), data.get("indicators"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def indicators_delete(request):
+    data = _request_data(request)
+    result = DouIndicator.delete_group(data.get("id"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def indicators_create(request):
+    data = _request_data(request)
+    result = Plans.create_user_indicator(request.user.doctorprofile, data.get("title", ""))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_plan(request):
+    data = _request_data(request)
+    document = Documents.objects.select_related("plan", "type_document").filter(pk=data.get("id")).first()
+    if not document:
+        return status_response(False, "Документ не найден")
+    result = document.save_user_plan(
+        request.user.doctorprofile,
+        data.get("title", ""),
+        data.get("groups"),
+        data.get("indicators"),
+        data.get("tests"),
+        with_confirm=bool(data.get("withConfirm")),
+    )
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))

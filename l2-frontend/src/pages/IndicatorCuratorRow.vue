@@ -5,7 +5,7 @@
     </td>
     <td>
       <a
-        :href="`/ui/results/descriptive#{&quot;pk&quot;:${localRow.mainDirection}}`"
+        :href="numberHref"
         target="_blank"
         class="a-under"
       >
@@ -120,6 +120,14 @@ export default {
       localRow: { ...this.row },
       saving: false,
     };
+  },
+  computed: {
+    numberHref() {
+      if (this.localRow.documentId) {
+        return `/ui/document-manager-2?document=${this.localRow.documentId}`;
+      }
+      return `/ui/results/descriptive#{"pk":${this.localRow.mainDirection}}`;
+    },
   },
   watch: {
     row: {
