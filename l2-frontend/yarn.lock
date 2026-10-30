@@ -5508,10 +5508,10 @@ inherits@2.0.3:
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.3.tgz#633c2c83e3da42a502f52466022480f4208261de"
   integrity sha512-x00IRNXNy63jwGkJmzPigoySHbaqpNuzKbBOmzK+g2OdZpQ9w+sxCN+VSB3ja7IAge2OP2qpfxTjeNcyjmW1uw==
 
-inputmask@^5.0.7:
-  version "5.0.8"
-  resolved "https://registry.yarnpkg.com/inputmask/-/inputmask-5.0.8.tgz#cd0f70b058c3291a0d4f27de25dbfc179c998bb4"
-  integrity sha512-1WcbyudPTXP1B28ozWWyFa6QRIUG4KiLoyR6LFHlpT4OfTzRqFfWgHFadNvRuMN1S9XNVz9CdNvCGjJi+uAMqQ==
+inputmask@^5.0.10:
+  version "5.0.10"
+  resolved "https://registry.yarnpkg.com/inputmask/-/inputmask-5.0.10.tgz#db313e024a4c3536f92fae1733c799c7ec032b53"
+  integrity sha512-WksYiOYQb9cYLxbpyZsoxWZXQAlRmA/gTj4t0TOgeaEpSxuQKMK+64mKrZtsFA0OYtwlhd+tR7oMp7jRKQAakg==
 
 internal-slot@^1.0.5:
   version "1.0.6"
