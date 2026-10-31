@@ -132,6 +132,9 @@
               {{ system }} обновилась! Перезагрузить страницу
             </button>
           </li>
+          <li v-else-if="isRequestCreation">
+            <HospitalWorkScheduleButton :title="user_hospital_title || $orgTitle()" />
+          </li>
           <li v-else>
             <span class="navbar-brand org-title"> Организация: {{ user_hospital_title || $orgTitle() }} </span>
           </li>
@@ -225,6 +228,7 @@ import ShiftButton from '@/ui-cards/CashRegisters/ShiftButton.vue';
     LaboratorySelector: () => import('@/ui-cards/LaboratorySelector.vue'),
     ChatsButton: () => import('@/ui-cards/ChatsButton.vue'),
     EcpSchedule: () => import('@/ui-cards/EcpSchedule.vue'),
+    HospitalWorkScheduleButton: () => import('@/pages/RequestCreation/HospitalWorkScheduleButton.vue'),
   },
 })
 export default class Navbar extends Vue {
@@ -270,6 +274,10 @@ export default class Navbar extends Vue {
 
   get metaTitle() {
     return String(this.$route?.meta?.title || '');
+  }
+
+  get isRequestCreation() {
+    return this.$route?.name === 'request_creation';
   }
 
   get chatsEnabled() {

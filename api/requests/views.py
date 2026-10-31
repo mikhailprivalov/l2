@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -1530,6 +1531,92 @@ def cancel_accept_request(request):
         direction.save(update_fields=["accept_who_doctor", "accept_time"])
 
     return status_response(True, "Принятие заявки отменено")
+
+
+WORK_SCHEDULE_DAYS = (
+    ("mon", "Понедельник"),
+    ("tue", "Вторник"),
+    ("wed", "Среда"),
+    ("thu", "Четверг"),
+    ("fri", "Пятница"),
+    ("sat", "Суббота"),
+    ("sun", "Воскресенье"),
+)
+WORK_SCHEDULE_TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+def _empty_work_schedule():
+    return {day: {"from": "", "to": ""} for day, _title in WORK_SCHEDULE_DAYS}
+
+
+def _clock(value):
+    text = str(value or "").strip()
+    if len(text) >= 5 and text[2] == ":":
+        return text[:5]
+    return text
+
+
+def _normalize_work_schedule(raw):
+    schedule = _empty_work_schedule()
+    if not isinstance(raw, dict):
+        return schedule
+    for day, _title in WORK_SCHEDULE_DAYS:
+        row = raw.get(day)
+        if not isinstance(row, dict):
+            continue
+        schedule[day] = {"from": _clock(row.get("from")), "to": _clock(row.get("to"))}
+    return schedule
+
+
+def _validate_work_schedule(raw):
+    if not isinstance(raw, dict):
+        return None, "Некорректный режим работы"
+    schedule = _empty_work_schedule()
+    for day, title in WORK_SCHEDULE_DAYS:
+        row = raw.get(day) or {}
+        if not isinstance(row, dict):
+            return None, "Некорректный режим работы"
+        start = _clock(row.get("from"))
+        end = _clock(row.get("to"))
+        if not start and not end:
+            continue
+        if not WORK_SCHEDULE_TIME_RE.match(start) or not WORK_SCHEDULE_TIME_RE.match(end):
+            return None, f"{title}: укажите время с и по"
+        if end <= start:
+            return None, f"{title}: время «по» должно быть позже «с»"
+        schedule[day] = {"from": start, "to": end}
+    return schedule, None
+
+
+def _current_hospital(request):
+    profile = getattr(request.user, "doctorprofile", None)
+    if not profile:
+        return None
+    return profile.get_hospital()
+
+
+@login_required
+@group_required("Создание и исполнение заявок")
+def get_work_schedule(request):
+    hospital = _current_hospital(request)
+    if not hospital:
+        return status_response(False, "Организация не найдена")
+    return status_response(True, data={"schedule": _normalize_work_schedule(hospital.work_schedule)})
+
+
+@login_required
+@group_required("Создание и исполнение заявок")
+def save_work_schedule(request):
+    request_data = json.loads(request.body)
+    schedule, error = _validate_work_schedule(request_data.get("schedule"))
+    if error:
+        return status_response(False, error)
+    hospital = _current_hospital(request)
+    if not hospital:
+        return status_response(False, "Организация не найдена")
+    hospital.work_schedule = schedule
+    hospital.save(update_fields=["work_schedule"])
+    return status_response(True, "Режим работы сохранён", {"schedule": schedule})
 
 
 @login_required
