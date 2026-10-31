@@ -19,4 +19,6 @@ urlpatterns = [
     path('cancel-accept', views.cancel_accept_request),
     path('params', views.get_request_params),
     path('permissions-doctor', views.get_permissions_doctor),
+    path('work-schedule', views.get_work_schedule),
+    path('work-schedule/save', views.save_work_schedule),
 ]
