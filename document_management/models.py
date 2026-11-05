@@ -944,6 +944,12 @@ class TypeDocuments(models.Model):
         TypeDocumentCreator.objects.bulk_create([TypeDocumentCreator(type_document=obj, doctor_id=doctor_id) for doctor_id in ids])
         return ids
 
+    def monitoring_direction_params_id(self):
+        monitoring = self.monitoring if self.monitoring_id else None
+        if monitoring and monitoring.is_monitoring and monitoring.direction_params_id:
+            return monitoring.direction_params_id
+        return -1
+
     def as_picker_research(self):
         from podrazdeleniya.models import Podrazdeleniya
 
@@ -975,12 +981,13 @@ class TypeDocuments(models.Model):
             "localizations": [],
             "service_locations": [],
             "direction_params": -1,
+            "monitoringDirectionParams": self.monitoring_direction_params_id(),
             "is_dou_document_type": True,
         }
 
     @staticmethod
     def picker_researches(doctor=None, available_only=False):
-        qs = TypeDocuments.objects.select_related("place_section").order_by("title", "pk")
+        qs = TypeDocuments.objects.select_related("place_section", "monitoring").order_by("title", "pk")
         if available_only:
             if not doctor:
                 return []
@@ -1199,6 +1206,7 @@ class TypeCases(models.Model):
             "localizations": [],
             "service_locations": [],
             "direction_params": -1,
+            "monitoringDirectionParams": self.default_type_document.monitoring_direction_params_id() if self.default_type_document_id else -1,
             "is_dou_document_type": True,
             "is_dou_case_type": True,
             "defaultTypeDocumentId": self.default_type_document_id if self.default_type_document_id else -1,
@@ -1206,7 +1214,7 @@ class TypeCases(models.Model):
 
     @staticmethod
     def picker_researches():
-        qs = TypeCases.objects.filter(place_section__isnull=False).order_by("title", "pk")
+        qs = TypeCases.objects.filter(place_section__isnull=False).select_related("default_type_document", "default_type_document__monitoring").order_by("title", "pk")
         result = []
         for row in qs:
             item = row.as_picker_research()
@@ -4449,8 +4457,8 @@ class Documents(models.Model):
         return result
 
     @staticmethod
-    def create_document(type_id, who_create, case_id=None, topic=None):
-        from directions.models import Issledovaniya
+    def create_document(type_id, who_create, case_id=None, topic=None, period_params=None):
+        from directions.models import Issledovaniya, Napravleniya
 
         case = None
         if case_id not in (None, "", -1, "-1"):
@@ -4480,6 +4488,14 @@ class Documents(models.Model):
             return {"ok": False, "message": "Вид документа не найден"}
         if not type_doc.can_create(who_create):
             return {"ok": False, "message": "Нет прав на создание этого вида документа"}
+        monitoring = type_doc.monitoring if type_doc.monitoring_id else None
+        monitoring_period = None
+        hospital = None
+        if monitoring and monitoring.is_monitoring:
+            hospital = who_create.hospital or Hospitals.get_default_hospital()
+            message, monitoring_period = Napravleniya.collect_monitoring_period(monitoring, period_params, hospital)
+            if message:
+                return {"ok": False, "message": message}
         schema = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
         if schema is None:
             schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
@@ -4501,11 +4517,13 @@ class Documents(models.Model):
             )
             if document_case:
                 DocumentCaseLink.objects.create(document=obj, document_case=document_case)
-            Issledovaniya.objects.create(
+            iss = Issledovaniya.objects.create(
                 document=obj,
                 research=type_doc.form_research(),
                 creator=who_create,
             )
+            if monitoring_period:
+                Napravleniya.save_monitoring_period(iss, monitoring, None, hospital, monitoring_period)
         type_title = type_doc.title or "Документ"
         title = f"{type_title} №{obj.pk}"
         Documents.log_action(

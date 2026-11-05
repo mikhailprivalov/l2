@@ -54,6 +54,8 @@ def monitoring_sql_by_all_hospital(
             LEFT JOIN directions_issledovaniya
             ON directions_issledovaniya.id = directions_monitoringresult.issledovaniye_id
             WHERE
+            directions_monitoringresult.napravleniye_id IS NOT NULL
+            AND
             CASE 
             WHEN %(type_period)s = 'PERIOD_HOUR' THEN 
                 directions_monitoringresult.type_period = 'PERIOD_HOUR' AND

@@ -805,7 +805,7 @@ def documents_recent(request):
 @group_required("ДОУ: просмотр документов")
 def documents_create(request):
     data = _request_data(request)
-    result = Documents.create_document(data.get("typeId"), request.user.doctorprofile, data.get("caseId"), data.get("topic"))
+    result = Documents.create_document(data.get("typeId"), request.user.doctorprofile, data.get("caseId"), data.get("topic"), data.get("periodParams"))
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))

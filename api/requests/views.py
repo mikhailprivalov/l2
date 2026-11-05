@@ -454,7 +454,7 @@ def create_request(request):
             research_pk = None
         synonyms = TitleResearchHospital.priced_synonyms_for_hospital(hospital.pk, request.user.doctorprofile.pk)
         if not research_pk or research_pk not in synonyms:
-            return status_response(False, "Услуга недоступна: нет в действующем прайсе больницы или не задан синоним")
+            return status_response(False, "Услуга недоступна: нет в действующем прайсе больницы")
 
     if not request_fields.get('date') or not request_fields.get('time'):
         return status_response(False, "Не указана дата или время исследования")

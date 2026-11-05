@@ -14,17 +14,46 @@
           style="margin-top:5px;"
         >
           <div class="col-xs-6">
-            <div class="input-group date-time treeselect-noborder-left">
-              <span class="input-group-addon">Дата</span>
-              <span
-                class="input-group-addon"
-                style="padding: 0;border: none;"
+            <div class="date-filter">
+              <label class="date-filter__addon">
+                <input
+                  v-model="params.filterByDate"
+                  type="checkbox"
+                >
+              </label>
+              <span class="date-filter__addon">Дата</span>
+              <input
+                ref="dateFrom"
+                class="date-filter__input"
+                type="text"
+                maxlength="10"
+                :value="params.datePeriod[0]"
+                @change="onPeriodDateChange(0, $event)"
               >
-                <DateRange
-                  v-model="params.datePeriod"
-                />
-
-              </span>
+              <button
+                type="button"
+                class="date-filter__clear"
+                title="Очистить дату начала"
+                @click="clearPeriodDate(0)"
+              >
+                ×
+              </button>
+              <input
+                ref="dateTo"
+                class="date-filter__input"
+                type="text"
+                maxlength="10"
+                :value="params.datePeriod[1]"
+                @change="onPeriodDateChange(1, $event)"
+              >
+              <button
+                type="button"
+                class="date-filter__clear"
+                title="Очистить дату окончания"
+                @click="clearPeriodDate(1)"
+              >
+                ×
+              </button>
             </div>
           </div>
         </div>
@@ -45,9 +74,71 @@
       v-else
       class="data"
     >
+      <div class="sort-bar">
+        <span class="sort-bar__label">Сортировка</span>
+        <select
+          class="form-control input-sm"
+          :value="sortPrimaryKey"
+          @change="setSortKey(0, $event)"
+        >
+          <option value="">
+            нет
+          </option>
+          <option
+            v-for="col in sortColumns"
+            :key="col.key"
+            :value="col.key"
+          >
+            {{ col.label }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          :disabled="!sortPrimaryKey"
+          @click.prevent="toggleLevelDir(0)"
+        >
+          {{ sortPrimaryDir === 'desc' ? '▼' : '▲' }}
+        </button>
+        <span class="sort-bar__label">затем</span>
+        <select
+          class="form-control input-sm"
+          :value="sortSecondaryKey"
+          :disabled="!sortPrimaryKey"
+          @change="setSortKey(1, $event)"
+        >
+          <option value="">
+            нет
+          </option>
+          <option
+            v-for="col in secondarySortColumns"
+            :key="col.key"
+            :value="col.key"
+          >
+            {{ col.label }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          :disabled="!sortSecondaryKey"
+          @click.prevent="toggleLevelDir(1)"
+        >
+          {{ sortSecondaryDir === 'desc' ? '▼' : '▲' }}
+        </button>
+        <button
+          v-if="sortLevels.length"
+          type="button"
+          class="btn btn-link btn-sm sort-bar__reset"
+          @click="clearSort"
+        >
+          сбросить
+        </button>
+      </div>
       <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
           <col style="width: 300px">
+          <col style="width: 110px">
           <col style="width: 130px">
           <col>
           <col style="width: 120px">
@@ -60,16 +151,107 @@
         </colgroup>
         <thead>
           <tr>
-            <th>Медицинская организация</th>
-            <th>Номер</th>
-            <th>Показатель</th>
-            <th>Значение МО</th>
-            <th>Балл, МО</th>
-            <th>Значение, куратор</th>
-            <th>Балл, куратор</th>
+            <th
+              class="sortable"
+              @click="toggleSort('hospital')"
+            >
+              Медицинская организация
+              <span
+                v-if="sortMark('hospital')"
+                class="sort-mark"
+              >{{ sortMark('hospital') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('confirmDate')"
+            >
+              Дата
+              <span
+                v-if="sortMark('confirmDate')"
+                class="sort-mark"
+              >{{ sortMark('confirmDate') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('direction')"
+            >
+              Номер
+              <span
+                v-if="sortMark('direction')"
+                class="sort-mark"
+              >{{ sortMark('direction') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('indicatorTitle')"
+            >
+              Показатель
+              <span
+                v-if="sortMark('indicatorTitle')"
+                class="sort-mark"
+              >{{ sortMark('indicatorTitle') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('hospitalValue')"
+            >
+              Значение МО
+              <span
+                v-if="sortMark('hospitalValue')"
+                class="sort-mark"
+              >{{ sortMark('hospitalValue') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('score')"
+            >
+              Балл, МО
+              <span
+                v-if="sortMark('score')"
+                class="sort-mark"
+              >{{ sortMark('score') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('curatorValue')"
+            >
+              Значение, куратор
+              <span
+                v-if="sortMark('curatorValue')"
+                class="sort-mark"
+              >{{ sortMark('curatorValue') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('curatorScore')"
+            >
+              Балл, куратор
+              <span
+                v-if="sortMark('curatorScore')"
+                class="sort-mark"
+              >{{ sortMark('curatorScore') }}</span>
+            </th>
             <th />
-            <th>Статус</th>
-            <th>Комментарий</th>
+            <th
+              class="sortable"
+              @click="toggleSort('curatorStatus')"
+            >
+              Статус
+              <span
+                v-if="sortMark('curatorStatus')"
+                class="sort-mark"
+              >{{ sortMark('curatorStatus') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('curatorComment')"
+            >
+              Комментарий
+              <span
+                v-if="sortMark('curatorComment')"
+                class="sort-mark"
+              >{{ sortMark('curatorComment') }}</span>
+            </th>
           </tr>
           <tr>
             <th>
@@ -78,6 +260,17 @@
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="hospitalFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
+            </th>
+            <th>
+              <treeselect
+                v-model="columnFilters.confirmDate"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="confirmDateFilterOptions"
                 placeholder="Все"
                 :clearable="true"
                 class="treeselect-wide"
@@ -173,7 +366,7 @@
           />
           <tr v-if="filteredRows.length === 0">
             <td
-              colspan="10"
+              colspan="11"
               class="text-center"
             >
               не найдено
@@ -199,11 +392,11 @@ import IndicatorCuratorRow from '@/pages/IndicatorCuratorRow.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import ExtraNotificationFastEditor from '@/ui-cards/ExtraNotificationFastEditor.vue';
 import { ExtraNotificationData } from '@/types/extraNotification';
-import DateRange from '@/ui-cards/DateRange.vue';
 
 interface Params {
   datePeriod: any;
   hospital: number;
+  filterByDate: boolean;
 }
 
 const EMPTY_ROWS: ExtraNotificationData[] = [];
@@ -235,9 +428,86 @@ const normalizeFilterValue = (value: any) => {
 
 const rowCuratorStatusLabel = (row: any) => (row.curatorApproved ? 'утверждено' : '–');
 
+interface SortLevel {
+  key: string;
+  dir: 'asc' | 'desc';
+}
+
+const SORT_COLUMNS = [
+  { key: 'hospital', label: 'Медицинская организация' },
+  { key: 'confirmDate', label: 'Дата' },
+  { key: 'direction', label: 'Номер' },
+  { key: 'indicatorTitle', label: 'Показатель' },
+  { key: 'hospitalValue', label: 'Значение МО' },
+  { key: 'score', label: 'Балл, МО' },
+  { key: 'curatorValue', label: 'Значение, куратор' },
+  { key: 'curatorScore', label: 'Балл, куратор' },
+  { key: 'curatorStatus', label: 'Статус' },
+  { key: 'curatorComment', label: 'Комментарий' },
+];
+
+const NUMERIC_SORT_KEYS = new Set(['direction', 'score', 'curatorScore']);
+const MIXED_SORT_KEYS = new Set(['hospitalValue', 'curatorValue']);
+
+const isBlankSortValue = (value: unknown) => {
+  const normalized = String(value ?? '').trim();
+  return normalized === '' || normalized === '–' || normalized === '-' || normalized === '—';
+};
+
+const isNumericSortValue = (value: unknown) => {
+  if (isBlankSortValue(value)) {
+    return false;
+  }
+  return Number.isFinite(Number(String(value).trim().replace(',', '.')));
+};
+
+const rowSortValue = (row: any, key: string) => (
+  key === 'curatorStatus' ? rowCuratorStatusLabel(row) : row[key]
+);
+
+const parseRuDate = (value: unknown) => {
+  const match = String(value ?? '').trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (!match) {
+    return null;
+  }
+  return Date.UTC(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+};
+
+const compareSortValues = (left: unknown, right: unknown, key: string) => {
+  if (key === 'confirmDate') {
+    const leftTime = parseRuDate(left);
+    const rightTime = parseRuDate(right);
+    if (leftTime !== null && rightTime !== null) {
+      return leftTime - rightTime;
+    }
+  }
+  const numeric = NUMERIC_SORT_KEYS.has(key)
+    || (MIXED_SORT_KEYS.has(key) && isNumericSortValue(left) && isNumericSortValue(right));
+  if (numeric) {
+    const leftNumber = Number(String(left).trim().replace(',', '.'));
+    const rightNumber = Number(String(right).trim().replace(',', '.'));
+    return leftNumber - rightNumber;
+  }
+  return String(left).localeCompare(String(right), 'ru', { numeric: true, sensitivity: 'base' });
+};
+
+const compareRowsByKey = (left: any, right: any, key: string, dir: 'asc' | 'desc') => {
+  const leftValue = rowSortValue(left, key);
+  const rightValue = rowSortValue(right, key);
+  const leftBlank = key !== 'curatorStatus' && isBlankSortValue(leftValue);
+  const rightBlank = key !== 'curatorStatus' && isBlankSortValue(rightValue);
+  if (leftBlank || rightBlank) {
+    if (leftBlank && rightBlank) {
+      return 0;
+    }
+    return leftBlank ? 1 : -1;
+  }
+  const direction = dir === 'asc' ? 1 : -1;
+  return compareSortValues(leftValue, rightValue, key) * direction;
+};
+
 @Component({
   components: {
-    DateRange,
     ExtraNotificationFastEditor,
     DateFieldNav2,
     DocCallRow,
@@ -252,10 +522,15 @@ const rowCuratorStatusLabel = (row: any) => (row.curatorApproved ? 'утверж
       params: {
         // date: moment().format('YYYY-MM-DD'),
         hospital: -1,
-        datePeriod: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+        filterByDate: true,
+        datePeriod: [
+          moment().subtract(40, 'days').format('DD.MM.YYYY'),
+          moment().format('DD.MM.YYYY'),
+        ],
       },
       columnFilters: {
         hospital: null,
+        confirmDate: null,
         direction: null,
         indicatorTitle: null,
         hospitalValue: null,
@@ -264,6 +539,8 @@ const rowCuratorStatusLabel = (row: any) => (row.curatorApproved ? 'утверж
         curatorScore: null,
         curatorStatus: null,
       },
+      sortLevels: [],
+      sortColumns: SORT_COLUMNS,
     };
   },
   beforeMount() {
@@ -293,6 +570,7 @@ const rowCuratorStatusLabel = (row: any) => (row.curatorApproved ? 'утверж
     },
   },
   async mounted() {
+    this.initPeriodDates();
     await this.$store.dispatch(actions.INC_LOADING);
     const { hospitals } = await this.$api('hospitals', { filterByUserHospital: true });
     this.hospitals = hospitals;
@@ -305,6 +583,8 @@ export default class ExtraNotification extends Vue {
   rows: ExtraNotificationData[];
 
   columnFilters: Record<string, string | null>;
+
+  sortLevels: SortLevel[];
 
   loaded: boolean;
 
@@ -320,7 +600,11 @@ export default class ExtraNotification extends Vue {
   }
 
   get watchParams() {
-    return _.pick(this.params, ['hospital', 'datePeriod']);
+    return {
+      hospital: this.params.hospital,
+      filterByDate: this.params.filterByDate,
+      datePeriod: this.params.filterByDate ? this.params.datePeriod : null,
+    };
   }
 
   get visibleHospitals() {
@@ -331,6 +615,7 @@ export default class ExtraNotification extends Vue {
     const toValue = (value: any) => String(value ?? '');
     const filters = {
       hospital: normalizeFilterValue(this.columnFilters.hospital),
+      confirmDate: normalizeFilterValue(this.columnFilters.confirmDate),
       direction: normalizeFilterValue(this.columnFilters.direction),
       indicatorTitle: normalizeFilterValue(this.columnFilters.indicatorTitle),
       hospitalValue: normalizeFilterValue(this.columnFilters.hospitalValue),
@@ -340,23 +625,217 @@ export default class ExtraNotification extends Vue {
       curatorStatus: normalizeFilterValue(this.columnFilters.curatorStatus),
     };
     const hasFilters = Object.values(filters).some(v => v !== null);
-    if (!hasFilters) {
-      return this.rows;
+    const filtered = hasFilters
+      ? this.rows.filter((row: any) => (
+        (filters.hospital === null || toValue(row.hospital) === filters.hospital)
+        && (filters.confirmDate === null || toValue(row.confirmDate) === filters.confirmDate)
+        && (filters.direction === null || toValue(row.direction) === filters.direction)
+        && (filters.indicatorTitle === null || toValue(row.indicatorTitle) === filters.indicatorTitle)
+        && (filters.hospitalValue === null || toValue(row.hospitalValue) === filters.hospitalValue)
+        && (filters.score === null || toValue(row.score) === filters.score)
+        && (filters.curatorValue === null || toValue(row.curatorValue) === filters.curatorValue)
+        && (filters.curatorScore === null || toValue(row.curatorScore) === filters.curatorScore)
+        && (filters.curatorStatus === null || rowCuratorStatusLabel(row) === filters.curatorStatus)
+      ))
+      : this.rows;
+    if (!this.sortLevels.length) {
+      return filtered;
     }
-    return this.rows.filter((row: any) => (
-      (filters.hospital === null || toValue(row.hospital) === filters.hospital)
-      && (filters.direction === null || toValue(row.direction) === filters.direction)
-      && (filters.indicatorTitle === null || toValue(row.indicatorTitle) === filters.indicatorTitle)
-      && (filters.hospitalValue === null || toValue(row.hospitalValue) === filters.hospitalValue)
-      && (filters.score === null || toValue(row.score) === filters.score)
-      && (filters.curatorValue === null || toValue(row.curatorValue) === filters.curatorValue)
-      && (filters.curatorScore === null || toValue(row.curatorScore) === filters.curatorScore)
-      && (filters.curatorStatus === null || rowCuratorStatusLabel(row) === filters.curatorStatus)
-    ));
+    const levels = this.sortLevels;
+    return filtered.slice().sort((left: any, right: any) => {
+      for (let index = 0; index < levels.length; index += 1) {
+        const level = levels[index];
+        const result = compareRowsByKey(left, right, level.key, level.dir);
+        if (result !== 0) {
+          return result;
+        }
+      }
+      return 0;
+    });
+  }
+
+  get secondarySortColumns() {
+    return SORT_COLUMNS.filter(column => column.key !== this.sortPrimaryKey);
+  }
+
+  get sortPrimaryKey() {
+    return this.sortLevels[0] ? this.sortLevels[0].key : '';
+  }
+
+  get sortPrimaryDir(): 'asc' | 'desc' {
+    return this.sortLevels[0] ? this.sortLevels[0].dir : 'asc';
+  }
+
+  get sortSecondaryKey() {
+    return this.sortLevels[1] ? this.sortLevels[1].key : '';
+  }
+
+  get sortSecondaryDir(): 'asc' | 'desc' {
+    return this.sortLevels[1] ? this.sortLevels[1].dir : 'asc';
+  }
+
+  initPeriodDates() {
+    const options = {
+      format: 'dd.mm.yyyy',
+      todayBtn: 'linked',
+      language: 'ru',
+      autoclose: true,
+      todayHighlight: true,
+      orientation: 'top',
+    };
+    [this.$refs.dateFrom, this.$refs.dateTo].forEach((input) => {
+      const element = input as HTMLInputElement;
+      const $input = (window as any).$(element);
+      $input.datepicker(options).on('changeDate', () => {
+        if (!$input.is(':focus')) {
+          element.dispatchEvent(new Event('change'));
+        }
+      });
+      const parsed = moment(element.value, 'DD.MM.YYYY', true);
+      if (parsed.isValid()) {
+        $input.datepicker('update', parsed.toDate());
+      }
+    });
+    this.$root.$on('validate-datepickers', this.validatePeriodDates);
+  }
+
+  validatePeriodDates() {
+    [this.$refs.dateFrom, this.$refs.dateTo].forEach((input, index) => {
+      const element = input as HTMLInputElement;
+      const value = String(element?.value || '').trim();
+      if (!element || value === '' || moment(value, 'DD.MM.YYYY', true).isValid()) {
+        return;
+      }
+      const today = moment().format('DD.MM.YYYY');
+      element.value = today;
+      (window as any).$(element).datepicker('update', moment().toDate());
+      this.$root.$emit('msg', 'error', 'Неверная дата');
+      const next = this.params.datePeriod.slice();
+      next[index] = today;
+      this.params.datePeriod = next;
+    });
+  }
+
+  onPeriodDateChange(index: number, event: Event) {
+    const input = event.target as HTMLInputElement;
+    let value = String(input.value || '').trim();
+    if (value !== '' && !moment(value, 'DD.MM.YYYY', true).isValid()) {
+      this.$root.$emit('msg', 'error', 'Неверная дата');
+      value = moment().format('DD.MM.YYYY');
+      input.value = value;
+      (window as any).$(input).datepicker('update', moment().toDate());
+    }
+    const next = this.params.datePeriod.slice();
+    if (next[index] === value) {
+      return;
+    }
+    next[index] = value;
+    this.params.datePeriod = next;
+  }
+
+  clearPeriodDate(index: number) {
+    const input = (index === 0 ? this.$refs.dateFrom : this.$refs.dateTo) as HTMLInputElement;
+    if (!input) {
+      return;
+    }
+    input.value = '';
+    (window as any).$(input).datepicker('update', '');
+    const next = this.params.datePeriod.slice();
+    if (next[index] === '') {
+      return;
+    }
+    next[index] = '';
+    this.params.datePeriod = next;
+  }
+
+  beforeDestroy() {
+    this.$root.$off('validate-datepickers', this.validatePeriodDates);
+    [this.$refs.dateFrom, this.$refs.dateTo].forEach((input) => {
+      if (input) {
+        (window as any).$(input).datepicker('destroy');
+      }
+    });
+  }
+
+  toggleSort(key: string) {
+    const primary = this.sortLevels[0];
+    const secondary = this.sortLevels[1];
+    if (primary && primary.key === key) {
+      this.sortLevels = [
+        { key, dir: primary.dir === 'asc' ? 'desc' : 'asc' },
+        ...(secondary ? [secondary] : []),
+      ];
+      return;
+    }
+    if (primary && secondary && secondary.key === key) {
+      this.sortLevels = [
+        primary,
+        { key, dir: secondary.dir === 'asc' ? 'desc' : 'asc' },
+      ];
+      return;
+    }
+    if (!primary) {
+      this.sortLevels = [{ key, dir: 'asc' }];
+      return;
+    }
+    this.sortLevels = [primary, { key, dir: 'asc' }];
+  }
+
+  setSortKey(index: number, event: Event) {
+    const key = (event.target as HTMLSelectElement).value;
+    const primary = this.sortLevels[0];
+    const secondary = this.sortLevels[1];
+    if (index === 0) {
+      if (!key) {
+        this.sortLevels = [];
+        return;
+      }
+      const dir = primary && primary.key === key ? primary.dir : 'asc';
+      const keptSecondary = secondary && secondary.key !== key ? secondary : null;
+      this.sortLevels = keptSecondary ? [{ key, dir }, keptSecondary] : [{ key, dir }];
+      return;
+    }
+    if (!primary) {
+      return;
+    }
+    if (!key || key === primary.key) {
+      this.sortLevels = [primary];
+      return;
+    }
+    const dir = secondary && secondary.key === key ? secondary.dir : 'asc';
+    this.sortLevels = [primary, { key, dir }];
+  }
+
+  toggleLevelDir(index: number) {
+    const level = this.sortLevels[index];
+    if (!level) {
+      return;
+    }
+    const next = this.sortLevels.slice();
+    next[index] = { key: level.key, dir: level.dir === 'asc' ? 'desc' : 'asc' };
+    this.sortLevels = next;
+  }
+
+  clearSort() {
+    this.sortLevels = [];
+  }
+
+  sortMark(key: string) {
+    const index = this.sortLevels.findIndex(level => level.key === key);
+    if (index === -1) {
+      return '';
+    }
+    const arrow = this.sortLevels[index].dir === 'asc' ? '▲' : '▼';
+    return `${index + 1}${arrow}`;
   }
 
   get hospitalFilterOptions() {
     return makeOptions(this.rows.map((r: any) => r.hospital));
+  }
+
+  get confirmDateFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.confirmDate))
+      .sort((left, right) => (parseRuDate(left.id) || 0) - (parseRuDate(right.id) || 0));
   }
 
   get directionFilterOptions() {
@@ -390,6 +869,7 @@ export default class ExtraNotification extends Vue {
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await this.$api('indicators/search-indicator', this.params);
+    this.sortLevels = [];
     this.rows = data.rows;
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
@@ -424,6 +904,31 @@ export default class ExtraNotification extends Vue {
   padding: 0 20px;
 }
 
+.sort-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+
+  > * {
+    margin-right: 6px;
+    margin-bottom: 4px;
+  }
+
+  select.form-control {
+    width: auto;
+    display: inline-block;
+  }
+
+  &__label {
+    color: #555;
+  }
+
+  &__reset {
+    padding-left: 4px;
+  }
+}
+
 .founded {
   text-align: center;
   padding: 5px;
@@ -438,9 +943,56 @@ export default class ExtraNotification extends Vue {
   }
 }
 
-.date-time {
-  input {
-    line-height: 1;
+.date-filter {
+  display: inline-flex;
+  align-items: stretch;
+  height: 34px;
+  background: #aab2bd;
+
+  &__addon {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0 8px;
+    background: #aab2bd;
+    color: #fff;
+    font-weight: normal;
+    white-space: nowrap;
+
+    input {
+      margin: 0;
+    }
+  }
+
+  &__clear {
+    flex: 0 0 28px;
+    width: 28px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #aab2bd;
+    color: #fff;
+    font-size: 16px;
+    line-height: 32px;
+
+    &:hover {
+      background: #434a54;
+      color: #fff;
+    }
+  }
+
+  &__input {
+    width: 92px;
+    flex: 0 0 92px;
+    height: 34px;
+    margin: 0;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: none;
+    text-align: center;
   }
 }
 
@@ -456,6 +1008,15 @@ export default class ExtraNotification extends Vue {
     position: sticky;
     top: -1px;
     background: #fff;
+  }
+
+  thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .sort-mark {
+    margin-left: 4px;
   }
 
   thead .vue-treeselect {

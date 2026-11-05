@@ -473,6 +473,12 @@
       </button>
     </div>
   </Modal>
+  <MonitoringPeriodModal
+    :open="monitoringModalOpen"
+    :direction-params-id="monitoringDirectionParamsId"
+    @close="closeMonitoringModal"
+    @confirm="confirmMonitoringPeriod"
+  />
   <Modal
     v-if="blockModalOpen"
     show-footer="true"
@@ -531,6 +537,7 @@ import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import DateRange from '@/ui-cards/DateRange.vue';
 import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
+import MonitoringPeriodModal from '@/pages/DocumentManagement/MonitoringPeriodModal.vue';
 import DocumentBlockPanel from '@/pages/DocumentManagement/DocumentBlockPanel.vue';
 import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
@@ -551,7 +558,18 @@ const overrideResearches = ref<Record<string, unknown>[]>([]);
 const ready = ref(false);
 const caseTopicModalOpen = ref(false);
 const caseTopicDraft = ref('');
-const pendingCreate = ref<{ typeId: number | null; caseId: number | null } | null>(null);
+const monitoringModalOpen = ref(false);
+const monitoringDirectionParamsId = ref(0);
+
+type CreatePayload = {
+  typeId: number | null;
+  caseId: number | null;
+  topic?: string;
+  monitoringDirectionParams?: number;
+  periodParams?: Record<string, unknown> | null;
+};
+
+const pendingCreate = ref<CreatePayload | null>(null);
 const query = ref('');
 const byNumber = ref(true);
 const byCase = ref(false);
@@ -1099,13 +1117,14 @@ const toggleFavorite = async () => {
   }
 };
 
-const runCreate = async (payload: { typeId: number | null; caseId: number | null; topic?: string }) => {
+const runCreate = async (payload: CreatePayload) => {
   await store.dispatch(actions.INC_LOADING);
   try {
     const result = await api('document-manager/documents/create', {
       typeId: payload.typeId,
       caseId: payload.caseId,
       topic: payload.topic || '',
+      periodParams: payload.periodParams || null,
     });
     if (result?.ok) {
       openedFromCaseFavorite.value = false;
@@ -1127,11 +1146,42 @@ const runCreate = async (payload: { typeId: number | null; caseId: number | null
   }
 };
 
+const monitoringParamsOf = (pk: number) => {
+  const row = overrideResearches.value.find(item => Number(item.pk) === Number(pk));
+  const value = Number(row?.monitoringDirectionParams);
+  return value > 0 ? value : 0;
+};
+
+const openMonitoringModal = (payload: CreatePayload) => {
+  pendingCreate.value = payload;
+  monitoringDirectionParamsId.value = payload.monitoringDirectionParams || 0;
+  monitoringModalOpen.value = true;
+};
+
+const closeMonitoringModal = () => {
+  monitoringModalOpen.value = false;
+  pendingCreate.value = null;
+};
+
+const confirmMonitoringPeriod = async (periodParams: Record<string, unknown>) => {
+  if (!pendingCreate.value) {
+    return;
+  }
+  const payload = { ...pendingCreate.value, periodParams };
+  monitoringModalOpen.value = false;
+  pendingCreate.value = null;
+  await runCreate(payload);
+};
+
 const createDocument = async () => {
   if (!canCreate.value) {
     return;
   }
-  const resolved = resolveCreate(selectedResearches.value[0]);
+  const pk = selectedResearches.value[0];
+  const resolved: CreatePayload = {
+    ...resolveCreate(pk),
+    monitoringDirectionParams: monitoringParamsOf(pk),
+  };
   if (resolved.caseId) {
     pendingCreate.value = resolved;
     caseTopicDraft.value = '';
@@ -1140,6 +1190,10 @@ const createDocument = async () => {
   }
   if (!resolved.typeId) {
     root.$emit('msg', 'error', 'Не указан вид документа');
+    return;
+  }
+  if ((resolved.monitoringDirectionParams || 0) > 0) {
+    openMonitoringModal(resolved);
     return;
   }
   await runCreate(resolved);
@@ -1161,7 +1215,13 @@ const confirmCaseTopic = async () => {
     return;
   }
   const payload = { ...pendingCreate.value, topic };
-  closeCaseTopicModal();
+  caseTopicModalOpen.value = false;
+  caseTopicDraft.value = '';
+  if (payload.typeId && (payload.monitoringDirectionParams || 0) > 0) {
+    openMonitoringModal(payload);
+    return;
+  }
+  pendingCreate.value = null;
   await runCreate(payload);
 };
 

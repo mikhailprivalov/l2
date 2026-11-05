@@ -3,7 +3,7 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
-def indicator_sql(fields_ids, date_start, date_end):
+def indicator_sql(fields_ids, date_start, date_end, filter_by_date, has_start, has_end):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -11,7 +11,7 @@ def indicator_sql(fields_ids, date_start, date_end):
                     directions_issledovaniya.napravleniye_id as direction_id,
                     directions_issledovaniya.document_id as document_id,
                     directions_issledovaniya.id as issledovaniye_id,
-                    to_char(directions_issledovaniya.time_save AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as d_confirm,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as d_confirm,
                     COALESCE(direction_hospital.title, creator_hospital.title) as hospital_title,
                     dp.field_id,
                     dp.value as result_value,
@@ -31,7 +31,15 @@ def indicator_sql(fields_ids, date_start, date_end):
                 LEFT JOIN directions_paraclinicresult dp on directions_issledovaniya.id = dp.issledovaniye_id
                 LEFT JOIN directory_paraclinicinputfield dpf on dpf.id = dp.field_id
                 LEFT JOIN directory_paraclinicinputgroups dpgr on dpgr.id = dpf.group_id
-                WHERE dp.field_id in %(fields_ids)s and directions_issledovaniya.time_confirmation is not Null
+                WHERE dp.field_id in %(fields_ids)s
+                  AND directions_issledovaniya.time_confirmation IS NOT NULL
+                  AND (
+                    %(filter_by_date)s IS FALSE
+                    OR (
+                      (%(has_start)s IS FALSE OR directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s >= %(d_start)s)
+                      AND (%(has_end)s IS FALSE OR directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s <= %(d_end)s)
+                    )
+                  )
                 ORDER BY directions_issledovaniya.document_id, directions_issledovaniya.napravleniye_id, dpgr.title, dpf.title
             """,
             params={
@@ -39,6 +47,9 @@ def indicator_sql(fields_ids, date_start, date_end):
                 'fields_ids': fields_ids,
                 'd_start': date_start,
                 'd_end': date_end,
+                'filter_by_date': filter_by_date,
+                'has_start': has_start,
+                'has_end': has_end,
             },
         )
         rows = namedtuplefetchall(cursor)

@@ -31,11 +31,23 @@ def _normalize_formula_for_curator(formula: str, curator_field_pk: int):
 def search_indicator(request):
     request_data = json.loads(request.body)
     hospital = int(request_data.get("hospital", -1))
-    date_period = request_data["datePeriod"]
-    time_start = f'{normalize_dots_date(date_period[0])} {request_data.get("time_start", "00:00")}:00'
-    time_end = f'{normalize_dots_date(date_period[1])} {request_data.get("time_end", "23:59")}:59:999999'
-    datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
-    datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
+    filter_by_date = bool(request_data.get("filterByDate", True))
+    date_period = request_data.get("datePeriod") or ["", ""]
+    datetime_start = None
+    datetime_end = None
+    if filter_by_date:
+        if date_period[0]:
+            time_start = f'{normalize_dots_date(date_period[0])} {request_data.get("time_start", "00:00")}:00'
+            datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
+        if len(date_period) > 1 and date_period[1]:
+            time_end = f'{normalize_dots_date(date_period[1])} {request_data.get("time_end", "23:59")}:59:999999'
+            datetime_end = datetime.datetime.strptime(time_end, '%Y-%m-%d %H:%M:%S:%f')
+    has_start = datetime_start is not None
+    has_end = datetime_end is not None
+    if not has_start:
+        datetime_start = datetime.datetime(1970, 1, 1)
+    if not has_end:
+        datetime_end = datetime.datetime(2100, 1, 1)
 
     user_hospital = request.user.doctorprofile.get_hospital_id() or -1
 
@@ -64,7 +76,7 @@ def search_indicator(request):
         if field.field_type == 3 and field.group_id not in group_to_score_field:
             group_to_score_field[field.group_id] = field
 
-    result_extra = indicator_sql(tuple(fields_obj), datetime_start, datetime_end)
+    result_extra = indicator_sql(tuple(fields_obj), datetime_start, datetime_end, filter_by_date, has_start, has_end)
 
     def _indicator_row(row):
         group_id = field_to_group.get(row.field_id)
@@ -73,6 +85,7 @@ def search_indicator(request):
             "documentId": row.document_id,
             "issledovaniye": row.issledovaniye_id,
             "hospital": row.hospital_title,
+            "confirmDate": row.d_confirm or "",
             "indicatorTitle": row.group_title,
             "groupId": group_id,
         }

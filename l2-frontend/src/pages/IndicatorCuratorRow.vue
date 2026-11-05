@@ -4,6 +4,9 @@
       {{ localRow.hospital }}
     </td>
     <td>
+      {{ localRow.confirmDate || '–' }}
+    </td>
+    <td>
       <a
         :href="numberHref"
         target="_blank"
@@ -27,11 +30,13 @@
           localRow.curatorVariants.length > 0"
         :value="localRow.curatorValue"
         :variants="localRow.curatorVariants"
+        :disabled="localRow.curatorApproved"
         @modified="onCuratorValueChange($event)"
       />
       <NumberField
         v-else-if="localRow.curatorFieldPk && localRow.curatorFieldType === 18"
         :value="localRow.curatorValue"
+        :disabled="localRow.curatorApproved"
         @modified="onCuratorValueChange($event)"
       />
       <span v-else>–</span>
@@ -58,7 +63,9 @@
       </button>
     </td>
     <td class="status-td">
-      {{ localRow.curatorApproved ? 'утверждено' : '–' }}
+      <span :class="{ 'status-td__approved': localRow.curatorApproved }">
+        {{ localRow.curatorApproved ? 'утверждено' : '–' }}
+      </span>
     </td>
     <td class="comment-td">
       <input
@@ -67,6 +74,7 @@
         type="text"
         class="form-control input-sm"
         placeholder="Комментарий"
+        :disabled="localRow.curatorApproved"
       >
       <span v-else>–</span>
     </td>
@@ -158,6 +166,9 @@ export default {
       this.localRow.curatorScore = raw === '' || raw === null || raw === undefined ? '' : String(raw);
     },
     onCuratorValueChange(value) {
+      if (this.localRow.curatorApproved) {
+        return;
+      }
       this.localRow.curatorValue = value;
       this.recalculateCuratorScore();
     },
@@ -200,6 +211,10 @@ export default {
 .status-td {
   text-align: center;
   vertical-align: middle;
+
+  &__approved {
+    color: #049372;
+  }
 }
 
 .comment-td {
