@@ -1369,6 +1369,105 @@ class Napravleniya(models.Model):
             return (f"{short_week_days[start_day.weekday()]}-{short_week_days[end_date.weekday()]}", start_day, end_date)
 
     @staticmethod
+    def collect_monitoring_period(research, research_data_params, current_hospital):
+        if not research or not research.is_monitoring:
+            return None, None
+        if not research.direction_params_id:
+            return "У мониторинга не заданы параметры", None
+        groups = research_data_params.get("groups") if isinstance(research_data_params, dict) else None
+        fields = groups[0].get("fields") if groups and isinstance(groups[0], dict) else None
+        if not fields:
+            return "У мониторинга не заданы параметры", None
+        period_param_hour = period_param_day = period_param_month = None
+        period_param_quarter = period_param_halfyear = period_param_year = None
+        period_param_week_date_start = period_param_week_day_start = None
+        for i in fields:
+            title = i.get("title")
+            value = i.get("value")
+            if title == "Час":
+                period_param_hour = value
+            if title == "День":
+                date = (value or "").split("-")
+                if len(date) < 3:
+                    return "У мониторинга не заданы параметры", None
+                period_param_day = date[2]
+                period_param_month = date[1]
+                period_param_year = date[0]
+            if title == "С":
+                period_param_week_day_start = value
+            if title == "Дата отсчета":
+                period_param_week_date_start = value
+            if title == "Месяц":
+                period_param_month = value
+            if title == "Квартал":
+                period_param_quarter = value
+            if title == "Полугодие":
+                period_param_halfyear = value
+            if title == "Год":
+                period_param_year = value
+        type_period = research.type_period
+        week_date_start_end = None
+        if type_period == "PERIOD_WEEK":
+            try:
+                week_date_start_end = Napravleniya.monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
+            except (TypeError, ValueError):
+                week_date_start_end = False
+            if not week_date_start_end:
+                return "Ошибка в параметрах недели", None
+        if Napravleniya.monitoring_is_created_later(
+            research,
+            type_period,
+            period_param_hour,
+            period_param_day,
+            week_date_start_end,
+            period_param_month,
+            period_param_quarter,
+            period_param_halfyear,
+            period_param_year,
+            current_hospital,
+        ):
+            return "Данный мониторинг уже создан", None
+        return None, {
+            "type_period": type_period,
+            "period_param_hour": period_param_hour,
+            "period_param_day": period_param_day,
+            "period_param_month": period_param_month,
+            "period_param_quarter": period_param_quarter,
+            "period_param_halfyear": period_param_halfyear,
+            "period_param_year": period_param_year,
+            "week_date_start_end": week_date_start_end,
+        }
+
+    @staticmethod
+    def save_monitoring_period(issledovaniye, research, napravleniye, hospital, period):
+        type_period = period["type_period"]
+        week_date_start_end = period.get("week_date_start_end")
+        period_param_year = period.get("period_param_year")
+        monitoring = MonitoringResult(napravleniye=napravleniye, research=research, issledovaniye=issledovaniye)
+        monitoring.type_period = research.type_period
+        monitoring.hospital = hospital
+        monitoring.period_param_hour = period.get("period_param_hour")
+        monitoring.period_param_day = period.get("period_param_day")
+        if type_period == "PERIOD_WEEK":
+            monitoring.period_param_week_description = week_date_start_end[0]
+            monitoring.period_param_week_date_start = week_date_start_end[1]
+            monitoring.period_param_week_date_end = week_date_start_end[2]
+            period_param_year = week_date_start_end[1].year
+            monitoring.period_date = week_date_start_end[1]
+        monitoring.period_param_month = period.get("period_param_month")
+        monitoring.period_param_quarter = period.get("period_param_quarter")
+        monitoring.period_param_halfyear = period.get("period_param_halfyear")
+        monitoring.period_param_year = period_param_year
+        monitoring.type_period = research.type_period
+        if type_period == "PERIOD_HOUR" or type_period == "PERIOD_DAY":
+            monitoring.period_date = datetime.date(int(period_param_year), int(period.get("period_param_month")), int(period.get("period_param_day")))
+        if type_period == "PERIOD_MONTH":
+            last_day_month = calendar.monthrange(int(period_param_year), int(period.get("period_param_month")))[1]
+            monitoring.period_date = datetime.date(int(period_param_year), int(period.get("period_param_month")), int(last_day_month))
+        monitoring.save()
+        return monitoring
+
+    @staticmethod
     def gen_napravleniya_by_issledovaniya(
         client_id,
         diagnos,
@@ -1637,51 +1736,11 @@ class Napravleniya(models.Model):
                         research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
                         if research_data_params:
                             dir_group = -1
-                    period_param_hour, period_param_day, period_param_month = None, None, None
-                    period_param_quarter, period_param_halfyear, period_param_year, type_period = None, None, None, None
-                    period_param_week_date_start, period_param_week_day_start, week_date_start_end = None, None, None
+                    monitoring_period = None
                     if research.is_monitoring:
-                        for i in research_data_params['groups'][0]['fields']:
-                            if i['title'] == "Час":
-                                period_param_hour = i['value']
-                            if i['title'] == "День":
-                                date = i['value'].split('-')
-                                period_param_day = date[2]
-                                period_param_month = date[1]
-                                period_param_year = date[0]
-                            if i['title'] == "С":
-                                period_param_week_day_start = i['value']
-                            if i['title'] == "Дата отсчета":
-                                period_param_week_date_start = i['value']
-                            if i['title'] == "Месяц":
-                                period_param_month = i['value']
-                            if i['title'] == "Квартал":
-                                period_param_quarter = i['value']
-                            if i['title'] == "Полугодие":
-                                period_param_halfyear = i['value']
-                            if i['title'] == "Год":
-                                period_param_year = i['value']
-                        type_period = research.type_period
-
-                        if type_period == "PERIOD_WEEK":
-                            week_date_start_end = Napravleniya.monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
-                            if not week_date_start_end:
-                                result["message"] = "Ошибка в параметрах недели"
-                                return result
-
-                        if Napravleniya.monitoring_is_created_later(
-                            research,
-                            type_period,
-                            period_param_hour,
-                            period_param_day,
-                            week_date_start_end,
-                            period_param_month,
-                            period_param_quarter,
-                            period_param_halfyear,
-                            period_param_year,
-                            current_hospital,
-                        ):
-                            result["message"] = "Данный мониторинг уже создан"
+                        message, monitoring_period = Napravleniya.collect_monitoring_period(research, research_data_params, current_hospital)
+                        if message:
+                            result["message"] = message
                             return result
 
                     if case_id > -2 and not issledovaniye_case_id:
@@ -1858,30 +1917,8 @@ class Napravleniya(models.Model):
                         issledovaniye.complex_research_account_id = used_research_for_all_complex_research.get(v)
                     issledovaniye.save()
 
-                    if research.is_monitoring:
-                        monitoring = MonitoringResult(napravleniye=directions_for_researches[dir_group], research=research, issledovaniye=issledovaniye)
-                        monitoring.type_period = research.type_period
-                        monitoring.hospital = current_hospital
-                        monitoring.period_param_hour = period_param_hour
-                        monitoring.period_param_day = period_param_day
-                        if type_period == 'PERIOD_WEEK':
-                            monitoring.period_param_week_description = week_date_start_end[0]
-                            monitoring.period_param_week_date_start = week_date_start_end[1]
-                            monitoring.period_param_week_date_end = week_date_start_end[2]
-                            period_param_year = week_date_start_end[1].year
-                            monitoring.period_date = week_date_start_end[1]
-                        monitoring.period_param_month = period_param_month
-                        monitoring.period_param_quarter = period_param_quarter
-                        monitoring.period_param_halfyear = period_param_halfyear
-                        monitoring.period_param_year = period_param_year
-                        monitoring.type_period = research.type_period
-
-                        if type_period == "PERIOD_HOUR" or type_period == "PERIOD_DAY":
-                            monitoring.period_date = datetime.date(int(period_param_year), int(period_param_month), int(period_param_day))
-                        if type_period == "PERIOD_MONTH":
-                            last_day_month = calendar.monthrange(int(period_param_year), int(period_param_month))[1]
-                            monitoring.period_date = datetime.date(int(period_param_year), int(period_param_month), int(last_day_month))
-                        monitoring.save()
+                    if research.is_monitoring and monitoring_period:
+                        Napravleniya.save_monitoring_period(issledovaniye, research, directions_for_researches[dir_group], current_hospital, monitoring_period)
 
                     if issledovaniye.pk not in childrens:
                         childrens[issledovaniye.pk] = {}
