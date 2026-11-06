@@ -50,7 +50,8 @@ def form_01(request_data):
     опционально колонка "Синоним" (TitleResearchHospital, только прайс Заказчик с больницей),
     опционально колонки "Категория", "Короткое название", "Обобщение", "Код НМУ".
     Новые названия категории и обобщения сначала создаются в справочнике, затем записываются на услугу.
-    Пустые ячейки этих колонок и пустая цена ЦИТО не затирают значения в базе.
+    Пустые ячейки категории, короткого названия, обобщения, кода НМУ и пустая цена ЦИТО не затирают значения в базе.
+    Пустая ячейка «Синоним» удаляет синоним этой больницы и услуги. Если колонки «Синоним» нет, синонимы не меняются.
     """
     price_id = request_data.get("entity_id")
     file = request_data.get("file")
@@ -137,7 +138,7 @@ def form_01(request_data):
                     service_changed = True
             if service_changed:
                 service.save()
-            if price.is_customer_hospital_price():
+            if price.is_customer_hospital_price() and synonym_idx is not None:
                 TitleResearchHospital.set_title_for_research(price.hospital, service, _cell_text(cells, synonym_idx))
 
     if not starts:

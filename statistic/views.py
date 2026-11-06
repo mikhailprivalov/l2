@@ -22,7 +22,7 @@ from contracts.models import PriceName, PriceCoast, Company
 from contracts.sql_func import get_research_coast_by_prce
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from directory.models import Researches
-from hospitals.models import Hospitals
+from hospitals.models import Hospitals, TitleResearchHospital
 from laboratory import settings
 from laboratory import utils
 from laboratory.utils import check_comborole_for_user
@@ -97,6 +97,27 @@ from laboratory.settings import (
     EXTRA_SLAVE_RESEARCH_PK,
 )
 from .statistic_func import save_file_disk, initial_work_book
+
+
+def _registry_synonyms_by_hospital(rows):
+    research_ids_by_hospital = {}
+    for row in rows:
+        hospital_id = getattr(row, "hospital_id", None)
+        research_id = getattr(row, "research_id", None)
+        if not hospital_id or not research_id:
+            continue
+        research_ids_by_hospital.setdefault(int(hospital_id), set()).add(int(research_id))
+    synonyms = {}
+    for hospital_id, research_ids in research_ids_by_hospital.items():
+        synonyms[hospital_id] = TitleResearchHospital.get_titles_for_hospital(hospital_id, list(research_ids))
+    return synonyms
+
+
+def _registry_service_synonym(synonyms, hospital_id, research_id):
+    if not hospital_id or not research_id:
+        return ""
+    title = (synonyms.get(int(hospital_id)) or {}).get(int(research_id)) or ""
+    return str(title).strip()
 
 
 def _is_hospital_discharge_research(research):
@@ -2040,6 +2061,7 @@ def statistic_xls(request):
         title_hospital = "Больницы"
         last_hospital = "Больницы"
         by_department_title_sum = {}
+        synonyms = _registry_synonyms_by_hospital(data)
         for i in data:
             tarif_coast = None
             coast_price_research = None
@@ -2064,6 +2086,7 @@ def statistic_xls(request):
             tmp_result["patient_patronymic"] = i.patient_patronymic
             tmp_result["service"] = i.research_title
             tmp_result["service_code"] = i.research_code
+            tmp_result["service_synonym"] = _registry_service_synonym(synonyms, i.hospital_id, i.research_id)
             if not by_department_title_sum.get(i.department_title):
                 by_department_title_sum[i.department_title] = {"count": 1, "coast": tarif_coast}
             else:
@@ -2123,6 +2146,7 @@ def statistic_xls(request):
 
             row_report = []
             default_hospital = Hospitals.get_default_hospital()
+            synonyms = _registry_synonyms_by_hospital(data)
             for i in data:
                 tarif_coast = None
                 if i.hospital_id:
@@ -2146,6 +2170,7 @@ def statistic_xls(request):
                 tmp_result["patient_patronymic"] = i.patient_patronymic
                 tmp_result["service"] = i.research_title
                 tmp_result["service_code"] = i.research_code
+                tmp_result["service_synonym"] = _registry_service_synonym(synonyms, i.hospital_id, i.research_id)
                 if not by_department_title_sum.get(i.department_title):
                     by_department_title_sum[i.department_title] = {"count": 1, "coast": tarif_coast}
                 else:
@@ -2466,6 +2491,7 @@ def statistic_xls(request):
 
             row_report = []
             default_hospital = Hospitals.get_default_hospital()
+            synonyms = _registry_synonyms_by_hospital(data)
             for i in data:
                 tarif_coast = None
                 if i.hospital_id:
@@ -2492,6 +2518,7 @@ def statistic_xls(request):
                 tmp_result["patient_patronymic"] = i.patient_patronymic
                 tmp_result["service"] = i.research_title
                 tmp_result["service_code"] = i.research_code
+                tmp_result["service_synonym"] = _registry_service_synonym(synonyms, i.hospital_id, i.research_id)
                 if not by_department_title_sum.get(i.department_title):
                     by_department_title_sum[i.department_title] = {"count": 1, "coast": tarif_coast}
                 else:

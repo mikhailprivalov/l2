@@ -50,7 +50,9 @@ class Hospitals(models.Model):
     json_result_auto_export = models.BooleanField(default=False, blank=True, db_index=True, help_text='Автоматически формировать JSON-результат для заявок этой организации')
     is_external_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
     not_has_price = models.BooleanField(default=False, blank=True, help_text='Без прайса - не выводить в картотеке при выборе услуг', db_index=True)
-    only_services_with_hospital_synonym = models.BooleanField(default=False, blank=True, db_index=True, help_text='Создание заявки: показывать только услуги с синонимом')
+    only_services_with_hospital_synonym = models.BooleanField(
+        default=False, blank=True, db_index=True, help_text='Создание заявки: только услуги действующего прайса; без синонима — полное название'
+    )
     # добавить каталог для переноса заказа
     orders_pull_by_numbers = models.CharField(
         max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории получения заказов (ftp://user:password@host.example.com/path)'
@@ -333,41 +335,64 @@ class TitleResearchHospital(models.Model):
                 item["hospitalTitle"] = synonym
 
     @staticmethod
+    def priced_services_cache_key(hospital_id, doctor_id=None):
+        from django.core.cache import cache
+
+        from laboratory.settings import RESEARCHES_CACHE_PER_USER
+
+        version = cache.get(f"hospital_priced_services_ver:{hospital_id}") or 0
+        user_part = f":{int(doctor_id)}" if RESEARCHES_CACHE_PER_USER and doctor_id else ""
+        return f"hospital_priced_services:{hospital_id}:{version}{user_part}"
+
+    @staticmethod
+    def invalidate_priced_services_cache(hospital_id):
+        from django.core.cache import cache
+
+        if not hospital_id:
+            return
+        ver_key = f"hospital_priced_services_ver:{hospital_id}"
+        if cache.add(ver_key, 1, 60 * 60 * 24 * 30):
+            return
+        try:
+            cache.incr(ver_key)
+        except ValueError:
+            cache.set(ver_key, 1, 60 * 60 * 24 * 30)
+
+    @staticmethod
     def priced_synonyms_for_hospital(hospital_id, doctor_id=None):
         from django.core.cache import cache
         from django.utils import timezone
 
-        from laboratory.settings import RESEARCHES_CACHE_PER_USER
+        from contracts.models import PriceCoast
 
         if not hospital_id:
             return {}
-        user_part = f":{int(doctor_id)}" if RESEARCHES_CACHE_PER_USER and doctor_id else ""
-        key = f"hospital_priced_synonyms:{hospital_id}{user_part}"
+        key = TitleResearchHospital.priced_services_cache_key(hospital_id, doctor_id)
         cached = cache.get(key)
         if isinstance(cached, str):
             loaded = json.loads(cached)
-            return {int(pk): title for pk, title in loaded.items() if title}
+            return {int(pk): (title or "") for pk, title in loaded.items()}
         today = timezone.localdate()
-        rows = (
-            TitleResearchHospital.objects.filter(hospital__id=hospital_id)
-            .exclude(title="")
-            .filter(
-                research__pricecoast__price_name__hospital_id=hospital_id,
-                research__pricecoast__price_name__subcontract=True,
-                research__pricecoast__price_name__external_performer=False,
-                research__pricecoast__price_name__doctor__isnull=True,
-                research__pricecoast__price_name__active_status=True,
-                research__pricecoast__price_name__date_start__lte=today,
-                research__pricecoast__price_name__date_end__gte=today,
+        research_ids = (
+            PriceCoast.objects.filter(
+                price_name__hospital_id=hospital_id,
+                price_name__subcontract=True,
+                price_name__external_performer=False,
+                price_name__doctor__isnull=True,
+                price_name__active_status=True,
+                price_name__date_start__lte=today,
+                price_name__date_end__gte=today,
             )
-            .values_list("research__id", "title")
+            .values_list("research_id", flat=True)
             .distinct()
         )
-        result = {}
-        for research_id, title in rows:
-            title = (title or "").strip()
-            if research_id and title:
-                result[int(research_id)] = title
+        result = {int(research_id): "" for research_id in research_ids if research_id}
+        if result:
+            rows = TitleResearchHospital.objects.filter(hospital__id=hospital_id, research__id__in=result.keys()).exclude(title="").values_list("research__id", "title")
+            for research_id, title in rows:
+                title = (title or "").strip()
+                if research_id and title and int(research_id) in result:
+                    result[int(research_id)] = title
         cache.set(key, json.dumps({str(pk): title for pk, title in result.items()}), 3600)
         return result
 
@@ -385,26 +410,68 @@ class TitleResearchHospital(models.Model):
                     pk = int(item.get("pk"))
                 except (TypeError, ValueError):
                     continue
-                title = (synonyms or {}).get(pk)
-                if pk not in allowed or not title:
+                if pk not in allowed:
+                    continue
+                title = str((synonyms or {}).get(pk) or "").strip()
+                if not title:
+                    title = str(item.get("full_title") or item.get("title") or "").strip()
+                if not title:
                     continue
                 item["hospitalTitle"] = title
                 kept.append(item)
             researches_map[key] = kept
 
     @staticmethod
+    def _link_pair(hospital, research, title):
+        existing = TitleResearchHospital.objects.filter(hospital=hospital, research=research, title=title).first()
+        if existing:
+            return existing
+        obj = TitleResearchHospital.objects.create(title=title)
+        obj.hospital.add(hospital)
+        obj.research.add(research)
+        return obj
+
+    @staticmethod
+    def _detach_pair(obj, hospital, research):
+        other_hospitals = list(obj.hospital.exclude(pk=hospital.pk))
+        other_researches = list(obj.research.exclude(pk=research.pk))
+        old_title = obj.title
+        if not other_hospitals and not other_researches:
+            obj.delete()
+            return
+        if other_hospitals and not other_researches:
+            obj.hospital.remove(hospital)
+            return
+        if not other_hospitals and other_researches:
+            obj.research.remove(research)
+            return
+        if len(other_hospitals) <= len(other_researches):
+            obj.hospital.remove(hospital)
+            for other_research in other_researches:
+                TitleResearchHospital._link_pair(hospital, other_research, old_title)
+        else:
+            obj.research.remove(research)
+            for other_hospital in other_hospitals:
+                TitleResearchHospital._link_pair(other_hospital, research, old_title)
+
+    @staticmethod
     def set_title_for_research(hospital, research, title):
         if not hospital or not research:
             return
         synonym = str(title or "").strip()
-        if not synonym or synonym == "None":
-            return
-        obj = TitleResearchHospital.objects.filter(hospital=hospital, research=research).first()
-        if obj:
-            if obj.title != synonym:
-                obj.title = synonym
-                obj.save()
-            return
-        obj = TitleResearchHospital.objects.create(title=synonym)
-        obj.hospital.add(hospital)
-        obj.research.add(research)
+        if synonym == "None":
+            synonym = ""
+        rows = list(TitleResearchHospital.objects.filter(hospital=hospital, research=research).distinct())
+        kept = None
+        changed = False
+        for obj in rows:
+            if synonym and (obj.title or "").strip() == synonym and kept is None:
+                kept = obj
+                continue
+            TitleResearchHospital._detach_pair(obj, hospital, research)
+            changed = True
+        if synonym and kept is None:
+            TitleResearchHospital._link_pair(hospital, research, synonym)
+            changed = True
+        if changed:
+            TitleResearchHospital.invalidate_priced_services_cache(hospital.pk)
