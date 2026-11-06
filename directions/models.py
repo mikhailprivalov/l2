@@ -1287,6 +1287,56 @@ class Napravleniya(models.Model):
         return res_data
 
     @staticmethod
+    def monitoring_param_int(value):
+        if value is None or isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            return value
+        text = str(value).strip()
+        if text in ("", "- Не выбрано"):
+            return None
+        try:
+            return int(text)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def monitoring_param_text(value):
+        if value is None:
+            return None
+        text = str(value).strip()
+        if text in ("", "- Не выбрано"):
+            return None
+        return text
+
+    @staticmethod
+    def monitoring_period_ready(
+        type_period,
+        period_param_hour,
+        period_param_day,
+        week_date_start_end,
+        period_param_month,
+        period_param_quarter,
+        period_param_halfyear,
+        period_param_year,
+    ):
+        if type_period == "PERIOD_HOUR":
+            return None not in (period_param_hour, period_param_day, period_param_month, period_param_year)
+        if type_period == "PERIOD_DAY":
+            return None not in (period_param_day, period_param_month, period_param_year)
+        if type_period == "PERIOD_WEEK":
+            return bool(week_date_start_end)
+        if type_period == "PERIOD_MONTH":
+            return None not in (period_param_month, period_param_year)
+        if type_period == "PERIOD_QURTER":
+            return None not in (period_param_quarter, period_param_year)
+        if type_period == "PERIOD_HALFYEAR":
+            return None not in (period_param_halfyear, period_param_year)
+        if type_period == "PERIOD_YEAR":
+            return period_param_year is not None
+        return False
+
+    @staticmethod
     def monitoring_is_created_later(
         research,
         type_period,
@@ -1299,6 +1349,25 @@ class Napravleniya(models.Model):
         period_param_year,
         current_hospital,
     ):
+        period_param_hour = Napravleniya.monitoring_param_int(period_param_hour)
+        period_param_day = Napravleniya.monitoring_param_int(period_param_day)
+        period_param_month = Napravleniya.monitoring_param_int(period_param_month)
+        period_param_quarter = Napravleniya.monitoring_param_int(period_param_quarter)
+        period_param_halfyear = Napravleniya.monitoring_param_int(period_param_halfyear)
+        period_param_year = Napravleniya.monitoring_param_int(period_param_year)
+        if type_period == "PERIOD_WEEK" and period_param_year is None and week_date_start_end:
+            period_param_year = week_date_start_end[2].year
+        if not Napravleniya.monitoring_period_ready(
+            type_period,
+            period_param_hour,
+            period_param_day,
+            week_date_start_end,
+            period_param_month,
+            period_param_quarter,
+            period_param_halfyear,
+            period_param_year,
+        ):
+            return None
         monitoring_exists = None
         if type_period == 'PERIOD_HOUR':
             monitoring_exists = MonitoringResult.objects.filter(
@@ -1320,8 +1389,6 @@ class Napravleniya(models.Model):
                 period_param_year=period_param_year,
             ).first()
         elif type_period == 'PERIOD_WEEK':
-            if not period_param_year:
-                period_param_year = week_date_start_end[2].year
             monitoring_exists = MonitoringResult.objects.filter(
                 research=research,
                 hospital=current_hospital,
@@ -1375,45 +1442,86 @@ class Napravleniya(models.Model):
         if not research.direction_params_id:
             return "У мониторинга не заданы параметры", None
         groups = research_data_params.get("groups") if isinstance(research_data_params, dict) else None
-        fields = groups[0].get("fields") if groups and isinstance(groups[0], dict) else None
-        if not fields:
+        if not isinstance(groups, (list, tuple)) or not groups:
             return "У мониторинга не заданы параметры", None
         period_param_hour = period_param_day = period_param_month = None
         period_param_quarter = period_param_halfyear = period_param_year = None
         period_param_week_date_start = period_param_week_day_start = None
-        for i in fields:
-            title = i.get("title")
-            value = i.get("value")
-            if title == "Час":
-                period_param_hour = value
-            if title == "День":
-                date = (value or "").split("-")
-                if len(date) < 3:
-                    return "У мониторинга не заданы параметры", None
-                period_param_day = date[2]
-                period_param_month = date[1]
-                period_param_year = date[0]
-            if title == "С":
-                period_param_week_day_start = value
-            if title == "Дата отсчета":
-                period_param_week_date_start = value
-            if title == "Месяц":
-                period_param_month = value
-            if title == "Квартал":
-                period_param_quarter = value
-            if title == "Полугодие":
-                period_param_halfyear = value
-            if title == "Год":
-                period_param_year = value
+        has_fields = False
+        for group in groups:
+            if not isinstance(group, dict):
+                continue
+            fields = group.get("fields") or []
+            if not isinstance(fields, (list, tuple)):
+                continue
+            for field in fields:
+                if not isinstance(field, dict):
+                    continue
+                has_fields = True
+                title = field.get("title")
+                value = field.get("value")
+                if title == "Час":
+                    hour = Napravleniya.monitoring_param_int(value)
+                    if hour is not None:
+                        period_param_hour = hour
+                elif title == "День":
+                    parts = str(value or "").split("-")
+                    if len(parts) >= 3:
+                        day_year = Napravleniya.monitoring_param_int(parts[0])
+                        day_month = Napravleniya.monitoring_param_int(parts[1])
+                        day_number = Napravleniya.monitoring_param_int(parts[2])
+                        if None not in (day_year, day_month, day_number):
+                            period_param_day = day_number
+                            period_param_month = day_month
+                            period_param_year = day_year
+                elif title == "С":
+                    week_day = Napravleniya.monitoring_param_text(value)
+                    if week_day is not None:
+                        period_param_week_day_start = week_day
+                elif title == "Дата отсчета":
+                    week_date = Napravleniya.monitoring_param_text(value)
+                    if week_date is not None:
+                        period_param_week_date_start = week_date
+                elif title == "Месяц":
+                    month = Napravleniya.monitoring_param_int(value)
+                    if month is not None:
+                        period_param_month = month
+                elif title == "Квартал":
+                    quarter = Napravleniya.monitoring_param_int(value)
+                    if quarter is not None:
+                        period_param_quarter = quarter
+                elif title == "Полугодие":
+                    halfyear = Napravleniya.monitoring_param_int(value)
+                    if halfyear is not None:
+                        period_param_halfyear = halfyear
+                elif title == "Год":
+                    year = Napravleniya.monitoring_param_int(value)
+                    if year is not None:
+                        period_param_year = year
+        if not has_fields:
+            return "У мониторинга не заданы параметры", None
         type_period = research.type_period
         week_date_start_end = None
         if type_period == "PERIOD_WEEK":
+            if not period_param_week_day_start or not period_param_week_date_start:
+                return "У мониторинга не заданы параметры", None
             try:
                 week_date_start_end = Napravleniya.monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
             except (TypeError, ValueError):
                 week_date_start_end = False
             if not week_date_start_end:
                 return "Ошибка в параметрах недели", None
+        elif not Napravleniya.monitoring_period_ready(
+            type_period,
+            period_param_hour,
+            period_param_day,
+            week_date_start_end,
+            period_param_month,
+            period_param_quarter,
+            period_param_halfyear,
+            period_param_year,
+        ):
+            return "У мониторинга не заданы параметры", None
         if Napravleniya.monitoring_is_created_later(
             research,
             type_period,
