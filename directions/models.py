@@ -1349,25 +1349,6 @@ class Napravleniya(models.Model):
         period_param_year,
         current_hospital,
     ):
-        period_param_hour = Napravleniya.monitoring_param_int(period_param_hour)
-        period_param_day = Napravleniya.monitoring_param_int(period_param_day)
-        period_param_month = Napravleniya.monitoring_param_int(period_param_month)
-        period_param_quarter = Napravleniya.monitoring_param_int(period_param_quarter)
-        period_param_halfyear = Napravleniya.monitoring_param_int(period_param_halfyear)
-        period_param_year = Napravleniya.monitoring_param_int(period_param_year)
-        if type_period == "PERIOD_WEEK" and period_param_year is None and week_date_start_end:
-            period_param_year = week_date_start_end[2].year
-        if not Napravleniya.monitoring_period_ready(
-            type_period,
-            period_param_hour,
-            period_param_day,
-            week_date_start_end,
-            period_param_month,
-            period_param_quarter,
-            period_param_halfyear,
-            period_param_year,
-        ):
-            return None
         monitoring_exists = None
         if type_period == 'PERIOD_HOUR':
             monitoring_exists = MonitoringResult.objects.filter(
@@ -1389,6 +1370,8 @@ class Napravleniya(models.Model):
                 period_param_year=period_param_year,
             ).first()
         elif type_period == 'PERIOD_WEEK':
+            if not period_param_year:
+                period_param_year = week_date_start_end[2].year
             monitoring_exists = MonitoringResult.objects.filter(
                 research=research,
                 hospital=current_hospital,
@@ -1844,12 +1827,63 @@ class Napravleniya(models.Model):
                         research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
                         if research_data_params:
                             dir_group = -1
+                    period_param_hour, period_param_day, period_param_month = None, None, None
+                    period_param_quarter, period_param_halfyear, period_param_year, type_period = None, None, None, None
+                    period_param_week_date_start, period_param_week_day_start, week_date_start_end = None, None, None
                     monitoring_period = None
                     if research.is_monitoring:
-                        message, monitoring_period = Napravleniya.collect_monitoring_period(research, research_data_params, current_hospital)
-                        if message:
-                            result["message"] = message
+                        for i in research_data_params['groups'][0]['fields']:
+                            if i['title'] == "Час":
+                                period_param_hour = i['value']
+                            if i['title'] == "День":
+                                date = i['value'].split('-')
+                                period_param_day = date[2]
+                                period_param_month = date[1]
+                                period_param_year = date[0]
+                            if i['title'] == "С":
+                                period_param_week_day_start = i['value']
+                            if i['title'] == "Дата отсчета":
+                                period_param_week_date_start = i['value']
+                            if i['title'] == "Месяц":
+                                period_param_month = i['value']
+                            if i['title'] == "Квартал":
+                                period_param_quarter = i['value']
+                            if i['title'] == "Полугодие":
+                                period_param_halfyear = i['value']
+                            if i['title'] == "Год":
+                                period_param_year = i['value']
+                        type_period = research.type_period
+
+                        if type_period == "PERIOD_WEEK":
+                            week_date_start_end = Napravleniya.monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
+                            if not week_date_start_end:
+                                result["message"] = "Ошибка в параметрах недели"
+                                return result
+
+                        if Napravleniya.monitoring_is_created_later(
+                            research,
+                            type_period,
+                            period_param_hour,
+                            period_param_day,
+                            week_date_start_end,
+                            period_param_month,
+                            period_param_quarter,
+                            period_param_halfyear,
+                            period_param_year,
+                            current_hospital,
+                        ):
+                            result["message"] = "Данный мониторинг уже создан"
                             return result
+                        monitoring_period = {
+                            "type_period": type_period,
+                            "period_param_hour": period_param_hour,
+                            "period_param_day": period_param_day,
+                            "period_param_month": period_param_month,
+                            "period_param_quarter": period_param_quarter,
+                            "period_param_halfyear": period_param_halfyear,
+                            "period_param_year": period_param_year,
+                            "week_date_start_end": week_date_start_end,
+                        }
 
                     if case_id > -2 and not issledovaniye_case_id:
                         if case_id == -1:
