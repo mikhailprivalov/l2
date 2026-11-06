@@ -388,11 +388,7 @@ class TitleResearchHospital(models.Model):
         )
         result = {int(research_id): "" for research_id in research_ids if research_id}
         if result:
-            rows = (
-                TitleResearchHospital.objects.filter(hospital__id=hospital_id, research__id__in=result.keys())
-                .exclude(title="")
-                .values_list("research__id", "title")
-            )
+            rows = TitleResearchHospital.objects.filter(hospital__id=hospital_id, research__id__in=result.keys()).exclude(title="").values_list("research__id", "title")
             for research_id, title in rows:
                 title = (title or "").strip()
                 if research_id and title and int(research_id) in result:
