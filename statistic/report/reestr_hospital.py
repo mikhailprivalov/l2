@@ -24,6 +24,7 @@ def reestr_hospital_base(ws1, d1, d2, title):
         ('ФИО пациента', 30),
         ('Код ОКМУ', 20),
         ('Область исследования/ Услуга', 25),
+        ('Второе название', 25),
         ('Модальность', 10),
         ('ФИО Врача', 30),
         ('Тариф услуги', 8),
@@ -67,22 +68,23 @@ def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum):
         ws1.cell(row=r, column=8).value = f'{v.get("patient_family", "-")} {v.get("patient_name", "-")} {v.get("patient_patronymic", "-")}'
         ws1.cell(row=r, column=9).value = v.get("service_code", "-")
         ws1.cell(row=r, column=10).value = v.get("service", "-")
-        ws1.cell(row=r, column=11).value = v.get("department", "-")
-        ws1.cell(row=r, column=12).value = f'{v.get("doctor_family", "-")} {v.get("doctor_name", "-")} {v.get("doctor_patronymic", "-")}'
-        ws1.cell(row=r, column=13).value = v.get("tarif_coast", "-")
-        ws1.cell(row=r, column=14).value = v.get("tarif_contrast", "-")
-        ws1.cell(row=r, column=15).value = v.get("tarif_dynamic", "-")
-        ws1.cell(row=r, column=16).value = v.get("tarif_extension", "-")
-        ws1.cell(row=r, column=17).value = v.get("tarif_night", "-")
-        ws1.cell(row=r, column=18).value = f'=SUM({get_column_letter(13)}{r}:{get_column_letter(17)}{r})'
+        ws1.cell(row=r, column=11).value = v.get("service_synonym") or ""
+        ws1.cell(row=r, column=12).value = v.get("department", "-")
+        ws1.cell(row=r, column=13).value = f'{v.get("doctor_family", "-")} {v.get("doctor_name", "-")} {v.get("doctor_patronymic", "-")}'
+        ws1.cell(row=r, column=14).value = v.get("tarif_coast", "-")
+        ws1.cell(row=r, column=15).value = v.get("tarif_contrast", "-")
+        ws1.cell(row=r, column=16).value = v.get("tarif_dynamic", "-")
+        ws1.cell(row=r, column=17).value = v.get("tarif_extension", "-")
+        ws1.cell(row=r, column=18).value = v.get("tarif_night", "-")
+        ws1.cell(row=r, column=19).value = f'=SUM({get_column_letter(14)}{r}:{get_column_letter(18)}{r})'
     r_sum = r
     r += 1
-    ws1.merge_cells(f"{get_column_letter(14)}{r}:{get_column_letter(15)}{r}")
-    megre_cell = ws1[f"{get_column_letter(14)}{r}"]
+    ws1.merge_cells(f"{get_column_letter(15)}{r}:{get_column_letter(16)}{r}")
+    megre_cell = ws1[f"{get_column_letter(15)}{r}"]
     megre_cell.value = 'ВСЕГО сумма, руб'
     megre_cell.style = style_border2
-    ws1.cell(row=r, column=18).value = f'=SUM({get_column_letter(18)}{6}:{get_column_letter(18)}{r_sum})'
-    ws1.cell(row=r, column=18).style = style_border2
+    ws1.cell(row=r, column=19).value = f'=SUM({get_column_letter(19)}{6}:{get_column_letter(19)}{r_sum})'
+    ws1.cell(row=r, column=19).style = style_border2
 
     r += 2
     ws1.cell(row=r, column=1).value = 'Свод'
