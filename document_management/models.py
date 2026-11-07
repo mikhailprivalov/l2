@@ -4774,9 +4774,7 @@ class Documents(models.Model):
         steps = 0
         while frontier and steps < 50:
             steps += 1
-            kids = list(
-                Documents.objects.select_related("type_document", "schema").filter(parent_document_id__in=frontier).order_by("pk")
-            )
+            kids = list(Documents.objects.select_related("type_document", "schema").filter(parent_document_id__in=frontier).order_by("pk"))
             frontier = []
             for kid in kids:
                 if kid.pk in nodes or not Documents.can_see_document(kid, who):
