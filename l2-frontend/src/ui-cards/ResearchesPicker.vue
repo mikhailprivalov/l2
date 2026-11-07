@@ -53,6 +53,7 @@
           :options="sectionTypeOptions"
           placeholder="Тип раздела"
           :append-to-body="true"
+          :z-index="10001"
           :clearable="true"
         />
         <div

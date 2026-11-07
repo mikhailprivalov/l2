@@ -39,13 +39,46 @@
           <button
             v-if="research && !confirmed"
             v-tippy
-            class="btn btn-blue-nb"
+            class="btn btn-blue-nb save-doc-btn"
             type="button"
             title="Сохранить без подтверждения"
             @click="save"
           >
-            &nbsp;<i class="fa fa-save" />&nbsp;
+            <i class="fa fa-save" />
           </button>
+        </div>
+      </div>
+      <div
+        v-if="!caseListMode && (parentDocument || linkedDocuments.length)"
+        class="doc-links"
+      >
+        <div
+          v-if="parentDocument"
+          class="doc-links__row"
+        >
+          <span>Основание</span>
+          <a
+            class="a-under"
+            :href="caseDocumentHref(parentDocument.id)"
+            target="_blank"
+            rel="noopener"
+          >{{ parentDocument.title }}</a>
+        </div>
+        <div
+          v-if="linkedDocuments.length"
+          class="doc-links__row"
+        >
+          <span>Связанные документы</span>
+          <span class="doc-links__list">
+            <a
+              v-for="row in linkedDocuments"
+              :key="row.id"
+              class="a-under"
+              :href="caseDocumentHref(row.id)"
+              target="_blank"
+              rel="noopener"
+            >{{ row.title }}</a>
+          </span>
         </div>
       </div>
       <div
@@ -317,6 +350,16 @@
           @saved="onPlanSaved"
         >
           <template #leading>
+            <button
+              v-if="hasDocumentLinks"
+              v-tippy
+              class="btn btn-blue-nb links-doc-btn links-doc-btn--edge"
+              type="button"
+              title="Связи"
+              @click="openLinkMap"
+            >
+              <i class="fa-solid fa-diagram-project" />
+            </button>
             <a
               v-if="hasPrintTemplate && documentId"
               class="print-link a-under"
@@ -355,6 +398,14 @@
               @click="setHidden(false)"
             >
               Показать
+            </button>
+            <button
+              v-if="documentId && confirmed"
+              class="btn btn-blue-nb"
+              type="button"
+              @click="emit('link-document')"
+            >
+              Связать документ
             </button>
           </template>
         </DouPlanEditor>
@@ -396,6 +447,16 @@
         v-if="!caseListMode && research && !isPlan"
         class="control-row"
       >
+        <button
+          v-if="hasDocumentLinks"
+          v-tippy
+          class="btn btn-blue-nb links-doc-btn"
+          type="button"
+          title="Связи"
+          @click="openLinkMap"
+        >
+          <i class="fa-solid fa-diagram-project" />
+        </button>
         <div class="res-title">
           {{ title }}:
         </div>
@@ -451,6 +512,37 @@
           @click="setHidden(false)"
         >
           Показать
+        </button>
+        <button
+          v-if="documentId && confirmed"
+          class="btn btn-blue-nb"
+          type="button"
+          @click="emit('link-document')"
+        >
+          Связать документ
+        </button>
+      </div>
+      <div
+        v-else-if="!caseListMode && documentId && confirmed && !(isPlan && planPreset)"
+        class="control-row"
+      >
+        <button
+          v-if="hasDocumentLinks"
+          v-tippy
+          class="btn btn-blue-nb links-doc-btn"
+          type="button"
+          title="Связи"
+          @click="openLinkMap"
+        >
+          <i class="fa-solid fa-diagram-project" />
+        </button>
+        <div class="res-title" />
+        <button
+          class="btn btn-blue-nb"
+          type="button"
+          @click="emit('link-document')"
+        >
+          Связать документ
         </button>
       </div>
       <div
@@ -602,6 +694,36 @@
         </div>
       </div>
     </div>
+    <Modal
+      v-if="linkMapOpen"
+      white-bg="true"
+      max-width="720px"
+      width="100%"
+      margin-left-right="auto"
+      @close="closeLinkMap"
+    >
+      <span slot="header">Связи документа</span>
+      <div slot="body">
+        <div
+          v-for="row in linkMapRows"
+          :key="`${row.depth}-${row.id}`"
+          class="link-map-row"
+          :style="{ paddingLeft: `${12 + row.depth * 18}px` }"
+        >
+          <span
+            v-if="row.current"
+            class="link-map-row__current"
+          >{{ row.title }}</span>
+          <a
+            v-else
+            class="a-under"
+            :href="caseDocumentHref(row.id)"
+            target="_blank"
+            rel="noopener"
+          >{{ row.title }}</a>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -620,6 +742,7 @@ import DescriptiveForm from '@/forms/DescriptiveForm.vue';
 import DouPlanEditor from '@/construct/DouPlanEditor.vue';
 import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
 import AddresseeField from '@/forms/Fields/AddresseeField.vue';
+import Modal from '@/ui-cards/Modal.vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
@@ -636,6 +759,7 @@ const emit = defineEmits<{
   (e: 'visibility-change'): void;
   (e: 'reviewed'): void;
   (e: 'approved'): void;
+  (e: 'link-document'): void;
 }>();
 
 const store = useStore();
@@ -740,6 +864,25 @@ const approvalSentLines = computed(() => {
   return lines;
 });
 const whoConfirmed = ref('');
+type DocumentLinkRow = { id: number; title: string };
+const parentDocument = ref<DocumentLinkRow | null>(null);
+const linkedDocuments = ref<DocumentLinkRow[]>([]);
+type DocumentLinkNode = {
+  id: number;
+  title: string;
+  current?: boolean;
+  children?: DocumentLinkNode[];
+};
+type DocumentLinkMapRow = {
+  id: number;
+  title: string;
+  current: boolean;
+  depth: number;
+};
+const linkMapOpen = ref(false);
+const linkMapRows = ref<DocumentLinkMapRow[]>([]);
+let linkMapToken = 0;
+const hasDocumentLinks = computed(() => Boolean(parentDocument.value) || linkedDocuments.value.length > 0);
 const patient = {};
 
 type CaseDocumentRow = {
@@ -1029,6 +1172,73 @@ const scrollToForm = async () => {
   rootEl.scrollTop += delta;
 };
 
+const linkRow = (value: unknown): DocumentLinkRow | null => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  const row = value as { id?: unknown; title?: unknown };
+  const id = Number(row.id);
+  if (!Number.isFinite(id) || id <= 0) {
+    return null;
+  }
+  return { id, title: String(row.title || id) };
+};
+
+const linkRows = (value: unknown): DocumentLinkRow[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map(item => linkRow(item)).filter((item): item is DocumentLinkRow => Boolean(item));
+};
+
+const flattenLinkNode = (node: DocumentLinkNode, depth: number, out: DocumentLinkMapRow[]) => {
+  const id = Number(node.id);
+  if (!Number.isFinite(id) || id <= 0) {
+    return;
+  }
+  out.push({
+    id,
+    title: String(node.title || id),
+    current: Boolean(node.current),
+    depth,
+  });
+  (node.children || []).forEach(child => flattenLinkNode(child, depth + 1, out));
+};
+
+const closeLinkMap = () => {
+  linkMapToken += 1;
+  linkMapOpen.value = false;
+  linkMapRows.value = [];
+};
+
+const openLinkMap = async () => {
+  const id = props.documentId;
+  if (!id) {
+    return;
+  }
+  const token = linkMapToken + 1;
+  linkMapToken = token;
+  linkMapOpen.value = true;
+  linkMapRows.value = [];
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/documents/links', { id });
+    if (token !== linkMapToken) {
+      return;
+    }
+    if (result?.ok && result.root) {
+      const rows: DocumentLinkMapRow[] = [];
+      flattenLinkNode(result.root, 0, rows);
+      linkMapRows.value = rows;
+      return;
+    }
+    closeLinkMap();
+    root.$emit('msg', 'error', result?.message || 'Связи не найдены');
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
 const load = async () => {
   title.value = '';
   research.value = null;
@@ -1069,6 +1279,9 @@ const load = async () => {
   approvalComment.value = '';
   caseDocuments.value = [];
   whoConfirmed.value = '';
+  parentDocument.value = null;
+  linkedDocuments.value = [];
+  closeLinkMap();
   if (props.caseId && !props.documentId) {
     await store.dispatch(actions.INC_LOADING);
     try {
@@ -1118,6 +1331,8 @@ const load = async () => {
       canCancelApproval.value = Boolean(result.canCancelApproval);
       approvalStatuses.value = result.approvalStatuses || [];
       whoConfirmed.value = result.whoConfirmed || '';
+      parentDocument.value = linkRow(result.parentDocument);
+      linkedDocuments.value = linkRows(result.linkedDocuments);
       if (result.reviewedNow) {
         emit('reviewed');
       }
@@ -1667,12 +1882,14 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
 .research-title {
   position: sticky;
   top: 0;
+  display: flex;
+  align-items: stretch;
+  height: 34px;
   background-color: #ddd;
   text-align: center;
-  padding: 5px;
+  padding: 0;
   font-weight: bold;
   z-index: 4;
-  display: flex;
 }
 
 .research-left {
@@ -1683,6 +1900,7 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  padding-left: 5px;
 }
 
 .research-title-text {
@@ -1724,17 +1942,65 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
 }
 
 .research-right {
+  display: flex;
+  align-items: stretch;
   text-align: right;
   flex: 0 0 auto;
-  margin-top: -5px;
-  margin-right: -5px;
-  margin-bottom: -5px;
+  margin: 0;
   white-space: nowrap;
 
   .btn {
+    height: 34px;
     border-radius: 0;
-    padding: 5px 4px;
+    padding: 0 10px;
+    line-height: 32px;
   }
+
+  .save-doc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 34px;
+    width: 34px;
+    padding: 0;
+    line-height: 1;
+  }
+}
+
+.doc-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 10px;
+}
+
+.link-map-row {
+  min-height: 28px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  line-height: 20px;
+}
+
+.link-map-row__current {
+  font-weight: 700;
+}
+
+.doc-links__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+
+  > span:first-child {
+    flex: 0 0 auto;
+    font-weight: bold;
+  }
+}
+
+.doc-links__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
 }
 
 .empty {
@@ -1997,16 +2263,30 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
   display: flex;
   flex-direction: row;
   margin-bottom: 10px;
-  padding-right: 21px;
+  padding-right: 11px;
 
   button {
     align-self: stretch;
     border-radius: 0;
   }
 
+  .links-doc-btn {
+    flex: 0 0 34px;
+    width: 34px;
+    padding: 0;
+  }
+
   div {
     align-self: stretch;
   }
+}
+
+.links-doc-btn--edge {
+  flex: 0 0 34px;
+  width: 34px;
+  margin-right: auto;
+  padding: 0;
+  border-radius: 0;
 }
 
 .res-title {

@@ -97,25 +97,20 @@
                 <div
                   v-for="row in allEmployees"
                   :key="row.id"
-                  class="addressee-modal__row"
+                  class="addressee-modal__row addressee-modal__row--plain"
                 >
                   <span class="addressee-modal__fio">{{ row.fio }}</span>
-                  <span class="addressee-modal__tail">
-                    <span
-                      v-if="row.department"
-                      class="addressee-modal__dep"
-                    >{{ row.department }}</span>
-                    <button
-                      v-if="canAddToSelectedSet && !isInSet(row.id)"
-                      class="addressee-modal__to-set"
-                      type="button"
-                      title="Включить в набор"
-                      :disabled="addingMemberId === row.id"
-                      @click="addToSelectedSet(row)"
-                    >
-                      <i class="fa fa-arrow-right" />
-                    </button>
-                  </span>
+                  <span class="addressee-modal__dep">{{ row.department }}</span>
+                  <button
+                    v-if="canAddToSelectedSet && !isInSet(row.id)"
+                    class="addressee-modal__to-set"
+                    type="button"
+                    title="Включить в набор"
+                    :disabled="addingMemberId === row.id"
+                    @click="addToSelectedSet(row)"
+                  >
+                    <i class="fa fa-arrow-right" />
+                  </button>
                 </div>
                 <div
                   v-if="isLoadingAllMore"
@@ -163,11 +158,8 @@
                     :checked="isSelected(row.id)"
                     @change="toggleEmployee(row)"
                   >
-                  <span>{{ row.fio }}</span>
-                  <span
-                    v-if="row.department"
-                    class="addressee-modal__dep"
-                  >{{ row.department }}</span>
+                  <span class="addressee-modal__fio">{{ row.fio }}</span>
+                  <span class="addressee-modal__dep">{{ row.department }}</span>
                 </label>
                 <div
                   v-if="isLoadingMore"
@@ -873,37 +865,29 @@ watch([allLoadedSelected, someLoadedSelected, employees, draft], async () => {
 }
 
 .addressee-modal__row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) minmax(0, 3fr);
+  align-items: start;
+  column-gap: 8px;
   padding: 4px 0;
   font-weight: normal;
   cursor: pointer;
 }
 
-.addressee-modal__fio {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.addressee-modal__row--plain {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) auto;
 }
 
-.addressee-modal__tail {
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-  gap: 6px;
-  margin-left: auto;
+.addressee-modal__fio,
+.addressee-modal__dep {
+  min-width: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .addressee-modal__dep {
-  margin-left: auto;
   color: #888;
   font-size: 12px;
-}
-
-.addressee-modal__tail .addressee-modal__dep {
-  margin-left: 0;
 }
 
 .addressee-modal__to-set {
