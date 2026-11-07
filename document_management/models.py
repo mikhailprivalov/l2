@@ -281,7 +281,11 @@ class AddresseeGroup(models.Model):
             return cls.empty_employees(page, page_size)
         if (not group_id or group_id <= 0) and not allow_all:
             return cls.empty_employees(page, page_size)
-        doctors = DoctorProfile.objects.filter(user__is_active=True, is_system_user=False, podrazdeleniye__hospital_id=hospital_pk).select_related("user", "podrazdeleniye")
+        doctors = DoctorProfile.objects.filter(
+            is_system_user=False,
+            dismissed=False,
+            hospital_id=hospital_pk,
+        ).select_related("user", "podrazdeleniye")
         if group_id and group_id > 0:
             doctors = doctors.filter(addressee_group_members__group_id=group_id)
         query = (query or "").strip()
@@ -4457,7 +4461,7 @@ class Documents(models.Model):
         return result
 
     @staticmethod
-    def create_document(type_id, who_create, case_id=None, topic=None, period_params=None):
+    def create_document(type_id, who_create, case_id=None, topic=None, period_params=None, parent_document_id=None):
         from directions.models import Issledovaniya, Napravleniya
 
         case = None
@@ -4499,6 +4503,15 @@ class Documents(models.Model):
         schema = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
         if schema is None:
             schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
+        parent = None
+        if parent_document_id not in (None, "", 0, "0", -1, "-1"):
+            try:
+                parent_pk = int(parent_document_id)
+            except (TypeError, ValueError):
+                return {"ok": False, "message": "Документ-основание не найден"}
+            parent = Documents.objects.filter(pk=parent_pk).first()
+            if not parent or not Documents.can_see_document(parent, who_create):
+                return {"ok": False, "message": "Документ-основание не найден"}
         with transaction.atomic():
             document_case = None
             if case is not None:
@@ -4514,6 +4527,7 @@ class Documents(models.Model):
                 type_case=case,
                 document_case=document_case,
                 plan=plan,
+                parent_document=parent,
             )
             if document_case:
                 DocumentCaseLink.objects.create(document=obj, document_case=document_case)
@@ -4526,11 +4540,14 @@ class Documents(models.Model):
                 Napravleniya.save_monitoring_period(iss, monitoring, None, hospital, monitoring_period)
         type_title = type_doc.title or "Документ"
         title = f"{type_title} №{obj.pk}"
+        log_body = {"title": title, "typeId": type_doc.pk, "typeTitle": type_doc.title or ""}
+        if parent:
+            log_body["parentDocumentId"] = parent.pk
         Documents.log_action(
             obj.pk,
             Documents.LOG_CREATE,
             who_create,
-            {"title": title, "typeId": type_doc.pk, "typeTitle": type_doc.title or ""},
+            log_body,
         )
         return {"ok": True, "id": obj.pk, "title": title, "caseId": document_case.pk if document_case else None}
 
@@ -4715,6 +4732,70 @@ class Documents(models.Model):
         }
 
     @staticmethod
+    def link_rows(docs, who):
+        from directions.models import Issledovaniya
+
+        visible = [doc for doc in docs if doc and Documents.can_see_document(doc, who)]
+        if not visible:
+            return []
+        iss_by_doc = {}
+        for iss in Issledovaniya.objects.filter(document_id__in=[doc.pk for doc in visible]).order_by("pk"):
+            iss_by_doc.setdefault(iss.document_id, iss)
+        topics = Documents.topics_for_documents(visible, iss_by_doc)
+        rows = []
+        for doc in visible:
+            type_title = doc.type_document.title if doc.type_document_id and doc.type_document else ""
+            topic = (topics.get(doc.pk) or "").strip()
+            title = " ".join(part for part in (topic, type_title) if part)
+            rows.append({"id": doc.pk, "title": Documents.title_with_id(doc.pk, title)})
+        return rows
+
+    @staticmethod
+    def link_tree(pk, who):
+        try:
+            pk = int(pk)
+        except (TypeError, ValueError):
+            return {"ok": False, "message": "Документ не найден"}
+        current = Documents.objects.select_related("type_document", "schema", "parent_document").filter(pk=pk).first()
+        if not current or not Documents.can_see_document(current, who):
+            return {"ok": False, "message": "Документ не найден"}
+        climbed = set()
+        node = current
+        while node.parent_document_id and node.parent_document_id not in climbed:
+            climbed.add(node.pk)
+            parent = Documents.objects.select_related("type_document", "schema").filter(pk=node.parent_document_id).first()
+            if not parent or not Documents.can_see_document(parent, who):
+                break
+            node = parent
+        root = node
+        nodes = {root.pk: root}
+        children_of = {root.pk: []}
+        frontier = [root.pk]
+        steps = 0
+        while frontier and steps < 50:
+            steps += 1
+            kids = list(Documents.objects.select_related("type_document", "schema").filter(parent_document_id__in=frontier).order_by("pk"))
+            frontier = []
+            for kid in kids:
+                if kid.pk in nodes or not Documents.can_see_document(kid, who):
+                    continue
+                nodes[kid.pk] = kid
+                children_of.setdefault(kid.parent_document_id, []).append(kid.pk)
+                children_of.setdefault(kid.pk, [])
+                frontier.append(kid.pk)
+        titles = {row["id"]: row["title"] for row in Documents.link_rows(list(nodes.values()), who)}
+
+        def build(doc_id):
+            return {
+                "id": doc_id,
+                "title": titles.get(doc_id) or Documents.title_with_id(doc_id, ""),
+                "current": doc_id == current.pk,
+                "children": [build(child_id) for child_id in children_of.get(doc_id, [])],
+            }
+
+        return {"ok": True, "root": build(root.pk)}
+
+    @staticmethod
     def get_details(pk, who=None):
         from django.db.models import Prefetch
         from directions.models import Issledovaniya
@@ -4725,6 +4806,9 @@ class Documents(models.Model):
                 "type_document",
                 "type_document__layout_template",
                 "type_document__group_document",
+                "parent_document",
+                "parent_document__type_document",
+                "parent_document__schema",
                 "document_case",
                 "document_case__who_create",
                 "document_case__who_close",
@@ -4808,6 +4892,10 @@ class Documents(models.Model):
         payload["canCancelApproval"] = DocumentEmployeeApprove.can_cancel(who)
         payload["isFavorite"] = record_favorite_status(who, obj)
         payload["hasPrintTemplate"] = bool(obj.type_document_id and obj.type_document.print_docx)
+        parent_rows = Documents.link_rows([obj.parent_document] if obj.parent_document_id else [], who)
+        payload["parentDocument"] = parent_rows[0] if parent_rows else None
+        children = list(obj.document_p.select_related("type_document", "schema").order_by("pk"))
+        payload["linkedDocuments"] = Documents.link_rows(children, who)
         plan = obj.plan if obj.plan_id and obj.plan and obj.plan.user_created else None
         payload["isPlan"] = bool(plan) or bool(obj.type_document_id and obj.type_document.is_plan)
         if plan:

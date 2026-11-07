@@ -51,6 +51,7 @@ urlpatterns = [
     path('documents/recent', views.documents_recent),
     path('documents/create', views.documents_create),
     path('documents/details', views.documents_details),
+    path('documents/links', views.documents_links),
     path('documents/save', views.documents_save),
     path('documents/confirm', views.documents_confirm),
     path('documents/plan', views.documents_plan),

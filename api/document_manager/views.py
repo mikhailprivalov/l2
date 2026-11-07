@@ -805,7 +805,14 @@ def documents_recent(request):
 @group_required("ДОУ: просмотр документов")
 def documents_create(request):
     data = _request_data(request)
-    result = Documents.create_document(data.get("typeId"), request.user.doctorprofile, data.get("caseId"), data.get("topic"), data.get("periodParams"))
+    result = Documents.create_document(
+        data.get("typeId"),
+        request.user.doctorprofile,
+        data.get("caseId"),
+        data.get("topic"),
+        data.get("periodParams"),
+        data.get("parentDocumentId"),
+    )
     if result.get("ok"):
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
@@ -816,6 +823,16 @@ def documents_create(request):
 def documents_details(request):
     data = _request_data(request)
     result = Documents.get_details(data.get("id"), request.user.doctorprofile)
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_links(request):
+    data = _request_data(request)
+    result = Documents.link_tree(data.get("id"), request.user.doctorprofile)
     if result.get("ok"):
         return JsonResponse(result)
     return status_response(False, result.get("message"))

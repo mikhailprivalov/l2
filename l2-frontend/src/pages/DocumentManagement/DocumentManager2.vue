@@ -1,6 +1,11 @@
 <template>
   <div class="root">
   <div class="body">
+    <div
+      v-if="linkParentId"
+      class="link-freeze"
+      @click="cancelLink"
+    />
     <TwoSidedLayout
       :left-width-px="leftWidthPx"
       :min-left-width-px="MIN_LEFT_WIDTH_PX"
@@ -387,6 +392,7 @@
           @visibility-change="onVisibilityChange"
           @reviewed="onReviewed"
           @approved="onApproved"
+          @link-document="startLink"
         />
       </div>
     </div>
@@ -567,9 +573,11 @@ type CreatePayload = {
   topic?: string;
   monitoringDirectionParams?: number;
   periodParams?: Record<string, unknown> | null;
+  parentDocumentId?: number | null;
 };
 
 const pendingCreate = ref<CreatePayload | null>(null);
+const linkParentId = ref<number | null>(null);
 const query = ref('');
 const byNumber = ref(true);
 const byCase = ref(false);
@@ -1125,6 +1133,7 @@ const runCreate = async (payload: CreatePayload) => {
       caseId: payload.caseId,
       topic: payload.topic || '',
       periodParams: payload.periodParams || null,
+      parentDocumentId: payload.parentDocumentId || null,
     });
     if (result?.ok) {
       openedFromCaseFavorite.value = false;
@@ -1173,6 +1182,24 @@ const confirmMonitoringPeriod = async (periodParams: Record<string, unknown>) =>
   await runCreate(payload);
 };
 
+const startLink = () => {
+  const parentId = viewerDocumentId.value;
+  if (!parentId) {
+    return;
+  }
+  linkParentId.value = parentId;
+};
+
+const cancelLink = () => {
+  linkParentId.value = null;
+};
+
+const onLinkKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && linkParentId.value) {
+    cancelLink();
+  }
+};
+
 const createDocument = async () => {
   if (!canCreate.value) {
     return;
@@ -1181,7 +1208,9 @@ const createDocument = async () => {
   const resolved: CreatePayload = {
     ...resolveCreate(pk),
     monitoringDirectionParams: monitoringParamsOf(pk),
+    parentDocumentId: linkParentId.value,
   };
+  linkParentId.value = null;
   if (resolved.caseId) {
     pendingCreate.value = resolved;
     caseTopicDraft.value = '';
@@ -1384,11 +1413,13 @@ onMounted(() => {
   openDocumentFromQuery();
   root.$on('open-dou-document', openFavorite);
   root.$on('dou-favorites-changed', onCaseFavoriteChanged);
+  window.addEventListener('keydown', onLinkKey);
 });
 
 onUnmounted(() => {
   root.$off('open-dou-document', openFavorite);
   root.$off('dou-favorites-changed', onCaseFavoriteChanged);
+  window.removeEventListener('keydown', onLinkKey);
 });
 
 onMounted(async () => {
@@ -1774,5 +1805,16 @@ const onReviewed = () => {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.link-freeze {
+  position: absolute;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: default;
 }
 </style>
