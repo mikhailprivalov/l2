@@ -271,6 +271,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/indicator-approval-journal',
+      name: 'indicator_approval_journal',
+      component: () => import('@/pages/IndicatorApprovalJournal.vue'),
+      meta: {
+        title: 'Журнал утверждения',
+        groups: ['Журнал утверждения'],
+        module: 'l2_indicator_curator',
+      },
+    },
+    {
       path: '/ui/monitorings/enter',
       name: 'monitorings_enter',
       component: () => import('@/pages/MonitoringsEnter.vue'),

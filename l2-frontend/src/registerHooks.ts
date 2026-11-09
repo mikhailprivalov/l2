@@ -79,6 +79,15 @@ export default (instance: Vue): void => {
     instance.$ok('Запланирован запрос результатов из внешней системы');
   });
 
+  instance.$root.$on('directions:queue_send_egisz', async ids => {
+    const data = await instance.$api('directions/queue-send-egisz', { ids });
+    if (data?.ok) {
+      instance.$ok(data.message || 'Направление добавлено в очередь отправки в ЕГИСЗ');
+    } else {
+      instance.$error(data?.message || 'Не удалось поставить направление в очередь отправки в ЕГИСЗ');
+    }
+  });
+
   instance.$root.$on('print:aggregate_laboratory_results', async pks => {
     window.open(`/forms/docx?type=113.02&directions=${pks}`, '_blank');
   });

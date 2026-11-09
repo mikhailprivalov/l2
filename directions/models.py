@@ -592,6 +592,7 @@ class Napravleniya(models.Model):
     external_order = models.ForeignKey(RegisteredOrders, default=None, blank=True, null=True, db_index=True, on_delete=models.PROTECT, help_text='Внешний заказ')
     need_order_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление заказа')
     need_pull_result = models.BooleanField(default=False, blank=True, help_text='Требуется ручной запрос результата из внешней системы')
+    queue_send_egisz = models.BooleanField(default=False, blank=True, db_index=True, help_text='В очереди на отправку в ЕГИСЗ')
     order_redirection_number = models.CharField(max_length=24, default=None, blank=True, null=True, db_index=True, help_text='Номер перенаправленного заказа')
     order_redirection_number_is_finished = models.BooleanField(default=False, blank=True, help_text='результат полностью выпонен внешней системой')
     external_executor_hospital = models.ForeignKey(
