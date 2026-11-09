@@ -74,5 +74,6 @@ urlpatterns = [
     path('resend-results', views.resend_results),
     path('need-order-redirection', views.need_order_redirection),
     path('request-result', views.request_result),
+    path('queue-send-egisz', views.queue_send_egisz),
     path('patient-open-case', views.patient_open_case),
 ]

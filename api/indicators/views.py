@@ -2,14 +2,23 @@ import datetime
 import json
 import re
 
+from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError, models
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from api.indicators.sql_func import indicator_sql
+from api.indicators.journal import aggregate_approval_rows
+from api.indicators.sql_func import approval_journal_sql, indicator_sql
 from directory.models import ParaclinicInputField, ParaclinicInputGroups
 from directions.models import ParaclinicResultIndicator
+from document_management.models import DocumentApprovalSign, Documents, TypeCases, TypeDocumentCreator, TypeDocuments
 from external_system.models import CuratorCdaFields, CdaFields
+from hospitals.models import Hospitals
+from laboratory.decorators import group_required
 from utils.dates import normalize_dots_date
+
+APPROVAL_JOURNAL_GROUP = "Журнал утверждения"
 
 
 def _parse_input_templates(field: ParaclinicInputField):
@@ -195,3 +204,216 @@ def save_indicator_value(request):
             },
         )
     return JsonResponse({"ok": True, "curatorScore": curator_score_value})
+
+
+def _body(request):
+    if not request.body:
+        return {}
+    return json.loads(request.body)
+
+
+def _period_bounds(data):
+    filter_by_date = bool(data.get("filterByDate", True))
+    date_period = data.get("datePeriod") or ["", ""]
+    datetime_start = datetime.datetime(1970, 1, 1)
+    datetime_end = datetime.datetime(2100, 1, 1)
+    if filter_by_date and date_period and date_period[0]:
+        datetime_start = datetime.datetime.strptime(f"{normalize_dots_date(str(date_period[0]))} 00:00:00", "%Y-%m-%d %H:%M:%S")
+    if filter_by_date and len(date_period) > 1 and date_period[1]:
+        datetime_end = datetime.datetime.strptime(f"{normalize_dots_date(str(date_period[1]))} 23:59:59:999999", "%Y-%m-%d %H:%M:%S:%f")
+    return filter_by_date, datetime_start, datetime_end
+
+
+def _hospital_filter(data):
+    try:
+        hospital_id = int(data.get("hospitalId", -1))
+    except (TypeError, ValueError):
+        hospital_id = -1
+    if hospital_id > 0:
+        return hospital_id, True
+    return 0, False
+
+
+def _format_date(value):
+    if not value:
+        return ""
+    if timezone.is_aware(value):
+        value = timezone.localtime(value)
+    return value.strftime("%d.%m.%Y")
+
+
+def _child_payload(document):
+    type_title = document.type_document.title if document.type_document_id and document.type_document else "Документ"
+    return {"id": document.pk, "title": f"{type_title} №{document.pk}"}
+
+
+def _sign_payload(sign):
+    fio = sign.doctor.get_fio() if sign.doctor_id and sign.doctor else ""
+    return {"signedAt": _format_date(sign.signed_at), "fio": fio}
+
+
+def _journal_sql(date_start, date_end, filter_by_date, hospital_id, filter_hospital, document_id=None, document_ids=None):
+    use_document_ids = document_ids is not None
+    return approval_journal_sql(
+        date_start,
+        date_end,
+        filter_by_date,
+        hospital_id,
+        filter_hospital,
+        document_id,
+        document_ids or [0],
+        use_document_ids,
+    )
+
+
+def _journal_rows(aggregated):
+    document_ids = [row["documentId"] for row in aggregated]
+    children = {}
+    signs = {}
+    if document_ids:
+        for document in Documents.objects.filter(parent_document_id__in=document_ids).select_related("type_document").order_by("pk"):
+            children.setdefault(document.parent_document_id, []).append(_child_payload(document))
+        for sign in DocumentApprovalSign.objects.filter(document_id__in=document_ids).select_related("doctor"):
+            signs[sign.document_id] = _sign_payload(sign)
+    result = []
+    for row in aggregated:
+        result.append(
+            {
+                "documentId": row["documentId"],
+                "hospital": row["hospital"],
+                "confirmDate": _format_date(row["confirmAt"]),
+                "approved": row["approved"],
+                "linkedDocuments": children.get(row["documentId"], []),
+                "sign": signs.get(row["documentId"]),
+            }
+        )
+    return result
+
+
+def _document_state(document_id):
+    raw_rows = _journal_sql(datetime.datetime(1970, 1, 1), datetime.datetime(2100, 1, 1), False, 0, False, document_id=document_id)
+    rows = aggregate_approval_rows(raw_rows)
+    return rows[0] if rows else None
+
+
+def _hospital_options():
+    return [{"id": row.pk, "label": row.short_title or row.title} for row in Hospitals.objects.filter(hide=False).order_by("short_title", "title", "pk")]
+
+
+def _link_kinds(doctor):
+    has_creators = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"))
+    is_creator = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"), doctor=doctor)
+    types = []
+    visible_ids = set()
+    queryset = TypeDocuments.objects.select_related("monitoring").filter(~models.Exists(has_creators) | models.Exists(is_creator)).order_by("title", "pk")
+    for row in queryset:
+        visible_ids.add(row.pk)
+        types.append(
+            {
+                "id": row.pk,
+                "title": row.title or "Документ",
+                "monitoringDirectionParams": row.monitoring_direction_params_id(),
+            }
+        )
+    cases = []
+    case_rows = TypeCases.objects.select_related("default_type_document", "default_type_document__monitoring").filter(default_type_document_id__in=visible_ids).order_by("title", "pk")
+    for case in case_rows:
+        cases.append(
+            {
+                "id": case.pk,
+                "title": case.title or "Дело",
+                "monitoringDirectionParams": case.default_type_document.monitoring_direction_params_id(),
+            }
+        )
+    return types, cases
+
+
+def _doctor(request):
+    return getattr(request.user, "doctorprofile", None)
+
+
+@login_required
+@group_required(APPROVAL_JOURNAL_GROUP)
+@require_POST
+def approval_journal(request):
+    try:
+        data = _body(request)
+        filter_by_date, datetime_start, datetime_end = _period_bounds(data)
+        hospital_id, filter_hospital = _hospital_filter(data)
+        matched = _journal_sql(datetime_start, datetime_end, filter_by_date, 0, False)
+        document_ids = list({row.document_id for row in matched})
+        aggregated = []
+        if document_ids:
+            full_rows = _journal_sql(datetime.datetime(1970, 1, 1), datetime.datetime(2100, 1, 1), False, 0, False, document_ids=document_ids)
+            aggregated = aggregate_approval_rows(full_rows)
+            if filter_hospital:
+                aggregated = [row for row in aggregated if row["hospitalId"] == hospital_id]
+        rows = _journal_rows(aggregated)
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "message": "Некорректный период"}, status=400)
+    return JsonResponse({"ok": True, "rows": rows, "hospitals": _hospital_options()})
+
+
+@login_required
+@group_required(APPROVAL_JOURNAL_GROUP)
+@require_POST
+def approval_journal_types(request):
+    doctor = _doctor(request)
+    if not doctor:
+        return JsonResponse({"ok": False, "message": "Профиль врача не найден"})
+    types, cases = _link_kinds(doctor)
+    return JsonResponse({"ok": True, "types": types, "cases": cases})
+
+
+@login_required
+@group_required(APPROVAL_JOURNAL_GROUP)
+@require_POST
+def approval_journal_link(request):
+    doctor = _doctor(request)
+    if not doctor:
+        return JsonResponse({"ok": False, "message": "Профиль врача не найден"})
+    data = _body(request)
+    try:
+        document_id = int(data.get("documentId") or 0)
+    except (TypeError, ValueError):
+        document_id = 0
+    if not document_id or not _document_state(document_id):
+        return JsonResponse({"ok": False, "message": "Документ не найден"})
+    result = Documents.create_document(
+        data.get("typeId"),
+        doctor,
+        data.get("caseId"),
+        data.get("topic"),
+        data.get("periodParams"),
+        document_id,
+    )
+    if not result.get("ok") or not result.get("id"):
+        return JsonResponse({"ok": False, "message": result.get("message") or "Документ не создан"})
+    child = Documents.objects.select_related("type_document").filter(pk=result["id"]).first()
+    return JsonResponse({"ok": True, "document": _child_payload(child)})
+
+
+@login_required
+@group_required(APPROVAL_JOURNAL_GROUP)
+@require_POST
+def approval_journal_sign(request):
+    doctor = _doctor(request)
+    if not doctor:
+        return JsonResponse({"ok": False, "message": "Профиль врача не найден"})
+    data = _body(request)
+    try:
+        document_id = int(data.get("documentId") or 0)
+    except (TypeError, ValueError):
+        document_id = 0
+    state = _document_state(document_id) if document_id else None
+    if not state:
+        return JsonResponse({"ok": False, "message": "Документ не найден"})
+    if not state["approved"]:
+        return JsonResponse({"ok": False, "message": "Документ не утвержден"})
+    try:
+        sign, _created = DocumentApprovalSign.objects.get_or_create(document_id=document_id, defaults={"doctor": doctor})
+    except IntegrityError:
+        sign = DocumentApprovalSign.objects.select_related("doctor").get(document_id=document_id)
+    else:
+        sign = DocumentApprovalSign.objects.select_related("doctor").get(pk=sign.pk)
+    return JsonResponse({"ok": True, "sign": _sign_payload(sign)})

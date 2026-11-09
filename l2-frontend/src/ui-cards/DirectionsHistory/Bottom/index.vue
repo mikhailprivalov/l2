@@ -42,6 +42,15 @@
               {{ value.title }}
             </a>
           </li>
+          <li class="divider" />
+          <li>
+            <a
+              href="#"
+              @click.prevent="queueSendEgisz"
+            >
+              Отправить в ЕГИСЗ
+            </a>
+          </li>
         </ul>
       </div>
     </div>
@@ -147,6 +156,9 @@ export default {
   methods: {
     callAsThis(handler) {
       handler.call(this);
+    },
+    queueSendEgisz() {
+      this.$root.$emit('directions:queue_send_egisz', this.checked);
     },
     change_parent_hide() {
       this.isOpenChangeParent = false;

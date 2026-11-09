@@ -5817,3 +5817,13 @@ class DocumentFiles(models.Model):
     class Meta:
         verbose_name = "Файл на документ"
         verbose_name_plural = "Файлы на документы"
+
+
+class DocumentApprovalSign(models.Model):
+    document = models.OneToOneField(Documents, related_name="approval_sign", db_index=True, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    signed_at = models.DateTimeField(auto_now_add=True, help_text="Время подписи")
+
+    class Meta:
+        verbose_name = "Подпись журнала утверждения"
+        verbose_name_plural = "Подписи журнала утверждения"

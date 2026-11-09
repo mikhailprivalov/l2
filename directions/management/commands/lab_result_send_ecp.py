@@ -36,6 +36,10 @@ class Command(BaseCommand):
                 i.need_resend_ecp = True
                 i.save()
         else:
+            queued_pks = list(Napravleniya.objects.filter(queue_send_egisz=True).values_list("pk", flat=True))
+            if queued_pks:
+                d_qs = (d_qs | Napravleniya.objects.filter(pk__in=queued_pks)).distinct()
+                Napravleniya.objects.filter(pk__in=queued_pks).update(queue_send_egisz=False)
             base = SettingManager.get_api_ecp_base_url()
             if base != 'empty':
                 available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))

@@ -404,6 +404,50 @@ def request_result(request):
     return status_response(True)
 
 
+@login_required()
+def queue_send_egisz(request):
+    request_data = json.loads(request.body)
+    raw_ids = request_data.get("ids") or []
+    if not raw_ids:
+        return status_response(False, "Не выбраны направления")
+    ids = []
+    for pk in raw_ids:
+        try:
+            ids.append(int(pk))
+        except (TypeError, ValueError):
+            continue
+    if not ids:
+        return status_response(False, "Не выбраны направления")
+
+    found = set(Napravleniya.objects.filter(pk__in=ids).values_list("pk", flat=True))
+    services = {}
+    service_rows = Issledovaniya.objects.filter(napravleniye_id__in=ids, cancel=False).values_list("napravleniye_id", "research__podrazdeleniye__p_type")
+    for direction_id, p_type in service_rows:
+        services.setdefault(direction_id, []).append(p_type)
+
+    accepted = []
+    rejected = []
+    for pk in ids:
+        types = services.get(pk)
+        if pk in found and types and all(p_type == Podrazdeleniya.LABORATORY for p_type in types):
+            accepted.append(pk)
+        else:
+            rejected.append(pk)
+
+    if accepted:
+        Napravleniya.objects.filter(pk__in=accepted).update(queue_send_egisz=True)
+    if not accepted:
+        numbers = ", ".join(str(pk) for pk in rejected)
+        return status_response(False, f"Нет направлений только с лабораторными услугами: {numbers}")
+    if rejected:
+        queued = ", ".join(str(pk) for pk in accepted)
+        skipped = ", ".join(str(pk) for pk in rejected)
+        return status_response(True, f"В очередь: {queued}. Не добавлены (есть нелабораторные услуги): {skipped}")
+    if len(accepted) == 1:
+        return status_response(True, "Направление добавлено в очередь отправки в ЕГИСЗ")
+    return status_response(True, f"В очередь добавлено направлений: {len(accepted)}")
+
+
 @login_required
 def directions_history(request):
     # SQL-query
