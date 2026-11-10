@@ -1,74 +1,136 @@
 <template>
   <div>
-    <form
-      class="panel panel-default panel-flt"
-      style="margin: 20px;"
-      @submit.prevent="load()"
+    <div
+      ref="filtersSticky"
+      class="filters-sticky"
     >
-      <div
-        class="panel-body"
-        style="overflow: visible;"
+      <form
+        class="panel panel-default panel-flt"
+        @submit.prevent="load()"
       >
         <div
-          class="row"
-          style="margin-top:5px;"
+          class="panel-body indicator-filters-body"
+          style="overflow: visible;"
         >
-          <div class="col-xs-12 indicator-filters">
-            <div class="date-filter">
-              <label class="date-filter__addon">
+          <div class="row">
+            <div class="col-xs-12 indicator-filters">
+              <div class="date-filter">
+                <label class="date-filter__addon">
+                  <input
+                    v-model="params.filterByDate"
+                    type="checkbox"
+                  >
+                </label>
+                <span class="date-filter__addon">Дата</span>
                 <input
-                  v-model="params.filterByDate"
+                  ref="dateFrom"
+                  class="date-filter__input"
+                  type="text"
+                  maxlength="10"
+                  :value="params.datePeriod[0]"
+                  @change="onPeriodDateChange(0, $event)"
+                >
+                <button
+                  type="button"
+                  class="date-filter__clear"
+                  title="Очистить дату начала"
+                  @click="clearPeriodDate(0)"
+                >
+                  ×
+                </button>
+                <input
+                  ref="dateTo"
+                  class="date-filter__input"
+                  type="text"
+                  maxlength="10"
+                  :value="params.datePeriod[1]"
+                  @change="onPeriodDateChange(1, $event)"
+                >
+                <button
+                  type="button"
+                  class="date-filter__clear"
+                  title="Очистить дату окончания"
+                  @click="clearPeriodDate(1)"
+                >
+                  ×
+                </button>
+              </div>
+              <label
+                v-if="canSeeAllIndicators"
+                class="all-indicators"
+              >
+                <input
+                  v-model="params.allIndicators"
                   type="checkbox"
                 >
+                <span>Все показатели</span>
               </label>
-              <span class="date-filter__addon">Дата</span>
-              <input
-                ref="dateFrom"
-                class="date-filter__input"
-                type="text"
-                maxlength="10"
-                :value="params.datePeriod[0]"
-                @change="onPeriodDateChange(0, $event)"
-              >
-              <button
-                type="button"
-                class="date-filter__clear"
-                title="Очистить дату начала"
-                @click="clearPeriodDate(0)"
-              >
-                ×
-              </button>
-              <input
-                ref="dateTo"
-                class="date-filter__input"
-                type="text"
-                maxlength="10"
-                :value="params.datePeriod[1]"
-                @change="onPeriodDateChange(1, $event)"
-              >
-              <button
-                type="button"
-                class="date-filter__clear"
-                title="Очистить дату окончания"
-                @click="clearPeriodDate(1)"
-              >
-                ×
-              </button>
+              <div class="sort-bar">
+                <span class="sort-bar__label">Сортировка</span>
+                <select
+                  class="form-control input-sm"
+                  :value="sortPrimaryKey"
+                  @change="setSortKey(0, $event)"
+                >
+                  <option value="">
+                    нет
+                  </option>
+                  <option
+                    v-for="col in sortColumns"
+                    :key="col.key"
+                    :value="col.key"
+                  >
+                    {{ col.label }}
+                  </option>
+                </select>
+                <button
+                  type="button"
+                  class="btn btn-default btn-sm"
+                  :disabled="!sortPrimaryKey"
+                  @click.prevent="toggleLevelDir(0)"
+                >
+                  {{ sortPrimaryDir === 'desc' ? '▼' : '▲' }}
+                </button>
+                <span class="sort-bar__label">затем</span>
+                <select
+                  class="form-control input-sm"
+                  :value="sortSecondaryKey"
+                  :disabled="!sortPrimaryKey"
+                  @change="setSortKey(1, $event)"
+                >
+                  <option value="">
+                    нет
+                  </option>
+                  <option
+                    v-for="col in secondarySortColumns"
+                    :key="col.key"
+                    :value="col.key"
+                  >
+                    {{ col.label }}
+                  </option>
+                </select>
+                <button
+                  type="button"
+                  class="btn btn-default btn-sm"
+                  :disabled="!sortSecondaryKey"
+                  @click.prevent="toggleLevelDir(1)"
+                >
+                  {{ sortSecondaryDir === 'desc' ? '▼' : '▲' }}
+                </button>
+                <button
+                  v-if="sortLevels.length"
+                  type="button"
+                  class="btn btn-link btn-sm sort-bar__reset"
+                  @click="clearSort"
+                >
+                  сбросить
+                </button>
+              </div>
             </div>
-            <label
-              v-if="canSeeAllIndicators"
-              class="all-indicators"
-            >
-              <input
-                v-model="params.allIndicators"
-                type="checkbox"
-              >
-              <span>Все показатели</span>
-            </label>
           </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
     <div
       v-if="!loaded"
       class="not-loaded"
@@ -84,84 +146,23 @@
       v-else
       class="data"
     >
-      <div class="sort-bar">
-        <span class="sort-bar__label">Сортировка</span>
-        <select
-          class="form-control input-sm"
-          :value="sortPrimaryKey"
-          @change="setSortKey(0, $event)"
-        >
-          <option value="">
-            нет
-          </option>
-          <option
-            v-for="col in sortColumns"
-            :key="col.key"
-            :value="col.key"
-          >
-            {{ col.label }}
-          </option>
-        </select>
-        <button
-          type="button"
-          class="btn btn-default btn-sm"
-          :disabled="!sortPrimaryKey"
-          @click.prevent="toggleLevelDir(0)"
-        >
-          {{ sortPrimaryDir === 'desc' ? '▼' : '▲' }}
-        </button>
-        <span class="sort-bar__label">затем</span>
-        <select
-          class="form-control input-sm"
-          :value="sortSecondaryKey"
-          :disabled="!sortPrimaryKey"
-          @change="setSortKey(1, $event)"
-        >
-          <option value="">
-            нет
-          </option>
-          <option
-            v-for="col in secondarySortColumns"
-            :key="col.key"
-            :value="col.key"
-          >
-            {{ col.label }}
-          </option>
-        </select>
-        <button
-          type="button"
-          class="btn btn-default btn-sm"
-          :disabled="!sortSecondaryKey"
-          @click.prevent="toggleLevelDir(1)"
-        >
-          {{ sortSecondaryDir === 'desc' ? '▼' : '▲' }}
-        </button>
-        <button
-          v-if="sortLevels.length"
-          type="button"
-          class="btn btn-link btn-sm sort-bar__reset"
-          @click="clearSort"
-        >
-          сбросить
-        </button>
-      </div>
       <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
           <col style="width: 300px">
           <col style="width: 110px">
-          <col style="width: 130px">
-          <col style="width: 160px">
+          <col style="width: 65px">
+          <col style="width: 113px">
           <col>
           <col style="width: 120px">
           <col style="width: 90px">
           <col style="width: 160px">
           <col style="width: 120px">
-          <col style="width: 100px">
+          <col style="width: 84px">
           <col style="width: 100px">
           <col style="width: 200px">
         </colgroup>
         <thead>
-          <tr>
+          <tr ref="headRow">
             <th
               class="sortable"
               @click="toggleSort('hospital')"
@@ -607,6 +608,8 @@ const compareRowsByKey = (left: any, right: any, key: string, dir: 'asc' | 'desc
   },
   async mounted() {
     this.initPeriodDates();
+    this.measureStickyOffsets();
+    window.addEventListener('resize', this.onWindowResize);
     await this.$store.dispatch(actions.INC_LOADING);
     const { hospitals } = await this.$api('hospitals', { filterByUserHospital: true });
     this.hospitals = hospitals;
@@ -636,7 +639,8 @@ export default class ExtraNotification extends Vue {
   }
 
   get canSeeAllIndicators() {
-    return (this.$store.getters.user_data.groups || []).includes('Все показатели');
+    const user = this.$store.getters.user_data || {};
+    return Boolean(user.su) || (user.groups || []).includes('Все показатели');
   }
 
   get watchParams() {
@@ -791,7 +795,29 @@ export default class ExtraNotification extends Vue {
     this.params.datePeriod = next;
   }
 
+  onWindowResize = () => {
+    this.measureStickyOffsets();
+  };
+
+  measureStickyOffsets() {
+    const root = this.$el as HTMLElement;
+    if (!root?.style) {
+      return;
+    }
+    const filters = this.$refs.filtersSticky as HTMLElement | undefined;
+    const headRow = this.$refs.headRow as HTMLElement | undefined;
+    const filtersHeight = filters ? Math.ceil(filters.getBoundingClientRect().height) : 0;
+    const headRowHeight = headRow ? Math.ceil(headRow.getBoundingClientRect().height) : 0;
+    root.style.setProperty('--filters-height', `${filtersHeight}px`);
+    root.style.setProperty('--head-row-height', `${headRowHeight}px`);
+  }
+
+  updated() {
+    this.measureStickyOffsets();
+  }
+
   beforeDestroy() {
+    window.removeEventListener('resize', this.onWindowResize);
     this.$root.$off('validate-datepickers', this.validatePeriodDates);
     [this.$refs.dateFrom, this.$refs.dateTo].forEach((input) => {
       if (input) {
@@ -958,11 +984,15 @@ export default class ExtraNotification extends Vue {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-left: 8px;
 
   > * {
     margin-right: 6px;
-    margin-bottom: 4px;
+  }
+
+  select.form-control,
+  .btn {
+    height: 34px;
   }
 
   select.form-control {
@@ -991,6 +1021,10 @@ export default class ExtraNotification extends Vue {
   &.disabled {
     opacity: 0.4;
   }
+}
+
+.indicator-filters-body {
+  padding: 4px 10px;
 }
 
 .indicator-filters {
@@ -1072,13 +1106,50 @@ export default class ExtraNotification extends Vue {
   border-bottom-right-radius: 4px;
 }
 
+.filters-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 20px 20px 8px;
+  background: #f2f2f2;
+}
+
+.filters-sticky .panel {
+  margin-bottom: 0;
+}
+
 .table-list {
   table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  &.table-bordered > thead > tr > th,
+  &.table-bordered > tbody > tr > td {
+    border-width: 0 1px 1px 0;
+  }
+
+  &.table-bordered > thead > tr > th:first-child,
+  &.table-bordered > tbody > tr > td:first-child {
+    border-left-width: 1px;
+  }
+
+  &.table-bordered > thead > tr:first-child > th {
+    border-top-width: 1px;
+  }
 
   thead th {
     position: sticky;
-    top: -1px;
+    z-index: 20;
     background: #fff;
+  }
+
+  thead tr:first-child th {
+    top: var(--filters-height, 0px);
+  }
+
+  thead tr:last-child th {
+    top: calc(var(--filters-height, 0px) + var(--head-row-height, 0px));
   }
 
   thead th.sortable {

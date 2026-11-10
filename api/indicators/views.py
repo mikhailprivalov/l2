@@ -75,7 +75,7 @@ def search_indicator(request):
 
     doctorprofile = request.user.doctorprofile
     group_names = [str(group) for group in request.user.groups.all()]
-    all_indicators = bool(request_data.get("allIndicators")) and "Все показатели" in group_names
+    all_indicators = bool(request_data.get("allIndicators")) and (request.user.is_superuser or "Все показатели" in group_names)
     if all_indicators:
         indicators = CuratorCdaFields.objects.exclude(indicator_id=None).values_list("indicator_id", flat=True)
     else:
