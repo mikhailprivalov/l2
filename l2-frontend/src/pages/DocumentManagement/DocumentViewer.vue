@@ -257,7 +257,6 @@
                     download
                   >docx</a>
                   <a
-                    v-if="row.hasPrintTemplate"
                     class="print-link a-under"
                     :href="printHref(row.id, 'pdf')"
                     target="_blank"
@@ -367,7 +366,7 @@
               download
             >docx</a>
             <a
-              v-if="hasPrintTemplate && documentId"
+              v-if="documentId"
               class="print-link a-under"
               :href="printHref(documentId, 'pdf')"
               target="_blank"
@@ -467,7 +466,7 @@
           download
         >docx</a>
         <a
-          v-if="hasPrintTemplate && documentId"
+          v-if="documentId"
           class="print-link a-under"
           :href="printHref(documentId, 'pdf')"
           target="_blank"

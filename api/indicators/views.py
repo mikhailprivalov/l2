@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from api.indicators.formula import calculate_formula
 from api.indicators.journal import aggregate_approval_rows
 from api.indicators.sql_func import approval_journal_sql, indicator_sql
 from directory.models import ParaclinicInputField, ParaclinicInputGroups
@@ -312,19 +313,65 @@ def _copy_curator_indicator_values(source_id, iss, child):
     for record in records:
         if record.field_id:
             saved[record.field_id] = record
-    if not saved:
+    if saved:
+        body = dict(child.body_values) if isinstance(child.body_values, dict) else {}
+        for record in saved.values():
+            value = "" if record.value is None else record.value
+            ParaclinicResult.objects.update_or_create(
+                issledovaniye=iss,
+                field=record.field,
+                defaults={"value": value, "field_type": record.field.field_type},
+            )
+            body[str(record.field_id)] = value
+        child.body_values = body
+        child.save(update_fields=["body_values"])
+    _calculate_formula_fields(iss, child)
+
+
+def _calculate_formula_fields(iss, child):
+    if not iss or not getattr(iss, "research_id", None):
+        return
+    fields = list(ParaclinicInputField.objects.filter(group__research_id=iss.research_id, field_type=3).order_by("group__order", "order", "pk"))
+    if not fields:
+        return
+    current = {}
+    for row in ParaclinicResult.objects.filter(issledovaniye=iss).only("field_id", "value"):
+        if row.field_id:
+            current[row.field_id] = "" if row.value is None else row.value
+    original = dict(current)
+    computed = {}
+    for _step in range(len(fields) + 1):
+        changed = False
+        for field in fields:
+            result = calculate_formula(field.default_value, current)
+            if result is None:
+                continue
+            computed[field.pk] = result
+            if current.get(field.pk) != result:
+                current[field.pk] = result
+                changed = True
+        if not changed:
+            break
+    if not computed:
         return
     body = dict(child.body_values) if isinstance(child.body_values, dict) else {}
-    for record in saved.values():
-        value = "" if record.value is None else record.value
+    stored = False
+    for field in fields:
+        if field.pk not in computed:
+            continue
+        result = computed[field.pk]
+        if original.get(field.pk) == result and body.get(str(field.pk)) == result:
+            continue
         ParaclinicResult.objects.update_or_create(
             issledovaniye=iss,
-            field=record.field,
-            defaults={"value": value, "field_type": record.field.field_type},
+            field=field,
+            defaults={"value": result, "field_type": field.field_type},
         )
-        body[str(record.field_id)] = value
-    child.body_values = body
-    child.save(update_fields=["body_values"])
+        body[str(field.pk)] = result
+        stored = True
+    if stored:
+        child.body_values = body
+        child.save(update_fields=["body_values"])
 
 
 def _ensure_curator_copy(document_id, doctor):

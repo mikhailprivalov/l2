@@ -152,14 +152,12 @@
                   </div>
                 </div>
               </div>
-              <div
-                v-if="row.hasPrintTemplate"
-                class="control-row"
-              >
+              <div class="control-row">
                 <div class="res-title">
                   {{ row.typeTitle }}:
                 </div>
                 <a
+                  v-if="row.hasPrintTemplate"
                   class="print-link a-under"
                   :href="printHref(row.id, 'docx')"
                   download
