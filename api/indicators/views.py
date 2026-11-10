@@ -3,7 +3,7 @@ import json
 import re
 
 from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError, models
+from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -11,8 +11,8 @@ from django.views.decorators.http import require_POST
 from api.indicators.journal import aggregate_approval_rows
 from api.indicators.sql_func import approval_journal_sql, indicator_sql
 from directory.models import ParaclinicInputField, ParaclinicInputGroups
-from directions.models import ParaclinicResultIndicator
-from document_management.models import DocumentApprovalSign, Documents, TypeCases, TypeDocumentCreator, TypeDocuments
+from directions.models import Issledovaniya, ParaclinicResult, ParaclinicResultIndicator
+from document_management.models import DocumentApprovalSign, Documents, TypeDocuments, TypeDocumentsSchema
 from external_system.models import CuratorCdaFields, CdaFields
 from hospitals.models import Hospitals
 from laboratory.decorators import group_required
@@ -300,32 +300,103 @@ def _hospital_options():
     return [{"id": row.pk, "label": row.short_title or row.title} for row in Hospitals.objects.filter(hide=False).order_by("short_title", "title", "pk")]
 
 
-def _link_kinds(doctor):
-    has_creators = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"))
-    is_creator = TypeDocumentCreator.objects.filter(type_document_id=models.OuterRef("pk"), doctor=doctor)
-    types = []
-    visible_ids = set()
-    queryset = TypeDocuments.objects.select_related("monitoring").filter(~models.Exists(has_creators) | models.Exists(is_creator)).order_by("title", "pk")
-    for row in queryset:
-        visible_ids.add(row.pk)
-        types.append(
-            {
-                "id": row.pk,
-                "title": row.title or "Документ",
-                "monitoringDirectionParams": row.monitoring_direction_params_id(),
-            }
+def _copy_curator_indicator_values(source_id, iss, child):
+    saved = {}
+    records = ParaclinicResultIndicator.objects.filter(issledovaniye__document_id=source_id).select_related("field").order_by("pk")
+    for record in records:
+        if record.field_id:
+            saved[record.field_id] = record
+    if not saved:
+        return
+    body = dict(child.body_values) if isinstance(child.body_values, dict) else {}
+    for record in saved.values():
+        value = "" if record.value is None else record.value
+        ParaclinicResult.objects.update_or_create(
+            issledovaniye=iss,
+            field=record.field,
+            defaults={"value": value, "field_type": record.field.field_type},
         )
-    cases = []
-    case_rows = TypeCases.objects.select_related("default_type_document", "default_type_document__monitoring").filter(default_type_document_id__in=visible_ids).order_by("title", "pk")
-    for case in case_rows:
-        cases.append(
-            {
-                "id": case.pk,
-                "title": case.title or "Дело",
-                "monitoringDirectionParams": case.default_type_document.monitoring_direction_params_id(),
-            }
+        body[str(record.field_id)] = value
+    child.body_values = body
+    child.save(update_fields=["body_values"])
+
+
+def _ensure_curator_copy(document_id, doctor):
+    if not document_id or not _document_state(document_id):
+        return {"ok": False, "message": "Документ не найден"}
+    with transaction.atomic():
+        source = Documents.objects.select_for_update().filter(pk=document_id).first()
+        if not source:
+            return {"ok": False, "message": "Документ не найден"}
+        existing = Documents.objects.filter(parent_document_id=source.pk).select_related("type_document").order_by("pk").first()
+        if existing:
+            if not existing.approval_journal_copy:
+                Documents.objects.filter(pk=existing.pk).update(approval_journal_copy=True)
+            return {"ok": True, "document": _child_payload(existing)}
+        if not source.type_document_id:
+            return {"ok": False, "message": "У документа нет вида"}
+        type_doc = TypeDocuments.objects.select_related("monitoring", "layout_template").filter(pk=source.type_document_id).first()
+        research = type_doc.form_research() if type_doc else None
+        if not type_doc or not research:
+            return {"ok": False, "message": "Нельзя создать документ этого вида"}
+        schema = TypeDocumentsSchema.objects.filter(type_document=type_doc).order_by("-created_at", "-pk").first()
+        if schema is None:
+            schema = TypeDocumentsSchema.get_or_create_for_type(type_doc)
+        child = Documents.objects.create(
+            type_document=type_doc,
+            who_create=doctor,
+            body_values={},
+            schema=schema,
+            parent_document=source,
+            approval_journal_copy=True,
         )
-    return types, cases
+        iss = Issledovaniya.objects.create(
+            document=child,
+            research=research,
+            creator=doctor,
+            doc_save=doctor,
+            time_save=timezone.now(),
+        )
+        _copy_curator_indicator_values(source.pk, iss, child)
+    child = Documents.objects.select_related("type_document").get(pk=child.pk)
+    type_title = type_doc.title or "Документ"
+    Documents.log_action(
+        child.pk,
+        Documents.LOG_CREATE,
+        doctor,
+        {
+            "title": f"{type_title} №{child.pk}",
+            "typeId": type_doc.pk,
+            "typeTitle": type_doc.title or "",
+            "parentDocumentId": source.pk,
+        },
+    )
+    return {"ok": True, "document": _child_payload(child)}
+
+
+def _refresh_curator_copy(source_id, child_id, doctor):
+    if not source_id or not _document_state(source_id):
+        return {"ok": False, "message": "Документ не найден"}
+    try:
+        child_id = int(child_id or 0)
+    except (TypeError, ValueError):
+        child_id = 0
+    if not child_id:
+        return {"ok": False, "message": "Связный документ не найден"}
+    with transaction.atomic():
+        child = Documents.objects.select_for_update().filter(pk=child_id, parent_document_id=source_id).first()
+        if not child:
+            return {"ok": False, "message": "Связный документ не найден"}
+        if not child.approval_journal_copy:
+            child.approval_journal_copy = True
+            child.save(update_fields=["approval_journal_copy"])
+        iss = child.get_issledovaniye()
+        _copy_curator_indicator_values(source_id, iss, child)
+        iss.doc_save = doctor
+        iss.time_save = timezone.now()
+        iss.save(update_fields=["doc_save", "time_save"])
+    child = Documents.objects.select_related("type_document").get(pk=child.pk)
+    return {"ok": True, "document": _child_payload(child)}
 
 
 def _doctor(request):
@@ -357,17 +428,6 @@ def approval_journal(request):
 @login_required
 @group_required(APPROVAL_JOURNAL_GROUP)
 @require_POST
-def approval_journal_types(request):
-    doctor = _doctor(request)
-    if not doctor:
-        return JsonResponse({"ok": False, "message": "Профиль врача не найден"})
-    types, cases = _link_kinds(doctor)
-    return JsonResponse({"ok": True, "types": types, "cases": cases})
-
-
-@login_required
-@group_required(APPROVAL_JOURNAL_GROUP)
-@require_POST
 def approval_journal_link(request):
     doctor = _doctor(request)
     if not doctor:
@@ -377,20 +437,28 @@ def approval_journal_link(request):
         document_id = int(data.get("documentId") or 0)
     except (TypeError, ValueError):
         document_id = 0
-    if not document_id or not _document_state(document_id):
-        return JsonResponse({"ok": False, "message": "Документ не найден"})
-    result = Documents.create_document(
-        data.get("typeId"),
-        doctor,
-        data.get("caseId"),
-        data.get("topic"),
-        data.get("periodParams"),
-        document_id,
-    )
-    if not result.get("ok") or not result.get("id"):
+    result = _ensure_curator_copy(document_id, doctor)
+    if not result.get("ok"):
         return JsonResponse({"ok": False, "message": result.get("message") or "Документ не создан"})
-    child = Documents.objects.select_related("type_document").filter(pk=result["id"]).first()
-    return JsonResponse({"ok": True, "document": _child_payload(child)})
+    return JsonResponse({"ok": True, "document": result["document"]})
+
+
+@login_required
+@group_required(APPROVAL_JOURNAL_GROUP)
+@require_POST
+def approval_journal_link_open(request):
+    doctor = _doctor(request)
+    if not doctor:
+        return JsonResponse({"ok": False, "message": "Профиль врача не найден"})
+    data = _body(request)
+    try:
+        document_id = int(data.get("documentId") or 0)
+    except (TypeError, ValueError):
+        document_id = 0
+    result = _refresh_curator_copy(document_id, data.get("linkedDocumentId"), doctor)
+    if not result.get("ok"):
+        return JsonResponse({"ok": False, "message": result.get("message") or "Не удалось обновить документ"})
+    return JsonResponse({"ok": True, "document": result["document"]})
 
 
 @login_required
@@ -410,10 +478,29 @@ def approval_journal_sign(request):
         return JsonResponse({"ok": False, "message": "Документ не найден"})
     if not state["approved"]:
         return JsonResponse({"ok": False, "message": "Документ не утвержден"})
+    copy = _ensure_curator_copy(document_id, doctor)
+    if not copy.get("ok"):
+        return JsonResponse({"ok": False, "message": copy.get("message") or "Документ не создан"})
     try:
         sign, _created = DocumentApprovalSign.objects.get_or_create(document_id=document_id, defaults={"doctor": doctor})
     except IntegrityError:
         sign = DocumentApprovalSign.objects.select_related("doctor").get(document_id=document_id)
     else:
         sign = DocumentApprovalSign.objects.select_related("doctor").get(pk=sign.pk)
-    return JsonResponse({"ok": True, "sign": _sign_payload(sign)})
+    return JsonResponse({"ok": True, "sign": _sign_payload(sign), "document": copy["document"]})
+
+
+@login_required
+@group_required(APPROVAL_JOURNAL_GROUP)
+@require_POST
+def approval_journal_sign_reset(request):
+    data = _body(request)
+    try:
+        document_id = int(data.get("documentId") or 0)
+    except (TypeError, ValueError):
+        document_id = 0
+    state = _document_state(document_id) if document_id else None
+    if not state:
+        return JsonResponse({"ok": False, "message": "Документ не найден"})
+    DocumentApprovalSign.objects.filter(document_id=document_id).delete()
+    return JsonResponse({"ok": True})

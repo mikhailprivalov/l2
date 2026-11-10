@@ -304,25 +304,37 @@
               >
                 <a
                   class="a-under"
-                  :href="documentHref(document.id)"
-                  target="_blank"
+                  href="#"
+                  @click.prevent="openLinked(row, document)"
                 >{{ document.title }}</a>
               </div>
               <button
+                v-if="!row.linkedDocuments.length"
                 type="button"
                 class="btn btn-blue-nb btn-sm"
-                @click="openLink(row)"
+                :disabled="linkingId === row.documentId || signingId === row.documentId"
+                @click="createLinked(row)"
               >
                 Связный документ
               </button>
             </td>
             <td>
-              <span v-if="row.sign">Подписан {{ row.sign.signedAt }} {{ row.sign.fio }}</span>
+              <template v-if="row.sign">
+                <div>Подписан {{ row.sign.signedAt }} {{ row.sign.fio }}</div>
+                <button
+                  type="button"
+                  class="btn btn-blue-nb btn-sm"
+                  :disabled="resettingId === row.documentId"
+                  @click="resetSign(row)"
+                >
+                  Сбросить
+                </button>
+              </template>
               <button
                 v-else-if="row.approved"
                 type="button"
                 class="btn btn-blue-nb btn-sm"
-                :disabled="signingId === row.documentId"
+                :disabled="signingId === row.documentId || linkingId === row.documentId"
                 @click="sign(row)"
               >
                 Подписать
@@ -341,64 +353,6 @@
         </tbody>
       </table>
     </div>
-    <Modal
-      v-if="linkDocumentId"
-      show-footer="true"
-      white-bg="true"
-      min-width="560px"
-      overflow-unset="true"
-      @close="closeLink"
-    >
-      <span slot="header">Связный документ</span>
-      <div
-        slot="body"
-        class="link-body"
-      >
-        <Treeselect
-          v-model="selectedKindId"
-          :multiple="false"
-          :disable-branch-nodes="true"
-          :options="kindOptions"
-          :clearable="true"
-          placeholder="Вид документа"
-          class="treeselect-wide"
-          :append-to-body="true"
-        />
-        <input
-          v-if="selectedKind && selectedKind.kind === 'case'"
-          v-model="topic"
-          type="text"
-          class="form-control link-body__topic"
-          placeholder="Тема дела"
-        >
-      </div>
-      <div
-        slot="footer"
-        class="link-footer"
-      >
-        <button
-          type="button"
-          class="btn btn-blue-nb"
-          @click="closeLink"
-        >
-          Закрыть
-        </button>
-        <button
-          type="button"
-          class="btn btn-blue-nb"
-          :disabled="linking || monitoringOpen"
-          @click="submitLink"
-        >
-          Создать
-        </button>
-      </div>
-    </Modal>
-    <MonitoringPeriodModal
-      :open="monitoringOpen"
-      :direction-params-id="monitoringParamsId"
-      @close="closeMonitoring"
-      @confirm="confirmPeriod"
-    />
   </div>
 </template>
 
@@ -418,8 +372,6 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import api from '@/api';
 import useNotify from '@/hooks/useNotify';
-import MonitoringPeriodModal from '@/pages/DocumentManagement/MonitoringPeriodModal.vue';
-import Modal from '@/ui-cards/Modal.vue';
 
 interface LinkedDocument {
   id: number;
@@ -438,28 +390,6 @@ interface JournalRow {
   approved: boolean;
   linkedDocuments: LinkedDocument[];
   sign: JournalSign | null;
-}
-
-interface KindSource {
-  id: number;
-  title: string;
-  monitoringDirectionParams: number;
-}
-
-interface LinkKind {
-  id: string;
-  label: string;
-  kind: 'type' | 'case';
-  sourceId: number;
-  monitoringDirectionParams: number;
-}
-
-interface LinkPayload {
-  documentId: number;
-  typeId: number | null;
-  caseId: number | null;
-  topic: string;
-  periodParams: Record<string, unknown> | null;
 }
 
 interface SortLevel {
@@ -596,56 +526,9 @@ const columnFilters = reactive({
 });
 const sortLevels = ref<SortLevel[]>([]);
 const signingId = ref(0);
-const linking = ref(false);
-const linkDocumentId = ref<number | null>(null);
-const types = ref<KindSource[]>([]);
-const cases = ref<KindSource[]>([]);
-const kindsLoaded = ref(false);
-const selectedKindId = ref<string | null>(null);
-const topic = ref('');
-const monitoringOpen = ref(false);
-const monitoringParamsId = ref(0);
-const pendingLink = ref<LinkPayload | null>(null);
-
-const kindList = computed<LinkKind[]>(() => [
-  ...types.value.map(row => ({
-    id: `type:${row.id}`,
-    label: row.title,
-    kind: 'type' as const,
-    sourceId: row.id,
-    monitoringDirectionParams: row.monitoringDirectionParams,
-  })),
-  ...cases.value.map(row => ({
-    id: `case:${row.id}`,
-    label: row.title,
-    kind: 'case' as const,
-    sourceId: row.id,
-    monitoringDirectionParams: row.monitoringDirectionParams,
-  })),
-]);
-
-const kindOptions = computed(() => {
-  const branches = [];
-  const typeRows = kindList.value.filter(row => row.kind === 'type');
-  const caseRows = kindList.value.filter(row => row.kind === 'case');
-  if (typeRows.length) {
-    branches.push({
-      id: 'branch-types',
-      label: 'Документы',
-      children: typeRows.map(row => ({ id: row.id, label: row.label })),
-    });
-  }
-  if (caseRows.length) {
-    branches.push({
-      id: 'branch-cases',
-      label: 'Дела',
-      children: caseRows.map(row => ({ id: row.id, label: row.label })),
-    });
-  }
-  return branches;
-});
-
-const selectedKind = computed(() => kindList.value.find(row => row.id === selectedKindId.value) || null);
+const resettingId = ref(0);
+const linkingId = ref(0);
+const openingId = ref(0);
 
 const sortPrimaryKey = computed(() => (sortLevels.value[0] ? sortLevels.value[0].key : ''));
 const sortPrimaryDir = computed(() => (sortLevels.value[0] ? sortLevels.value[0].dir : 'asc'));
@@ -799,90 +682,44 @@ const load = async () => {
   loaded.value = true;
 };
 
-const loadKinds = async () => {
-  if (kindsLoaded.value) {
+const openLinked = async (row: JournalRow, document: LinkedDocument) => {
+  if (openingId.value) {
     return;
   }
-  const response = await api('indicators/approval-journal/types', {});
-  if (!response.ok) {
-    notify.error(response.message || 'Не удалось загрузить виды документов');
-    return;
-  }
-  types.value = response.types || [];
-  cases.value = response.cases || [];
-  kindsLoaded.value = true;
-};
-
-const openLink = async (row: JournalRow) => {
-  selectedKindId.value = null;
-  topic.value = '';
-  linkDocumentId.value = row.documentId;
-  await loadKinds();
-};
-
-const closeLink = () => {
-  linkDocumentId.value = null;
-  selectedKindId.value = null;
-  topic.value = '';
-};
-
-const closeMonitoring = () => {
-  monitoringOpen.value = false;
-  pendingLink.value = null;
-};
-
-const createLink = async (payload: LinkPayload) => {
-  linking.value = true;
+  openingId.value = document.id;
   try {
-    const response = await api('indicators/approval-journal/link', payload);
+    const response = await api('indicators/approval-journal/link-open', {
+      documentId: row.documentId,
+      linkedDocumentId: document.id,
+    });
+    if (!response.ok) {
+      notify.error(response.message || 'Не удалось обновить документ');
+      return;
+    }
+    window.open(documentHref(document.id), '_blank');
+  } finally {
+    openingId.value = 0;
+  }
+};
+
+const createLinked = async (row: JournalRow) => {
+  if (row.linkedDocuments.length) {
+    return;
+  }
+  linkingId.value = row.documentId;
+  try {
+    const response = await api('indicators/approval-journal/link', { documentId: row.documentId });
     if (!response.ok || !response.document) {
       notify.error(response.message || 'Документ не создан');
       return;
     }
-    const row = rows.value.find(item => item.documentId === payload.documentId);
-    if (row) {
-      row.linkedDocuments = [...row.linkedDocuments, response.document];
-    }
-    closeLink();
-    closeMonitoring();
+    rows.value = rows.value.map(item => (
+      item.documentId === row.documentId ? { ...item, linkedDocuments: [response.document] } : item
+    ));
     window.open(documentHref(response.document.id), '_blank');
   } finally {
-    linking.value = false;
+    linkingId.value = 0;
   }
-};
-
-const submitLink = () => {
-  const kind = selectedKind.value;
-  const documentId = linkDocumentId.value;
-  if (!kind || !documentId) {
-    notify.error('Выберите вид документа');
-    return;
-  }
-  if (kind.kind === 'case' && !topic.value.trim()) {
-    notify.error('Укажите тему дела');
-    return;
-  }
-  const payload: LinkPayload = {
-    documentId,
-    typeId: kind.kind === 'type' ? kind.sourceId : null,
-    caseId: kind.kind === 'case' ? kind.sourceId : null,
-    topic: topic.value.trim(),
-    periodParams: null,
-  };
-  if (kind.monitoringDirectionParams > 0) {
-    pendingLink.value = payload;
-    monitoringParamsId.value = kind.monitoringDirectionParams;
-    monitoringOpen.value = true;
-    return;
-  }
-  createLink(payload);
-};
-
-const confirmPeriod = (periodParams: Record<string, unknown>) => {
-  if (!pendingLink.value) {
-    return;
-  }
-  createLink({ ...pendingLink.value, periodParams });
 };
 
 const sign = async (row: JournalRow) => {
@@ -893,11 +730,35 @@ const sign = async (row: JournalRow) => {
       notify.error(response.message || 'Не удалось подписать');
       return;
     }
-    rows.value = rows.value.map(item => (
-      item.documentId === row.documentId ? { ...item, sign: response.sign } : item
-    ));
+    const created = response.document ? [response.document] : [];
+    rows.value = rows.value.map(item => {
+      if (item.documentId !== row.documentId) {
+        return item;
+      }
+      return {
+        ...item,
+        sign: response.sign,
+        linkedDocuments: item.linkedDocuments.length ? item.linkedDocuments : created,
+      };
+    });
   } finally {
     signingId.value = 0;
+  }
+};
+
+const resetSign = async (row: JournalRow) => {
+  resettingId.value = row.documentId;
+  try {
+    const response = await api('indicators/approval-journal/sign-reset', { documentId: row.documentId });
+    if (!response.ok) {
+      notify.error(response.message || 'Не удалось сбросить подпись');
+      return;
+    }
+    rows.value = rows.value.map(item => (
+      item.documentId === row.documentId ? { ...item, sign: null } : item
+    ));
+  } finally {
+    resettingId.value = 0;
   }
 };
 
@@ -1131,20 +992,5 @@ watch([filterByDate, dateRange], () => {
   &__approved {
     color: #049372;
   }
-}
-
-.link-body {
-  min-height: 220px;
-  padding: 12px;
-}
-
-.link-body__topic {
-  margin-top: 12px;
-}
-
-.link-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
 }
 </style>

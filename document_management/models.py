@@ -3806,6 +3806,7 @@ class Documents(models.Model):
         on_delete=models.SET_NULL,
     )
     is_hidden = models.BooleanField(default=False, blank=True, db_index=True, help_text="Скрыт из списков")
+    approval_journal_copy = models.BooleanField(default=False, blank=True, help_text="Копия журнала утверждения, заполняется из показателей куратора")
     type_case = models.ForeignKey(
         TypeCases,
         related_name="created_documents",
@@ -4558,6 +4559,8 @@ class Documents(models.Model):
             return {"ok": False, "message": "Документ не найден"}
         if not self.plan_id or not self.plan or not self.plan.user_created:
             return {"ok": False, "message": "План не найден"}
+        if self.approval_journal_copy:
+            return {"ok": False, "message": "Документ заполняется из показателей куратора"}
         if Documents.document_is_confirmed(self):
             return {"ok": False, "message": "Документ подтверждён"}
         result = Plans.save_plan(self.plan_id, title, groups, indicators, tests, allow_user=True, who=who)
@@ -4857,6 +4860,7 @@ class Documents(models.Model):
         payload["research"] = research
         payload["testId"] = obj.type_document.test_id if obj.type_document_id and obj.type_document and obj.type_document.test_id else None
         payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
+        payload["approvalJournalCopy"] = bool(obj.approval_journal_copy)
         payload["whoConfirmed"] = Documents.confirmation_text(obj, iss) if payload["confirmed"] else ""
         can_hide = Documents.HIDDEN_DOCS_GROUP in group_names
         if not can_hide and who and obj.who_create_id == getattr(who, "pk", None) and not payload["confirmed"]:
@@ -4919,6 +4923,8 @@ class Documents(models.Model):
             return {"ok": False, "message": "Исследование не найдено"}
         if not Documents.can_see_document(iss.document, who):
             return {"ok": False, "message": "Документ не найден"}
+        if iss.document.approval_journal_copy:
+            return {"ok": False, "message": "Документ заполняется из показателей куратора"}
         if iss.time_confirmation or iss.document.time_confirm:
             return {"ok": False, "message": "Документ подтверждён"}
         document = iss.document
@@ -5328,6 +5334,8 @@ class DocumentEmployeeApprove(models.Model):
     def can_edit(document, who):
         if not document or not who:
             return False
+        if getattr(document, "approval_journal_copy", False):
+            return False
         if document.time_confirm:
             return False
         cache = getattr(document, "_prefetched_objects_cache", None) or {}
@@ -5369,6 +5377,8 @@ class DocumentEmployeeApprove(models.Model):
     def set_approvers(cls, document, who, members):
         if not Documents.can_see_document(document, who):
             return {"ok": False, "message": "Документ не найден"}
+        if document.approval_journal_copy:
+            return {"ok": False, "message": "Документ заполняется из показателей куратора"}
         if not cls.can_edit(document, who):
             if Documents.document_is_confirmed(document):
                 return {"ok": False, "message": "Документ подтверждён"}
