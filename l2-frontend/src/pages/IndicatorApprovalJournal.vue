@@ -304,25 +304,37 @@
               >
                 <a
                   class="a-under"
-                  :href="documentHref(document.id)"
-                  target="_blank"
+                  href="#"
+                  @click.prevent="openLinked(row, document)"
                 >{{ document.title }}</a>
               </div>
               <button
+                v-if="!row.linkedDocuments.length"
                 type="button"
                 class="btn btn-blue-nb btn-sm"
-                @click="openLink(row)"
+                :disabled="linkingId === row.documentId || signingId === row.documentId"
+                @click="createLinked(row)"
               >
                 Связный документ
               </button>
             </td>
             <td>
-              <span v-if="row.sign">Подписан {{ row.sign.signedAt }} {{ row.sign.fio }}</span>
+              <template v-if="row.sign">
+                <div>Подписан {{ row.sign.signedAt }} {{ row.sign.fio }}</div>
+                <button
+                  type="button"
+                  class="btn btn-blue-nb btn-sm"
+                  :disabled="resettingId === row.documentId"
+                  @click="resetSign(row)"
+                >
+                  Сбросить
+                </button>
+              </template>
               <button
                 v-else-if="row.approved"
                 type="button"
                 class="btn btn-blue-nb btn-sm"
-                :disabled="signingId === row.documentId"
+                :disabled="signingId === row.documentId || linkingId === row.documentId"
                 @click="sign(row)"
               >
                 Подписать
@@ -342,63 +354,76 @@
       </table>
     </div>
     <Modal
-      v-if="linkDocumentId"
+      v-if="signOpen"
       show-footer="true"
       white-bg="true"
-      min-width="560px"
-      overflow-unset="true"
-      @close="closeLink"
+      min-width="640px"
+      @close="closeSign"
     >
-      <span slot="header">Связный документ</span>
+      <span slot="header">Подписать</span>
       <div
         slot="body"
-        class="link-body"
+        class="sign-body"
       >
-        <Treeselect
-          v-model="selectedKindId"
-          :multiple="false"
-          :disable-branch-nodes="true"
-          :options="kindOptions"
-          :clearable="true"
-          placeholder="Вид документа"
-          class="treeselect-wide"
-          :append-to-body="true"
-        />
-        <input
-          v-if="selectedKind && selectedKind.kind === 'case'"
-          v-model="topic"
-          type="text"
-          class="form-control link-body__topic"
-          placeholder="Тема дела"
+        <div v-if="!signChecked">
+          загрузка
+        </div>
+        <div
+          v-else-if="!signHasPlugin"
+          class="status-error"
         >
+          Плагин CSP не настроен
+        </div>
+        <template v-else>
+          <select
+            v-if="signCertificates.length"
+            v-model="selectedThumbprint"
+            class="form-control"
+          >
+            <option
+              v-for="certificate in signCertificates"
+              :key="certificate.thumbprint"
+              :value="certificate.thumbprint"
+            >
+              {{ certificate.name }}
+            </option>
+          </select>
+          <div
+            v-else
+            class="status-error"
+          >
+            Нет сертификатов
+          </div>
+          <div
+            v-if="selectedCertificate"
+            class="sign-body__cert"
+          >
+            <div>{{ selectedCertificate.thumbprint }}</div>
+            <div>{{ selectedCertificate.validFrom }} — {{ selectedCertificate.validTo }}</div>
+          </div>
+        </template>
       </div>
       <div
         slot="footer"
-        class="link-footer"
+        class="sign-footer"
       >
         <button
           type="button"
           class="btn btn-blue-nb"
-          @click="closeLink"
+          @click="closeSign"
         >
           Закрыть
         </button>
         <button
           type="button"
           class="btn btn-blue-nb"
-          :disabled="linking || monitoringOpen"
-          @click="submitLink"
+          :disabled="signBusy || !selectedThumbprint"
+          @click="confirmSign"
         >
-          Создать
+          Подписать
         </button>
       </div>
     </Modal>
-    <MonitoringPeriodModal
-      :open="monitoringOpen"
-      :direction-params-id="monitoringParamsId"
-      @close="closeMonitoring"
-      @confirm="confirmPeriod"
-    />
   </div>
 </template>
 
@@ -413,12 +438,19 @@ import {
   watch,
 } from 'vue';
 import moment from 'moment';
+import {
+  createDetachedSignature,
+  createHash,
+  getCertificate,
+  getSystemInfo,
+  getUserCertificates,
+} from 'crypto-pro';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import api from '@/api';
 import useNotify from '@/hooks/useNotify';
-import MonitoringPeriodModal from '@/pages/DocumentManagement/MonitoringPeriodModal.vue';
+import { convertSubjectNameToTitle } from '@/utils';
 import Modal from '@/ui-cards/Modal.vue';
 
 interface LinkedDocument {
@@ -438,28 +470,6 @@ interface JournalRow {
   approved: boolean;
   linkedDocuments: LinkedDocument[];
   sign: JournalSign | null;
-}
-
-interface KindSource {
-  id: number;
-  title: string;
-  monitoringDirectionParams: number;
-}
-
-interface LinkKind {
-  id: string;
-  label: string;
-  kind: 'type' | 'case';
-  sourceId: number;
-  monitoringDirectionParams: number;
-}
-
-interface LinkPayload {
-  documentId: number;
-  typeId: number | null;
-  caseId: number | null;
-  topic: string;
-  periodParams: Record<string, unknown> | null;
 }
 
 interface SortLevel {
@@ -595,57 +605,25 @@ const columnFilters = reactive({
   sign: null as string | null,
 });
 const sortLevels = ref<SortLevel[]>([]);
+interface SignCertificate {
+  thumbprint: string;
+  name: string;
+  validFrom: string;
+  validTo: string;
+}
+
 const signingId = ref(0);
-const linking = ref(false);
-const linkDocumentId = ref<number | null>(null);
-const types = ref<KindSource[]>([]);
-const cases = ref<KindSource[]>([]);
-const kindsLoaded = ref(false);
-const selectedKindId = ref<string | null>(null);
-const topic = ref('');
-const monitoringOpen = ref(false);
-const monitoringParamsId = ref(0);
-const pendingLink = ref<LinkPayload | null>(null);
-
-const kindList = computed<LinkKind[]>(() => [
-  ...types.value.map(row => ({
-    id: `type:${row.id}`,
-    label: row.title,
-    kind: 'type' as const,
-    sourceId: row.id,
-    monitoringDirectionParams: row.monitoringDirectionParams,
-  })),
-  ...cases.value.map(row => ({
-    id: `case:${row.id}`,
-    label: row.title,
-    kind: 'case' as const,
-    sourceId: row.id,
-    monitoringDirectionParams: row.monitoringDirectionParams,
-  })),
-]);
-
-const kindOptions = computed(() => {
-  const branches = [];
-  const typeRows = kindList.value.filter(row => row.kind === 'type');
-  const caseRows = kindList.value.filter(row => row.kind === 'case');
-  if (typeRows.length) {
-    branches.push({
-      id: 'branch-types',
-      label: 'Документы',
-      children: typeRows.map(row => ({ id: row.id, label: row.label })),
-    });
-  }
-  if (caseRows.length) {
-    branches.push({
-      id: 'branch-cases',
-      label: 'Дела',
-      children: caseRows.map(row => ({ id: row.id, label: row.label })),
-    });
-  }
-  return branches;
-});
-
-const selectedKind = computed(() => kindList.value.find(row => row.id === selectedKindId.value) || null);
+const signOpen = ref(false);
+const signRowId = ref(0);
+const signPdf = ref('');
+const signChecked = ref(false);
+const signHasPlugin = ref(false);
+const signCertificates = ref<SignCertificate[]>([]);
+const selectedThumbprint = ref('');
+const signBusy = ref(false);
+const resettingId = ref(0);
+const linkingId = ref(0);
+const openingId = ref(0);
 
 const sortPrimaryKey = computed(() => (sortLevels.value[0] ? sortLevels.value[0].key : ''));
 const sortPrimaryDir = computed(() => (sortLevels.value[0] ? sortLevels.value[0].dir : 'asc'));
@@ -698,6 +676,21 @@ const linkedFilterOptions = computed(() => makeOptions(rows.value.map(row => lin
 const signFilterOptions = computed(() => makeOptions(rows.value.map(row => signLabel(row))));
 
 const documentHref = (documentId: number) => `/ui/document-manager-2?document=${documentId}`;
+
+const selectedCertificate = computed(() => (
+  signCertificates.value.find(certificate => certificate.thumbprint === selectedThumbprint.value) || null
+));
+
+const rememberLinked = (documentId: number, document: LinkedDocument | null) => {
+  if (!document) {
+    return;
+  }
+  rows.value = rows.value.map(item => (
+    item.documentId === documentId && !item.linkedDocuments.length
+      ? { ...item, linkedDocuments: [document] }
+      : item
+  ));
+};
 
 const periodInputs = () => [dateFrom.value, dateTo.value];
 
@@ -799,105 +792,161 @@ const load = async () => {
   loaded.value = true;
 };
 
-const loadKinds = async () => {
-  if (kindsLoaded.value) {
+const openLinked = async (row: JournalRow, document: LinkedDocument) => {
+  if (openingId.value) {
     return;
   }
-  const response = await api('indicators/approval-journal/types', {});
-  if (!response.ok) {
-    notify.error(response.message || 'Не удалось загрузить виды документов');
-    return;
-  }
-  types.value = response.types || [];
-  cases.value = response.cases || [];
-  kindsLoaded.value = true;
-};
-
-const openLink = async (row: JournalRow) => {
-  selectedKindId.value = null;
-  topic.value = '';
-  linkDocumentId.value = row.documentId;
-  await loadKinds();
-};
-
-const closeLink = () => {
-  linkDocumentId.value = null;
-  selectedKindId.value = null;
-  topic.value = '';
-};
-
-const closeMonitoring = () => {
-  monitoringOpen.value = false;
-  pendingLink.value = null;
-};
-
-const createLink = async (payload: LinkPayload) => {
-  linking.value = true;
+  openingId.value = document.id;
   try {
-    const response = await api('indicators/approval-journal/link', payload);
+    const response = await api('indicators/approval-journal/link-open', {
+      documentId: row.documentId,
+      linkedDocumentId: document.id,
+    });
+    if (!response.ok) {
+      notify.error(response.message || 'Не удалось обновить документ');
+      return;
+    }
+    window.open(documentHref(document.id), '_blank');
+  } finally {
+    openingId.value = 0;
+  }
+};
+
+const createLinked = async (row: JournalRow) => {
+  if (row.linkedDocuments.length) {
+    return;
+  }
+  linkingId.value = row.documentId;
+  try {
+    const response = await api('indicators/approval-journal/link', { documentId: row.documentId });
     if (!response.ok || !response.document) {
       notify.error(response.message || 'Документ не создан');
       return;
     }
-    const row = rows.value.find(item => item.documentId === payload.documentId);
-    if (row) {
-      row.linkedDocuments = [...row.linkedDocuments, response.document];
-    }
-    closeLink();
-    closeMonitoring();
+    rows.value = rows.value.map(item => (
+      item.documentId === row.documentId ? { ...item, linkedDocuments: [response.document] } : item
+    ));
     window.open(documentHref(response.document.id), '_blank');
   } finally {
-    linking.value = false;
+    linkingId.value = 0;
   }
 };
 
-const submitLink = () => {
-  const kind = selectedKind.value;
-  const documentId = linkDocumentId.value;
-  if (!kind || !documentId) {
-    notify.error('Выберите вид документа');
-    return;
-  }
-  if (kind.kind === 'case' && !topic.value.trim()) {
-    notify.error('Укажите тему дела');
-    return;
-  }
-  const payload: LinkPayload = {
-    documentId,
-    typeId: kind.kind === 'type' ? kind.sourceId : null,
-    caseId: kind.kind === 'case' ? kind.sourceId : null,
-    topic: topic.value.trim(),
-    periodParams: null,
-  };
-  if (kind.monitoringDirectionParams > 0) {
-    pendingLink.value = payload;
-    monitoringParamsId.value = kind.monitoringDirectionParams;
-    monitoringOpen.value = true;
-    return;
-  }
-  createLink(payload);
+const closeSign = () => {
+  signOpen.value = false;
+  signRowId.value = 0;
+  signPdf.value = '';
+  signChecked.value = false;
+  signHasPlugin.value = false;
+  signCertificates.value = [];
+  selectedThumbprint.value = '';
+  signBusy.value = false;
 };
 
-const confirmPeriod = (periodParams: Record<string, unknown>) => {
-  if (!pendingLink.value) {
-    return;
+const loadCertificates = async () => {
+  signChecked.value = false;
+  signHasPlugin.value = false;
+  signCertificates.value = [];
+  selectedThumbprint.value = '';
+  try {
+    await getSystemInfo();
+    signHasPlugin.value = true;
+    const certificates = await getUserCertificates();
+    signCertificates.value = certificates.map(certificate => ({
+      thumbprint: certificate.thumbprint,
+      name: convertSubjectNameToTitle(null, certificate.subjectName) || certificate.thumbprint,
+      validFrom: moment(certificate.validFrom).format('DD.MM.YYYY HH:mm'),
+      validTo: moment(certificate.validTo).format('DD.MM.YYYY HH:mm'),
+    }));
+    if (signCertificates.value.length) {
+      selectedThumbprint.value = signCertificates.value[0].thumbprint;
+    }
+  } catch (error) {
+    if (error) {
+      signHasPlugin.value = false;
+    }
+  } finally {
+    signChecked.value = true;
   }
-  createLink({ ...pendingLink.value, periodParams });
 };
 
 const sign = async (row: JournalRow) => {
   signingId.value = row.documentId;
   try {
-    const response = await api('indicators/approval-journal/sign', { documentId: row.documentId });
+    const response = await api('indicators/approval-journal/sign-file', { documentId: row.documentId });
+    rememberLinked(row.documentId, response.document || null);
+    if (!response.ok || !response.pdf) {
+      notify.error(response.message || 'Не удалось подготовить документ');
+      return;
+    }
+    signRowId.value = row.documentId;
+    signPdf.value = response.pdf;
+    signOpen.value = true;
+    await loadCertificates();
+  } finally {
+    signingId.value = 0;
+  }
+};
+
+const confirmSign = async () => {
+  if (!signRowId.value || !signPdf.value || !selectedThumbprint.value || signBusy.value) {
+    return;
+  }
+  signBusy.value = true;
+  try {
+    const binary = Uint8Array.from(atob(signPdf.value), char => char.charCodeAt(0));
+    const hashed = await createHash(binary);
+    const signature = await createDetachedSignature(selectedThumbprint.value, hashed);
+    let certificate = null;
+    try {
+      certificate = await getCertificate(selectedThumbprint.value);
+    } catch (error) {
+      if (error) {
+        certificate = null;
+      }
+    }
+    const response = await api('indicators/approval-journal/sign', {
+      documentId: signRowId.value,
+      sign: signature,
+      certThumbprint: selectedThumbprint.value,
+      certDetails: certificate ? {
+        subjectName: certificate.subjectName,
+        validFrom: certificate.validFrom,
+        validTo: certificate.validTo,
+      } : null,
+    });
     if (!response.ok) {
       notify.error(response.message || 'Не удалось подписать');
       return;
     }
+    const documentId = signRowId.value;
     rows.value = rows.value.map(item => (
-      item.documentId === row.documentId ? { ...item, sign: response.sign } : item
+      item.documentId === documentId ? { ...item, sign: response.sign } : item
+    ));
+    rememberLinked(documentId, response.document || null);
+    closeSign();
+  } catch (error) {
+    if (error) {
+      notify.error('Не удалось подписать');
+    }
+  } finally {
+    signBusy.value = false;
+  }
+};
+
+const resetSign = async (row: JournalRow) => {
+  resettingId.value = row.documentId;
+  try {
+    const response = await api('indicators/approval-journal/sign-reset', { documentId: row.documentId });
+    if (!response.ok) {
+      notify.error(response.message || 'Не удалось сбросить подпись');
+      return;
+    }
+    rows.value = rows.value.map(item => (
+      item.documentId === row.documentId ? { ...item, sign: null } : item
     ));
   } finally {
-    signingId.value = 0;
+    resettingId.value = 0;
   }
 };
 
@@ -1133,18 +1182,22 @@ watch([filterByDate, dateRange], () => {
   }
 }
 
-.link-body {
-  min-height: 220px;
+.sign-body {
+  min-height: 120px;
   padding: 12px;
+
+  &__cert {
+    margin-top: 8px;
+  }
 }
 
-.link-body__topic {
-  margin-top: 12px;
-}
-
-.link-footer {
+.sign-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.status-error {
+  color: #da4453;
 }
 </style>

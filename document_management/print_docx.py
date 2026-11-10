@@ -217,3 +217,16 @@ def render_document_print(document_id, output_format, doctor):
         DocumentManagerLog.write(DocumentManagerLog.PRINT_ERROR, doctor, {"error": str(exc), "message": "Печать ДОУ pdf"}, document_id=document.pk)
         return _error("Не удалось сделать PDF")
     return _file_response(pdf_bytes, _file_name(document, "pdf"), "application/pdf", False)
+
+
+def render_document_pdf_bytes(document):
+    if not document or not document.type_document_id or not document.type_document or not document.type_document.print_docx:
+        return None, "У вида нет шаблона печати"
+    try:
+        docx_bytes = _render_docx_bytes(document)
+    except Exception:
+        return None, "Не удалось заполнить шаблон"
+    try:
+        return _docx_bytes_to_pdf(docx_bytes), None
+    except Exception:
+        return None, "Не удалось сделать PDF"

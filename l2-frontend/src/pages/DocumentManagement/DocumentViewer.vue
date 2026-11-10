@@ -37,7 +37,7 @@
         </div>
         <div class="research-right">
           <button
-            v-if="research && !confirmed"
+            v-if="research && !formLocked"
             v-tippy
             class="btn btn-blue-nb save-doc-btn"
             type="button"
@@ -224,9 +224,9 @@
                 </div>
                 <DescriptiveForm
                   v-else
-                  :key="`${row.id}-${row.issPk}-${row.confirmed}`"
-                  :research="row.research"
-                  :confirmed="row.confirmed"
+          :key="`${row.id}-${row.issPk}-${row.confirmed}-${row.approvalJournalCopy}`"
+          :research="row.research"
+          :confirmed="row.confirmed || row.approvalJournalCopy"
                   :patient="patient"
                   :pk="row.issPk"
                   :document-id="row.id"
@@ -264,7 +264,7 @@
                     rel="noopener"
                   >pdf</a>
                   <button
-                    v-if="!row.confirmed"
+                    v-if="!row.confirmed && !row.approvalJournalCopy"
                     class="btn btn-blue-nb"
                     type="button"
                     @click="saveDocument(row.id)"
@@ -272,7 +272,7 @@
                     Сохранить
                   </button>
                   <button
-                    v-if="!row.confirmed"
+                    v-if="!row.confirmed && !row.approvalJournalCopy"
                     class="btn btn-blue-nb"
                     type="button"
                     @click="confirmDocument(row.id)"
@@ -345,7 +345,7 @@
           :plan-id="0"
           document-mode
           :document-id="documentId"
-          :readonly="confirmed"
+          :readonly="formLocked"
           :preset="planPreset"
           @saved="onPlanSaved"
         >
@@ -422,9 +422,9 @@
         data-document-form
       >
         <DescriptiveForm
-          :key="`${documentId}-${issPk}-${confirmed}`"
+          :key="`${documentId}-${issPk}-${formLocked}`"
           :research="research"
-          :confirmed="confirmed"
+          :confirmed="formLocked"
           :patient="patient"
           :pk="issPk"
           :document-id="documentId"
@@ -474,7 +474,7 @@
           rel="noopener"
         >pdf</a>
         <button
-          v-if="!confirmed"
+          v-if="!formLocked"
           class="btn btn-blue-nb"
           type="button"
           @click="save"
@@ -482,7 +482,7 @@
           Сохранить
         </button>
         <button
-          v-if="!confirmed"
+          v-if="!formLocked"
           class="btn btn-blue-nb"
           type="button"
           @click="confirm"
@@ -774,6 +774,8 @@ const planPreset = ref(null);
 const issPk = ref<number | null>(null);
 const loaded = ref(false);
 const confirmed = ref(false);
+const approvalJournalCopy = ref(false);
+const formLocked = computed(() => confirmed.value || approvalJournalCopy.value);
 const isHidden = ref(false);
 const canHide = ref(false);
 const canReset = ref(false);
@@ -898,6 +900,7 @@ type CaseDocumentRow = {
   testId: number | null;
   issPk: number | null;
   confirmed: boolean;
+  approvalJournalCopy: boolean;
   isHidden: boolean;
   canHide: boolean;
   canReset: boolean;
@@ -933,6 +936,7 @@ const blankDocumentBody = () => ({
   testId: null as number | null,
   issPk: null as number | null,
   confirmed: false,
+  approvalJournalCopy: false,
   isHidden: false,
   canHide: false,
   canReset: false,
@@ -995,6 +999,7 @@ const loadDocumentBody = async (id: number) => {
       testId: result.testId || null,
       issPk: result.issPk || null,
       confirmed: Boolean(result.confirmed),
+      approvalJournalCopy: Boolean(result.approvalJournalCopy),
       isHidden: Boolean(result.isHidden),
       canHide: Boolean(result.canHide),
       canReset: Boolean(result.canReset),
@@ -1248,6 +1253,7 @@ const load = async () => {
   issPk.value = null;
   loaded.value = false;
   confirmed.value = false;
+  approvalJournalCopy.value = false;
   isHidden.value = false;
   canHide.value = false;
   canReset.value = false;
@@ -1312,6 +1318,7 @@ const load = async () => {
       planPreset.value = result.plan || null;
       issPk.value = result.issPk || null;
       confirmed.value = Boolean(result.confirmed);
+      approvalJournalCopy.value = Boolean(result.approvalJournalCopy);
       isHidden.value = Boolean(result.isHidden);
       canHide.value = Boolean(result.canHide);
       canReset.value = Boolean(result.canReset);
