@@ -5833,6 +5833,15 @@ class DocumentApprovalSign(models.Model):
     document = models.OneToOneField(Documents, related_name="approval_sign", db_index=True, on_delete=models.CASCADE)
     doctor = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
     signed_at = models.DateTimeField(auto_now_add=True, help_text="Время подписи")
+    sign_value = models.TextField(blank=True, default="", help_text="Отсоединённая подпись PDF")
+    sign_certificate = models.ForeignKey(
+        "directions.SignatureCertificateDetails",
+        null=True,
+        blank=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        help_text="Сертификат подписи",
+    )
 
     class Meta:
         verbose_name = "Подпись журнала утверждения"

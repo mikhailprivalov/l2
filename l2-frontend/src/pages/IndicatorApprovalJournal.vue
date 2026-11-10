@@ -353,6 +353,77 @@
         </tbody>
       </table>
     </div>
+    <Modal
+      v-if="signOpen"
+      show-footer="true"
+      white-bg="true"
+      min-width="640px"
+      @close="closeSign"
+    >
+      <span slot="header">Подписать</span>
+      <div
+        slot="body"
+        class="sign-body"
+      >
+        <div v-if="!signChecked">
+          загрузка
+        </div>
+        <div
+          v-else-if="!signHasPlugin"
+          class="status-error"
+        >
+          Плагин CSP не настроен
+        </div>
+        <template v-else>
+          <select
+            v-if="signCertificates.length"
+            v-model="selectedThumbprint"
+            class="form-control"
+          >
+            <option
+              v-for="certificate in signCertificates"
+              :key="certificate.thumbprint"
+              :value="certificate.thumbprint"
+            >
+              {{ certificate.name }}
+            </option>
+          </select>
+          <div
+            v-else
+            class="status-error"
+          >
+            Нет сертификатов
+          </div>
+          <div
+            v-if="selectedCertificate"
+            class="sign-body__cert"
+          >
+            <div>{{ selectedCertificate.thumbprint }}</div>
+            <div>{{ selectedCertificate.validFrom }} — {{ selectedCertificate.validTo }}</div>
+          </div>
+        </template>
+      </div>
+      <div
+        slot="footer"
+        class="sign-footer"
+      >
+        <button
+          type="button"
+          class="btn btn-blue-nb"
+          @click="closeSign"
+        >
+          Закрыть
+        </button>
+        <button
+          type="button"
+          class="btn btn-blue-nb"
+          :disabled="signBusy || !selectedThumbprint"
+          @click="confirmSign"
+        >
+          Подписать
+        </button>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -367,11 +438,20 @@ import {
   watch,
 } from 'vue';
 import moment from 'moment';
+import {
+  createDetachedSignature,
+  createHash,
+  getCertificate,
+  getSystemInfo,
+  getUserCertificates,
+} from 'crypto-pro';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import api from '@/api';
 import useNotify from '@/hooks/useNotify';
+import { convertSubjectNameToTitle } from '@/utils';
+import Modal from '@/ui-cards/Modal.vue';
 
 interface LinkedDocument {
   id: number;
@@ -525,7 +605,22 @@ const columnFilters = reactive({
   sign: null as string | null,
 });
 const sortLevels = ref<SortLevel[]>([]);
+interface SignCertificate {
+  thumbprint: string;
+  name: string;
+  validFrom: string;
+  validTo: string;
+}
+
 const signingId = ref(0);
+const signOpen = ref(false);
+const signRowId = ref(0);
+const signPdf = ref('');
+const signChecked = ref(false);
+const signHasPlugin = ref(false);
+const signCertificates = ref<SignCertificate[]>([]);
+const selectedThumbprint = ref('');
+const signBusy = ref(false);
 const resettingId = ref(0);
 const linkingId = ref(0);
 const openingId = ref(0);
@@ -581,6 +676,21 @@ const linkedFilterOptions = computed(() => makeOptions(rows.value.map(row => lin
 const signFilterOptions = computed(() => makeOptions(rows.value.map(row => signLabel(row))));
 
 const documentHref = (documentId: number) => `/ui/document-manager-2?document=${documentId}`;
+
+const selectedCertificate = computed(() => (
+  signCertificates.value.find(certificate => certificate.thumbprint === selectedThumbprint.value) || null
+));
+
+const rememberLinked = (documentId: number, document: LinkedDocument | null) => {
+  if (!document) {
+    return;
+  }
+  rows.value = rows.value.map(item => (
+    item.documentId === documentId && !item.linkedDocuments.length
+      ? { ...item, linkedDocuments: [document] }
+      : item
+  ));
+};
 
 const periodInputs = () => [dateFrom.value, dateTo.value];
 
@@ -722,27 +832,105 @@ const createLinked = async (row: JournalRow) => {
   }
 };
 
+const closeSign = () => {
+  signOpen.value = false;
+  signRowId.value = 0;
+  signPdf.value = '';
+  signChecked.value = false;
+  signHasPlugin.value = false;
+  signCertificates.value = [];
+  selectedThumbprint.value = '';
+  signBusy.value = false;
+};
+
+const loadCertificates = async () => {
+  signChecked.value = false;
+  signHasPlugin.value = false;
+  signCertificates.value = [];
+  selectedThumbprint.value = '';
+  try {
+    await getSystemInfo();
+    signHasPlugin.value = true;
+    const certificates = await getUserCertificates();
+    signCertificates.value = certificates.map(certificate => ({
+      thumbprint: certificate.thumbprint,
+      name: convertSubjectNameToTitle(null, certificate.subjectName) || certificate.thumbprint,
+      validFrom: moment(certificate.validFrom).format('DD.MM.YYYY HH:mm'),
+      validTo: moment(certificate.validTo).format('DD.MM.YYYY HH:mm'),
+    }));
+    if (signCertificates.value.length) {
+      selectedThumbprint.value = signCertificates.value[0].thumbprint;
+    }
+  } catch (error) {
+    if (error) {
+      signHasPlugin.value = false;
+    }
+  } finally {
+    signChecked.value = true;
+  }
+};
+
 const sign = async (row: JournalRow) => {
   signingId.value = row.documentId;
   try {
-    const response = await api('indicators/approval-journal/sign', { documentId: row.documentId });
+    const response = await api('indicators/approval-journal/sign-file', { documentId: row.documentId });
+    rememberLinked(row.documentId, response.document || null);
+    if (!response.ok || !response.pdf) {
+      notify.error(response.message || 'Не удалось подготовить документ');
+      return;
+    }
+    signRowId.value = row.documentId;
+    signPdf.value = response.pdf;
+    signOpen.value = true;
+    await loadCertificates();
+  } finally {
+    signingId.value = 0;
+  }
+};
+
+const confirmSign = async () => {
+  if (!signRowId.value || !signPdf.value || !selectedThumbprint.value || signBusy.value) {
+    return;
+  }
+  signBusy.value = true;
+  try {
+    const binary = Uint8Array.from(atob(signPdf.value), char => char.charCodeAt(0));
+    const hashed = await createHash(binary);
+    const signature = await createDetachedSignature(selectedThumbprint.value, hashed);
+    let certificate = null;
+    try {
+      certificate = await getCertificate(selectedThumbprint.value);
+    } catch (error) {
+      if (error) {
+        certificate = null;
+      }
+    }
+    const response = await api('indicators/approval-journal/sign', {
+      documentId: signRowId.value,
+      sign: signature,
+      certThumbprint: selectedThumbprint.value,
+      certDetails: certificate ? {
+        subjectName: certificate.subjectName,
+        validFrom: certificate.validFrom,
+        validTo: certificate.validTo,
+      } : null,
+    });
     if (!response.ok) {
       notify.error(response.message || 'Не удалось подписать');
       return;
     }
-    const created = response.document ? [response.document] : [];
-    rows.value = rows.value.map(item => {
-      if (item.documentId !== row.documentId) {
-        return item;
-      }
-      return {
-        ...item,
-        sign: response.sign,
-        linkedDocuments: item.linkedDocuments.length ? item.linkedDocuments : created,
-      };
-    });
+    const documentId = signRowId.value;
+    rows.value = rows.value.map(item => (
+      item.documentId === documentId ? { ...item, sign: response.sign } : item
+    ));
+    rememberLinked(documentId, response.document || null);
+    closeSign();
+  } catch (error) {
+    if (error) {
+      notify.error('Не удалось подписать');
+    }
   } finally {
-    signingId.value = 0;
+    signBusy.value = false;
   }
 };
 
@@ -992,5 +1180,24 @@ watch([filterByDate, dateRange], () => {
   &__approved {
     color: #049372;
   }
+}
+
+.sign-body {
+  min-height: 120px;
+  padding: 12px;
+
+  &__cert {
+    margin-top: 8px;
+  }
+}
+
+.sign-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.status-error {
+  color: #da4453;
 }
 </style>

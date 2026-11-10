@@ -1,3 +1,4 @@
+import base64
 import datetime
 import json
 import re
@@ -11,8 +12,9 @@ from django.views.decorators.http import require_POST
 from api.indicators.journal import aggregate_approval_rows
 from api.indicators.sql_func import approval_journal_sql, indicator_sql
 from directory.models import ParaclinicInputField, ParaclinicInputGroups
-from directions.models import Issledovaniya, ParaclinicResult, ParaclinicResultIndicator
+from directions.models import Issledovaniya, ParaclinicResult, ParaclinicResultIndicator, SignatureCertificateDetails
 from document_management.models import DocumentApprovalSign, Documents, TypeDocuments, TypeDocumentsSchema
+from document_management.print_docx import render_document_pdf_bytes
 from external_system.models import CuratorCdaFields, CdaFields
 from hospitals.models import Hospitals
 from laboratory.decorators import group_required
@@ -248,7 +250,11 @@ def _child_payload(document):
 
 
 def _sign_payload(sign):
-    fio = sign.doctor.get_fio() if sign.doctor_id and sign.doctor else ""
+    fio = ""
+    if sign.sign_certificate_id and sign.sign_certificate:
+        fio = sign.sign_certificate.owner or ""
+    if not fio and sign.doctor_id and sign.doctor:
+        fio = sign.doctor.get_fio()
     return {"signedAt": _format_date(sign.signed_at), "fio": fio}
 
 
@@ -273,7 +279,7 @@ def _journal_rows(aggregated):
     if document_ids:
         for document in Documents.objects.filter(parent_document_id__in=document_ids).select_related("type_document").order_by("pk"):
             children.setdefault(document.parent_document_id, []).append(_child_payload(document))
-        for sign in DocumentApprovalSign.objects.filter(document_id__in=document_ids).select_related("doctor"):
+        for sign in DocumentApprovalSign.objects.filter(document_id__in=document_ids).select_related("doctor", "sign_certificate"):
             signs[sign.document_id] = _sign_payload(sign)
     result = []
     for row in aggregated:
@@ -461,6 +467,47 @@ def approval_journal_link_open(request):
     return JsonResponse({"ok": True, "document": result["document"]})
 
 
+def _document_id(data):
+    try:
+        return int(data.get("documentId") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _approved_source(document_id):
+    state = _document_state(document_id) if document_id else None
+    if not state:
+        return None, "Документ не найден"
+    if not state["approved"]:
+        return None, "Документ не утвержден"
+    return state, None
+
+
+@login_required
+@group_required(APPROVAL_JOURNAL_GROUP)
+@require_POST
+def approval_journal_sign_file(request):
+    doctor = _doctor(request)
+    if not doctor:
+        return JsonResponse({"ok": False, "message": "Профиль врача не найден"})
+    document_id = _document_id(_body(request))
+    _state, error = _approved_source(document_id)
+    if error:
+        return JsonResponse({"ok": False, "message": error})
+    copy = _ensure_curator_copy(document_id, doctor)
+    if not copy.get("ok"):
+        return JsonResponse({"ok": False, "message": copy.get("message") or "Документ не создан"})
+    child_id = copy["document"]["id"]
+    refreshed = _refresh_curator_copy(document_id, child_id, doctor)
+    if not refreshed.get("ok"):
+        return JsonResponse({"ok": False, "message": refreshed.get("message") or "Документ не создан", "document": copy["document"]})
+    child = Documents.objects.select_related("type_document").filter(pk=child_id).first()
+    pdf_bytes, pdf_error = render_document_pdf_bytes(child)
+    if pdf_error or not pdf_bytes:
+        return JsonResponse({"ok": False, "message": pdf_error or "Не удалось сделать PDF", "document": refreshed["document"]})
+    return JsonResponse({"ok": True, "document": refreshed["document"], "pdf": base64.b64encode(pdf_bytes).decode("ascii")})
+
+
 @login_required
 @group_required(APPROVAL_JOURNAL_GROUP)
 @require_POST
@@ -469,25 +516,30 @@ def approval_journal_sign(request):
     if not doctor:
         return JsonResponse({"ok": False, "message": "Профиль врача не найден"})
     data = _body(request)
+    document_id = _document_id(data)
+    _state, error = _approved_source(document_id)
+    if error:
+        return JsonResponse({"ok": False, "message": error})
+    sign_value = str(data.get("sign") or "").strip()
+    if not sign_value:
+        return JsonResponse({"ok": False, "message": "Некорректная подпись"})
+    certificate = SignatureCertificateDetails.get_or_update(str(data.get("certThumbprint") or ""), data.get("certDetails"))
+    if not certificate:
+        return JsonResponse({"ok": False, "message": "Некорректный сертификат"})
+    child = Documents.objects.select_related("type_document").filter(parent_document_id=document_id).order_by("pk").first()
+    if not child:
+        return JsonResponse({"ok": False, "message": "Документ не создан"})
     try:
-        document_id = int(data.get("documentId") or 0)
-    except (TypeError, ValueError):
-        document_id = 0
-    state = _document_state(document_id) if document_id else None
-    if not state:
-        return JsonResponse({"ok": False, "message": "Документ не найден"})
-    if not state["approved"]:
-        return JsonResponse({"ok": False, "message": "Документ не утвержден"})
-    copy = _ensure_curator_copy(document_id, doctor)
-    if not copy.get("ok"):
-        return JsonResponse({"ok": False, "message": copy.get("message") or "Документ не создан"})
-    try:
-        sign, _created = DocumentApprovalSign.objects.get_or_create(document_id=document_id, defaults={"doctor": doctor})
+        sign, created = DocumentApprovalSign.objects.get_or_create(
+            document_id=document_id,
+            defaults={"doctor": doctor, "sign_value": sign_value, "sign_certificate": certificate},
+        )
     except IntegrityError:
-        sign = DocumentApprovalSign.objects.select_related("doctor").get(document_id=document_id)
+        sign = DocumentApprovalSign.objects.select_related("doctor", "sign_certificate").get(document_id=document_id)
     else:
-        sign = DocumentApprovalSign.objects.select_related("doctor").get(pk=sign.pk)
-    return JsonResponse({"ok": True, "sign": _sign_payload(sign), "document": copy["document"]})
+        if not created:
+            sign = DocumentApprovalSign.objects.select_related("doctor", "sign_certificate").get(pk=sign.pk)
+    return JsonResponse({"ok": True, "sign": _sign_payload(sign), "document": _child_payload(child)})
 
 
 @login_required

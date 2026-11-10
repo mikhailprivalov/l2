@@ -8,6 +8,7 @@ urlpatterns = [
     path('approval-journal', views.approval_journal),
     path('approval-journal/link', views.approval_journal_link),
     path('approval-journal/link-open', views.approval_journal_link_open),
+    path('approval-journal/sign-file', views.approval_journal_sign_file),
     path('approval-journal/sign', views.approval_journal_sign),
     path('approval-journal/sign-reset', views.approval_journal_sign_reset),
 ]
