@@ -16,6 +16,9 @@
       </a>
     </td>
     <td>
+      {{ localRow.curatorName || '–' }}
+    </td>
+    <td>
       {{ localRow.indicatorTitle }}
     </td>
     <td>
@@ -206,6 +209,11 @@ export default {
 .approve-td {
   text-align: center;
   vertical-align: middle;
+  padding: 2px 4px;
+
+  .btn {
+    padding: 2px 6px;
+  }
 }
 
 .status-td {
