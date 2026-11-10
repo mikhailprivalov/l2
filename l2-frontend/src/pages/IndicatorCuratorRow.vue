@@ -16,6 +16,9 @@
       </a>
     </td>
     <td>
+      {{ localRow.curatorName || '–' }}
+    </td>
+    <td>
       {{ localRow.indicatorTitle }}
     </td>
     <td>

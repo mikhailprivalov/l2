@@ -72,17 +72,6 @@
       </label>
       <label
         class="filter-check"
-        @click.prevent="toggleTopics"
-      >
-        <input
-          type="checkbox"
-          :checked="showTopics"
-          tabindex="-1"
-        >
-        <span>Блоки</span>
-      </label>
-      <label
-        class="filter-check"
         @click.prevent="toggleTests"
       >
         <input
@@ -91,6 +80,17 @@
           tabindex="-1"
         >
         <span>Тесты</span>
+      </label>
+      <label
+        class="filter-check"
+        @click.prevent="toggleTopics"
+      >
+        <input
+          type="checkbox"
+          :checked="showTopics"
+          tabindex="-1"
+        >
+        <span>Блоки</span>
       </label>
       <button
         v-if="showTopics && canCreateBlocks"
@@ -520,7 +520,19 @@ const readStoredListFilter = (): {
   }
 };
 
-const storedListFilter = readStoredListFilter();
+const openedWithResetFilters = () => {
+  try {
+    return new URLSearchParams(window.location.search).get('resetFilters') === '1';
+  } catch {
+    return false;
+  }
+};
+
+const storedListFilter = openedWithResetFilters()
+  ? {
+    role: null, hidden: false, myCases: false, topics: false, tests: false,
+  }
+  : readStoredListFilter();
 const roleFilter = ref<string | null>(storedListFilter.role);
 const showHidden = ref(storedListFilter.hidden);
 const showMyCases = ref(storedListFilter.myCases);

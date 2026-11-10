@@ -13,7 +13,7 @@
           class="row"
           style="margin-top:5px;"
         >
-          <div class="col-xs-6">
+          <div class="col-xs-12 indicator-filters">
             <div class="date-filter">
               <label class="date-filter__addon">
                 <input
@@ -55,6 +55,16 @@
                 ×
               </button>
             </div>
+            <label
+              v-if="canSeeAllIndicators"
+              class="all-indicators"
+            >
+              <input
+                v-model="params.allIndicators"
+                type="checkbox"
+              >
+              <span>Все показатели</span>
+            </label>
           </div>
         </div>
       </div>
@@ -140,6 +150,7 @@
           <col style="width: 300px">
           <col style="width: 110px">
           <col style="width: 130px">
+          <col style="width: 160px">
           <col>
           <col style="width: 120px">
           <col style="width: 90px">
@@ -180,6 +191,16 @@
                 v-if="sortMark('direction')"
                 class="sort-mark"
               >{{ sortMark('direction') }}</span>
+            </th>
+            <th
+              class="sortable"
+              @click="toggleSort('curatorName')"
+            >
+              Куратор
+              <span
+                v-if="sortMark('curatorName')"
+                class="sort-mark"
+              >{{ sortMark('curatorName') }}</span>
             </th>
             <th
               class="sortable"
@@ -282,6 +303,17 @@
                 :multiple="false"
                 :disable-branch-nodes="true"
                 :options="directionFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
+            </th>
+            <th>
+              <treeselect
+                v-model="columnFilters.curatorName"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="curatorNameFilterOptions"
                 placeholder="Все"
                 :clearable="true"
                 class="treeselect-wide"
@@ -397,6 +429,7 @@ interface Params {
   datePeriod: any;
   hospital: number;
   filterByDate: boolean;
+  allIndicators: boolean;
 }
 
 const EMPTY_ROWS: ExtraNotificationData[] = [];
@@ -437,6 +470,7 @@ const SORT_COLUMNS = [
   { key: 'hospital', label: 'Медицинская организация' },
   { key: 'confirmDate', label: 'Дата' },
   { key: 'direction', label: 'Номер' },
+  { key: 'curatorName', label: 'Куратор' },
   { key: 'indicatorTitle', label: 'Показатель' },
   { key: 'hospitalValue', label: 'Значение МО' },
   { key: 'score', label: 'Балл, МО' },
@@ -523,6 +557,7 @@ const compareRowsByKey = (left: any, right: any, key: string, dir: 'asc' | 'desc
         // date: moment().format('YYYY-MM-DD'),
         hospital: -1,
         filterByDate: true,
+        allIndicators: false,
         datePeriod: [
           moment().subtract(40, 'days').format('DD.MM.YYYY'),
           moment().format('DD.MM.YYYY'),
@@ -532,6 +567,7 @@ const compareRowsByKey = (left: any, right: any, key: string, dir: 'asc' | 'desc
         hospital: null,
         confirmDate: null,
         direction: null,
+        curatorName: null,
         indicatorTitle: null,
         hospitalValue: null,
         score: null,
@@ -599,11 +635,16 @@ export default class ExtraNotification extends Vue {
     return false;
   }
 
+  get canSeeAllIndicators() {
+    return (this.$store.getters.user_data.groups || []).includes('Все показатели');
+  }
+
   get watchParams() {
     return {
       hospital: this.params.hospital,
       filterByDate: this.params.filterByDate,
       datePeriod: this.params.filterByDate ? this.params.datePeriod : null,
+      allIndicators: this.canSeeAllIndicators && this.params.allIndicators,
     };
   }
 
@@ -617,6 +658,7 @@ export default class ExtraNotification extends Vue {
       hospital: normalizeFilterValue(this.columnFilters.hospital),
       confirmDate: normalizeFilterValue(this.columnFilters.confirmDate),
       direction: normalizeFilterValue(this.columnFilters.direction),
+      curatorName: normalizeFilterValue(this.columnFilters.curatorName),
       indicatorTitle: normalizeFilterValue(this.columnFilters.indicatorTitle),
       hospitalValue: normalizeFilterValue(this.columnFilters.hospitalValue),
       score: normalizeFilterValue(this.columnFilters.score),
@@ -630,6 +672,7 @@ export default class ExtraNotification extends Vue {
         (filters.hospital === null || toValue(row.hospital) === filters.hospital)
         && (filters.confirmDate === null || toValue(row.confirmDate) === filters.confirmDate)
         && (filters.direction === null || toValue(row.direction) === filters.direction)
+        && (filters.curatorName === null || toValue(row.curatorName) === filters.curatorName)
         && (filters.indicatorTitle === null || toValue(row.indicatorTitle) === filters.indicatorTitle)
         && (filters.hospitalValue === null || toValue(row.hospitalValue) === filters.hospitalValue)
         && (filters.score === null || toValue(row.score) === filters.score)
@@ -842,6 +885,10 @@ export default class ExtraNotification extends Vue {
     return makeOptions(this.rows.map((r: any) => r.direction), true);
   }
 
+  get curatorNameFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.curatorName));
+  }
+
   get indicatorTitleFilterOptions() {
     return makeOptions(this.rows.map((r: any) => r.indicatorTitle));
   }
@@ -868,7 +915,10 @@ export default class ExtraNotification extends Vue {
 
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const data = await this.$api('indicators/search-indicator', this.params);
+    const data = await this.$api('indicators/search-indicator', {
+      ...this.params,
+      allIndicators: this.canSeeAllIndicators && this.params.allIndicators,
+    });
     this.sortLevels = [];
     this.rows = data.rows;
     await this.$store.dispatch(actions.DEC_LOADING);
@@ -940,6 +990,27 @@ export default class ExtraNotification extends Vue {
 
   &.disabled {
     opacity: 0.4;
+  }
+}
+
+.indicator-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.all-indicators {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  margin: 0 0 0 8px;
+  padding: 0 8px;
+  background: #aab2bd;
+  color: #fff;
+  font-weight: normal;
+
+  input {
+    margin: 0 6px 0 0;
   }
 }
 

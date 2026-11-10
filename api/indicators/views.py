@@ -74,11 +74,33 @@ def search_indicator(request):
         )
 
     doctorprofile = request.user.doctorprofile
-    indicators = CuratorCdaFields.objects.filter(curator=doctorprofile).values_list("indicator_id", flat=True)
+    group_names = [str(group) for group in request.user.groups.all()]
+    all_indicators = bool(request_data.get("allIndicators")) and "Все показатели" in group_names
+    if all_indicators:
+        indicators = CuratorCdaFields.objects.exclude(indicator_id=None).values_list("indicator_id", flat=True)
+    else:
+        indicators = CuratorCdaFields.objects.filter(curator=doctorprofile).values_list("indicator_id", flat=True)
     cda_pks = CdaFields.objects.filter(pk__in=indicators).values_list("pk", flat=True)
     groups_obj = ParaclinicInputGroups.objects.filter(cda_option__in=cda_pks)
+    group_to_cda = {group.pk: group.cda_option_id for group in groups_obj.only("pk", "cda_option_id")}
+    cda_to_names = {}
+    assignments = CuratorCdaFields.objects.filter(indicator_id__in=cda_pks, curator__isnull=False).select_related("curator")
+    assignments = assignments.order_by("curator__family", "curator__name", "curator__patronymic", "pk")
+    for assignment in assignments:
+        name = (assignment.curator.get_fio() or "").strip() if assignment.curator_id else ""
+        if not name:
+            continue
+        names = cda_to_names.setdefault(assignment.indicator_id, [])
+        if name not in names:
+            names.append(name)
+
+    def _curator_names(group_id):
+        return ", ".join(cda_to_names.get(group_to_cda.get(group_id)) or [])
+
     fields = list(ParaclinicInputField.objects.filter(group__in=groups_obj))
     fields_obj = [f.pk for f in fields]
+    if not fields_obj:
+        return JsonResponse({"rows": []})
     field_to_group = {f.pk: f.group_id for f in fields}
     group_to_curator_field = {}
     group_to_score_field = {}
@@ -140,6 +162,7 @@ def search_indicator(request):
     saved_values = {key: record.value for key, record in saved_records.items()}
 
     for row in result:
+        row["curatorName"] = _curator_names(row.get("groupId"))
         curator_field = group_to_curator_field.get(row.get("groupId"))
         score_field = group_to_score_field.get(row.get("groupId"))
         if not curator_field:
