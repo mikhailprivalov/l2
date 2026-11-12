@@ -346,6 +346,7 @@
           :document-id="documentId"
           :readonly="formLocked"
           :preset="planPreset"
+          :curator-id="controlCuratorId"
           @saved="onPlanSaved"
         >
           <template #leading>
@@ -427,6 +428,8 @@
           :patient="patient"
           :pk="issPk"
           :document-id="documentId"
+          :control-plan-id="controlPlanId"
+          :curator-id="controlCuratorId"
         />
       </div>
       <div
@@ -751,6 +754,7 @@ const props = defineProps<{
   showCaseDocuments?: boolean;
   focusForm?: boolean;
   approvalMode?: boolean;
+  controlPlanId?: number | null;
 }>();
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
@@ -769,7 +773,18 @@ const title = ref('');
 const research = ref(null);
 const isPlan = ref(false);
 const testId = ref<number | null>(null);
-const planPreset = ref(null);
+const planPreset = ref<{ id?: number } | null>(null);
+const controlCuratorId = computed(() => {
+  const planId = Number(props.controlPlanId);
+  if (!Number.isFinite(planId) || planId < 1) {
+    return null;
+  }
+  if (isPlan.value && Number(planPreset.value?.id) !== planId) {
+    return null;
+  }
+  const doctorId = Number(store.getters.currentDocPk);
+  return Number.isFinite(doctorId) && doctorId > 0 ? doctorId : null;
+});
 const issPk = ref<number | null>(null);
 const loaded = ref(false);
 const confirmed = ref(false);

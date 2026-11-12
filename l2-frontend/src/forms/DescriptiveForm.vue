@@ -564,6 +564,8 @@
                   v-model="field.value"
                   :document-id="documentId"
                   :addressees="planAddressees"
+                  :control-plan-id="controlPlanId"
+                  :curator-id="curatorId"
                   :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
@@ -711,6 +713,14 @@ export default {
       required: true,
     },
     documentId: {
+      type: Number,
+      required: false,
+    },
+    controlPlanId: {
+      type: Number,
+      required: false,
+    },
+    curatorId: {
       type: Number,
       required: false,
     },

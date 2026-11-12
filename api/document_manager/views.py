@@ -759,6 +759,8 @@ def documents_list(request):
     doctor = request.user.doctorprofile
     if data.get("countOnly"):
         return JsonResponse({"pendingReviewCount": DocumentReview.pending_count(doctor)})
+    if data.get("filter") == "onControl":
+        return JsonResponse({"result": Documents.control_plan_rows(doctor), "pendingReviewCount": DocumentReview.pending_count(doctor)})
     if data.get("participant"):
         found = {"ok": True, "result": []}
         if data.get("cases"):

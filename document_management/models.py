@@ -2210,6 +2210,28 @@ class Plans(models.Model):
         return payload
 
     @staticmethod
+    def people_ids(value):
+        ids = []
+        for item in value or []:
+            if not isinstance(item, dict):
+                continue
+            try:
+                doctor_id = int(item.get("id"))
+            except (TypeError, ValueError):
+                continue
+            if doctor_id > 0 and doctor_id not in ids:
+                ids.append(doctor_id)
+        return ids
+
+    @staticmethod
+    def iter_indicators(payload):
+        for group in payload.get("groups") or []:
+            for row in group.get("indicators") or []:
+                yield row
+        for row in payload.get("indicators") or []:
+            yield row
+
+    @staticmethod
     def people_from_addressee_values(values):
         ids = []
         seen = set()
@@ -4458,6 +4480,59 @@ class Documents(models.Model):
         return {"ok": True, "result": rows}
 
     @staticmethod
+    def control_plan_rows(who):
+        from django.db.models import Prefetch
+        from django.utils import timezone
+
+        if not who or not getattr(who, "pk", None):
+            return []
+        doc_ids = list(
+            Documents.objects.filter(Documents.case_access_q(who), is_hidden=False, control_plans__curator_rows__doctor=who)
+            .order_by("-create_at", "-pk")
+            .distinct()
+            .values_list("pk", flat=True)
+        )
+        if not doc_ids:
+            return []
+        stored = ControlPlan.objects.filter(document_id__in=doc_ids, curator_rows__doctor=who).select_related("document", "plan", "task").prefetch_related(
+            Prefetch(
+                "executor_rows",
+                queryset=ControlPlanExecutor.objects.select_related("doctor", "doctor__podrazdeleniye").order_by("pk"),
+            ),
+            Prefetch(
+                "curator_rows",
+                queryset=ControlPlanCurator.objects.select_related("doctor", "doctor__podrazdeleniye").order_by("pk"),
+            ),
+        ).order_by("-document__create_at", "-document_id", "order", "pk")
+        grouped = []
+        current = None
+        for row in stored:
+            key = (row.document_id, row.plan_id)
+            if current is None or current["key"] != key:
+                created = timezone.localtime(row.document.create_at) if row.document.create_at else None
+                date_text = created.strftime("%d.%m.%y") if created else ""
+                plan_title = row.plan.title or f"План {row.plan_id}"
+                current = {
+                    "key": key,
+                    "id": row.document_id,
+                    "planId": row.plan_id,
+                    "planTitle": plan_title,
+                    "title": f"{date_text} — {plan_title}" if date_text else plan_title,
+                    "tasks": [],
+                }
+                grouped.append(current)
+            current["tasks"].append(
+                {
+                    "id": row.pk,
+                    "title": row.task.title if row.task_id and row.task else "",
+                    "dueDate": row.due_date.strftime("%Y-%m-%d") if row.due_date else "",
+                    "executors": ControlPlan.people_json(row.executor_rows.all()),
+                    "curator": ControlPlan.people_json(row.curator_rows.all()),
+                }
+            )
+        return [{key: value for key, value in item.items() if key != "key"} for item in grouped]
+
+    @staticmethod
     def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False):
         qs = (
             Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case")
@@ -4674,14 +4749,16 @@ class Documents(models.Model):
             return result
         if with_confirm:
             now = timezone.now()
-            self.time_confirm = now
-            self.who_confirm = who
-            self.save(update_fields=["time_confirm", "who_confirm"])
-            iss = self.get_issledovaniye()
-            if iss:
-                iss.doc_confirmation = who
-                iss.time_confirmation = now
-                iss.save(update_fields=["doc_confirmation", "time_confirmation"])
+            with transaction.atomic():
+                self.time_confirm = now
+                self.who_confirm = who
+                self.save(update_fields=["time_confirm", "who_confirm"])
+                iss = self.get_issledovaniye()
+                if iss:
+                    iss.doc_confirmation = who
+                    iss.time_confirmation = now
+                    iss.save(update_fields=["doc_confirmation", "time_confirmation"])
+                ControlPlan.replace_for_document(self)
         Documents.log_action(
             self.pk,
             Documents.LOG_CONFIRM if with_confirm else Documents.LOG_SAVE,
@@ -5134,6 +5211,8 @@ class Documents(models.Model):
             iss.save()
             if has_addressee_field:
                 DocumentReview.sync_for_document(document, addressee_ids)
+            if with_confirm:
+                ControlPlan.replace_for_document(document)
             DocumentRecent.objects.filter(document=document).update(topic=document.topic_value(iss, research=research))
         Documents.log_action(
             document.pk,
@@ -5170,14 +5249,16 @@ class Documents(models.Model):
         iss = Issledovaniya.objects.filter(document=obj).order_by("pk").first()
         if (not iss or not iss.time_confirmation) and not obj.time_confirm:
             return {"ok": False, "message": "Документ не подтверждён"}
-        if iss:
-            iss.time_confirmation = None
-            iss.doc_confirmation = None
-            iss.executor_confirmation = None
-            iss.save(update_fields=["time_confirmation", "doc_confirmation", "executor_confirmation"])
-        obj.time_confirm = None
-        obj.who_confirm = None
-        obj.save(update_fields=["time_confirm", "who_confirm"])
+        with transaction.atomic():
+            if iss:
+                iss.time_confirmation = None
+                iss.doc_confirmation = None
+                iss.executor_confirmation = None
+                iss.save(update_fields=["time_confirmation", "doc_confirmation", "executor_confirmation"])
+            obj.time_confirm = None
+            obj.who_confirm = None
+            obj.save(update_fields=["time_confirm", "who_confirm"])
+            ControlPlan.objects.filter(document=obj).delete()
         Documents.log_action(
             obj.pk,
             Documents.LOG_RESET,
@@ -5290,6 +5371,200 @@ class Documents(models.Model):
             packed.append((lg.time, lg.pk, one(lg, lg.get_type_display())))
         packed.sort(key=lambda item: (item[0], item[1]))
         return [{"type": f"Документ №{pk}", "events": [item[2] for item in packed]}]
+
+
+class ControlPlan(models.Model):
+    document = models.ForeignKey(
+        Documents,
+        related_name="control_plans",
+        db_index=True,
+        on_delete=models.CASCADE,
+        help_text="Документ, при подтверждении которого записан контроль",
+    )
+    plan = models.ForeignKey(
+        Plans,
+        related_name="control_plans",
+        db_index=True,
+        on_delete=models.CASCADE,
+        help_text="План",
+    )
+    task = models.ForeignKey(
+        DouIndicator,
+        related_name="control_plans",
+        db_index=True,
+        on_delete=models.PROTECT,
+        help_text="Задача",
+    )
+    due_date = models.DateField(null=True, blank=True, help_text="Дата выполнения")
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "control_plan"
+        verbose_name = "Контроль плана"
+        verbose_name_plural = "Контроль планов"
+        ordering = ("order", "pk")
+        unique_together = (("document", "plan", "task"),)
+
+    def __str__(self):
+        return f"{self.document_id} – {self.plan_id} – {self.task_id}"
+
+    @staticmethod
+    def plan_ids_for_document(document):
+        from directions.models import ParaclinicResult
+
+        found = []
+        seen = set()
+        if document.plan_id and getattr(document, "plan", None) and document.plan.user_created:
+            found.append(document.plan_id)
+            seen.add(document.plan_id)
+        rows = ParaclinicResult.objects.filter(issledovaniye__document=document, field_type=PLAN_FIELD_TYPE).order_by("pk").only("value")
+        for row in rows:
+            parsed = Plans.parse_ids(row.value)
+            if not parsed:
+                continue
+            for pk in parsed:
+                if pk not in seen:
+                    seen.add(pk)
+                    found.append(pk)
+        return found
+
+    @staticmethod
+    def replace_for_document(document):
+        from django.db.models import Prefetch
+
+        ControlPlan.objects.filter(document=document).delete()
+        plan_ids = ControlPlan.plan_ids_for_document(document)
+        if not plan_ids:
+            return
+        plans = Plans.objects.filter(pk__in=plan_ids).prefetch_related(
+            Prefetch(
+                "indicator_groups",
+                queryset=PlanIndicatorGroup.objects.order_by("order", "pk").prefetch_related(
+                    Prefetch("indicators", queryset=PlanIndicator.objects.order_by("order", "pk")),
+                ),
+            ),
+            Prefetch("indicators", queryset=PlanIndicator.objects.order_by("order", "pk")),
+        )
+        by_id = {plan.pk: plan for plan in plans}
+        addressees = Plans.addressees_on_document(document)
+        curators_fallback = Plans.curator_from_doctor(document.who_create)
+        position = 0
+        written = set()
+        for plan_id in plan_ids:
+            plan = by_id.get(plan_id)
+            if not plan:
+                continue
+            tasks = []
+            for group in plan.indicator_groups.all():
+                tasks.extend(group.indicators.all())
+            tasks.extend(row for row in plan.indicators.all() if row.group_id is None)
+            for task in tasks:
+                if not task.indicator_id or (plan.pk, task.indicator_id) in written:
+                    continue
+                executors = task.executors if isinstance(task.executors, list) and task.executors else addressees
+                curators = task.curator if isinstance(task.curator, list) and task.curator else curators_fallback
+                executor_ids = Plans.people_ids(executors)
+                curator_ids = Plans.people_ids(curators)
+                if not executor_ids:
+                    continue
+                written.add((plan.pk, task.indicator_id))
+                control = ControlPlan.objects.create(
+                    document=document,
+                    plan=plan,
+                    task_id=task.indicator_id,
+                    due_date=ControlPlan.due_date_for(task, executor_ids),
+                    order=position,
+                )
+                position += 1
+                ControlPlanExecutor.objects.bulk_create(
+                    [ControlPlanExecutor(control_plan=control, doctor_id=doctor_id) for doctor_id in executor_ids]
+                )
+                ControlPlanCurator.objects.bulk_create(
+                    [ControlPlanCurator(control_plan=control, doctor_id=doctor_id) for doctor_id in curator_ids]
+                )
+
+    @staticmethod
+    def earliest_employment(executor_ids):
+        from django.utils import timezone
+
+        from employees.models import Employee, EmployeePosition
+
+        today = timezone.now().date()
+        dates = []
+        doctors = DoctorProfile.objects.filter(pk__in=executor_ids).only("pk", "snils", "hospital_id")
+        for doctor in doctors:
+            snils = (doctor.snils or "").strip()
+            if not snils:
+                continue
+            employees = Employee.objects.filter(snils=snils)
+            if doctor.hospital_id:
+                employees = employees.filter(hospital_id=doctor.hospital_id)
+            positions = EmployeePosition.objects.filter(employee_id__in=employees.values("pk"), is_active=True, date_employment__isnull=False).filter(
+                models.Q(date_dismissal__isnull=True) | models.Q(date_dismissal__gt=today)
+            )
+            dates.extend(position.date_employment for position in positions)
+        return min(dates) if dates else None
+
+    @staticmethod
+    def due_date_for(task, executor_ids):
+        from dateutil.relativedelta import relativedelta
+
+        if (task.due_kind or PlanIndicator.DUE_ABSOLUTE) != PlanIndicator.DUE_EMPLOYMENT:
+            return task.due_date
+        hired = ControlPlan.earliest_employment(executor_ids)
+        if not hired or task.offset_value in (None, ""):
+            return None
+        try:
+            value = int(task.offset_value)
+        except (TypeError, ValueError):
+            return None
+        unit = task.offset_unit or PlanIndicator.UNIT_DAYS
+        if unit == PlanIndicator.UNIT_MONTHS:
+            return hired + relativedelta(months=value)
+        if unit == PlanIndicator.UNIT_YEARS:
+            return hired + relativedelta(years=value)
+        return hired + relativedelta(days=value)
+
+    @staticmethod
+    def people_json(links):
+        result = []
+        for link in links:
+            doctor = link.doctor
+            if not doctor:
+                continue
+            department = ""
+            if doctor.podrazdeleniye_id and doctor.podrazdeleniye:
+                department = doctor.podrazdeleniye.title or ""
+            result.append({"id": doctor.pk, "fio": doctor.get_full_fio() or "", "department": department})
+        return result
+
+
+class ControlPlanExecutor(models.Model):
+    control_plan = models.ForeignKey(ControlPlan, related_name="executor_rows", db_index=True, on_delete=models.CASCADE)
+    doctor = models.ForeignKey("users.DoctorProfile", related_name="control_plan_executor_rows", db_index=True, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "control_plan_executor"
+        verbose_name = "Исполнитель контроля"
+        verbose_name_plural = "Исполнители контроля"
+        unique_together = (("control_plan", "doctor"),)
+
+    def __str__(self):
+        return f"{self.control_plan_id} – {self.doctor_id}"
+
+
+class ControlPlanCurator(models.Model):
+    control_plan = models.ForeignKey(ControlPlan, related_name="curator_rows", db_index=True, on_delete=models.CASCADE)
+    doctor = models.ForeignKey("users.DoctorProfile", related_name="control_plan_curator_rows", db_index=True, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "control_plan_curator"
+        verbose_name = "Куратор контроля"
+        verbose_name_plural = "Кураторы контроля"
+        unique_together = (("control_plan", "doctor"),)
+
+    def __str__(self):
+        return f"{self.control_plan_id} – {self.doctor_id}"
 
 
 class DocumentEmployeeApprove(models.Model):
