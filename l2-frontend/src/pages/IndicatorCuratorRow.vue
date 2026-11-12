@@ -135,7 +135,7 @@ export default {
   computed: {
     numberHref() {
       if (this.localRow.documentId) {
-        return `/ui/document-manager-2?document=${this.localRow.documentId}`;
+        return `/ui/document-manager-2?document=${this.localRow.documentId}&resetFilters=1`;
       }
       return `/ui/results/descriptive#{"pk":${this.localRow.mainDirection}}`;
     },

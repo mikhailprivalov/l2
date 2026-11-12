@@ -563,6 +563,7 @@
                 <PlanField
                   v-model="field.value"
                   :document-id="documentId"
+                  :addressees="planAddressees"
                   :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
@@ -763,6 +764,39 @@ export default {
     },
     groups() {
       return this.research.groups;
+    },
+    planAddressees() {
+      const people = [];
+      const seen = new Set();
+      (this.research.groups || []).forEach(group => {
+        (group.fields || []).forEach(field => {
+          if (field.field_type !== 45 || !field.value) {
+            return;
+          }
+          let rows = [];
+          try {
+            rows = JSON.parse(field.value);
+          } catch {
+            rows = [];
+          }
+          if (!Array.isArray(rows)) {
+            return;
+          }
+          rows.forEach(row => {
+            const id = Number(row?.id);
+            if (!Number.isFinite(id) || id < 1 || seen.has(id)) {
+              return;
+            }
+            seen.add(id);
+            people.push({
+              id,
+              fio: row.fio || '',
+              department: row.department || '',
+            });
+          });
+        });
+      });
+      return JSON.stringify(people);
     },
     userGroups() {
       return this.$store.getters.user_data.groups || [];

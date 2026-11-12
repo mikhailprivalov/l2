@@ -623,11 +623,12 @@ const openedWithResetFilters = () => {
   }
 };
 
+const savedListFilter = readStoredListFilter();
 const storedListFilter = openedWithResetFilters()
   ? {
-    role: null, hidden: false, myCases: false, topics: false, tests: false, participant: false,
+    role: null, hidden: false, myCases: savedListFilter.myCases, topics: false, tests: false, participant: false,
   }
-  : readStoredListFilter();
+  : savedListFilter;
 
 const readStoredLeftWidth = (): number => {
   try {
@@ -677,6 +678,7 @@ const selectedTest = ref<number | null>(null);
 const blockModalOpen = ref(false);
 const blockTitleDraft = ref('');
 const openedFromCaseFavorite = ref(false);
+const openedFromDocumentLink = ref(false);
 const showCaseDocuments = computed(() => showMyCases.value || openedFromCaseFavorite.value);
 const viewerDocumentId = computed(() => (
   showCreatedForm.value || !caseSearch.value ? selectedDocument.value : null
@@ -688,7 +690,7 @@ const viewerCaseId = computed(() => {
   return caseSearch.value ? selectedCase.value : null;
 });
 const showCaseDocumentsOnViewer = computed(() => (
-  (showCaseDocuments.value || caseSearch.value) && !showCreatedForm.value
+  (showCaseDocuments.value || caseSearch.value) && !showCreatedForm.value && !openedFromDocumentLink.value
 ));
 const docsEl = ref<HTMLElement | null>(null);
 const recentPage = ref(1);
@@ -909,7 +911,12 @@ const loadDocuments = async (keepSelection = false) => {
     }
     documents.value = result || [];
     pendingReviewCount.value = Number(count) || 0;
-    if (!keepSelection && selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
+    if (
+      !keepSelection
+      && !openedFromDocumentLink.value
+      && selectedDocument.value
+      && !documents.value.some(row => row.id === selectedDocument.value)
+    ) {
       selectedDocument.value = null;
     }
   } finally {
@@ -1269,6 +1276,7 @@ const confirmCaseTopic = async () => {
 const selectDocument = (id: number) => {
   showCreatedForm.value = false;
   openedFromCaseFavorite.value = false;
+  openedFromDocumentLink.value = false;
   caseSearch.value = false;
   selectedCase.value = null;
   selectedDocument.value = id;
@@ -1276,6 +1284,7 @@ const selectDocument = (id: number) => {
 
 const selectCase = (id: number) => {
   showCreatedForm.value = false;
+  openedFromDocumentLink.value = false;
   selectedCase.value = id;
   selectedDocument.value = null;
 };
@@ -1382,6 +1391,7 @@ const confirmBlock = async () => {
 
 const openFavorite = (payload: number | { id?: number; cases?: boolean }) => {
   const id = typeof payload === 'number' ? payload : Number(payload?.id);
+  openedFromDocumentLink.value = false;
   openedFromCaseFavorite.value = typeof payload === 'object' && Boolean(payload?.cases);
   if (id) {
     showCreatedForm.value = false;
@@ -1404,6 +1414,7 @@ const openDocumentFromQuery = () => {
   if (id > 0) {
     showCreatedForm.value = false;
     openedFromCaseFavorite.value = false;
+    openedFromDocumentLink.value = true;
     showTopics.value = false;
     showTests.value = false;
     selectedBlock.value = null;

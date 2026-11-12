@@ -244,7 +244,7 @@ const documentLine = (row: { id: number; topic: string; typeTitle: string; creat
   [String(row.id), row.topic, row.typeTitle, row.createdAt, row.creator].map(part => (part || '').trim() || '—').join(', ')
 );
 
-const documentHref = (id: number) => `${window.location.origin}/ui/document-manager-2?document=${id}`;
+const documentHref = (id: number) => `${window.location.origin}/ui/document-manager-2?document=${id}&resetFilters=1`;
 
 const printHref = (id: number, format: 'docx' | 'pdf') => (
   `${window.location.origin}/api/document-manager/documents/print?id=${id}&format=${format}`

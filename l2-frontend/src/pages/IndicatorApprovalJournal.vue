@@ -675,7 +675,7 @@ const statusFilterOptions = computed(() => makeOptions(rows.value.map(row => sta
 const linkedFilterOptions = computed(() => makeOptions(rows.value.map(row => linkedLabel(row))));
 const signFilterOptions = computed(() => makeOptions(rows.value.map(row => signLabel(row))));
 
-const documentHref = (documentId: number) => `/ui/document-manager-2?document=${documentId}`;
+const documentHref = (documentId: number) => `/ui/document-manager-2?document=${documentId}&resetFilters=1`;
 
 const selectedCertificate = computed(() => (
   signCertificates.value.find(certificate => certificate.thumbprint === selectedThumbprint.value) || null

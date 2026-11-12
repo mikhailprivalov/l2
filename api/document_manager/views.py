@@ -608,10 +608,11 @@ def plans_preview(request):
     document = None
     document_id = data.get("documentId")
     if document_id not in (None, "", -1, "-1"):
-        document = Documents.objects.filter(pk=document_id).first()
+        document = Documents.objects.select_related("who_create", "who_create__podrazdeleniye").filter(pk=document_id).first()
         if document and not Documents.can_see_document(document, doctor):
             document = None
-    return JsonResponse({"ok": True, "result": Plans.preview_for(ids, doctor, document)})
+    addressees = data.get("addressees") if "addressees" in data else None
+    return JsonResponse({"ok": True, "result": Plans.preview_for(ids, doctor, document, addressees=addressees)})
 
 
 @login_required
@@ -630,7 +631,13 @@ def plans_details(request):
 @group_required("Конструктор: ДОУ")
 def plans_update(request):
     data = _request_data(request)
-    result = Plans.save_plan(data.get("id", -1), data.get("title", ""), data.get("groups"), data.get("indicators"), data.get("tests"))
+    result = Plans.save_plan(
+        data.get("id", -1),
+        data.get("title", ""),
+        data.get("groups"),
+        data.get("indicators"),
+        data.get("tests"),
+    )
     if result.get("ok"):
         _audit(request, DocumentManagerLog.PLAN, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
         return status_response(True, data=result)
@@ -700,6 +707,8 @@ def tests_update(request):
         data.get("orderMode"),
         data.get("questionLimit"),
         data.get("questionPick"),
+        data.get("professionalDirections", ""),
+        data.get("competencies", ""),
     )
     if result.get("ok"):
         _audit(request, DocumentManagerLog.TEST, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))

@@ -475,8 +475,8 @@ ALLOW_DIGITS_IN_FAMILY = False
 # Пустой список — проверка отключена. Переопределение в laboratory/local_settings.py
 # Пример: ["family", "tag_patient_id", "tag_patient_name"]
 EQUIPMENT_RECEIVE_FAMILY_MATCH_FIELDS = []
-
 PROMETHEUS_ENABLED = False
+
 USERS_PK_SHOW_FACT_ADDRESSES_025U = []
 CDA_TITLES_FIELDS_PRIMARY_RESEARCH = []
 CDA_TITLES_FIELDS_EXTRACT_RESEARCH = []

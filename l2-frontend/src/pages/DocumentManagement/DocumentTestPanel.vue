@@ -36,6 +36,18 @@
         {{ title }}
       </div>
       <div
+        v-if="professionalDirections"
+        class="test-meta"
+      >
+        Направление профессиональной деятельности: {{ professionalDirections }}
+      </div>
+      <div
+        v-if="competencies"
+        class="test-meta"
+      >
+        Компетенции: {{ competencies }}
+      </div>
+      <div
         v-if="answerable && (editable || canReset)"
         class="actions"
       >
@@ -144,6 +156,8 @@ const loading = ref(false);
 const loaded = ref(false);
 const saving = ref(false);
 const title = ref('');
+const professionalDirections = ref('');
+const competencies = ref('');
 const questions = ref<QuestionRow[]>([]);
 const selected = ref<number[]>([]);
 const confirmed = ref(false);
@@ -185,6 +199,8 @@ const toggleAnswer = (id: number) => {
 
 const apply = (data) => {
   title.value = data.title || '';
+  professionalDirections.value = data.professionalDirections || '';
+  competencies.value = data.competencies || '';
   questions.value = data.questions || [];
   selected.value = Array.isArray(data.selected) ? data.selected.map(Number) : [];
   confirmed.value = Boolean(data.confirmed);
@@ -246,6 +262,8 @@ const resetAttempt = async () => {
 const load = async () => {
   loaded.value = false;
   title.value = '';
+  professionalDirections.value = '';
+  competencies.value = '';
   questions.value = [];
   selected.value = [];
   confirmed.value = false;
@@ -314,6 +332,11 @@ watch(() => [props.testId, props.documentId], load, { immediate: true });
   min-height: 34px;
   padding: 6px 0;
   font-size: 16px;
+  color: #434a54;
+}
+
+.test-meta {
+  padding: 0 0 6px;
   color: #434a54;
 }
 

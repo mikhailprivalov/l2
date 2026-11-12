@@ -16,6 +16,24 @@
     </div>
     <div class="test-settings">
       <div class="setting-row">
+        <span class="setting-label setting-label-wide">Направление профессиональной деятельности</span>
+        <input
+          v-model="professionalDirections"
+          type="text"
+          class="form-control setting-text"
+          placeholder="Значения через точку с запятой"
+        >
+      </div>
+      <div class="setting-row">
+        <span class="setting-label setting-label-wide">Компетенции</span>
+        <input
+          v-model="competencies"
+          type="text"
+          class="form-control setting-text"
+          placeholder="Значения через точку с запятой"
+        >
+      </div>
+      <div class="setting-row">
         <span class="setting-label">Порядок вопросов</span>
         <select
           v-model="orderMode"
@@ -208,6 +226,8 @@ const emit = defineEmits<{
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const title = ref('');
+const professionalDirections = ref('');
+const competencies = ref('');
 const questions = ref<QuestionRow[]>([]);
 const orderMode = ref<'sequential' | 'random'>('sequential');
 const limitMode = ref<'all' | 'count'>('all');
@@ -291,6 +311,8 @@ const applySettings = (data: { orderMode?: string; questionLimit?: number | null
 
 const load = async () => {
   title.value = '';
+  professionalDirections.value = '';
+  competencies.value = '';
   questions.value = [];
   applySettings({});
   await store.dispatch(actions.INC_LOADING);
@@ -301,6 +323,8 @@ const load = async () => {
       return;
     }
     title.value = data.title || '';
+    professionalDirections.value = data.professionalDirections || '';
+    competencies.value = data.competencies || '';
     applySettings(data);
     applyQuestions(data.questions || []);
   } finally {
@@ -318,6 +342,8 @@ const save = async () => {
     const result = await api('document-manager/tests/update', {
       id: props.testId,
       title: title.value,
+      professionalDirections: professionalDirections.value,
+      competencies: competencies.value,
       orderMode: orderMode.value,
       questionLimit: limitMode.value === 'count' ? questionLimit.value : null,
       questionPick: questionPick.value,
@@ -332,6 +358,8 @@ const save = async () => {
       })),
     });
     if (result?.ok) {
+      professionalDirections.value = result.professionalDirections || '';
+      competencies.value = result.competencies || '';
       root.$emit('msg', 'ok', 'Сохранено');
       emit('saved', { id: result.id });
     } else {
@@ -490,6 +518,19 @@ watch(() => props.testId, load, { immediate: true });
   flex-basis: 190px;
   color: #fff;
   background-color: #aab2bd;
+}
+
+.setting-label-wide {
+  flex-basis: auto;
+}
+
+.setting-text {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  height: 34px;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .setting-select,

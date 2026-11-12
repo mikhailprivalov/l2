@@ -2143,7 +2143,7 @@ class Plans(models.Model):
         }
 
     @staticmethod
-    def preview_for(ids, who, document=None):
+    def preview_for(ids, who, document=None, addressees=None):
         from django.db.models import Prefetch
 
         allowed = Plans.allowed_ids(who)
@@ -2164,7 +2164,70 @@ class Plans(models.Model):
             Prefetch("tests", queryset=PlanTest.objects.select_related("test").order_by("order", "pk")),
         )
         by_id = {plan.pk: plan for plan in plans}
-        return [Plans.preview_one(by_id[pk]) for pk in wanted if pk in by_id]
+        doctor = getattr(document, "who_create", None) if document is not None else None
+        if addressees is None:
+            executors = Plans.addressees_on_document(document)
+        else:
+            executors = Plans.people_from_addressee_values([addressees])
+        result = []
+        for pk in wanted:
+            plan = by_id.get(pk)
+            if not plan:
+                continue
+            row = Plans.preview_one(plan)
+            Plans.fill_empty_curators(row, doctor)
+            Plans.fill_empty_executors(row, executors)
+            result.append(row)
+        return result
+
+    @staticmethod
+    def curator_from_doctor(doctor):
+        if not doctor or not getattr(doctor, "pk", None):
+            return []
+        return PlanIndicator.clean_executors([doctor.pk])
+
+    @staticmethod
+    def fill_empty_curators(payload, doctor):
+        return Plans._fill_empty(payload, "curator", Plans.curator_from_doctor(doctor))
+
+    @staticmethod
+    def fill_empty_executors(payload, people):
+        return Plans._fill_empty(payload, "executors", people)
+
+    @staticmethod
+    def _fill_empty(payload, key, people):
+        if not people:
+            return payload
+
+        def fill(rows):
+            for row in rows or []:
+                if not row.get(key):
+                    row[key] = people
+
+        for group in payload.get("groups") or []:
+            fill(group.get("indicators"))
+        fill(payload.get("indicators"))
+        return payload
+
+    @staticmethod
+    def people_from_addressee_values(values):
+        ids = []
+        seen = set()
+        for value in values or []:
+            for doctor_id in DocumentReview.parse_addressee_ids(value):
+                if doctor_id not in seen:
+                    seen.add(doctor_id)
+                    ids.append(doctor_id)
+        return PlanIndicator.clean_executors(ids)
+
+    @staticmethod
+    def addressees_on_document(document):
+        from directions.models import ParaclinicResult
+
+        if document is None:
+            return []
+        rows = ParaclinicResult.objects.filter(issledovaniye__document=document, field_type=ADDRESSEE_FIELD_TYPE).only("value")
+        return Plans.people_from_addressee_values([row.value for row in rows])
 
     @staticmethod
     def validate_document_fields(groups, iss, who):
@@ -2253,7 +2316,7 @@ class Plans(models.Model):
         }
 
     @staticmethod
-    def save_plan(pk, title, groups, indicators, tests=None, allow_user=False, who=None):
+    def save_plan(pk, title, groups, indicators, tests=None, allow_user=False, who=None, default_curator=None):
         from django.db import transaction
 
         title = (title or "").strip()
@@ -2265,6 +2328,7 @@ class Plans(models.Model):
         kept_ids = set()
         if pk not in (None, -1, "-1"):
             kept_ids = set(PlanIndicator.objects.filter(plan_id=pk).values_list("indicator_id", flat=True))
+        curator_fallback = Plans.curator_from_doctor(default_curator) if default_curator is not None else []
         cleaned_groups = []
         for index, group in enumerate(groups):
             group_title = (group.get("title") or "").strip()
@@ -2272,7 +2336,7 @@ class Plans(models.Model):
                 return {"ok": False, "message": "Укажите название группы"}
             cleaned_rows = []
             for row_index, row in enumerate(group.get("indicators") or []):
-                cleaned, error = PlanIndicator.clean_row(row, row_index, who=who, allow_user=allow_user, kept_ids=kept_ids)
+                cleaned, error = PlanIndicator.clean_row(row, row_index, who=who, allow_user=allow_user, kept_ids=kept_ids, curator_fallback=curator_fallback)
                 if error:
                     return {"ok": False, "message": error}
                 cleaned_rows.append(cleaned)
@@ -2285,7 +2349,7 @@ class Plans(models.Model):
             cleaned_groups.append({"title": group_title, "order": index, "indicators": cleaned_rows, "tests": cleaned_tests})
         cleaned_loose = []
         for row_index, row in enumerate(indicators):
-            cleaned, error = PlanIndicator.clean_row(row, row_index, who=who, allow_user=allow_user, kept_ids=kept_ids)
+            cleaned, error = PlanIndicator.clean_row(row, row_index, who=who, allow_user=allow_user, kept_ids=kept_ids, curator_fallback=curator_fallback)
             if error:
                 return {"ok": False, "message": error}
             cleaned_loose.append(cleaned)
@@ -2566,6 +2630,7 @@ class PlanIndicator(models.Model):
     offset_value = models.IntegerField(null=True, blank=True)
     offset_unit = models.CharField(max_length=16, default=UNIT_DAYS, blank=True)
     executors = models.JSONField(default=list, blank=True, help_text="Исполнители")
+    curator = models.JSONField(default=list, blank=True, help_text="Куратор")
 
     class Meta:
         verbose_name = "Показатель плана"
@@ -2585,6 +2650,7 @@ class PlanIndicator(models.Model):
             "offsetValue": self.offset_value,
             "offsetUnit": self.offset_unit or self.UNIT_DAYS,
             "executors": self.executors if isinstance(self.executors, list) else [],
+            "curator": self.curator if isinstance(self.curator, list) else [],
         }
 
     @staticmethod
@@ -2602,7 +2668,7 @@ class PlanIndicator(models.Model):
         return None
 
     @staticmethod
-    def clean_row(row, order, who=None, allow_user=False, kept_ids=None):
+    def clean_row(row, order, who=None, allow_user=False, kept_ids=None, curator_fallback=None):
         indicator = DouIndicator.objects.filter(pk=row.get("indicatorId")).first()
         if not indicator:
             return None, "Выберите показатель"
@@ -2640,6 +2706,7 @@ class PlanIndicator(models.Model):
             "offset_value": offset_value,
             "offset_unit": offset_unit,
             "executors": PlanIndicator.clean_executors(row.get("executors")),
+            "curator": PlanIndicator.clean_executors(row.get("curator")) or list(curator_fallback or []),
         }, None
 
     @staticmethod
@@ -2732,6 +2799,8 @@ class DouTest(models.Model):
     PICK_RANDOM = "random"
 
     title = models.CharField(max_length=128, blank=True, null=True)
+    professional_direction = models.TextField(blank=True, default="", verbose_name="Направление профессиональной деятельности")
+    competencies = models.TextField(blank=True, default="", verbose_name="Компетенции")
     order_mode = models.CharField(max_length=16, default=ORDER_SEQUENTIAL)
     question_limit = models.PositiveIntegerField(null=True, blank=True)
     question_pick = models.CharField(max_length=16, default=PICK_ALL)
@@ -2754,7 +2823,7 @@ class DouTest(models.Model):
     @staticmethod
     def get_details(pk):
         if pk in (None, -1, "-1"):
-            return {"ok": True, "id": -1, "title": "", "questions": [], **DouTest.empty_settings()}
+            return {"ok": True, "id": -1, "title": "", "questions": [], **DouTest.empty_settings(), **DouTest.empty_texts()}
         test = DouTest.objects.filter(pk=pk).prefetch_related("questions__answers").first()
         if not test:
             return {"ok": False, "message": "Тест не найден"}
@@ -2768,7 +2837,7 @@ class DouTest(models.Model):
                     "answers": [row.as_json() for row in question.answers.all().order_by("order", "pk")],
                 }
             )
-        return {"ok": True, "id": test.pk, "title": test.title or "", "questions": questions, **test.settings_json()}
+        return {"ok": True, "id": test.pk, "title": test.title or "", "questions": questions, **test.settings_json(), **test.texts_json()}
 
     @staticmethod
     def empty_settings():
@@ -2778,6 +2847,25 @@ class DouTest(models.Model):
         order_mode = self.order_mode if self.order_mode in (self.ORDER_SEQUENTIAL, self.ORDER_RANDOM) else self.ORDER_SEQUENTIAL
         question_pick = self.question_pick if self.question_pick in (self.PICK_ALL, self.PICK_RANDOM) else self.PICK_ALL
         return {"orderMode": order_mode, "questionLimit": self.question_limit, "questionPick": question_pick}
+
+    @staticmethod
+    def empty_texts():
+        return {"professionalDirections": "", "competencies": ""}
+
+    @staticmethod
+    def clean_semicolon_text(value):
+        parts = []
+        for part in str(value or "").split(";"):
+            item = part.strip()
+            if item:
+                parts.append(item)
+        return "; ".join(parts)
+
+    def texts_json(self):
+        return {
+            "professionalDirections": self.professional_direction or "",
+            "competencies": self.competencies or "",
+        }
 
     @staticmethod
     def clean_settings(order_mode, question_limit, question_pick, question_count):
@@ -2799,7 +2887,7 @@ class DouTest(models.Model):
         return {"order_mode": order_mode, "question_limit": limit, "question_pick": question_pick}, None
 
     @staticmethod
-    def save_test(pk, title, questions, order_mode=None, question_limit=None, question_pick=None):
+    def save_test(pk, title, questions, order_mode=None, question_limit=None, question_pick=None, professional_direction="", competencies=""):
         from django.db import transaction
 
         title = (title or "").strip()
@@ -2828,6 +2916,8 @@ class DouTest(models.Model):
         settings, error = DouTest.clean_settings(order_mode or DouTest.ORDER_SEQUENTIAL, question_limit, question_pick or DouTest.PICK_ALL, len(cleaned_questions))
         if error:
             return {"ok": False, "message": error}
+        professional_direction = DouTest.clean_semicolon_text(professional_direction)
+        competencies = DouTest.clean_semicolon_text(competencies)
         with transaction.atomic():
             if pk in (None, -1, "-1"):
                 test = DouTest(title=title)
@@ -2836,6 +2926,8 @@ class DouTest(models.Model):
                 if not test:
                     return {"ok": False, "message": "Тест не найден"}
                 test.title = title
+            test.professional_direction = professional_direction
+            test.competencies = competencies
             test.order_mode = settings["order_mode"]
             test.question_limit = settings["question_limit"]
             test.question_pick = settings["question_pick"]
@@ -2845,7 +2937,7 @@ class DouTest(models.Model):
                 question = DouTestQuestion.objects.create(test=test, text=row["text"], order=row["order"])
                 for answer in row["answers"]:
                     DouTestAnswer.objects.create(question=question, **answer)
-        return {"ok": True, "id": test.pk, "title": test.title}
+        return {"ok": True, "id": test.pk, "title": test.title, **test.texts_json()}
 
     @staticmethod
     def _cell_text(value):
@@ -3055,6 +3147,7 @@ class DouTestAttempt(models.Model):
             "ok": True,
             "id": test.pk,
             "title": test.title or "",
+            **test.texts_json(),
             "questions": public_questions,
             "selected": selected,
             "confirmed": confirmed,
@@ -4440,15 +4533,19 @@ class Documents(models.Model):
                 mine_case_ids = set(UserMyCase.objects.filter(doctor=who, document_case_id__in=case_ids).values_list("document_case_id", flat=True))
 
         result = []
+        seen_case_ids = set()
         for doc in docs:
             payload = doc.json
             if my_cases:
                 for case in Documents.linked_cases(doc):
+                    if case.pk in seen_case_ids:
+                        continue
                     if case.who_create_id != getattr(who, "pk", None) and case.pk not in mine_case_ids:
                         continue
+                    seen_case_ids.add(case.pk)
                     row = dict(payload)
                     case_topic = (case.topic or "").strip()
-                    row["title"] = f"{case_topic} {doc.pk}".strip() if case_topic else str(doc.pk)
+                    row["title"] = f"{case_topic} {case.pk}".strip() if case_topic else str(case.pk)
                     row["caseId"] = case.pk
                     row["isFavorite"] = case.pk in favorite_case_ids
                     result.append(row)
@@ -4563,7 +4660,16 @@ class Documents(models.Model):
             return {"ok": False, "message": "Документ заполняется из показателей куратора"}
         if Documents.document_is_confirmed(self):
             return {"ok": False, "message": "Документ подтверждён"}
-        result = Plans.save_plan(self.plan_id, title, groups, indicators, tests, allow_user=True, who=who)
+        result = Plans.save_plan(
+            self.plan_id,
+            title,
+            groups,
+            indicators,
+            tests,
+            allow_user=True,
+            who=who,
+            default_curator=self.who_create,
+        )
         if not result.get("ok"):
             return result
         if with_confirm:
@@ -4817,6 +4923,8 @@ class Documents(models.Model):
                 "document_case__who_close",
                 "block",
                 "plan",
+                "who_create",
+                "who_create__podrazdeleniye",
                 "who_confirm",
                 "who_confirm__podrazdeleniye",
             )
@@ -4905,6 +5013,7 @@ class Documents(models.Model):
         if plan:
             plan_details = Plans.get_details(plan.pk, who)
             if plan_details.get("ok"):
+                Plans.fill_empty_curators(plan_details, obj.who_create)
                 payload["plan"] = plan_details
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
         type_doc = obj.type_document.title if obj.type_document else ""

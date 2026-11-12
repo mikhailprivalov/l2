@@ -59,7 +59,7 @@
           <span>Основание</span>
           <a
             class="a-under"
-            :href="caseDocumentHref(parentDocument.id, true)"
+            :href="caseDocumentHref(parentDocument.id)"
             target="_blank"
             rel="noopener"
           >{{ parentDocument.title }}</a>
@@ -74,7 +74,7 @@
               v-for="row in linkedDocuments"
               :key="row.id"
               class="a-under"
-              :href="caseDocumentHref(row.id, true)"
+              :href="caseDocumentHref(row.id)"
               target="_blank"
               rel="noopener"
             >{{ row.title }}</a>
@@ -917,14 +917,10 @@ const printHref = (id: number, format: 'docx' | 'pdf') => (
   `${window.location.origin}/api/document-manager/documents/print?id=${id}&format=${format}`
 );
 
-const caseDocumentHref = (id: number, resetFilters = false) => {
+const caseDocumentHref = (id: number) => {
   const url = new URL(window.location.href);
   url.searchParams.set('document', String(id));
-  if (resetFilters) {
-    url.searchParams.set('resetFilters', '1');
-  } else {
-    url.searchParams.delete('resetFilters');
-  }
+  url.searchParams.set('resetFilters', '1');
   return url.toString();
 };
 
