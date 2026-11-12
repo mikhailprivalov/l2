@@ -165,8 +165,8 @@ class DouTestAnswerInline(admin.TabularInline):
 
 @admin.register(DouTest)
 class DouTestAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "order_mode", "question_limit", "question_pick")
-    search_fields = ("title",)
+    list_display = ("pk", "title", "professional_direction", "competencies", "order_mode", "question_limit", "question_pick")
+    search_fields = ("title", "professional_direction", "competencies")
 
 
 @admin.register(DouTestQuestion)

@@ -56,6 +56,15 @@
             :key="row.clientKey"
             class="indicator-row"
           >
+            <button
+              v-if="!readonly"
+              class="btn btn-blue-nb row-remove"
+              type="button"
+              title="Удалить"
+              @click="removeIndicator(group.indicators, row)"
+            >
+              <i class="fa fa-times" />
+            </button>
             <Treeselect
               v-model="row.indicatorId"
               class="treeselect-wide treeselect-34px indicator-select"
@@ -110,19 +119,20 @@
                 </option>
               </select>
             </div>
+            <span class="executor-label">Исполнитель</span>
             <AddresseeField
               v-model="row.executors"
               class="executor"
               header="Исполнители"
               :disabled="readonly"
             />
-            <button
-              class="btn btn-blue-nb"
-              type="button"
-              @click="removeIndicator(group.indicators, row)"
-            >
-              Удалить
-            </button>
+            <span class="executor-label">Куратор</span>
+            <AddresseeField
+              v-model="row.curator"
+              class="executor"
+              header="Куратор"
+              :disabled="readonly"
+            />
           </div>
           <button
             class="btn btn-blue-nb add-row"
@@ -136,6 +146,15 @@
             :key="row.clientKey"
             class="indicator-row"
           >
+            <button
+              v-if="!readonly"
+              class="btn btn-blue-nb row-remove"
+              type="button"
+              title="Удалить"
+              @click="removeTest(group.tests, row)"
+            >
+              <i class="fa fa-times" />
+            </button>
             <Treeselect
               v-model="row.testId"
               class="treeselect-wide treeselect-34px indicator-select"
@@ -188,13 +207,6 @@
                 </option>
               </select>
             </div>
-            <button
-              class="btn btn-blue-nb"
-              type="button"
-              @click="removeTest(group.tests, row)"
-            >
-              Удалить
-            </button>
           </div>
           <button
             class="btn btn-blue-nb add-row"
@@ -213,6 +225,15 @@
             :key="row.clientKey"
             class="indicator-row"
           >
+            <button
+              v-if="!readonly"
+              class="btn btn-blue-nb row-remove"
+              type="button"
+              title="Удалить"
+              @click="removeIndicator(looseIndicators, row)"
+            >
+              <i class="fa fa-times" />
+            </button>
             <Treeselect
               v-model="row.indicatorId"
               class="treeselect-wide treeselect-34px indicator-select"
@@ -267,19 +288,20 @@
                 </option>
               </select>
             </div>
+            <span class="executor-label">Исполнитель</span>
             <AddresseeField
               v-model="row.executors"
               class="executor"
               header="Исполнители"
               :disabled="readonly"
             />
-            <button
-              class="btn btn-blue-nb"
-              type="button"
-              @click="removeIndicator(looseIndicators, row)"
-            >
-              Удалить
-            </button>
+            <span class="executor-label">Куратор</span>
+            <AddresseeField
+              v-model="row.curator"
+              class="executor"
+              header="Куратор"
+              :disabled="readonly"
+            />
           </div>
           <button
             class="btn btn-blue-nb add-row"
@@ -293,6 +315,15 @@
             :key="row.clientKey"
             class="indicator-row"
           >
+            <button
+              v-if="!readonly"
+              class="btn btn-blue-nb row-remove"
+              type="button"
+              title="Удалить"
+              @click="removeTest(looseTests, row)"
+            >
+              <i class="fa fa-times" />
+            </button>
             <Treeselect
               v-model="row.testId"
               class="treeselect-wide treeselect-34px indicator-select"
@@ -345,13 +376,6 @@
                 </option>
               </select>
             </div>
-            <button
-              class="btn btn-blue-nb"
-              type="button"
-              @click="removeTest(looseTests, row)"
-            >
-              Удалить
-            </button>
           </div>
           <button
             class="btn btn-blue-nb add-row"
@@ -518,6 +542,7 @@ interface PlanIndicatorRow {
   offsetValue: number | null;
   offsetUnit: 'days' | 'months' | 'years';
   executors: string;
+  curator: string;
 }
 
 interface PlanTestRow {
@@ -546,6 +571,7 @@ interface IndicatorPayload {
   offsetValue?: number | null;
   offsetUnit?: 'days' | 'months' | 'years';
   executors?: string | { id: number; fio?: string; department?: string }[];
+  curator?: string | { id: number; fio?: string; department?: string }[];
 }
 
 interface TestPayload {
@@ -679,6 +705,7 @@ const addIndicator = (rows: PlanIndicatorRow[]) => {
     offsetValue: null,
     offsetUnit: 'days',
     executors: '[]',
+    curator: '[]',
   });
 };
 
@@ -744,6 +771,7 @@ const mapIndicator = (row: IndicatorPayload, index: number): PlanIndicatorRow =>
     offsetValue: row.offsetValue ?? null,
     offsetUnit: row.offsetUnit || 'days',
     executors: executorsValue(row.executors),
+    curator: executorsValue(row.curator),
   };
 };
 
@@ -755,6 +783,7 @@ const payloadIndicator = (row: PlanIndicatorRow, index: number) => ({
   offsetValue: row.dueKind === 'employment' ? row.offsetValue : null,
   offsetUnit: row.offsetUnit,
   executors: row.executors || '[]',
+  curator: row.curator || '[]',
 });
 
 const mapTest = (row: TestPayload, index: number): PlanTestRow => {
@@ -1027,20 +1056,57 @@ watch(() => props.preset, () => {
 
 .indicator-row {
   display: flex;
-  align-items: stretch;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  flex-wrap: nowrap;
   margin-top: 5px;
   min-width: 0;
+
+  > * + * {
+    margin-left: -1px;
+  }
+
+  > .btn {
+    align-self: flex-start;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0 10px;
+    border-radius: 0;
+    line-height: 32px;
+    vertical-align: top;
+  }
+}
+
+.row-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .executor {
-  flex: 1 1 280px;
-  min-width: 220px;
+  flex: 1 1 80px;
+  min-width: 80px;
+  height: 34px;
 }
 
 .indicator-select {
-  flex: 1 1 220px;
-  min-width: 160px;
+  flex: 1 1 80px;
+  min-width: 80px;
+  height: 34px;
 }
 
 .due-kind,
@@ -1048,12 +1114,38 @@ watch(() => props.preset, () => {
 .offset-value,
 .offset-unit {
   height: 34px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid #96a0ad;
   border-radius: 0;
   box-shadow: none;
+  background: #fff;
+  line-height: 32px;
+  box-sizing: border-box;
 }
 
 .due-kind {
-  flex: 0 0 230px;
+  flex: 0 0 110px;
+  width: 110px;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.executor-label {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  height: 34px;
+  margin: 0;
+  padding: 0 8px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 32px;
+  white-space: nowrap;
+  background: #aab2bd;
+  border: 1px solid #96a0ad;
+  box-sizing: border-box;
 }
 
 .due-date {
@@ -1063,6 +1155,7 @@ watch(() => props.preset, () => {
 .offset {
   display: flex;
   flex: 0 0 220px;
+  height: 34px;
 }
 
 .offset-value {
@@ -1071,6 +1164,61 @@ watch(() => props.preset, () => {
 
 .offset-unit {
   width: 130px;
+  margin-left: -1px;
+}
+
+:deep(.indicator-select.vue-treeselect) {
+  height: 34px;
+}
+
+:deep(.indicator-select .vue-treeselect__control),
+:deep(.indicator-select:not(.vue-treeselect--disabled) .vue-treeselect__control:hover),
+:deep(.indicator-select.vue-treeselect--focused .vue-treeselect__control),
+:deep(.indicator-select.vue-treeselect--open .vue-treeselect__control) {
+  box-sizing: border-box !important;
+  height: 34px !important;
+  border: 1px solid #96a0ad;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+:deep(.indicator-select .vue-treeselect__placeholder),
+:deep(.indicator-select .vue-treeselect__single-value) {
+  line-height: 32px !important;
+}
+
+:deep(.executor.addressee-field) {
+  height: 34px;
+  min-height: 34px;
+  align-items: flex-start;
+}
+
+:deep(.executor .addressee-field__preview) {
+  height: 34px;
+  min-height: 34px;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0 8px;
+  border: 1px solid #96a0ad;
+  border-radius: 0;
+  box-sizing: border-box;
+  line-height: 32px;
+}
+
+:deep(.executor .addressee-field__btn) {
+  align-self: flex-start;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 10px;
+  border-radius: 0;
+  line-height: 32px;
+  vertical-align: top;
 }
 
 .add-row {
