@@ -4494,16 +4494,21 @@ class Documents(models.Model):
         )
         if not doc_ids:
             return []
-        stored = ControlPlan.objects.filter(document_id__in=doc_ids, curator_rows__doctor=who).select_related("document", "plan", "task").prefetch_related(
-            Prefetch(
-                "executor_rows",
-                queryset=ControlPlanExecutor.objects.select_related("doctor", "doctor__podrazdeleniye").order_by("pk"),
-            ),
-            Prefetch(
-                "curator_rows",
-                queryset=ControlPlanCurator.objects.select_related("doctor", "doctor__podrazdeleniye").order_by("pk"),
-            ),
-        ).order_by("-document__create_at", "-document_id", "order", "pk")
+        stored = (
+            ControlPlan.objects.filter(document_id__in=doc_ids, curator_rows__doctor=who)
+            .select_related("document", "plan", "task", "who_confirm")
+            .prefetch_related(
+                Prefetch(
+                    "executor_rows",
+                    queryset=ControlPlanExecutor.objects.select_related("doctor", "doctor__podrazdeleniye").order_by("pk"),
+                ),
+                Prefetch(
+                    "curator_rows",
+                    queryset=ControlPlanCurator.objects.select_related("doctor", "doctor__podrazdeleniye").order_by("pk"),
+                ),
+            )
+            .order_by("-document__create_at", "-document_id", "order", "pk")
+        )
         grouped = []
         current = None
         for row in stored:
@@ -4526,6 +4531,10 @@ class Documents(models.Model):
                     "id": row.pk,
                     "title": row.task.title if row.task_id and row.task else "",
                     "dueDate": row.due_date.strftime("%Y-%m-%d") if row.due_date else "",
+                    "done": bool(row.done),
+                    "doneDate": row.done_date.strftime("%Y-%m-%d") if row.done_date else "",
+                    "whoConfirm": row.who_confirm.get_full_fio() if row.who_confirm_id and row.who_confirm else "",
+                    "confirmAt": ControlPlan.confirm_at_text(row.confirm_at),
                     "executors": ControlPlan.people_json(row.executor_rows.all()),
                     "curator": ControlPlan.people_json(row.curator_rows.all()),
                 }
@@ -5396,6 +5405,19 @@ class ControlPlan(models.Model):
         help_text="Задача",
     )
     due_date = models.DateField(null=True, blank=True, help_text="Дата выполнения")
+    done = models.BooleanField(default=False, help_text="Выполнено")
+    done_date = models.DateField(null=True, blank=True, help_text="Фактическая дата выполнения")
+    who_confirm = models.ForeignKey(
+        "users.DoctorProfile",
+        related_name="control_plan_confirms",
+        null=True,
+        blank=True,
+        default=None,
+        db_index=True,
+        on_delete=models.SET_NULL,
+        help_text="Кто изменил выполнение",
+    )
+    confirm_at = models.DateTimeField(null=True, blank=True, help_text="Когда изменено выполнение")
     order = models.IntegerField(default=0)
 
     class Meta:
@@ -5524,6 +5546,49 @@ class ControlPlan(models.Model):
         if unit == PlanIndicator.UNIT_YEARS:
             return hired + relativedelta(years=value)
         return hired + relativedelta(days=value)
+
+    @staticmethod
+    def confirm_at_text(value):
+        from laboratory.utils import strdatetimeru
+
+        return strdatetimeru(value) or ""
+
+    @staticmethod
+    def completion_payload(row):
+        return {
+            "ok": True,
+            "id": row.pk,
+            "done": bool(row.done),
+            "doneDate": row.done_date.strftime("%Y-%m-%d") if row.done_date else "",
+            "whoConfirm": row.who_confirm.get_full_fio() if row.who_confirm_id and row.who_confirm else "",
+            "confirmAt": ControlPlan.confirm_at_text(row.confirm_at),
+        }
+
+    @staticmethod
+    def set_completion(pk, who, done, done_date):
+        from django.utils import timezone
+
+        try:
+            row_id = int(pk)
+        except (TypeError, ValueError):
+            return {"ok": False, "message": "Задача не найдена"}
+        row = ControlPlan.objects.select_related("document", "who_confirm").filter(pk=row_id).first()
+        if not row or not who or not Documents.can_see_document(row.document, who):
+            return {"ok": False, "message": "Задача не найдена"}
+        if not ControlPlanCurator.objects.filter(control_plan=row, doctor=who).exists():
+            return {"ok": False, "message": "Нет прав"}
+        is_done = bool(done)
+        parsed = PlanIndicator._parse_date(done_date) if done_date else None
+        if done_date and not parsed:
+            return {"ok": False, "message": "Укажите дату"}
+        if row.done == is_done and row.done_date == parsed:
+            return ControlPlan.completion_payload(row)
+        row.done = is_done
+        row.done_date = parsed
+        row.who_confirm = who
+        row.confirm_at = timezone.now()
+        row.save(update_fields=["done", "done_date", "who_confirm", "confirm_at"])
+        return ControlPlan.completion_payload(row)
 
     @staticmethod
     def people_json(links):

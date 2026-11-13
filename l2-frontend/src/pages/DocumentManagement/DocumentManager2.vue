@@ -404,6 +404,8 @@
               <div>Дата</div>
               <div>Исполнитель</div>
               <div>Куратор</div>
+              <div>Выполнено</div>
+              <div title="Фактическая дата выполнения">Фактическая дата выполнения</div>
             </div>
             <div
               v-for="task in selectedControlRow.tasks"
@@ -443,6 +445,24 @@
                 disabled
                 :value="peopleText(task.curator)"
               />
+              <select
+                class="form-control control-task__done"
+                :value="task.done ? '1' : '0'"
+                @change="onControlDone(task, $event)"
+              >
+                <option value="0">
+                  Нет
+                </option>
+                <option value="1">
+                  Да
+                </option>
+              </select>
+              <input
+                class="form-control control-task__date"
+                type="date"
+                :value="task.doneDate"
+                @change="onControlDoneDate(task, $event)"
+              >
             </div>
           </template>
         </div>
@@ -725,6 +745,8 @@ type ControlTask = {
   id: number;
   title: string;
   dueDate: string;
+  done: boolean;
+  doneDate: string;
   executors: unknown;
   curator: unknown;
 };
@@ -748,6 +770,41 @@ const selectedDocument = ref<number | null>(null);
 const selectedControlKey = ref<string | null>(null);
 const controlKey = (row: ListRow) => `${row.id}-${row.planId || 0}`;
 const controlDocumentHref = (id: number) => `/ui/document-manager-2?document=${id}&resetFilters=1`;
+
+const saveControlCompletion = async (task: ControlTask, done: boolean, doneDate: string) => {
+  const result = await api('document-manager/documents/control-done', {
+    id: task.id,
+    done,
+    doneDate,
+  });
+  if (!result?.ok) {
+    return;
+  }
+  const row = documents.value.find(item => item.tasks?.some(entry => entry.id === task.id));
+  const tasks = row?.tasks;
+  if (!tasks) {
+    return;
+  }
+  const index = tasks.findIndex(entry => entry.id === task.id);
+  if (index < 0) {
+    return;
+  }
+  const current = tasks[index];
+  tasks.splice(index, 1, {
+    ...current,
+    done: Boolean(result.done),
+    doneDate: result.doneDate || '',
+  });
+};
+
+const onControlDone = (task: ControlTask, event: Event) => {
+  const value = (event.target as HTMLSelectElement).value === '1';
+  saveControlCompletion(task, value, task.doneDate);
+};
+
+const onControlDoneDate = (task: ControlTask, event: Event) => {
+  saveControlCompletion(task, task.done, (event.target as HTMLInputElement).value);
+};
 const selectedCase = ref<number | null>(null);
 const caseSearch = ref(false);
 const showCreatedForm = ref(false);
@@ -1908,7 +1965,9 @@ const onReviewed = () => {
 .control-head,
 .control-task {
   display: grid;
-  grid-template-columns: 88px minmax(140px, 1.4fr) minmax(140px, 1fr) 148px minmax(160px, 1.2fr) minmax(160px, 1.2fr);
+  grid-template-columns:
+    88px minmax(120px, 1.3fr) minmax(120px, 1fr) 140px
+    minmax(140px, 1.1fr) minmax(140px, 1.1fr) 78px 190px;
   align-items: stretch;
   margin-bottom: 0;
   background: #fff;
@@ -1957,6 +2016,16 @@ const onReviewed = () => {
   text-overflow: ellipsis;
   background: #fff;
   border: 1px solid #96a0ad;
+  box-sizing: border-box;
+}
+
+.control-task__done {
+  width: 100%;
+  height: 34px;
+  padding: 0 4px;
+  color: #434a54;
+  border: 1px solid #96a0ad;
+  border-radius: 0;
   box-sizing: border-box;
 }
 
