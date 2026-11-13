@@ -405,7 +405,7 @@
               <div>Исполнитель</div>
               <div>Куратор</div>
               <div>Выполнено</div>
-              <div title="Фактическая дата выполнения">Фактическая дата выполнения</div>
+              <div>Фактическая дата</div>
             </div>
             <div
               v-for="task in selectedControlRow.tasks"
@@ -1967,7 +1967,7 @@ const onReviewed = () => {
   display: grid;
   grid-template-columns:
     88px minmax(120px, 1.3fr) minmax(120px, 1fr) 140px
-    minmax(140px, 1.1fr) minmax(140px, 1.1fr) 78px 190px;
+    minmax(140px, 1.1fr) minmax(140px, 1.1fr) 120px 190px;
   align-items: stretch;
   margin-bottom: 0;
   background: #fff;
