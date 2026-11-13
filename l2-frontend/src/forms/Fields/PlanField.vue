@@ -63,7 +63,7 @@
               class="plan-preview"
             >
               <div
-                v-for="group in plan.groups"
+                v-for="group in shownGroups(plan)"
                 :key="group.id"
                 class="ed-group"
               >
@@ -78,7 +78,7 @@
                   >
                 </div>
                 <div
-                  v-for="row in group.indicators"
+                  v-for="row in curatorTasks(group.indicators, plan.id)"
                   :key="`i-${row.id}`"
                   class="indicator-row"
                 >
@@ -106,7 +106,7 @@
                   />
                 </div>
                 <div
-                  v-for="row in group.tests"
+                  v-for="row in shownTests(group.tests, plan.id)"
                   :key="`t-${row.id}`"
                   class="indicator-row"
                 >
@@ -121,14 +121,14 @@
                 </div>
               </div>
               <div
-                v-if="plan.indicators.length || plan.tests.length"
+                v-if="curatorTasks(plan.indicators, plan.id).length || shownTests(plan.tests, plan.id).length"
                 class="ed-group"
               >
                 <div class="section-title">
                   Без группы
                 </div>
                 <div
-                  v-for="row in plan.indicators"
+                  v-for="row in curatorTasks(plan.indicators, plan.id)"
                   :key="`li-${row.id}`"
                   class="indicator-row"
                 >
@@ -156,7 +156,7 @@
                   />
                 </div>
                 <div
-                  v-for="row in plan.tests"
+                  v-for="row in shownTests(plan.tests, plan.id)"
                   :key="`lt-${row.id}`"
                   class="indicator-row"
                 >
@@ -242,6 +242,8 @@ const props = defineProps<{
   disabled?: boolean;
   documentId?: number | null;
   addressees?: string | null;
+  controlPlanId?: number | null;
+  curatorId?: number | null;
 }>();
 
 // eslint-disable-next-line no-spaced-func, func-call-spacing
@@ -330,7 +332,44 @@ const rows = computed((): PlanRow[] => selectedIds.value.map(id => {
   };
 }));
 
-const isOpen = (id: number) => openIds.value.includes(id);
+const peopleIds = (value: string) => {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .map(row => Number(row?.id))
+      .filter(id => Number.isFinite(id) && id > 0);
+  } catch {
+    return [];
+  }
+};
+
+const controlsPlan = (planId: number) => {
+  const selected = Number(props.controlPlanId);
+  const curatorId = Number(props.curatorId);
+  return Number.isFinite(selected) && selected === planId && Number.isFinite(curatorId) && curatorId > 0;
+};
+
+const curatorTasks = (tasks: PlanLine[], planId: number) => {
+  if (!controlsPlan(planId)) {
+    return tasks;
+  }
+  const curatorId = Number(props.curatorId);
+  return tasks.filter(row => peopleIds(row.curator).includes(curatorId));
+};
+
+const shownTests = (tests: PlanLine[], planId: number) => (controlsPlan(planId) ? [] : tests);
+
+const shownGroups = (plan: PlanRow) => {
+  if (!controlsPlan(plan.id)) {
+    return plan.groups;
+  }
+  return plan.groups.filter(group => curatorTasks(group.indicators, plan.id).length > 0);
+};
+
+const isOpen = (id: number) => openIds.value.includes(id) || controlsPlan(id);
 
 const togglePlan = (id: number) => {
   openIds.value = isOpen(id)
@@ -338,9 +377,12 @@ const togglePlan = (id: number) => {
     : [...openIds.value, id];
 };
 
-const planHasBody = (plan: PlanRow) => (
-  plan.groups.length > 0 || plan.indicators.length > 0 || plan.tests.length > 0
-);
+const planHasBody = (plan: PlanRow) => {
+  if (controlsPlan(plan.id)) {
+    return curatorTasks(plan.indicators, plan.id).length > 0 || shownGroups(plan).length > 0;
+  }
+  return plan.groups.length > 0 || plan.indicators.length > 0 || plan.tests.length > 0;
+};
 
 const optionLabel = (row: PlanOption) => row.title || row.label || String(row.id);
 

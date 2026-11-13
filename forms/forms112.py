@@ -389,6 +389,7 @@ def join_two_pdf_data(func_name, http_params, user_data, buffer, ind_card, type=
 
 def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj, additional_objects):
     p_doc_serial, p_doc_num = patient_data['passport_serial'], patient_data['passport_num']
+    space_symbol = '&nbsp;'
     for section in appendix_paragraphs:
         if section.get('page_break'):
             objs.append(PageBreak())
@@ -399,7 +400,7 @@ def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj,
         elif section.get('HRFlowable'):
             objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
         elif section.get('patient_fio'):
-            objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
+            objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']}){space_symbol * 45}№ карты - {patient_data['card_num']}", styles_obj[section['style']]))
         elif section.get('patient_addresses'):
             objs.append(Paragraph(f"{section['text']} {patient_data['main_address']}", styles_obj[section['style']]))
         elif section.get('patient_document'):
@@ -413,6 +414,7 @@ def add_appendix_paragraphs(objs, appendix_paragraphs, patient_data, styles_obj,
 def add_route_list(objs, appendix_route_list, patient_data, styles_obj, additional_objectsj):
     styleTB = styles_obj["styleTB"]
     styleTC = styles_obj["styleTC"]
+    space_symbol = '&nbsp;'
     route_list = [[Paragraph('Направление', styleTB), Paragraph('Пройдено', styleTB), Paragraph('Услуга', styleTB), Paragraph('Примечание', styleTB), Paragraph(' Ш/к', styleTB)]]
     notation = False
     for section in appendix_route_list:
@@ -423,7 +425,7 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
             height_spacer = section.get('spacer_data')
             objs.append(Spacer(1, height_spacer * mm))
         elif section.get('patient_fio'):
-            objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']})", styles_obj[section['style']]))
+            objs.append(Paragraph(f"{section['text']} {patient_data['fio']} ({patient_data['born']}){space_symbol * 45}№ карты - {patient_data['card_num']}", styles_obj[section['style']]))
         elif section.get('notation'):
             notation = True
         else:

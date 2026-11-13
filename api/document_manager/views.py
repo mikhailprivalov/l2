@@ -27,6 +27,7 @@ from document_management.models import (  # noqa: I001
     DouTestAttempt,
     DouIndicator,
     Plans,
+    ControlPlan,
     TypeCases,
     TypeDocuments,
     TypeSection,
@@ -759,6 +760,8 @@ def documents_list(request):
     doctor = request.user.doctorprofile
     if data.get("countOnly"):
         return JsonResponse({"pendingReviewCount": DocumentReview.pending_count(doctor)})
+    if data.get("filter") == "onControl":
+        return JsonResponse({"result": Documents.control_plan_rows(doctor), "pendingReviewCount": DocumentReview.pending_count(doctor)})
     if data.get("participant"):
         found = {"ok": True, "result": []}
         if data.get("cases"):
@@ -773,6 +776,16 @@ def documents_list(request):
             "pendingReviewCount": DocumentReview.pending_count(doctor),
         }
     )
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_control_done(request):
+    data = _request_data(request)
+    result = ControlPlan.set_completion(data.get("id"), request.user.doctorprofile, data.get("done"), data.get("doneDate"))
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
 
 
 @login_required

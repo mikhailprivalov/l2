@@ -29,7 +29,7 @@
       </div>
       <div class="content-editor">
         <div
-          v-for="group in orderedGroups"
+          v-for="group in visibleGroups"
           :key="group.clientKey"
           class="ed-group"
         >
@@ -52,7 +52,7 @@
             </span>
           </div>
           <div
-            v-for="row in orderedIndicators(group.indicators)"
+            v-for="row in curatorIndicators(group.indicators)"
             :key="row.clientKey"
             class="indicator-row"
           >
@@ -142,7 +142,7 @@
             Добавить задачу
           </button>
           <div
-            v-for="row in orderedTests(group.tests)"
+            v-for="row in shownTests(group.tests)"
             :key="row.clientKey"
             class="indicator-row"
           >
@@ -209,6 +209,7 @@
             </div>
           </div>
           <button
+            v-if="!curatorId"
             class="btn btn-blue-nb add-row"
             type="button"
             @click="addTest(group.tests)"
@@ -216,12 +217,15 @@
             Добавить тест
           </button>
         </div>
-        <div class="ed-group">
+        <div
+          v-if="!curatorId || curatorIndicators(looseIndicators).length"
+          class="ed-group"
+        >
           <div class="section-title">
             Без группы
           </div>
           <div
-            v-for="row in orderedIndicators(looseIndicators)"
+            v-for="row in curatorIndicators(looseIndicators)"
             :key="row.clientKey"
             class="indicator-row"
           >
@@ -311,7 +315,7 @@
             Добавить задачу
           </button>
           <div
-            v-for="row in orderedTests(looseTests)"
+            v-for="row in shownTests(looseTests)"
             :key="row.clientKey"
             class="indicator-row"
           >
@@ -378,6 +382,7 @@
             </div>
           </div>
           <button
+            v-if="!curatorId"
             class="btn btn-blue-nb add-row"
             type="button"
             @click="addTest(looseTests)"
@@ -617,6 +622,7 @@ const props = defineProps<{
   documentId?: number | null;
   readonly?: boolean;
   preset?: PlanPreset | null;
+  curatorId?: number | null;
 }>();
 
 // eslint-disable-next-line no-spaced-func, func-call-spacing
@@ -691,7 +697,42 @@ const indicatorSelectOptions = computed(() => {
 
 const orderedGroups = computed(() => [...groups.value].sort((a, b) => a.order - b.order));
 const orderedIndicators = (rows: PlanIndicatorRow[]) => [...rows].sort((a, b) => a.order - b.order);
+const peopleIds = (value: string) => {
+  try {
+    const rows = JSON.parse(value || '[]');
+    if (!Array.isArray(rows)) {
+      return [];
+    }
+    return rows
+      .map(row => Number(row?.id))
+      .filter(id => Number.isFinite(id) && id > 0);
+  } catch {
+    return [];
+  }
+};
+const curatorIndicators = (rows: PlanIndicatorRow[]) => {
+  const ordered = orderedIndicators(rows);
+  const curatorId = Number(props.curatorId);
+  if (!Number.isFinite(curatorId) || curatorId < 1) {
+    return ordered;
+  }
+  return ordered.filter(row => peopleIds(row.curator).includes(curatorId));
+};
+const visibleGroups = computed(() => {
+  const curatorId = Number(props.curatorId);
+  if (!Number.isFinite(curatorId) || curatorId < 1) {
+    return orderedGroups.value;
+  }
+  return orderedGroups.value.filter(group => curatorIndicators(group.indicators).length > 0);
+});
 const orderedTests = (rows: PlanTestRow[]) => [...rows].sort((a, b) => a.order - b.order);
+const shownTests = (rows: PlanTestRow[]) => {
+  const curatorId = Number(props.curatorId);
+  if (Number.isFinite(curatorId) && curatorId > 0) {
+    return [];
+  }
+  return orderedTests(rows);
+};
 
 const addIndicator = (rows: PlanIndicatorRow[]) => {
   const order = rows.reduce((max, row) => Math.max(max, row.order), 0) + 1;
@@ -705,7 +746,7 @@ const addIndicator = (rows: PlanIndicatorRow[]) => {
     offsetValue: null,
     offsetUnit: 'days',
     executors: '[]',
-    curator: '[]',
+    curator: Number(props.curatorId) > 0 ? JSON.stringify([{ id: Number(props.curatorId) }]) : '[]',
   });
 };
 

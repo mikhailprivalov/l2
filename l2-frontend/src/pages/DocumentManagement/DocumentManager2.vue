@@ -260,14 +260,18 @@
         <template v-else>
           <div
             v-for="document in visibleDocuments"
-            :key="`${document.id}-${document.caseId || 0}`"
+            :key="`${document.id}-${document.planId || document.caseId || 0}`"
             class="doc-row"
           >
           <button
             class="doc-btn"
-            :class="{ 'active-button': selectedDocument === document.id }"
+            :class="{
+              'active-button': roleFilter === 'onControl'
+                ? controlKey(document) === selectedControlKey
+                : selectedDocument === document.id,
+            }"
             type="button"
-            @click="selectDocument(document.id)"
+            @click="roleFilter === 'onControl' ? selectControl(document) : selectDocument(document.id)"
           >
             <span class="doc-title">{{ document.title }}</span>
             <i
@@ -382,6 +386,86 @@
           v-else-if="showTopics && !showCreatedForm"
           :block-id="selectedBlock"
         />
+        <div
+          v-else-if="roleFilter === 'onControl'"
+          class="control-tasks"
+        >
+          <div
+            v-if="!selectedControlRow"
+            class="control-tasks__empty"
+          >
+            Выберите план
+          </div>
+          <template v-else>
+            <div class="control-head">
+              <div>Документ</div>
+              <div>Задача</div>
+              <div>План</div>
+              <div>Дата</div>
+              <div>Исполнитель</div>
+              <div>Куратор</div>
+              <div>Выполнено</div>
+              <div>Фактическая дата</div>
+            </div>
+            <div
+              v-for="task in selectedControlRow.tasks"
+              :key="task.id"
+              class="control-task"
+            >
+              <a
+                class="control-task__doc a-under"
+                :href="controlDocumentHref(selectedControlRow.id)"
+                target="_blank"
+                rel="noopener"
+              >№{{ selectedControlRow.id }}</a>
+              <div class="control-task__name">
+                {{ task.title }}
+              </div>
+              <a
+                class="control-task__plan a-under"
+                :href="controlDocumentHref(selectedControlRow.id)"
+                target="_blank"
+                rel="noopener"
+              >{{ selectedControlRow.planTitle || selectedControlRow.title }}</a>
+              <input
+                class="form-control control-task__date"
+                type="date"
+                readonly
+                :value="task.dueDate"
+              >
+              <AddresseeField
+                class="executor"
+                header="Исполнители"
+                disabled
+                :value="peopleText(task.executors)"
+              />
+              <AddresseeField
+                class="executor"
+                header="Куратор"
+                disabled
+                :value="peopleText(task.curator)"
+              />
+              <select
+                class="form-control control-task__done"
+                :value="task.done ? '1' : '0'"
+                @change="onControlDone(task, $event)"
+              >
+                <option value="0">
+                  Нет
+                </option>
+                <option value="1">
+                  Да
+                </option>
+              </select>
+              <input
+                class="form-control control-task__date"
+                type="date"
+                :value="task.doneDate"
+                @change="onControlDoneDate(task, $event)"
+              >
+            </div>
+          </template>
+        </div>
         <DocumentViewer
           v-else
           :document-id="viewerDocumentId"
@@ -546,6 +630,7 @@ import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
 import MonitoringPeriodModal from '@/pages/DocumentManagement/MonitoringPeriodModal.vue';
 import DocumentBlockPanel from '@/pages/DocumentManagement/DocumentBlockPanel.vue';
 import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
+import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import Modal from '@/ui-cards/Modal.vue';
@@ -656,11 +741,23 @@ const showParticipant = ref(storedListFilter.participant);
 const participantDocuments = ref(true);
 const participantCases = ref(true);
 const pendingReviewCount = ref(0);
+type ControlTask = {
+  id: number;
+  title: string;
+  dueDate: string;
+  done: boolean;
+  doneDate: string;
+  executors: unknown;
+  curator: unknown;
+};
 type ListRow = {
   id: number;
   title: string;
   confirmed?: boolean;
   caseId?: number;
+  planId?: number;
+  planTitle?: string;
+  tasks?: ControlTask[];
   isMine?: boolean;
   inMyCases?: boolean;
   isFavorite?: boolean;
@@ -670,6 +767,44 @@ const listQuery = ref('');
 const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
 const tests = ref<{ id: number; title: string }[]>([]);
 const selectedDocument = ref<number | null>(null);
+const selectedControlKey = ref<string | null>(null);
+const controlKey = (row: ListRow) => `${row.id}-${row.planId || 0}`;
+const controlDocumentHref = (id: number) => `/ui/document-manager-2?document=${id}&resetFilters=1`;
+
+const saveControlCompletion = async (task: ControlTask, done: boolean, doneDate: string) => {
+  const result = await api('document-manager/documents/control-done', {
+    id: task.id,
+    done,
+    doneDate,
+  });
+  if (!result?.ok) {
+    return;
+  }
+  const row = documents.value.find(item => item.tasks?.some(entry => entry.id === task.id));
+  const tasks = row?.tasks;
+  if (!tasks) {
+    return;
+  }
+  const index = tasks.findIndex(entry => entry.id === task.id);
+  if (index < 0) {
+    return;
+  }
+  const current = tasks[index];
+  tasks.splice(index, 1, {
+    ...current,
+    done: Boolean(result.done),
+    doneDate: result.doneDate || '',
+  });
+};
+
+const onControlDone = (task: ControlTask, event: Event) => {
+  const value = (event.target as HTMLSelectElement).value === '1';
+  saveControlCompletion(task, value, task.doneDate);
+};
+
+const onControlDoneDate = (task: ControlTask, event: Event) => {
+  saveControlCompletion(task, task.done, (event.target as HTMLInputElement).value);
+};
 const selectedCase = ref<number | null>(null);
 const caseSearch = ref(false);
 const showCreatedForm = ref(false);
@@ -810,7 +945,8 @@ const loadDocuments = async (keepSelection = false) => {
   const hasListFilter = roleFilter.value === 'created'
     || roleFilter.value === 'toReview'
     || roleFilter.value === 'recent'
-    || roleFilter.value === 'toBeAgreed';
+    || roleFilter.value === 'toBeAgreed'
+    || roleFilter.value === 'onControl';
   if (showTests.value) {
     selectedDocument.value = null;
     selectedBlock.value = null;
@@ -899,6 +1035,7 @@ const loadDocuments = async (keepSelection = false) => {
     const listFilter = roleFilter.value === 'created'
       || roleFilter.value === 'toReview'
       || roleFilter.value === 'toBeAgreed'
+      || roleFilter.value === 'onControl'
       ? roleFilter.value
       : null;
     const { result, pendingReviewCount: count } = await api('document-manager/documents/list', {
@@ -918,6 +1055,13 @@ const loadDocuments = async (keepSelection = false) => {
       && !documents.value.some(row => row.id === selectedDocument.value)
     ) {
       selectedDocument.value = null;
+    }
+    if (
+      roleFilter.value === 'onControl'
+      && selectedControlKey.value
+      && !documents.value.some(row => controlKey(row) === selectedControlKey.value)
+    ) {
+      selectedControlKey.value = null;
     }
   } finally {
     await store.dispatch(actions.DEC_LOADING);
@@ -1281,6 +1425,18 @@ const selectDocument = (id: number) => {
   selectedCase.value = null;
   selectedDocument.value = id;
 };
+
+const selectControl = (row: ListRow) => {
+  selectedControlKey.value = controlKey(row);
+};
+
+const selectedControlRow = computed(() => (
+  documents.value.find(row => controlKey(row) === selectedControlKey.value) || null
+));
+
+const peopleText = (value: unknown) => (
+  typeof value === 'string' ? value || '[]' : JSON.stringify(value || [])
+);
 
 const selectCase = (id: number) => {
   showCreatedForm.value = false;
@@ -1791,6 +1947,116 @@ const onReviewed = () => {
   overflow: hidden;
   overflow-wrap: anywhere;
   text-align: left;
+}
+
+.control-tasks {
+  height: 100%;
+  overflow: auto;
+  padding: 12px;
+  background: #f8f7f7;
+  box-sizing: border-box;
+}
+
+.control-tasks__empty {
+  color: #888;
+  font-size: 13px;
+}
+
+.control-head,
+.control-task {
+  display: grid;
+  grid-template-columns:
+    88px minmax(120px, 1.3fr) minmax(120px, 1fr) 140px
+    minmax(140px, 1.1fr) minmax(140px, 1.1fr) 120px 190px;
+  align-items: stretch;
+  margin-bottom: 0;
+  background: #fff;
+}
+
+.control-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.control-head > div {
+  height: 34px;
+  padding: 0 8px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 14px;
+  line-height: 32px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: #aab2bd;
+  border: 1px solid #96a0ad;
+  box-sizing: border-box;
+}
+
+.control-head > div + div,
+.control-task > * + * {
+  margin-left: -1px;
+}
+
+.control-task + .control-task,
+.control-head + .control-task {
+  margin-top: -1px;
+}
+
+.control-task__doc,
+.control-task__plan {
+  display: block;
+  height: 34px;
+  padding: 0 8px;
+  overflow: hidden;
+  color: #434a54;
+  font-size: 14px;
+  line-height: 32px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: #fff;
+  border: 1px solid #96a0ad;
+  box-sizing: border-box;
+}
+
+.control-task__done {
+  width: 100%;
+  height: 34px;
+  padding: 0 4px;
+  color: #434a54;
+  border: 1px solid #96a0ad;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+.control-task__date {
+  width: 100%;
+  max-width: none;
+  height: 34px;
+  padding: 0 8px;
+  color: #434a54;
+  border: 1px solid #96a0ad;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+.control-task__name {
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  overflow: hidden;
+  color: #434a54;
+  font-size: 14px;
+  line-height: 34px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid #96a0ad;
+  box-sizing: border-box;
+}
+
+.executor {
+  min-width: 0;
+  width: 100%;
 }
 
 .doc-draft {

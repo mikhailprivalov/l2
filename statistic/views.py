@@ -5,7 +5,7 @@ from copy import deepcopy
 import pytz_deprecation_shim as pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone, dateformat
 from django.utils.encoding import iri_to_uri
@@ -1007,6 +1007,7 @@ def statistic_xls(request):
                 ("ФИО", 7600),
                 ("Возраст", 3000),
                 ("Карта", 6000),
+                ("Дата и время забора", 6000),
                 ("Число направлений", 5000),
                 ("Номера направлений", 6000),
                 ("Наименования исследований", 20000),
@@ -1031,32 +1032,47 @@ def statistic_xls(request):
             else:
                 day1 = day2 = timezone.now()
 
+            collected_tubes = TubesRegistration.objects.filter(doc_get=user_row, time_get__isnull=False, time_get__range=(day1, day2))
             iss_list = (
                 Issledovaniya.objects.filter(tubes__doc_get=user_row, tubes__time_get__isnull=False, tubes__time_get__range=(day1, day2))
                 .order_by("napravleniye__client__individual__patronymic", "napravleniye__client__individual__name", "napravleniye__client__individual__family")
                 .distinct()
+                .prefetch_related(Prefetch("tubes", queryset=collected_tubes))
             )
             patients = {}
             for iss in iss_list:
                 k = iss.napravleniye.client.individual_id
                 if k not in patients:
                     client = iss.napravleniye.client.individual
-                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": [], "cards": []}
+                    patients[k] = {
+                        "fio": client.fio(short=True, dots=True),
+                        "age": client.age_s(direction=iss.napravleniye),
+                        "directions": [],
+                        "researches": [],
+                        "cards": [],
+                        "get_times": set(),
+                    }
                 if iss.napravleniye_id not in patients[k]["directions"]:
                     patients[k]["directions"].append(iss.napravleniye_id)
                 kn = iss.napravleniye.client.number_with_type()
                 if kn not in patients[k]["cards"]:
                     patients[k]["cards"].append(kn)
                 patients[k]["researches"].append(iss.research.title)
+                for tube in iss.tubes.all():
+                    taken_at = utils.timetolocal(tube.time_get)
+                    if taken_at:
+                        patients[k]["get_times"].add(taken_at.replace(second=0, microsecond=0))
 
             n = 0
             for p_pk in patients:
                 n += 1
+                get_times = ", ".join(taken_at.strftime("%d.%m.%Y %H:%M") for taken_at in sorted(patients[p_pk]["get_times"]))
                 row = [
                     str(n),
                     patients[p_pk]["fio"],
                     patients[p_pk]["age"],
                     ", ".join(patients[p_pk]["cards"]),
+                    get_times,
                     len(patients[p_pk]["directions"]),
                     ", ".join([str(x) for x in patients[p_pk]["directions"]]),
                     ", ".join(patients[p_pk]["researches"]),
