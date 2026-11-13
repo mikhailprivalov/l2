@@ -5498,12 +5498,8 @@ class ControlPlan(models.Model):
                     order=position,
                 )
                 position += 1
-                ControlPlanExecutor.objects.bulk_create(
-                    [ControlPlanExecutor(control_plan=control, doctor_id=doctor_id) for doctor_id in executor_ids]
-                )
-                ControlPlanCurator.objects.bulk_create(
-                    [ControlPlanCurator(control_plan=control, doctor_id=doctor_id) for doctor_id in curator_ids]
-                )
+                ControlPlanExecutor.objects.bulk_create([ControlPlanExecutor(control_plan=control, doctor_id=doctor_id) for doctor_id in executor_ids])
+                ControlPlanCurator.objects.bulk_create([ControlPlanCurator(control_plan=control, doctor_id=doctor_id) for doctor_id in curator_ids])
 
     @staticmethod
     def earliest_employment(executor_ids):
