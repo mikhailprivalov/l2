@@ -3331,12 +3331,7 @@ class DouTestAttempt(models.Model):
         test = DouTest.objects.filter(pk=test_id).prefetch_related("questions__answers").first()
         if not test:
             return {"ok": False, "message": "Тест не найден"}
-        attempt = (
-            DouTestAttempt.objects.filter(test=test, doctor=doctor)
-            .select_related("document", "document__who_confirm", "document__who_confirm__podrazdeleniye")
-            .order_by("-pk")
-            .first()
-        )
+        attempt = DouTestAttempt.objects.filter(test=test, doctor=doctor).select_related("document", "document__who_confirm", "document__who_confirm__podrazdeleniye").order_by("-pk").first()
         return DouTestAttempt._quiz(test, attempt, doctor)
 
     @staticmethod
