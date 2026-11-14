@@ -4418,12 +4418,7 @@ class Documents(models.Model):
                 document_case_id__in=case_ids,
             ).values_list("document_id", "document_case_id")
         )
-        rows = [
-            DocumentCaseLink(document_id=doc.pk, document_case_id=case_id)
-            for doc in tests
-            for case_id in case_ids
-            if (doc.pk, case_id) not in have
-        ]
+        rows = [DocumentCaseLink(document_id=doc.pk, document_case_id=case_id) for doc in tests for case_id in case_ids if (doc.pk, case_id) not in have]
         if rows:
             DocumentCaseLink.objects.bulk_create(rows)
         for doc in tests:
