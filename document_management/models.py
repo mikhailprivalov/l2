@@ -1088,8 +1088,18 @@ class TypeDocuments(models.Model):
             return {"ok": False, "message": "Укажите либо мониторинг, либо тест"}
         try:
             return TypeDocuments._save_type_row(
-                pk, title, group, place, code, first_template, templates, monitoring, test,
-                plan_flag, test_default_flag, creator_ids,
+                pk,
+                title,
+                group,
+                place,
+                code,
+                first_template,
+                templates,
+                monitoring,
+                test,
+                plan_flag,
+                test_default_flag,
+                creator_ids,
             )
         except IntegrityError:
             if not test_default_flag:
