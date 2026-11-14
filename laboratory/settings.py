@@ -686,7 +686,7 @@ REQUESTS_JOURNAL_MAX_PERIOD_DAYS = 40
 # Снять можно только на /ui/requests-journal: суперадмин или группа REQUEST_ACCEPT_CANCEL_GROUP.
 # False: принятие снимает тот врач, кто его поставил, на /ui/requests-fill.
 # Переопределение в laboratory/local_settings.py
-REQUEST_ACCEPT_DOCTOR_CANNOT_CANCEL = True
+REQUEST_ACCEPT_DOCTOR_CANNOT_CANCEL = False
 REQUEST_ACCEPT_CANCEL_GROUP = "Отмена принятия заявки"
 
 # Кэш каталога услуг. False — общий для всех. True — отдельный кэш на каждого пользователя.
