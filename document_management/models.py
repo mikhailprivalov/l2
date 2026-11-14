@@ -789,11 +789,19 @@ class TypeDocuments(models.Model):
         on_delete=models.SET_NULL,
     )
     is_plan = models.BooleanField(default=False, blank=True, help_text="План")
+    is_test_defaulta = models.BooleanField(default=False, blank=True, help_text="Это тест по умолчанию")
     print_docx = models.FileField(upload_to=get_print_docx_path, default=None, null=True, blank=True, help_text="Шаблон печати docx")
 
     class Meta:
         verbose_name = "Вид документа"
         verbose_name_plural = "Виды документов"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["is_test_defaulta"],
+                condition=models.Q(is_test_defaulta=True),
+                name="typedocuments_one_test_defaulta",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.title}"
@@ -846,6 +854,7 @@ class TypeDocuments(models.Model):
             "testId": self.test_id,
             "testTitle": self.test.title if self.test_id and self.test else "",
             "isPlan": bool(self.is_plan),
+            "isTestDefaulta": bool(self.is_test_defaulta),
             "creators": self.get_creators(),
             "hasPrintTemplate": bool(self.print_docx),
             "printTemplateName": os.path.basename(self.print_docx.name) if self.print_docx else "",
@@ -1024,12 +1033,24 @@ class TypeDocuments(models.Model):
         monitoring_id=None,
         test_id=None,
         is_plan=False,
+        is_test_defaulta=False,
     ):
         from directory.models import Researches
 
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
+        test_default_flag = bool(is_test_defaulta)
+        if test_default_flag:
+            group_id = None
+            code = ""
+            layout_template_id = None
+            layout_template_ids = []
+            creator_ids = []
+            place_section_id = None
+            monitoring_id = None
+            test_id = None
+            is_plan = False
         group = None
         if group_id not in (None, "", -1, "-1"):
             group = GroupDocuments.objects.filter(pk=group_id).first()
@@ -1065,7 +1086,57 @@ class TypeDocuments(models.Model):
             return {"ok": False, "message": "Укажите либо план, либо мониторинг, либо тест"}
         if monitoring and test:
             return {"ok": False, "message": "Укажите либо мониторинг, либо тест"}
+        try:
+            return TypeDocuments._save_type_row(
+                pk,
+                title,
+                group,
+                place,
+                code,
+                first_template,
+                templates,
+                monitoring,
+                test,
+                plan_flag,
+                test_default_flag,
+                creator_ids,
+            )
+        except IntegrityError:
+            if not test_default_flag:
+                raise
+            return TypeDocuments._test_default_conflict(pk)
+
+    @staticmethod
+    def _test_default_conflict(pk):
+        others = TypeDocuments.objects.filter(is_test_defaulta=True)
+        if pk not in (None, "", -1, "-1"):
+            others = others.exclude(pk=pk)
+        other = others.order_by("pk").first()
+        name = other.title if other else ""
+        return {"ok": False, "message": "Тест по умолчанию уже задан у вида «{}»".format(name)}
+
+    @staticmethod
+    def _save_type_row(
+        pk,
+        title,
+        group,
+        place,
+        code,
+        first_template,
+        templates,
+        monitoring,
+        test,
+        plan_flag,
+        test_default_flag,
+        creator_ids,
+    ):
         with transaction.atomic():
+            if test_default_flag:
+                others = TypeDocuments.objects.select_for_update().filter(is_test_defaulta=True)
+                if pk not in (None, "", -1, "-1"):
+                    others = others.exclude(pk=pk)
+                if others.exists():
+                    return TypeDocuments._test_default_conflict(pk)
             if pk in (None, -1, "-1"):
                 obj = TypeDocuments(
                     title=title,
@@ -1076,6 +1147,7 @@ class TypeDocuments(models.Model):
                     monitoring=monitoring,
                     test=test,
                     is_plan=plan_flag,
+                    is_test_defaulta=test_default_flag,
                 )
             else:
                 obj = TypeDocuments.objects.filter(pk=pk).first()
@@ -1089,11 +1161,14 @@ class TypeDocuments(models.Model):
                 obj.monitoring = monitoring
                 obj.test = test
                 obj.is_plan = plan_flag
+                obj.is_test_defaulta = test_default_flag
             obj.save()
             TypeDocumentLayoutTemplate.objects.filter(type_document=obj).delete()
             TypeDocumentLayoutTemplate.objects.bulk_create([TypeDocumentLayoutTemplate(type_document=obj, layout_template=row, order=index) for index, row in enumerate(templates)])
             if creator_ids is not None:
                 TypeDocuments._set_creators(obj, creator_ids)
+            if test_default_flag:
+                obj.clear_print_docx()
             TypeDocumentsSchema.get_or_create_for_type(obj)
         return {"ok": True, "id": obj.pk, "title": obj.title}
 
@@ -1461,6 +1536,7 @@ class DocumentCase(models.Model):
             have = set(document.case_links.values_list("document_case_id", flat=True))
             DocumentCaseLink.objects.bulk_create([DocumentCaseLink(document=document, document_case_id=pk) for pk in final_ids if pk not in have])
             Documents.sync_case_field(document)
+            Documents.attach_plan_cases(document)
         cases = Documents.linked_cases(document)
         case_payload = cases[0].as_json(who) if len(cases) == 1 else None
         return {"ok": True, "caseIds": [case.pk for case in cases], "caseId": document.document_case_id, "case": case_payload}
@@ -2826,6 +2902,8 @@ class DouTest(models.Model):
     order_mode = models.CharField(max_length=16, default=ORDER_SEQUENTIAL)
     question_limit = models.PositiveIntegerField(null=True, blank=True)
     question_pick = models.CharField(max_length=16, default=PICK_ALL)
+    pass_percent = models.PositiveSmallIntegerField(default=100, help_text="Порог в %, с которого тест считается пройден")
+    attempt_limit = models.PositiveIntegerField(default=3, help_text="Сколько раз можно проходить тест до успеха")
 
     class Meta:
         verbose_name = "Тест"
@@ -2863,12 +2941,20 @@ class DouTest(models.Model):
 
     @staticmethod
     def empty_settings():
-        return {"orderMode": DouTest.ORDER_SEQUENTIAL, "questionLimit": None, "questionPick": DouTest.PICK_ALL}
+        return {"orderMode": DouTest.ORDER_SEQUENTIAL, "questionLimit": None, "questionPick": DouTest.PICK_ALL, "passPercent": 100, "attemptLimit": 3}
 
     def settings_json(self):
         order_mode = self.order_mode if self.order_mode in (self.ORDER_SEQUENTIAL, self.ORDER_RANDOM) else self.ORDER_SEQUENTIAL
         question_pick = self.question_pick if self.question_pick in (self.PICK_ALL, self.PICK_RANDOM) else self.PICK_ALL
-        return {"orderMode": order_mode, "questionLimit": self.question_limit, "questionPick": question_pick}
+        pass_percent = 100 if self.pass_percent is None else self.pass_percent
+        attempt_limit = 3 if not self.attempt_limit or self.attempt_limit < 1 else self.attempt_limit
+        return {
+            "orderMode": order_mode,
+            "questionLimit": self.question_limit,
+            "questionPick": question_pick,
+            "passPercent": pass_percent,
+            "attemptLimit": attempt_limit,
+        }
 
     @staticmethod
     def empty_texts():
@@ -2890,7 +2976,7 @@ class DouTest(models.Model):
         }
 
     @staticmethod
-    def clean_settings(order_mode, question_limit, question_pick, question_count):
+    def clean_settings(order_mode, question_limit, question_pick, question_count, pass_percent=None, attempt_limit=None):
         if order_mode not in (DouTest.ORDER_SEQUENTIAL, DouTest.ORDER_RANDOM):
             return None, "Укажите порядок вопросов"
         if question_pick not in (DouTest.PICK_ALL, DouTest.PICK_RANDOM):
@@ -2906,10 +2992,45 @@ class DouTest(models.Model):
                 return None, "Укажите количество вопросов"
             if limit > question_count:
                 return None, "Количество вопросов больше, чем в тесте"
-        return {"order_mode": order_mode, "question_limit": limit, "question_pick": question_pick}, None
+        if pass_percent in (None, ""):
+            threshold = 100
+        else:
+            try:
+                threshold = int(pass_percent)
+            except (TypeError, ValueError):
+                return None, "Укажите порог от 0 до 100"
+            if threshold < 0 or threshold > 100:
+                return None, "Укажите порог от 0 до 100"
+        if attempt_limit in (None, ""):
+            attempts = 3
+        else:
+            try:
+                attempts = int(attempt_limit)
+            except (TypeError, ValueError):
+                return None, "Укажите количество попыток"
+            if attempts < 1:
+                return None, "Укажите количество попыток"
+        return {
+            "order_mode": order_mode,
+            "question_limit": limit,
+            "question_pick": question_pick,
+            "pass_percent": threshold,
+            "attempt_limit": attempts,
+        }, None
 
     @staticmethod
-    def save_test(pk, title, questions, order_mode=None, question_limit=None, question_pick=None, professional_direction="", competencies=""):
+    def save_test(
+        pk,
+        title,
+        questions,
+        order_mode=None,
+        question_limit=None,
+        question_pick=None,
+        professional_direction="",
+        competencies="",
+        pass_percent=None,
+        attempt_limit=None,
+    ):
         from django.db import transaction
 
         title = (title or "").strip()
@@ -2935,7 +3056,14 @@ class DouTest(models.Model):
             if not has_correct:
                 return {"ok": False, "message": "Отметьте правильный ответ"}
             cleaned_questions.append({"text": text, "order": index, "answers": cleaned_answers})
-        settings, error = DouTest.clean_settings(order_mode or DouTest.ORDER_SEQUENTIAL, question_limit, question_pick or DouTest.PICK_ALL, len(cleaned_questions))
+        settings, error = DouTest.clean_settings(
+            order_mode or DouTest.ORDER_SEQUENTIAL,
+            question_limit,
+            question_pick or DouTest.PICK_ALL,
+            len(cleaned_questions),
+            pass_percent,
+            attempt_limit,
+        )
         if error:
             return {"ok": False, "message": error}
         professional_direction = DouTest.clean_semicolon_text(professional_direction)
@@ -2953,6 +3081,8 @@ class DouTest(models.Model):
             test.order_mode = settings["order_mode"]
             test.question_limit = settings["question_limit"]
             test.question_pick = settings["question_pick"]
+            test.pass_percent = settings["pass_percent"]
+            test.attempt_limit = settings["attempt_limit"]
             test.save()
             DouTestQuestion.objects.filter(test=test).delete()
             for row in cleaned_questions:
@@ -3082,7 +3212,6 @@ class DouTestAttempt(models.Model):
     class Meta:
         verbose_name = "Прохождение теста"
         verbose_name_plural = "Прохождения тестов"
-        unique_together = ("test", "doctor")
 
     def __str__(self):
         return f"{self.test_id} – {self.doctor_id}"
@@ -3116,6 +3245,15 @@ class DouTestAttempt(models.Model):
         total = len(questions)
         percent = 0 if total == 0 else int((correct * 100 + total // 2) // total)
         return correct, total, percent
+
+    @staticmethod
+    def _passed(test, attempt):
+        if not test or not attempt:
+            return False
+        questions, _valid = DouTestAttempt._questions(test)
+        _correct, _total, percent = DouTestAttempt._score(questions, attempt.answer_ids or [])
+        threshold = 100 if test.pass_percent is None else test.pass_percent
+        return percent >= threshold
 
     @staticmethod
     def _questions(test):
@@ -3179,9 +3317,12 @@ class DouTestAttempt(models.Model):
         }
         if confirmed:
             correct, total, percent = DouTestAttempt._score(questions, selected)
+            threshold = 100 if test.pass_percent is None else test.pass_percent
             payload["correct"] = correct
             payload["total"] = total
             payload["percent"] = percent
+            payload["passPercent"] = threshold
+            payload["passed"] = percent >= threshold
         if editable is None:
             editable = bool(can_reset or not confirmed)
         payload["editable"] = bool(editable)
@@ -3200,18 +3341,18 @@ class DouTestAttempt(models.Model):
         test = DouTest.objects.filter(pk=test_id).prefetch_related("questions__answers").first()
         if not test:
             return {"ok": False, "message": "Тест не найден"}
-        attempt = DouTestAttempt.objects.filter(test=test, doctor=doctor).select_related("document", "document__who_confirm", "document__who_confirm__podrazdeleniye").first()
+        attempt = DouTestAttempt.objects.filter(test=test, doctor=doctor).select_related("document", "document__who_confirm", "document__who_confirm__podrazdeleniye").order_by("-pk").first()
         return DouTestAttempt._quiz(test, attempt, doctor)
 
     @staticmethod
     def get_for_document(document_id, doctor):
         if not doctor:
             return {"ok": False, "message": "Сотрудник не найден"}
-        document = Documents.objects.filter(pk=document_id).select_related("type_document", "type_document__test", "who_confirm", "who_confirm__podrazdeleniye").first()
+        document = Documents.objects.filter(pk=document_id).select_related("type_document", "type_document__test", "test", "who_confirm", "who_confirm__podrazdeleniye").first()
         if not document or not Documents.can_see_document(document, doctor):
             return {"ok": False, "message": "Документ не найден"}
-        linked_test = document.type_document.test if document.type_document_id and document.type_document and document.type_document.test_id else None
-        test = DouTest.objects.filter(pk=linked_test.pk).prefetch_related("questions__answers").first() if linked_test else None
+        linked_test_id = document.resolved_test_id()
+        test = DouTest.objects.filter(pk=linked_test_id).prefetch_related("questions__answers").first() if linked_test_id else None
         if not test:
             return {"ok": False, "message": "Тест не найден"}
         attempt = DouTestAttempt.objects.filter(document=document).first()
@@ -3299,9 +3440,11 @@ class DouTestAttempt(models.Model):
             iss.save(update_fields=["time_confirmation", "doc_confirmation", "executor_confirmation"])
         document.time_confirm = None
         document.who_confirm = None
-        document.save(update_fields=["time_confirm", "who_confirm"])
+        document.test_passed = False
+        document.save(update_fields=["time_confirm", "who_confirm", "test_passed"])
         title, type_title = DouTestAttempt._log_title(document)
         Documents.log_action(document.pk, Documents.LOG_RESET, doctor, {"title": title, "typeId": document.type_document_id, "typeTitle": type_title})
+        Documents._log_plan_test(document, Documents.LOG_RESET, doctor)
 
     @staticmethod
     def save_for(test_id, doctor, answer_ids, confirm, document_id=None):
@@ -3313,21 +3456,25 @@ class DouTestAttempt(models.Model):
                 document = Documents.objects.select_for_update().filter(pk=document_id).first()
                 if not document or not Documents.can_see_document(document, doctor):
                     return {"ok": False, "message": "Документ не найден"}
-                type_doc = TypeDocuments.objects.filter(pk=document.type_document_id).select_related("test").first()
-                test = type_doc.test if type_doc and type_doc.test_id else None
+                if not document.test_id:
+                    fill_id = test_id if test_id not in (None, "", -1, "-1") else document.resolved_test_id()
+                    linked = DouTest.objects.filter(pk=fill_id).first() if fill_id else None
+                    if linked:
+                        document.test = linked
+                        document.save(update_fields=["test"])
+                test = DouTest.objects.select_for_update().filter(pk=document.test_id).first() if document.test_id else None
                 if not test:
                     return {"ok": False, "message": "Тест не найден"}
             else:
                 test = DouTest.objects.select_for_update().filter(pk=test_id).first()
                 if not test:
                     return {"ok": False, "message": "Тест не найден"}
-            attempt = DouTestAttempt.objects.select_for_update().filter(document=document).first() if document is not None else None
-            if attempt is None:
-                attempt = DouTestAttempt.objects.select_for_update().filter(test=test, doctor=doctor).first()
+            if document is not None:
+                attempt = DouTestAttempt.objects.select_for_update().filter(document=document).first()
+            else:
+                attempt = DouTestAttempt.objects.select_for_update().filter(test=test, doctor=doctor).order_by("-pk").first()
             if attempt and attempt.confirmed_at and not DouTestAttempt._can_reset(doctor):
                 return {"ok": False, "message": "Тест подтверждён"}
-            if attempt and document is not None and attempt.document_id and attempt.document_id != document.pk:
-                return {"ok": False, "message": "Прохождение уже сохранено в другом документе"}
             valid_ids = set(DouTestAnswer.objects.filter(question__test=test).values_list("pk", flat=True))
             cleaned = DouTestAttempt._clean_ids(answer_ids, valid_ids)
             if cleaned is None:
@@ -3347,6 +3494,10 @@ class DouTestAttempt(models.Model):
                     attempt.confirmed_at = DouTestAttempt._stamp_confirm(bound, doctor)
                 elif not attempt.confirmed_at:
                     attempt.confirmed_at = bound.time_confirm
+                bound.test_passed = DouTestAttempt._passed(test, attempt)
+                bound.save(update_fields=["test_passed"])
+                if bound.test_passed:
+                    Documents._log_plan_test(bound, Documents.LOG_CONFIRM, doctor, test)
             elif document is not None:
                 attempt.document = document
             attempt.save()
@@ -3961,6 +4112,37 @@ class Documents(models.Model):
         help_text="План, составленный в документе",
         on_delete=models.SET_NULL,
     )
+    test = models.ForeignKey(
+        "DouTest",
+        related_name="test_documents",
+        blank=True,
+        null=True,
+        default=None,
+        db_index=True,
+        help_text="Тест, с которым создан документ",
+        on_delete=models.SET_NULL,
+    )
+    plan_document = models.ForeignKey(
+        "self",
+        related_name="plan_test_documents",
+        blank=True,
+        null=True,
+        default=None,
+        db_index=True,
+        help_text="Документ экземпляра плана",
+        on_delete=models.SET_NULL,
+    )
+    plan_task = models.ForeignKey(
+        "PlanTest",
+        related_name="plan_task_documents",
+        blank=True,
+        null=True,
+        default=None,
+        db_index=True,
+        help_text="Задача теста в плане",
+        on_delete=models.SET_NULL,
+    )
+    test_passed = models.BooleanField(default=False, help_text="Тест пройден")
 
     HIDDEN_DOCS_GROUP = "Скрытие документа"
     RESET_GROUP = "Сброс документов"
@@ -4225,12 +4407,48 @@ class Documents(models.Model):
         Documents.objects.filter(pk=obj.pk).update(document_case_id=obj.document_case_id)
 
     @staticmethod
+    def attach_plan_cases(plan_document, test_documents=None):
+        if not plan_document or not plan_document.pk:
+            return
+        Documents.ensure_case_link(plan_document)
+        case_ids = list(plan_document.case_links.order_by("pk").values_list("document_case_id", flat=True))
+        if plan_document.document_case_id and plan_document.document_case_id not in case_ids:
+            case_ids.append(plan_document.document_case_id)
+        if not case_ids:
+            return
+        if test_documents is None:
+            tests = list(Documents.objects.filter(plan_document=plan_document))
+        else:
+            tests = [doc for doc in test_documents if doc and doc.pk]
+        if not tests:
+            return
+        have = set(
+            DocumentCaseLink.objects.filter(
+                document_id__in=[doc.pk for doc in tests],
+                document_case_id__in=case_ids,
+            ).values_list("document_id", "document_case_id")
+        )
+        rows = [DocumentCaseLink(document_id=doc.pk, document_case_id=case_id) for doc in tests for case_id in case_ids if (doc.pk, case_id) not in have]
+        if rows:
+            DocumentCaseLink.objects.bulk_create(rows)
+        for doc in tests:
+            Documents.sync_case_field(doc)
+
+    @staticmethod
     def sync_block_field(obj):
         ids = list(obj.block_links.order_by("pk").values_list("block_id", flat=True))
         if obj.block_id in ids:
             return
         obj.block_id = ids[0] if ids else None
         Documents.objects.filter(pk=obj.pk).update(block_id=obj.block_id)
+
+    def resolved_test_id(self):
+        if self.test_id:
+            return self.test_id
+        type_doc = self.type_document
+        if self.type_document_id and type_doc and type_doc.test_id:
+            return type_doc.test_id
+        return None
 
     @classmethod
     def can_see_document(cls, obj, who):
@@ -4446,6 +4664,30 @@ class Documents(models.Model):
         DocumentManagerLog.write(log_type, who, extra or {}, document_id=pk)
 
     @staticmethod
+    def _log_plan_test(document, action, who, test=None):
+        if not document or not document.plan_document_id:
+            return
+        title, type_title = DouTestAttempt._log_title(document)
+        test_title = ""
+        if test is not None:
+            test_title = test.title or ""
+        elif document.test_id and getattr(document, "test", None):
+            test_title = document.test.title or ""
+        Documents.log_action(
+            document.plan_document_id,
+            action,
+            who,
+            {
+                "title": title,
+                "typeId": document.type_document_id,
+                "typeTitle": type_title,
+                "testDocumentId": document.pk,
+                "testTitle": test_title,
+                "confirmed": action == Documents.LOG_CONFIRM,
+            },
+        )
+
+    @staticmethod
     def participant_cases(who, date_from=None, date_to=None):
         if not who:
             return {"ok": True, "result": []}
@@ -4480,6 +4722,184 @@ class Documents(models.Model):
         return {"ok": True, "result": rows}
 
     @staticmethod
+    def participant_plans(who, date_from=None, date_to=None):
+        from django.utils import timezone
+
+        from document_management.sql_func import participant_plans as query_plans
+        from laboratory.settings import TIME_ZONE
+
+        if not who:
+            return {"ok": True, "result": []}
+        start, end, date_error = Documents._search_dates(date_from, date_to)
+        if date_error:
+            return {"ok": False, "message": date_error, "result": []}
+        found = list(query_plans(who.pk, start, end, TIME_ZONE))
+        tasks_by_pair = Documents._participant_plan_tasks(found)
+        task_lists = [tasks_by_pair.get((row.document_id, row.plan_id), []) for row in found]
+        executor_labels = Documents._executor_labels(task_lists)
+        rows = []
+        for row, tasks, executors in zip(found, task_lists, executor_labels):
+            moment = timezone.localtime(row.time_confirm) if row.time_confirm else None
+            date_text = moment.strftime("%d.%m.%y") if moment else ""
+            title = row.plan_title or f"План {row.plan_id}"
+            rows.append(
+                {
+                    "id": row.document_id,
+                    "planId": row.plan_id,
+                    "documentId": row.document_id,
+                    "planTitle": title,
+                    "title": f"{date_text} — {title}" if date_text else title,
+                    "executors": executors,
+                    "isPlan": True,
+                    "isExecutor": bool(row.is_executor),
+                    "isCurator": bool(row.is_curator),
+                    "tasks": tasks,
+                }
+            )
+        return {"ok": True, "result": rows}
+
+    @staticmethod
+    def _executor_ids(tasks, limit=5):
+        ids = []
+        seen = set()
+        for task in tasks or []:
+            people = task.get("executors") if isinstance(task, dict) else None
+            if not isinstance(people, list):
+                continue
+            for person in people:
+                if not isinstance(person, dict):
+                    continue
+                try:
+                    pk = int(person.get("id"))
+                except (TypeError, ValueError):
+                    continue
+                if pk < 1 or pk in seen:
+                    continue
+                seen.add(pk)
+                ids.append(pk)
+                if len(ids) >= limit:
+                    return ids
+        return ids
+
+    @staticmethod
+    def _executor_labels(task_lists, limit=5):
+        lists = list(task_lists)
+        ids_by_index = [Documents._executor_ids(tasks, limit) for tasks in lists]
+        wanted = {pk for ids in ids_by_index for pk in ids}
+        doctors = {doctor.pk: doctor for doctor in DoctorProfile.objects.filter(pk__in=wanted)} if wanted else {}
+        labels = []
+        for ids in ids_by_index:
+            names = []
+            for pk in ids:
+                doctor = doctors.get(pk)
+                if not doctor:
+                    continue
+                name = doctor.get_fio(dots=True, with_space=False)
+                if name:
+                    names.append(name)
+            labels.append(", ".join(names))
+        return labels
+
+    @staticmethod
+    def _control_test_rows(document, plan_ids):
+        from django.db.models import F
+        from django.utils import timezone
+
+        plan_ids = [plan_id for plan_id in plan_ids if plan_id]
+        if not document or not plan_ids:
+            return {}
+        addressees = Plans.addressees_on_document(document)
+        curators = Plans.curator_from_doctor(document.who_create)
+        executor_ids = Plans.people_ids(addressees)
+        tests = list(PlanTest.objects.filter(plan_id__in=plan_ids).select_related("test").order_by(F("group__order").asc(nulls_last=True), F("group_id").asc(nulls_last=True), "order", "pk"))
+        passed_by_task = {}
+        passed_rows = Documents.objects.filter(
+            plan_document=document,
+            plan_task_id__in=[row.pk for row in tests],
+            test_passed=True,
+            time_confirm__isnull=False,
+        ).order_by("plan_task_id", "-time_confirm", "-pk")
+        for row in passed_rows:
+            if row.plan_task_id not in passed_by_task:
+                passed_by_task[row.plan_task_id] = row
+        grouped = {}
+        for test in tests:
+            due = ControlPlan.due_date_for(test, executor_ids)
+            passed = passed_by_task.get(test.pk)
+            done_date = ""
+            if passed and passed.time_confirm:
+                done_date = timezone.localtime(passed.time_confirm).strftime("%Y-%m-%d")
+            grouped.setdefault(test.plan_id, []).append(
+                {
+                    "id": -test.pk,
+                    "title": "Т {}".format(test.test.title if test.test_id and test.test else "").rstrip(),
+                    "testId": test.test_id,
+                    "planTestId": test.pk,
+                    "testTitle": test.test.title if test.test_id and test.test else "",
+                    "passedDocumentId": passed.pk if passed else None,
+                    "dueDate": due.strftime("%Y-%m-%d") if due else "",
+                    "done": bool(passed),
+                    "doneDate": done_date,
+                    "whoConfirm": "",
+                    "confirmAt": "",
+                    "executors": addressees,
+                    "curator": curators,
+                    "isTest": True,
+                }
+            )
+        return grouped
+
+    @staticmethod
+    def _participant_plan_tasks(found):
+        from django.db.models import Prefetch
+
+        pairs = {(row.document_id, row.plan_id) for row in found}
+        if not pairs:
+            return {}
+        stored = (
+            ControlPlan.objects.filter(document_id__in=[row.document_id for row in found], plan_id__in=[row.plan_id for row in found])
+            .select_related("task", "who_confirm")
+            .prefetch_related(
+                Prefetch(
+                    "executor_rows",
+                    queryset=ControlPlanExecutor.objects.select_related("doctor", "doctor__podrazdeleniye").order_by("pk"),
+                ),
+                Prefetch(
+                    "curator_rows",
+                    queryset=ControlPlanCurator.objects.select_related("doctor", "doctor__podrazdeleniye").order_by("pk"),
+                ),
+            )
+            .order_by("order", "pk")
+        )
+        grouped = {}
+        for row in stored:
+            key = (row.document_id, row.plan_id)
+            if key not in pairs:
+                continue
+            grouped.setdefault(key, []).append(
+                {
+                    "id": row.pk,
+                    "title": row.task.title if row.task_id and row.task else "",
+                    "dueDate": row.due_date.strftime("%Y-%m-%d") if row.due_date else "",
+                    "done": bool(row.done),
+                    "doneDate": row.done_date.strftime("%Y-%m-%d") if row.done_date else "",
+                    "whoConfirm": row.who_confirm.get_full_fio() if row.who_confirm_id and row.who_confirm else "",
+                    "confirmAt": ControlPlan.confirm_at_text(row.confirm_at),
+                    "executors": ControlPlan.people_json(row.executor_rows.all()),
+                    "curator": ControlPlan.people_json(row.curator_rows.all()),
+                }
+            )
+        documents = {doc.pk: doc for doc in Documents.objects.filter(pk__in={row.document_id for row in found}).select_related("who_create")}
+        plans_by_doc = {}
+        for row in found:
+            plans_by_doc.setdefault(row.document_id, set()).add(row.plan_id)
+        for document_id, plan_ids in plans_by_doc.items():
+            test_rows = Documents._control_test_rows(documents.get(document_id), plan_ids)
+            for plan_id in plan_ids:
+                grouped.setdefault((document_id, plan_id), []).extend(test_rows.get(plan_id, []))
+        return grouped
+
+    @staticmethod
     def control_plan_rows(who):
         from django.db.models import Prefetch
         from django.utils import timezone
@@ -4512,6 +4932,8 @@ class Documents(models.Model):
         grouped = []
         current = None
         for row in stored:
+            if row.done_date:
+                continue
             key = (row.document_id, row.plan_id)
             if current is None or current["key"] != key:
                 created = timezone.localtime(row.document.create_at) if row.document.create_at else None
@@ -4539,6 +4961,14 @@ class Documents(models.Model):
                     "curator": ControlPlan.people_json(row.curator_rows.all()),
                 }
             )
+        documents = {doc.pk: doc for doc in Documents.objects.filter(pk__in={item["id"] for item in grouped}).select_related("who_create")}
+        plans_by_doc = {}
+        for item in grouped:
+            plans_by_doc.setdefault(item["id"], []).append(item)
+        for document_id, items in plans_by_doc.items():
+            test_rows = Documents._control_test_rows(documents.get(document_id), [item["planId"] for item in items])
+            for item in items:
+                item["tasks"].extend(test_rows.get(item["planId"], []))
         return [{key: value for key, value in item.items() if key != "key"} for item in grouped]
 
     @staticmethod
@@ -4732,6 +5162,66 @@ class Documents(models.Model):
             log_body,
         )
         return {"ok": True, "id": obj.pk, "title": title, "caseId": document_case.pk if document_case else None}
+
+    @staticmethod
+    def _plan_task_link(test, who, plan_document_id, plan_test_id):
+        try:
+            plan_document_id = int(plan_document_id)
+            plan_test_id = int(plan_test_id)
+        except (TypeError, ValueError):
+            return None, None
+        if plan_document_id < 1 or plan_test_id < 1 or not who:
+            return None, None
+        plan_document = Documents.objects.filter(pk=plan_document_id).first()
+        plan_task = PlanTest.objects.filter(pk=plan_test_id, test=test).first()
+        if not plan_document or not plan_task:
+            return None, None
+        if plan_task.plan_id not in ControlPlan.plan_ids_for_document(plan_document):
+            return None, None
+        return plan_document, plan_task
+
+    @staticmethod
+    def open_for_test(test_id, who_create, plan_document_id=None, plan_test_id=None):
+        test = DouTest.objects.filter(pk=test_id).first()
+        if not test:
+            return {"ok": False, "message": "Тест не найден"}
+        if not who_create:
+            return {"ok": False, "message": "Сотрудник не найден"}
+        with transaction.atomic():
+            type_doc = TypeDocuments.objects.select_for_update().filter(is_test_defaulta=True).order_by("pk").first()
+            if not type_doc:
+                return {"ok": False, "message": "Не задан вид документа «Это тест по умолчанию»"}
+            latest = Documents.objects.select_for_update().filter(type_document=type_doc, test=test, who_create=who_create).order_by("-pk").first()
+            if latest and not latest.time_confirm:
+                if latest.plan_document_id:
+                    plan = Documents.objects.filter(pk=latest.plan_document_id).first()
+                    Documents.attach_plan_cases(plan, [latest])
+                if not Documents.can_see_document(latest, who_create):
+                    return {"ok": False, "message": "Документ с этим тестом уже создан и не подтверждён"}
+                return {"ok": True, "id": latest.pk, "created": False}
+            if latest and latest.time_confirm:
+                attempt = DouTestAttempt.objects.filter(document=latest).first()
+                if DouTestAttempt._passed(test, attempt):
+                    return {"ok": False, "message": "Тест уже пройден"}
+                used = Documents.objects.filter(type_document=type_doc, test=test, who_create=who_create).count()
+                allowed = 3 if not test.attempt_limit or test.attempt_limit < 1 else test.attempt_limit
+                if used >= allowed:
+                    return {"ok": False, "message": "Количество попыток исчерпано"}
+            if not type_doc.can_create(who_create):
+                return {"ok": False, "message": "Нет прав на создание этого вида документа"}
+            created = Documents.create_document(type_doc.pk, who_create)
+            if not created.get("ok"):
+                return created
+            plan_document, plan_task = Documents._plan_task_link(test, who_create, plan_document_id, plan_test_id)
+            Documents.objects.filter(pk=created["id"]).update(
+                test=test,
+                plan_document=plan_document,
+                plan_task=plan_task,
+            )
+            created_doc = Documents.objects.filter(pk=created["id"]).first()
+            if plan_document and created_doc:
+                Documents.attach_plan_cases(plan_document, [created_doc])
+            return {"ok": True, "id": created["id"], "created": True}
 
     def save_user_plan(self, who, title, groups, indicators, tests, with_confirm=False):
         from django.utils import timezone
@@ -5013,6 +5503,8 @@ class Documents(models.Model):
                 "who_create__podrazdeleniye",
                 "who_confirm",
                 "who_confirm__podrazdeleniye",
+                "test",
+                "type_document__test",
             )
             .prefetch_related(
                 Prefetch(
@@ -5052,7 +5544,7 @@ class Documents(models.Model):
         payload["ok"] = True
         payload["issPk"] = iss.pk if iss else None
         payload["research"] = research
-        payload["testId"] = obj.type_document.test_id if obj.type_document_id and obj.type_document and obj.type_document.test_id else None
+        payload["testId"] = obj.resolved_test_id()
         payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
         payload["approvalJournalCopy"] = bool(obj.approval_journal_copy)
         payload["whoConfirmed"] = Documents.confirmation_text(obj, iss) if payload["confirmed"] else ""
@@ -5256,7 +5748,9 @@ class Documents(models.Model):
         if not Documents.can_see_document(obj, who):
             return {"ok": False, "message": "Документ не найден"}
         iss = Issledovaniya.objects.filter(document=obj).order_by("pk").first()
-        if (not iss or not iss.time_confirmation) and not obj.time_confirm:
+        attempt = DouTestAttempt.objects.filter(document=obj).first()
+        confirmed = bool(obj.time_confirm) or bool(iss and iss.time_confirmation) or bool(attempt and attempt.confirmed_at)
+        if not confirmed:
             return {"ok": False, "message": "Документ не подтверждён"}
         with transaction.atomic():
             if iss:
@@ -5266,8 +5760,10 @@ class Documents(models.Model):
                 iss.save(update_fields=["time_confirmation", "doc_confirmation", "executor_confirmation"])
             obj.time_confirm = None
             obj.who_confirm = None
-            obj.save(update_fields=["time_confirm", "who_confirm"])
+            obj.test_passed = False
+            obj.save(update_fields=["time_confirm", "who_confirm", "test_passed"])
             ControlPlan.objects.filter(document=obj).delete()
+            DouTestAttempt.objects.filter(document=obj, confirmed_at__isnull=False).update(confirmed_at=None)
         Documents.log_action(
             obj.pk,
             Documents.LOG_RESET,
@@ -5278,6 +5774,7 @@ class Documents(models.Model):
                 "typeTitle": obj.type_document.title if obj.type_document else "",
             },
         )
+        Documents._log_plan_test(obj, Documents.LOG_RESET, who)
         return {"ok": True, "id": obj.pk, "confirmed": False}
 
     @staticmethod
@@ -5341,6 +5838,8 @@ class Documents(models.Model):
             "deleted": "Удалён",
             "memberId": "Участник",
             "closedAt": "Закрыто",
+            "testDocumentId": "Документ теста",
+            "testTitle": "Тест",
         }
         yesno = {True: "да", False: "нет"}
 

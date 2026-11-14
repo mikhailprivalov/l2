@@ -119,7 +119,8 @@
                 v-if="row.testId"
                 :test-id="row.testId"
                 :document-id="row.id"
-                review
+                :answerable="!row.confirmed"
+                :review="row.confirmed"
                 @saved="onTestSaved(row.id, $event)"
               />
               <div

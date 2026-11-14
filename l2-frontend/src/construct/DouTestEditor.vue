@@ -84,6 +84,25 @@
         </select>
         <span class="question-count">Вопросов: {{ questionCount }}</span>
       </div>
+      <div class="setting-row">
+        <span class="setting-label">Порог в %</span>
+        <input
+          v-model.number="passPercent"
+          type="number"
+          min="0"
+          max="100"
+          class="form-control setting-number"
+        >
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Количество попыток</span>
+        <input
+          v-model.number="attemptLimit"
+          type="number"
+          min="1"
+          class="form-control setting-number"
+        >
+      </div>
     </div>
     <div class="content-editor">
       <div
@@ -233,6 +252,8 @@ const orderMode = ref<'sequential' | 'random'>('sequential');
 const limitMode = ref<'all' | 'count'>('all');
 const questionLimit = ref<number | null>(null);
 const questionPick = ref<'all' | 'random'>('all');
+const passPercent = ref(100);
+const attemptLimit = ref(3);
 let nextKey = 1;
 
 const questionCount = computed(() => questions.value.length);
@@ -297,7 +318,16 @@ const applyQuestions = (rows: QuestionPayload[]) => {
   });
 };
 
-const applySettings = (data: { orderMode?: string; questionLimit?: number | null; questionPick?: string }) => {
+const applySettings = (data: {
+  orderMode?: string;
+  questionLimit?: number | null;
+  questionPick?: string;
+  passPercent?: number | null;
+  attemptLimit?: number | null;
+}) => {
+  passPercent.value = data.passPercent == null ? 100 : Number(data.passPercent);
+  const attempts = Number(data.attemptLimit);
+  attemptLimit.value = Number.isInteger(attempts) && attempts >= 1 ? attempts : 3;
   orderMode.value = data.orderMode === 'random' ? 'random' : 'sequential';
   questionPick.value = data.questionPick === 'random' ? 'random' : 'all';
   if (data.questionLimit == null) {
@@ -337,6 +367,16 @@ const save = async () => {
     root.$emit('msg', 'error', 'Укажите количество вопросов');
     return;
   }
+  const threshold = Number(passPercent.value);
+  if (!Number.isInteger(threshold) || threshold < 0 || threshold > 100) {
+    root.$emit('msg', 'error', 'Укажите порог от 0 до 100');
+    return;
+  }
+  const attempts = Number(attemptLimit.value);
+  if (!Number.isInteger(attempts) || attempts < 1) {
+    root.$emit('msg', 'error', 'Укажите количество попыток');
+    return;
+  }
   await store.dispatch(actions.INC_LOADING);
   try {
     const result = await api('document-manager/tests/update', {
@@ -347,6 +387,8 @@ const save = async () => {
       orderMode: orderMode.value,
       questionLimit: limitMode.value === 'count' ? questionLimit.value : null,
       questionPick: questionPick.value,
+      passPercent: threshold,
+      attemptLimit: attempts,
       questions: orderedQuestions.value.map((question, index) => ({
         text: question.text,
         order: index,

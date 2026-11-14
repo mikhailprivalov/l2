@@ -247,6 +247,7 @@ class SettingManager:
             "document_manager_for_all": bool(getattr(django_settings, "DOCUMENT_MANAGER_FOR_ALL", False)),
             "document_manager_enabled": not bool(getattr(django_settings, "HIDE_DOCUMENT_MANAGER", False)),
             "show_requests_fill_dicom_download": bool(getattr(django_settings, "SHOW_REQUESTS_FILL_DICOM_DOWNLOAD", False)),
+            "request_accept_doctor_cannot_cancel": bool(getattr(django_settings, "REQUEST_ACCEPT_DOCTOR_CANNOT_CANCEL", False)),
             "show_code_in_request_creation": bool(getattr(django_settings, "SHOW_CODE_IN_REQUEST_CREATION", False)),
             "show_anatomical_area_in_request_creation": bool(getattr(django_settings, "SHOW_ANATOMICAL_AREA_IN_REQUEST_CREATION", False)),
             "research_picker_show_dou": bool(getattr(django_settings, "RESEARCH_PICKER_SHOW_DOU", False)),

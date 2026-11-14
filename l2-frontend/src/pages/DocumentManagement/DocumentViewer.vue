@@ -211,9 +211,11 @@
               <template v-else-if="row.loaded">
                 <DocumentTestPanel
                   v-if="row.testId"
+                  :key="`${row.id}-${row.confirmed}`"
                   :test-id="row.testId"
                   :document-id="row.id"
-                  review
+                  :answerable="!(row.confirmed || row.approvalJournalCopy)"
+                  :review="Boolean(row.confirmed || row.approvalJournalCopy)"
                   @saved="onTestSaved(row.id, $event)"
                 />
                 <div
@@ -321,12 +323,26 @@
           </div>
         </div>
       </div>
+      <div
+        v-if="!caseListMode && loaded && !isPlan && testId && confirmed && canReset"
+        class="control-row"
+      >
+        <button
+          class="btn btn-blue-nb"
+          type="button"
+          @click="resetConfirm"
+        >
+          Сброс подтверждения
+        </button>
+      </div>
       <DocumentTestPanel
         v-if="!caseListMode && loaded && !isPlan && testId"
+        :key="`${documentId}-${confirmed}`"
         data-document-form
         :test-id="testId"
         :document-id="documentId"
-        review
+        :answerable="!formLocked"
+        :review="formLocked"
         @saved="onTestSaved(documentId, $event)"
       />
       <div

@@ -46,6 +46,7 @@
                 v-model="code"
                 type="text"
                 class="form-control"
+                :disabled="kind === 'type' && isTestDefaulta"
               >
             </div>
             <div
@@ -56,6 +57,7 @@
               <select
                 v-model.number="groupId"
                 class="form-control"
+                :disabled="isTestDefaulta"
               >
                 <option :value="-1">
                   Не выбрана
@@ -77,6 +79,7 @@
               <select
                 v-model.number="placeSectionId"
                 class="form-control"
+                :disabled="kind === 'type' && isTestDefaulta"
               >
                 <option :value="-1">
                   Не выбран
@@ -101,20 +104,29 @@
       >
         <div
           class="template-row"
-          :class="{ 'is-locked': planLocked }"
+          :class="{ 'is-locked': planLocked || isTestDefaulta }"
         >
           <span class="input-group-addon">План</span>
           <label class="plan-flag">
             <input
               v-model="isPlan"
               type="checkbox"
-              :disabled="planLocked"
+              :disabled="planLocked || isTestDefaulta"
+            >
+          </label>
+        </div>
+        <div class="template-row">
+          <span class="input-group-addon">Это тест по умолчанию</span>
+          <label class="plan-flag">
+            <input
+              v-model="isTestDefaulta"
+              type="checkbox"
             >
           </label>
         </div>
         <div
           class="template-row"
-          :class="{ 'is-locked': monitoringLocked }"
+          :class="{ 'is-locked': monitoringLocked || isTestDefaulta }"
         >
           <span class="input-group-addon">Ссылка на мониторинг</span>
           <Treeselect
@@ -126,12 +138,12 @@
             placeholder="Не выбрана"
             :append-to-body="true"
             :clearable="true"
-            :disabled="monitoringLocked"
+            :disabled="monitoringLocked || isTestDefaulta"
           />
         </div>
         <div
           class="template-row"
-          :class="{ 'is-locked': testLocked }"
+          :class="{ 'is-locked': testLocked || isTestDefaulta }"
         >
           <span class="input-group-addon">Ссылка на тест</span>
           <Treeselect
@@ -143,12 +155,12 @@
             placeholder="Не выбран"
             :append-to-body="true"
             :clearable="true"
-            :disabled="testLocked"
+            :disabled="testLocked || isTestDefaulta"
           />
         </div>
         <div
           class="template-row"
-          :class="{ 'is-locked': templatesLocked }"
+          :class="{ 'is-locked': templatesLocked || isTestDefaulta }"
         >
           <span class="input-group-addon">Шаблоны документа</span>
           <Treeselect
@@ -160,7 +172,7 @@
             placeholder="Добавить шаблон"
             :append-to-body="true"
             :clearable="true"
-            :disabled="templatesLocked"
+            :disabled="templatesLocked || isTestDefaulta"
             @select="onSelectTemplate"
           />
         </div>
@@ -174,13 +186,13 @@
           v-for="(row, index) in selectedTemplates"
           :key="row.id"
           class="template-item"
-          :class="{ 'is-locked': templatesLocked }"
+          :class="{ 'is-locked': templatesLocked || isTestDefaulta }"
         >
           <span class="template-item-title">{{ row.label }}</span>
           <button
             class="btn btn-blue-nb template-item-btn"
             type="button"
-            :disabled="templatesLocked || index === 0"
+            :disabled="templatesLocked || isTestDefaulta || index === 0"
             title="Выше"
             @click="moveTemplate(index, -1)"
           >
@@ -189,7 +201,7 @@
           <button
             class="btn btn-blue-nb template-item-btn"
             type="button"
-            :disabled="templatesLocked || index === selectedTemplates.length - 1"
+            :disabled="templatesLocked || isTestDefaulta || index === selectedTemplates.length - 1"
             title="Ниже"
             @click="moveTemplate(index, 1)"
           >
@@ -199,16 +211,22 @@
             class="btn btn-blue-nb template-item-btn"
             type="button"
             title="Удалить"
-            :disabled="templatesLocked"
+            :disabled="templatesLocked || isTestDefaulta"
             @click="removeTemplate(index)"
           >
             <i class="glyphicon glyphicon-remove" />
           </button>
         </div>
-        <div class="template-row">
+        <div
+          class="template-row"
+          :class="{ 'is-locked': isTestDefaulta }"
+        >
           <span class="input-group-addon">Шаблон печати</span>
           <div class="print-template-body">
-            <template v-if="itemId <= 0">
+            <template v-if="isTestDefaulta">
+              Файл не выбран
+            </template>
+            <template v-else-if="itemId <= 0">
               Сохраните вид документа, чтобы прикрепить docx
             </template>
             <template v-else>
@@ -228,7 +246,7 @@
                 v-if="printTemplateName"
                 href="#"
                 class="a-under"
-                @click.prevent="removePrintTemplate"
+                @click.prevent="removePrintTemplate()"
               >Удалить</a>
             </template>
           </div>
@@ -240,12 +258,16 @@
           &#123;&#123;id_dolzhnost&#125;&#125;,
           &#123;&#123;id_podrazdelenie&#125;&#125;
         </div>
-        <div class="template-row">
+        <div
+          class="template-row"
+          :class="{ 'is-locked': isTestDefaulta }"
+        >
           <span class="input-group-addon">Создатели</span>
           <AddresseeField
             class="creators-field"
             header="Создатели"
             hide-preview
+            :disabled="isTestDefaulta"
             :value="creatorsJson"
             @input="onCreatorsInput"
           />
@@ -266,6 +288,7 @@
             class="btn btn-blue-nb template-item-btn"
             type="button"
             title="Удалить"
+            :disabled="isTestDefaulta"
             @click="removeCreator(row.id)"
           >
             <i class="glyphicon glyphicon-remove" />
@@ -418,6 +441,8 @@ const props = defineProps<{
   testIdValue?: number | null;
   testTitleValue?: string;
   isPlanValue?: boolean;
+  isTestDefaultaValue?: boolean;
+  testDefaultOwnerTitle?: string;
   creatorsValue?: CreatorPerson[];
   defaultTypeDocumentIdValue?: number | null;
   placeSectionIdValue?: number | null;
@@ -452,6 +477,7 @@ const monitoringOptions = ref<LayoutTemplateOption[]>([]);
 const testId = ref<number | null>(null);
 const testOptions = ref<LayoutTemplateOption[]>([]);
 const isPlan = ref(false);
+const isTestDefaulta = ref(false);
 const creators = ref<CreatorPerson[]>([]);
 const defaultTypeDocumentId = ref<number>(-1);
 const placeSectionId = ref<number>(-1);
@@ -497,10 +523,12 @@ const sectionTypeOptions = computed(() => (props.sectionTypes || []).map(row => 
   label: row.title,
 })));
 
-const templatesLocked = computed(() => Boolean(monitoringId.value || testId.value || isPlan.value));
-const planLocked = computed(() => (Boolean(monitoringId.value) || Boolean(testId.value)) && !isPlan.value);
-const monitoringLocked = computed(() => (Boolean(testId.value) || isPlan.value) && !monitoringId.value);
-const testLocked = computed(() => (Boolean(monitoringId.value) || isPlan.value) && !testId.value);
+const templatesLocked = computed(() => Boolean(monitoringId.value || testId.value || isPlan.value || isTestDefaulta.value));
+const planLocked = computed(() => isTestDefaulta.value || (
+  (Boolean(monitoringId.value) || Boolean(testId.value)) && !isPlan.value
+));
+const monitoringLocked = computed(() => isTestDefaulta.value || ((Boolean(testId.value) || isPlan.value) && !monitoringId.value));
+const testLocked = computed(() => isTestDefaulta.value || ((Boolean(monitoringId.value) || isPlan.value) && !testId.value));
 
 const availableTemplates = computed(() => {
   const selected = new Set(selectedTemplates.value.map(row => row.id));
@@ -552,6 +580,19 @@ const ensureTestOption = () => {
   ];
 };
 
+const clearTestDefaultFields = () => {
+  code.value = '';
+  groupId.value = -1;
+  placeSectionId.value = -1;
+  isPlan.value = false;
+  monitoringId.value = null;
+  testId.value = null;
+  templateToAdd.value = null;
+  selectedTemplates.value = [];
+  creators.value = [];
+  printTemplateName.value = '';
+};
+
 const fill = () => {
   title.value = props.titleValue || '';
   code.value = props.codeValue || '';
@@ -564,6 +605,7 @@ const fill = () => {
   testId.value = Number.isFinite(linkedTest) && linkedTest > 0 ? linkedTest : null;
   ensureTestOption();
   isPlan.value = Boolean(props.isPlanValue);
+  isTestDefaulta.value = Boolean(props.isTestDefaultaValue);
   creators.value = (props.creatorsValue || []).map(row => ({
     id: row.id,
     fio: row.fio || '',
@@ -583,6 +625,9 @@ const fill = () => {
     fio: row.fio || '',
     department: row.department || '',
   }));
+  if (isTestDefaulta.value) {
+    clearTestDefaultFields();
+  }
 };
 
 watch(
@@ -599,6 +644,7 @@ watch(
     props.testIdValue,
     props.testTitleValue,
     props.isPlanValue,
+    props.isTestDefaultaValue,
     props.creatorsValue,
     props.defaultTypeDocumentIdValue,
     props.placeSectionIdValue,
@@ -665,6 +711,9 @@ const removeTemplate = (index: number) => {
 };
 
 const onCreatorsInput = (value: string) => {
+  if (isTestDefaulta.value) {
+    return;
+  }
   try {
     const parsed = JSON.parse(value || '[]');
     if (!Array.isArray(parsed)) {
@@ -690,6 +739,9 @@ const onCreatorsInput = (value: string) => {
 };
 
 const removeCreator = (id: number) => {
+  if (isTestDefaulta.value) {
+    return;
+  }
   creators.value = creators.value.filter(row => row.id !== id);
 };
 
@@ -733,7 +785,7 @@ const rememberPrintTemplate = (name: string) => {
 };
 
 const pickPrintTemplate = async () => {
-  if (props.itemId <= 0 || printTemplateBusy.value) {
+  if (isTestDefaulta.value || props.itemId <= 0 || printTemplateBusy.value) {
     return;
   }
   const file = await selectFile('.docx');
@@ -768,8 +820,8 @@ const pickPrintTemplate = async () => {
   }
 };
 
-const removePrintTemplate = async () => {
-  if (props.itemId <= 0 || printTemplateBusy.value || !printTemplateName.value) {
+const removePrintTemplate = async (force = false) => {
+  if (props.itemId <= 0 || printTemplateBusy.value || (!printTemplateName.value && !force)) {
     return;
   }
   printTemplateBusy.value = true;
@@ -787,6 +839,23 @@ const removePrintTemplate = async () => {
     await store.dispatch(actions.DEC_LOADING);
   }
 };
+
+watch(isTestDefaulta, (enabled, wasEnabled) => {
+  if (!enabled || wasEnabled) {
+    return;
+  }
+  const ownerTitle = (props.testDefaultOwnerTitle || '').trim();
+  if (ownerTitle) {
+    isTestDefaulta.value = false;
+    root.$emit('msg', 'error', `Тест по умолчанию уже задан у вида «${ownerTitle}»`);
+    return;
+  }
+  const hadPrintFile = Boolean(printTemplateName.value) && props.itemId > 0;
+  clearTestDefaultFields();
+  if (hadPrintFile) {
+    removePrintTemplate(true);
+  }
+});
 
 const loadTests = async () => {
   if (props.kind !== 'type') {
@@ -884,6 +953,7 @@ const save = async () => {
         monitoringId: monitoringId.value,
         testId: testId.value,
         isPlan: isPlan.value,
+        isTestDefaulta: isTestDefaulta.value,
         creatorIds: creators.value.map(row => row.id),
       };
     }

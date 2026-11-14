@@ -162,6 +162,17 @@
         >
           <label
             class="filter-check side-check side-check-hidden"
+            @click.prevent="toggleParticipantPlans"
+          >
+            <input
+              type="checkbox"
+              :checked="participantPlans"
+              tabindex="-1"
+            >
+            <span>Планы</span>
+          </label>
+          <label
+            class="filter-check side-check side-check-hidden"
             @click.prevent="participantDocuments = !participantDocuments"
           >
             <input
@@ -224,10 +235,22 @@
         <template v-else-if="caseSearch">
           <div
             v-for="row in visibleDocuments"
-            :key="`case-${row.id}`"
+            :key="row.isPlan ? `plan-${row.documentId}-${row.planId}` : `case-${row.id}`"
             class="doc-row"
           >
             <button
+              v-if="row.isPlan"
+              class="doc-btn"
+              :class="{ 'active-button': planKey(row) === selectedPlanKey }"
+              type="button"
+              @click="selectParticipantPlan(row)"
+            >
+              <span class="doc-title doc-title--plan">
+                {{ row.title }}<template v-if="row.executors"> — {{ row.executors }}</template>
+              </span>
+            </button>
+            <button
+              v-else
               class="doc-btn"
               :class="{ 'active-button': selectedCase === row.id }"
               type="button"
@@ -387,11 +410,11 @@
           :block-id="selectedBlock"
         />
         <div
-          v-else-if="roleFilter === 'onControl'"
+          v-else-if="showControlSheet"
           class="control-tasks"
         >
           <div
-            v-if="!selectedControlRow"
+            v-if="!controlSheet"
             class="control-tasks__empty"
           >
             Выберите план
@@ -404,29 +427,60 @@
               <div>Дата</div>
               <div>Исполнитель</div>
               <div>Куратор</div>
-              <div>Выполнено</div>
+              <div
+                class="control-head__sort"
+                @click="toggleDoneSort"
+              >
+                Выполнено
+                <span
+                  v-if="doneSort"
+                  class="control-head__arrow"
+                >{{ doneSort === 'yes' ? '▲' : '▼' }}</span>
+              </div>
               <div>Фактическая дата</div>
             </div>
             <div
-              v-for="task in selectedControlRow.tasks"
+              v-for="task in controlTasks"
               :key="task.id"
               class="control-task"
             >
               <a
+                v-tippy
                 class="control-task__doc a-under"
-                :href="controlDocumentHref(selectedControlRow.id)"
+                :href="controlDocumentHref(controlSheet.id)"
                 target="_blank"
                 rel="noopener"
-              >№{{ selectedControlRow.id }}</a>
-              <div class="control-task__name">
-                {{ task.title }}
+                @mouseenter="prepareClipTip"
+              >{{ controlSheet.id }}</a>
+              <div
+                v-tippy
+                class="control-task__name"
+                @mouseenter="prepareClipTip"
+              >
+                <template v-if="task.isTest && task.testId">
+                  <a
+                    class="a-under"
+                    :class="task.passedDocumentId ? 'test-letter--passed' : 'test-letter--open'"
+                    :href="task.passedDocumentId
+                      ? controlDocumentHref(task.passedDocumentId)
+                      : testDocumentHref(task.testId, controlSheet.id, task.planTestId)"
+                    target="_blank"
+                    rel="noopener"
+                  >Т</a>
+                  <span v-if="task.testTitle"> {{ task.testTitle }}</span>
+                </template>
+                <template v-else>
+                  {{ task.title }}
+                </template>
               </div>
               <a
+                v-tippy
                 class="control-task__plan a-under"
-                :href="controlDocumentHref(selectedControlRow.id)"
+                :href="controlDocumentHref(controlSheet.id)"
                 target="_blank"
                 rel="noopener"
-              >{{ selectedControlRow.planTitle || selectedControlRow.title }}</a>
+                @mouseenter="prepareClipTip"
+              >{{ controlSheet.planTitle || controlSheet.title }}</a>
               <input
                 class="form-control control-task__date"
                 type="date"
@@ -434,20 +488,25 @@
                 :value="task.dueDate"
               >
               <AddresseeField
+                v-tippy
                 class="executor"
                 header="Исполнители"
                 disabled
                 :value="peopleText(task.executors)"
+                @mouseenter.native="prepareClipTip"
               />
               <AddresseeField
+                v-tippy
                 class="executor"
                 header="Куратор"
                 disabled
                 :value="peopleText(task.curator)"
+                @mouseenter.native="prepareClipTip"
               />
               <select
                 class="form-control control-task__done"
                 :value="task.done ? '1' : '0'"
+                :disabled="task.isTest"
                 @change="onControlDone(task, $event)"
               >
                 <option value="0">
@@ -461,6 +520,7 @@
                 class="form-control control-task__date"
                 type="date"
                 :value="task.doneDate"
+                :disabled="task.isTest"
                 @change="onControlDoneDate(task, $event)"
               >
             </div>
@@ -738,6 +798,7 @@ const showMyCases = ref(storedListFilter.myCases);
 const showTopics = ref(storedListFilter.topics);
 const showTests = ref(storedListFilter.tests);
 const showParticipant = ref(storedListFilter.participant);
+const participantPlans = ref(true);
 const participantDocuments = ref(true);
 const participantCases = ref(true);
 const pendingReviewCount = ref(0);
@@ -749,6 +810,11 @@ type ControlTask = {
   doneDate: string;
   executors: unknown;
   curator: unknown;
+  isTest?: boolean;
+  testId?: number | null;
+  planTestId?: number | null;
+  passedDocumentId?: number | null;
+  testTitle?: string;
 };
 type ListRow = {
   id: number;
@@ -757,6 +823,10 @@ type ListRow = {
   caseId?: number;
   planId?: number;
   planTitle?: string;
+  documentId?: number;
+  isPlan?: boolean;
+  executors?: string;
+  isCase?: boolean;
   tasks?: ControlTask[];
   isMine?: boolean;
   inMyCases?: boolean;
@@ -770,6 +840,40 @@ const selectedDocument = ref<number | null>(null);
 const selectedControlKey = ref<string | null>(null);
 const controlKey = (row: ListRow) => `${row.id}-${row.planId || 0}`;
 const controlDocumentHref = (id: number) => `/ui/document-manager-2?document=${id}&resetFilters=1`;
+const clippedText = (el: HTMLElement) => {
+  const preview = el.querySelector('.addressee-field__preview');
+  const box = preview instanceof HTMLElement ? preview : el;
+  if (box.scrollWidth <= box.clientWidth) {
+    return '';
+  }
+  return (box.textContent || '').replace(/\s+/g, ' ').trim();
+};
+const prepareClipTip = (event: MouseEvent) => {
+  const el = event.currentTarget as HTMLElement;
+  const text = clippedText(el);
+  if (!text) {
+    el.removeAttribute('data-original-title');
+    return;
+  }
+  el.setAttribute('data-original-title', text);
+  const host = el as unknown as Record<string, { popper?: HTMLElement } | undefined>;
+  const tippyKey = 'tippy'.padStart(6, '_');
+  const content = host[tippyKey]?.popper?.querySelector('.tippy-content');
+  if (content) {
+    content.textContent = text;
+  }
+};
+const testDocumentHref = (testId: number, planDocumentId: number, planTestId?: number | null) => {
+  const params = new URLSearchParams({
+    openTest: String(testId),
+    planDocument: String(planDocumentId),
+    resetFilters: '1',
+  });
+  if (planTestId) {
+    params.set('planTest', String(planTestId));
+  }
+  return `/ui/document-manager-2?${params.toString()}`;
+};
 
 const saveControlCompletion = async (task: ControlTask, done: boolean, doneDate: string) => {
   const result = await api('document-manager/documents/control-done', {
@@ -782,7 +886,7 @@ const saveControlCompletion = async (task: ControlTask, done: boolean, doneDate:
   }
   const row = documents.value.find(item => item.tasks?.some(entry => entry.id === task.id));
   const tasks = row?.tasks;
-  if (!tasks) {
+  if (!row || !tasks) {
     return;
   }
   const index = tasks.findIndex(entry => entry.id === task.id);
@@ -790,6 +894,17 @@ const saveControlCompletion = async (task: ControlTask, done: boolean, doneDate:
     return;
   }
   const current = tasks[index];
+  if (result.doneDate && !row.isPlan) {
+    tasks.splice(index, 1);
+    if (!tasks.length) {
+      const key = controlKey(row);
+      documents.value = documents.value.filter(item => item !== row);
+      if (selectedControlKey.value === key) {
+        selectedControlKey.value = null;
+      }
+    }
+    return;
+  }
   tasks.splice(index, 1, {
     ...current,
     done: Boolean(result.done),
@@ -798,11 +913,17 @@ const saveControlCompletion = async (task: ControlTask, done: boolean, doneDate:
 };
 
 const onControlDone = (task: ControlTask, event: Event) => {
+  if (task.isTest) {
+    return;
+  }
   const value = (event.target as HTMLSelectElement).value === '1';
   saveControlCompletion(task, value, task.doneDate);
 };
 
 const onControlDoneDate = (task: ControlTask, event: Event) => {
+  if (task.isTest) {
+    return;
+  }
   saveControlCompletion(task, task.done, (event.target as HTMLInputElement).value);
 };
 const selectedCase = ref<number | null>(null);
@@ -815,17 +936,28 @@ const blockTitleDraft = ref('');
 const openedFromCaseFavorite = ref(false);
 const openedFromDocumentLink = ref(false);
 const showCaseDocuments = computed(() => showMyCases.value || openedFromCaseFavorite.value);
-const viewerDocumentId = computed(() => (
-  showCreatedForm.value || !caseSearch.value ? selectedDocument.value : null
-));
+const selectedPlanKey = ref<string | null>(null);
+const selectedPlanDocument = ref<number | null>(null);
+const planKey = (row: ListRow) => `${row.documentId || 0}-${row.planId || 0}`;
+const viewerDocumentId = computed(() => {
+  if (showCreatedForm.value || !caseSearch.value) {
+    return selectedDocument.value;
+  }
+  return selectedPlanDocument.value;
+});
 const viewerCaseId = computed(() => {
   if (showCreatedForm.value) {
     return selectedDocument.value ? null : selectedCase.value;
   }
+  if (caseSearch.value && selectedPlanDocument.value) {
+    return null;
+  }
   return caseSearch.value ? selectedCase.value : null;
 });
 const showCaseDocumentsOnViewer = computed(() => (
-  (showCaseDocuments.value || caseSearch.value) && !showCreatedForm.value && !openedFromDocumentLink.value
+  (showCaseDocuments.value || (caseSearch.value && !selectedPlanDocument.value))
+  && !showCreatedForm.value
+  && !openedFromDocumentLink.value
 ));
 const docsEl = ref<HTMLElement | null>(null);
 const recentPage = ref(1);
@@ -937,9 +1069,12 @@ const onDocumentsScroll = () => {
 const loadDocuments = async (keepSelection = false) => {
   const loadId = ++documentsLoadId;
   const previousCase = selectedCase.value;
+  const previousPlan = selectedPlanKey.value;
   documents.value = [];
   caseSearch.value = false;
   selectedCase.value = null;
+  selectedPlanKey.value = null;
+  selectedPlanDocument.value = null;
   recentPage.value = 1;
   recentHasMore.value = false;
   const hasListFilter = roleFilter.value === 'created'
@@ -993,14 +1128,15 @@ const loadDocuments = async (keepSelection = false) => {
   selectedBlock.value = null;
   if (showParticipant.value) {
     await loadPendingCount();
-    if (!participantCases.value) {
+    if (!participantCases.value && !participantPlans.value) {
       return;
     }
     await store.dispatch(actions.INC_LOADING);
     try {
       const data = await api('document-manager/documents/list', {
         participant: true,
-        cases: true,
+        plans: participantPlans.value,
+        cases: participantCases.value,
         dateFrom: toApiDate(dateRange.value[0]),
         dateTo: toApiDate(dateRange.value[1]),
       });
@@ -1013,8 +1149,14 @@ const loadDocuments = async (keepSelection = false) => {
       documents.value = data?.result || [];
       caseSearch.value = true;
       pendingReviewCount.value = Number(data?.pendingReviewCount) || 0;
-      if (previousCase && documents.value.some(row => row.id === previousCase)) {
+      if (previousCase && documents.value.some(row => row.isCase && row.id === previousCase)) {
         selectedCase.value = previousCase;
+      }
+      const plan = documents.value.find(row => row.isPlan && planKey(row) === previousPlan);
+      if (plan) {
+        selectedPlanKey.value = planKey(plan);
+        selectedPlanDocument.value = plan.documentId || plan.id;
+        selectedDocument.value = selectedPlanDocument.value;
       }
     } finally {
       await store.dispatch(actions.DEC_LOADING);
@@ -1111,6 +1253,11 @@ const toggleMyCases = () => {
   loadDocuments();
 };
 
+const toggleParticipantPlans = () => {
+  participantPlans.value = !participantPlans.value;
+  loadDocuments();
+};
+
 const toggleParticipantCases = () => {
   participantCases.value = !participantCases.value;
   loadDocuments();
@@ -1122,6 +1269,7 @@ const toggleParticipant = () => {
   showParticipant.value = next;
   selectedDocument.value = null;
   if (next) {
+    participantPlans.value = true;
     participantDocuments.value = true;
     participantCases.value = true;
     showHidden.value = false;
@@ -1433,20 +1581,70 @@ const selectControl = (row: ListRow) => {
 const selectedControlRow = computed(() => (
   documents.value.find(row => controlKey(row) === selectedControlKey.value) || null
 ));
+const selectedParticipantPlan = computed(() => (
+  showParticipant.value
+    ? documents.value.find(row => row.isPlan && planKey(row) === selectedPlanKey.value) || null
+    : null
+));
+const showControlSheet = computed(() => roleFilter.value === 'onControl' || Boolean(selectedParticipantPlan.value));
+const controlSheet = computed(() => (
+  roleFilter.value === 'onControl' ? selectedControlRow.value : selectedParticipantPlan.value
+));
+const doneSort = ref<'yes' | 'no' | ''>('');
+const controlSheetKey = computed(() => {
+  const sheet = controlSheet.value;
+  if (!sheet) {
+    return '';
+  }
+  return `${roleFilter.value || ''}:${sheet.id}:${sheet.planId || 0}:${sheet.documentId || 0}`;
+});
+const controlTasks = computed(() => {
+  const tasks = controlSheet.value?.tasks || [];
+  if (doneSort.value !== 'yes' && doneSort.value !== 'no') {
+    return tasks;
+  }
+  const yesFirst = doneSort.value === 'yes';
+  return tasks
+    .map((task, index) => ({ task, index }))
+    .sort((left, right) => {
+      if (left.task.done === right.task.done) {
+        return left.index - right.index;
+      }
+      return left.task.done === yesFirst ? -1 : 1;
+    })
+    .map(item => item.task);
+});
+const toggleDoneSort = () => {
+  doneSort.value = doneSort.value === 'yes' ? 'no' : 'yes';
+};
+watch(controlSheetKey, () => {
+  doneSort.value = '';
+});
 
 const peopleText = (value: unknown) => (
   typeof value === 'string' ? value || '[]' : JSON.stringify(value || [])
 );
 
+const selectParticipantPlan = (row: ListRow) => {
+  showCreatedForm.value = false;
+  openedFromDocumentLink.value = false;
+  selectedCase.value = null;
+  selectedPlanKey.value = planKey(row);
+  selectedPlanDocument.value = row.documentId || row.id;
+  selectedDocument.value = selectedPlanDocument.value;
+};
+
 const selectCase = (id: number) => {
   showCreatedForm.value = false;
   openedFromDocumentLink.value = false;
+  selectedPlanKey.value = null;
+  selectedPlanDocument.value = null;
   selectedCase.value = id;
   selectedDocument.value = null;
 };
 
 const patchListRow = (id: number, patch: Partial<ListRow>) => {
-  const index = documents.value.findIndex(item => item.id === id);
+  const index = documents.value.findIndex(item => item.isCase && item.id === id);
   if (index < 0) {
     return;
   }
@@ -1601,7 +1799,29 @@ onUnmounted(() => {
   window.removeEventListener('keydown', onLinkKey);
 });
 
+const openTestFromQuery = async () => {
+  const params = new URLSearchParams(window.location.search);
+  const testId = Number(params.get('openTest'));
+  if (!(testId > 0)) {
+    return;
+  }
+  const planDocumentId = Number(params.get('planDocument'));
+  const planTestId = Number(params.get('planTest'));
+  const result = await api('document-manager/documents/open-test', {
+    testId,
+    planDocumentId: planDocumentId > 0 ? planDocumentId : null,
+    planTestId: planTestId > 0 ? planTestId : null,
+  });
+  if (result?.ok && result.id) {
+    window.history.replaceState(null, '', `/ui/document-manager-2?document=${result.id}&resetFilters=1`);
+    openDocumentFromQuery();
+    return;
+  }
+  root.$emit('msg', 'error', result?.message || 'Не удалось открыть документ');
+};
+
 onMounted(async () => {
+  await openTestFromQuery();
   await store.dispatch(actions.INC_LOADING);
   try {
     const data = await researchesPoint.getResearches({ params: { dou: 1 } });
@@ -1949,6 +2169,10 @@ const onReviewed = () => {
   text-align: left;
 }
 
+.doc-title--plan {
+  overflow-wrap: break-word;
+}
+
 .control-tasks {
   height: 100%;
   overflow: auto;
@@ -1967,7 +2191,7 @@ const onReviewed = () => {
   display: grid;
   grid-template-columns:
     88px minmax(120px, 1.3fr) minmax(120px, 1fr) 140px
-    minmax(140px, 1.1fr) minmax(140px, 1.1fr) 120px 190px;
+    minmax(140px, 1.1fr) minmax(140px, 1.1fr) 146px 190px;
   align-items: stretch;
   margin-bottom: 0;
   background: #fff;
@@ -1977,6 +2201,15 @@ const onReviewed = () => {
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+.control-head__sort {
+  cursor: pointer;
+  user-select: none;
+}
+
+.control-head__arrow {
+  margin-left: 4px;
 }
 
 .control-head > div {
@@ -2038,6 +2271,15 @@ const onReviewed = () => {
   border: 1px solid #96a0ad;
   border-radius: 0;
   box-sizing: border-box;
+}
+
+.test-letter--open {
+  color: #da4453;
+  font-weight: 700;
+}
+
+.test-letter--passed {
+  color: #049372;
 }
 
 .control-task__name {
