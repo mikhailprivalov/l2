@@ -4806,11 +4806,7 @@ class Documents(models.Model):
         addressees = Plans.addressees_on_document(document)
         curators = Plans.curator_from_doctor(document.who_create)
         executor_ids = Plans.people_ids(addressees)
-        tests = list(
-            PlanTest.objects.filter(plan_id__in=plan_ids)
-            .select_related("test")
-            .order_by(F("group__order").asc(nulls_last=True), F("group_id").asc(nulls_last=True), "order", "pk")
-        )
+        tests = list(PlanTest.objects.filter(plan_id__in=plan_ids).select_related("test").order_by(F("group__order").asc(nulls_last=True), F("group_id").asc(nulls_last=True), "order", "pk"))
         passed_by_task = {}
         passed_rows = Documents.objects.filter(
             plan_document=document,
