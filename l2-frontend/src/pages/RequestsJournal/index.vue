@@ -192,7 +192,18 @@
               {{ row.createdAt }}
             </td>
             <td class="table-list__date">
-              {{ row.acceptedAt || '—' }}
+              <div class="accepted-cell">
+                <span>{{ row.acceptedAt || '—' }}</span>
+                <button
+                  v-if="row.canCancelAccept"
+                  class="btn btn-xs btn-default status-hide-btn"
+                  title="Отменить принятие"
+                  :disabled="togglingId === row.id"
+                  @click.stop="cancelAccept(row)"
+                >
+                  отмена
+                </button>
+              </div>
             </td>
             <td class="table-list__date">
               {{ row.confirmedAt || '—' }}
@@ -308,6 +319,7 @@ interface JournalRow {
   cito: boolean;
   hidden: boolean;
   canHide: boolean;
+  canCancelAccept?: boolean;
 }
 
 const pageSizeOptions = [50, 100, 150];
@@ -504,6 +516,28 @@ const resetFilters = () => {
     hospitalId: -1,
     doctorId: -1,
   };
+};
+
+const cancelAccept = async (row: JournalRow) => {
+  togglingId.value = row.id;
+  try {
+    const response = await api('requests/cancel-accept', {
+      requestId: row.id,
+      hospitalId: filters.value.hospitalId,
+    });
+    if (response.ok) {
+      notify.ok('Принятие заявки отменено');
+      await load(page.value);
+      return;
+    }
+    notify.error(response.message || 'Нельзя отменить принятие');
+  } catch (error) {
+    notify.error('Ошибка при отмене принятия заявки');
+    // eslint-disable-next-line no-console
+    console.error('Ошибка при отмене принятия заявки:', error);
+  } finally {
+    togglingId.value = null;
+  }
 };
 
 const toggleRequestCancel = async (row: JournalRow) => {
@@ -862,6 +896,13 @@ $filter-label-width: 82px;
   padding: 0 4px;
   font-size: 10px;
   line-height: 1.4;
+}
+
+.accepted-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .row-cito {

@@ -68,6 +68,36 @@ def get_requests_journal_max_period_days():
     return getattr(django_settings, 'REQUESTS_JOURNAL_MAX_PERIOD_DAYS', 40)
 
 
+def _request_accept_cancel_restricted():
+    return bool(getattr(django_settings, 'REQUEST_ACCEPT_DOCTOR_CANNOT_CANCEL', False))
+
+
+def _request_accept_cancel_group_name():
+    name = getattr(django_settings, 'REQUEST_ACCEPT_CANCEL_GROUP', 'Отмена принятия заявки')
+    return str(name or 'Отмена принятия заявки')
+
+
+def _cancel_accept_group_names():
+    names = ["Заполнение заявок", "Врач-диагностики", "Журнал заявок", _request_accept_cancel_group_name()]
+    unique = []
+    for name in names:
+        if name and name not in unique:
+            unique.append(name)
+    return tuple(unique)
+
+
+def _user_can_cancel_request_accept(user):
+    if not _request_accept_cancel_restricted():
+        return False
+    if getattr(user, 'is_superuser', False):
+        return True
+    return user.groups.filter(name=_request_accept_cancel_group_name()).exists()
+
+
+def _log_request_accept_action(direction, doctor, log_type):
+    Log.log(str(direction.pk), log_type, user=doctor, body={})
+
+
 def _equipment_receive_matches_patient_family(equipment_receive, family):
     fields = getattr(django_settings, 'EQUIPMENT_RECEIVE_FAMILY_MATCH_FIELDS', None) or []
     if not fields:
@@ -1103,7 +1133,7 @@ def _get_journal_doctor_fio(direction, confirmed_by):
     return '—'
 
 
-def direction_to_all_list_row(direction, hospital_id=None):
+def direction_to_all_list_row(direction, hospital_id=None, can_cancel_accept=False):
     last_confirmed = _get_last_confirmed_issledovaniya(direction)
     confirmed_by = None
     if last_confirmed:
@@ -1131,6 +1161,13 @@ def direction_to_all_list_row(direction, hospital_id=None):
         'cito': direction.is_cito,
         'hidden': direction.cancel,
         'canHide': not direction.cancel,
+        'canCancelAccept': bool(
+            can_cancel_accept
+            and direction.accept_who_doctor_id
+            and not direction.total_confirmed
+            and not direction.cancel
+            and not any(iss.time_confirmation for iss in direction.issledovaniya_set.all())
+        ),
     }
 
 
@@ -1346,7 +1383,8 @@ def get_requests_all_list(request):
     directions_list = list(directions[offset : offset + limit])
 
     hospital_id = request.user.doctorprofile.get_hospital_id()
-    rows = [direction_to_all_list_row(direction, hospital_id) for direction in directions_list]
+    can_cancel_accept = _user_can_cancel_request_accept(request.user)
+    rows = [direction_to_all_list_row(direction, hospital_id, can_cancel_accept) for direction in directions_list]
     filter_options = _get_all_list_filter_options(hospital_id)
 
     return JsonResponse(
@@ -1491,12 +1529,13 @@ def accept_request(request):
         direction.accept_who_doctor = request.user.doctorprofile
         direction.accept_time = now
         direction.save(update_fields=["accept_who_doctor", "accept_time"])
+        _log_request_accept_action(direction, request.user.doctorprofile, 250004)
 
     return status_response(True, "Заявка успешно принята")
 
 
 @login_required
-@group_required("Заполнение заявок", "Врач-диагностики")
+@group_required(*_cancel_accept_group_names())
 def cancel_accept_request(request):
     request_data = json.loads(request.body)
     request_id = request_data.get("requestId")
@@ -1505,30 +1544,36 @@ def cancel_accept_request(request):
     if not request_id:
         return status_response(False, "ID заявки не указан")
 
-    try:
-        allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
-    except ValueError as e:
-        return status_response(False, str(e))
+    restricted = _request_accept_cancel_restricted()
+    allowed_hospital_ids = None
+    if not restricted:
+        try:
+            allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
+        except ValueError as e:
+            return status_response(False, str(e))
+    elif not _user_can_cancel_request_accept(request.user):
+        return status_response(False, "Отменить принятие может только администратор или пользователь с ролью отмены принятия")
 
     with transaction.atomic():
         direction = Napravleniya.objects.select_for_update().get(pk=request_id, is_request=True)
 
-        if allowed_hospital_ids and direction.hospital_id not in allowed_hospital_ids:
+        if allowed_hospital_ids is not None and direction.hospital_id not in allowed_hospital_ids:
             return status_response(False, "У пользователя нет доступа к этой заявке")
 
         if not direction.accept_who_doctor:
             return status_response(False, "Заявка не принята")
 
-        if direction.accept_who_doctor != request.user.doctorprofile:
+        if not restricted and direction.accept_who_doctor != request.user.doctorprofile:
             return status_response(False, "Отменить принятие может только тот, кто принял заявку")
 
         confirmed_researches = direction.issledovaniya_set.filter(time_confirmation__isnull=False)
-        if confirmed_researches.exists():
+        if direction.total_confirmed or confirmed_researches.exists():
             return status_response(False, "Нельзя отменить принятие заявки, которая уже исполнена")
 
         direction.accept_who_doctor = None
         direction.accept_time = None
         direction.save(update_fields=["accept_who_doctor", "accept_time"])
+        _log_request_accept_action(direction, request.user.doctorprofile, 250005)
 
     return status_response(True, "Принятие заявки отменено")
 

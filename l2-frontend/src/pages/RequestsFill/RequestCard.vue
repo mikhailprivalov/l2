@@ -69,6 +69,7 @@ import { computed, ref } from 'vue';
 
 import api from '@/api';
 import useNotify from '@/hooks/useNotify';
+import { useStore } from '@/store';
 
 export type Request = {
   id: number;
@@ -102,13 +103,20 @@ const emit = defineEmits<{
 }>();
 
 const notify = useNotify();
+const store = useStore();
 const processing = ref(false);
 
 const showClinic = computed(() => props.hospitalId === -1 && Boolean(props.request.clinic));
+const doctorCannotCancelAccept = computed(() => Boolean(store.getters.modules.request_accept_doctor_cannot_cancel));
 
 const showAcceptButton = () => props.request.waitFill && !props.request.accepted;
 
-const showCancelButton = () => props.request.waitFill && props.request.accepted && props.request.acceptedByCurrentUser;
+const showCancelButton = () => (
+  props.request.waitFill
+  && props.request.accepted
+  && props.request.acceptedByCurrentUser
+  && !doctorCannotCancelAccept.value
+);
 
 const handleRequestAction = async (accept: boolean) => {
   if (processing.value) return;

@@ -87,6 +87,8 @@
         :test-id-value="selectedItem?.testId"
         :test-title-value="selectedItem?.testTitle"
         :is-plan-value="selectedItem?.isPlan"
+        :is-test-defaulta-value="selectedItem?.isTestDefaulta"
+        :test-default-owner-title="testDefaultOwnerTitle"
         :creators-value="selectedItem?.creators"
         :default-type-document-id-value="selectedItem?.defaultTypeDocumentId"
         :place-section-id-value="selectedItem?.placeSectionId"
@@ -188,6 +190,7 @@ interface CatalogItem {
   testId?: number | null;
   testTitle?: string;
   isPlan?: boolean;
+  isTestDefaulta?: boolean;
   creators?: { id: number; fio: string; department?: string }[];
   defaultTypeDocumentId?: number | null;
   defaultTypeDocumentTitle?: string;
@@ -265,6 +268,14 @@ const filteredItems = computed(() => {
 });
 
 const selectedItem = computed(() => items.value.find(row => row.id === selectedId.value) || null);
+
+const testDefaultOwnerTitle = computed(() => {
+  if (selectedNavId.value !== 'document_types') {
+    return '';
+  }
+  const owner = items.value.find(row => row.isTestDefaulta && row.id !== selectedId.value);
+  return owner?.title || '';
+});
 
 const showCatalogEditor = computed(
   () => (

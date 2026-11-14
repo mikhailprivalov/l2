@@ -25,6 +25,7 @@
       >
         <span>Правильно {{ correct }} из {{ total }}</span>
         <span class="score-percent">{{ percent }}%</span>
+        <span :class="passed ? 'score-pass' : 'score-fail'">{{ passed ? 'Пройден' : 'Не пройден' }}</span>
       </div>
       <div
         v-if="answerable && !documentId && whoConfirmed"
@@ -167,6 +168,7 @@ const whoConfirmed = ref('');
 const correct = ref(0);
 const total = ref(0);
 const percent = ref(0);
+const passed = ref(false);
 const message = ref('');
 
 const showCorrect = (answer: AnswerRow) => !props.answerable && !props.review && Boolean(answer.isCorrect);
@@ -213,6 +215,8 @@ const apply = (data) => {
   correct.value = Number(data.correct || 0);
   total.value = Number(data.total || 0);
   percent.value = Number(data.percent || 0);
+  const threshold = data.passPercent == null ? 100 : Number(data.passPercent);
+  passed.value = data.passed === undefined ? percent.value >= threshold : Boolean(data.passed);
   message.value = '';
   loaded.value = true;
   emit('saved', { confirmed: confirmed.value, whoConfirmed: whoConfirmed.value });
@@ -319,8 +323,13 @@ watch(() => [props.testId, props.documentId], load, { immediate: true });
   color: #434a54;
 }
 
-.score-percent {
+.score-percent,
+.score-pass {
   color: #049372;
+}
+
+.score-fail {
+  color: #da4453;
 }
 
 .confirmed-line {

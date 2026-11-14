@@ -128,6 +128,7 @@ def types_update(request):
         data.get("monitoringId"),
         data.get("testId"),
         data.get("isPlan"),
+        data.get("isTestDefaulta"),
     )
     if result.get("ok"):
         _audit(request, DocumentManagerLog.TYPE, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
@@ -710,6 +711,8 @@ def tests_update(request):
         data.get("questionPick"),
         data.get("professionalDirections", ""),
         data.get("competencies", ""),
+        data.get("passPercent"),
+        data.get("attemptLimit"),
     )
     if result.get("ok"):
         _audit(request, DocumentManagerLog.TEST, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
@@ -763,12 +766,23 @@ def documents_list(request):
     if data.get("filter") == "onControl":
         return JsonResponse({"result": Documents.control_plan_rows(doctor), "pendingReviewCount": DocumentReview.pending_count(doctor)})
     if data.get("participant"):
-        found = {"ok": True, "result": []}
+        rows = []
+        message = None
+        if data.get("plans"):
+            found = Documents.participant_plans(doctor, data.get("dateFrom"), data.get("dateTo"))
+            if found.get("ok"):
+                rows.extend(found.get("result") or [])
+            elif not message:
+                message = found.get("message")
         if data.get("cases"):
             found = Documents.participant_cases(doctor, data.get("dateFrom"), data.get("dateTo"))
-        payload = {"result": found.get("result") or [], "pendingReviewCount": DocumentReview.pending_count(doctor)}
-        if not found.get("ok"):
-            payload["message"] = found.get("message")
+            if found.get("ok"):
+                rows.extend(found.get("result") or [])
+            elif not message:
+                message = found.get("message")
+        payload = {"result": rows, "pendingReviewCount": DocumentReview.pending_count(doctor)}
+        if message:
+            payload["message"] = message
         return JsonResponse(payload)
     return JsonResponse(
         {
@@ -834,6 +848,21 @@ def documents_create(request):
         data.get("topic"),
         data.get("periodParams"),
         data.get("parentDocumentId"),
+    )
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_open_test(request):
+    data = _request_data(request)
+    result = Documents.open_for_test(
+        data.get("testId"),
+        request.user.doctorprofile,
+        data.get("planDocumentId"),
+        data.get("planTestId"),
     )
     if result.get("ok"):
         return status_response(True, data=result)

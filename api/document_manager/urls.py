@@ -51,6 +51,7 @@ urlpatterns = [
     path('documents/search', views.documents_search),
     path('documents/recent', views.documents_recent),
     path('documents/create', views.documents_create),
+    path('documents/open-test', views.documents_open_test),
     path('documents/details', views.documents_details),
     path('documents/links', views.documents_links),
     path('documents/save', views.documents_save),
