@@ -5186,12 +5186,7 @@ class Documents(models.Model):
             type_doc = TypeDocuments.objects.select_for_update().filter(is_test_defaulta=True).order_by("pk").first()
             if not type_doc:
                 return {"ok": False, "message": "Не задан вид документа «Это тест по умолчанию»"}
-            latest = (
-                Documents.objects.select_for_update()
-                .filter(type_document=type_doc, test=test, who_create=who_create)
-                .order_by("-pk")
-                .first()
-            )
+            latest = Documents.objects.select_for_update().filter(type_document=type_doc, test=test, who_create=who_create).order_by("-pk").first()
             if latest and not latest.time_confirm:
                 if latest.plan_document_id:
                     plan = Documents.objects.filter(pk=latest.plan_document_id).first()
