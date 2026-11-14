@@ -1117,8 +1117,18 @@ class TypeDocuments(models.Model):
 
     @staticmethod
     def _save_type_row(
-        pk, title, group, place, code, first_template, templates, monitoring, test,
-        plan_flag, test_default_flag, creator_ids,
+        pk,
+        title,
+        group,
+        place,
+        code,
+        first_template,
+        templates,
+        monitoring,
+        test,
+        plan_flag,
+        test_default_flag,
+        creator_ids,
     ):
         with transaction.atomic():
             if test_default_flag:
