@@ -35,6 +35,15 @@
               style="padding-right: 10px"
               @click.prevent="exportResearch(pk)"
             >Экспорт</a>
+            <button
+              v-if="pk !== -1"
+              type="button"
+              class="research-history-btn"
+              title="История"
+              @click.prevent="openHistoryModal"
+            >
+              <i class="fas fa-history" />
+            </button>
           </span>
           <input
             v-model="title"
@@ -1346,6 +1355,11 @@
       :departments="departmentsForPermissions"
       @hide="closePermissionsModal"
     />
+    <ResearchHistoryModal
+      v-if="showHistoryModal"
+      :research-id="pk"
+      @hide="closeHistoryModal"
+    />
     <FileAddModal
       v-if="showFileAddModal"
       :entity-id="loaded_pk"
@@ -1379,6 +1393,7 @@ import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
+import ResearchHistoryModal from '@/construct/ResearchHistoryModal.vue';
 import FileAddModal from '@/modals/FileAddModal.vue';
 import LinkFieldModal from '@/construct/LinkFieldModal.vue';
 import { getTreeSelectLabel } from '@/utils';
@@ -1397,6 +1412,7 @@ export default {
     LinkFieldModal,
     FileAddModal,
     ResearchPermissionsModal,
+    ResearchHistoryModal,
     LoadFile,
     PermanentDirectories,
     FieldHelper,
@@ -1532,6 +1548,7 @@ export default {
       showAllDepartmentForTemplateField: false,
       userDepartmentId: null,
       showPermissionsModal: false,
+      showHistoryModal: false,
       possibleGroupsForField: [],
       showFileAddModal: false,
       timeoutOne: null,
@@ -2117,6 +2134,12 @@ export default {
     closePermissionsModal() {
       this.showPermissionsModal = false;
     },
+    openHistoryModal() {
+      this.showHistoryModal = true;
+    },
+    closeHistoryModal() {
+      this.showHistoryModal = false;
+    },
     openFileAddModal() {
       this.showFileAddModal = true;
     },
@@ -2383,6 +2406,18 @@ export default {
 
 .color-export-research {
   color: #d7f1fa;
+}
+.research-history-btn {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #d7f1fa;
+  line-height: 1;
+  vertical-align: baseline;
+}
+.research-history-btn:hover {
+  color: #fff;
 }
 .fields-roll-up-title {
   width: calc(100% - 145px) !important;

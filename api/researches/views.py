@@ -40,6 +40,7 @@ from directory.sql_func import get_constructor_edit_access_by_research_id, get_c
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
 from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, DISABLED_RESULT_FORMS, RESEARCHES_CACHE_PER_USER
+from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from rmis_integration.client import get_md5
@@ -487,6 +488,7 @@ def researches_update(request):
     response = {"ok": False}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -2)
+    request_pk = pk
     user_groups = [str(x) for x in request.user.groups.all()]
     if pk > -2:
         department_pk = request_data.get("department")
@@ -834,8 +836,87 @@ def researches_update(request):
                         TypeDocumentsSchema.sync_for_layout_template(res)
                     if res.is_monitoring:
                         TypeDocumentsSchema.sync_for_monitoring(res)
-        Log(key=pk, type=10000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
+                is_create = request_pk == -1
+                request_data["pk"] = res.pk
+                request_data["action"] = "create" if is_create else "update"
+                Log(
+                    key=str(res.pk),
+                    type=10001 if is_create else 10000,
+                    body=json.dumps(request_data),
+                    user=request.user.doctorprofile,
+                ).save()
     return JsonResponse(response)
+
+
+def _research_history_logs(research_pk):
+    key = str(research_pk)
+    body_filter = Q()
+    for prefix in (f'{{"pk": {research_pk},', f'{{"pk":{research_pk},'):
+        body_filter |= Q(body__startswith=prefix)
+    return (
+        Log.objects.filter(type__in=(10000, 10001))
+        .filter(Q(type=10001, key=key) | body_filter | Q(type=10000, key=key, body__contains='"action": "update"'))
+        .select_related("user")
+        .order_by("-pk")
+    )
+
+
+def _research_history_action(log_type):
+    return "Создание" if log_type == 10001 else "Изменение"
+
+
+def _research_history_user(row):
+    return row.user.get_fio() if row.user else "Система"
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: Редактировать свои услуги", "Конструктор: ДОУ")
+def research_history(request):
+    request_data = json.loads(request.body)
+    try:
+        research_pk = int(request_data.get("pk"))
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "message": "Не указана услуга", "rows": []})
+    if research_pk < 1:
+        return JsonResponse({"ok": True, "rows": []})
+
+    result = []
+    for row in _research_history_logs(research_pk).defer("body"):
+        result.append(
+            {
+                "id": row.pk,
+                "time": strdatetime(row.time),
+                "action": _research_history_action(row.type),
+                "user": _research_history_user(row),
+            }
+        )
+    return JsonResponse({"ok": True, "rows": result})
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: Редактировать свои услуги", "Конструктор: ДОУ")
+def research_history_body(request):
+    request_data = json.loads(request.body)
+    try:
+        research_pk = int(request_data.get("pk"))
+        log_id = int(request_data.get("id"))
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "message": "Не указана запись"})
+    if research_pk < 1 or log_id < 1:
+        return JsonResponse({"ok": False, "message": "Запись не найдена"})
+
+    row = _research_history_logs(research_pk).filter(pk=log_id).first()
+    if not row:
+        return JsonResponse({"ok": False, "message": "Запись не найдена"})
+    return JsonResponse(
+        {
+            "ok": True,
+            "time": strdatetime(row.time),
+            "action": _research_history_action(row.type),
+            "user": _research_history_user(row),
+            "body": row.body or "",
+        }
+    )
 
 
 @login_required
