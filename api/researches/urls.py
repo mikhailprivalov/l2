@@ -8,6 +8,8 @@ urlpatterns = [
     path('by-department', views.researches_by_department),
     path('params', views.researches_params),
     path('update', views.researches_update),
+    path('history', views.research_history),
+    path('history-body', views.research_history_body),
     path('details', views.researches_details),
     path('paraclinic_details', views.paraclinic_details),
     path('hosp-service-details', views.hospital_service_details),
