@@ -1813,6 +1813,7 @@ class Fractions(models.Model):
             hide=fraction_data["hide"],
             ref_m=fraction_data["ref_m"],
             ref_f=fraction_data["ref_f"],
+            default_value=fraction_data["default_value"],
         )
         new_fraction.save()
         return new_fraction
