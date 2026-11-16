@@ -481,7 +481,7 @@ def form(request):
                 "ref": current_ref,
                 "selectedReference": selected_reference,
                 "norm": r.get_is_norm(recalc=True)[0] if r else None,
-                "value": str(r.value if r else '').replace('&lt;', '<').replace('&gt;', '>'),
+                "value": str((r.value or "") if r else (f.default_value or "")).replace('&lt;', '<').replace('&gt;', '>'),
                 "comment": str(r.comment if r else '').replace('&lt;', '<').replace('&gt;', '>'),
             }
         )

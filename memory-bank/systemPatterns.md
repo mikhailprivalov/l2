@@ -45,7 +45,7 @@
 - `directions/` - referrals
 - `researches/` - research types
 - `directory/` - research directories
-- `results/` - research results
+- `results/` - research results. On `/ui/laboratory/results`, `laboratory/form` fills an empty cell from `Fractions.default_value` only when that fraction has no `Result` row yet. A saved empty value stays empty. Constructor **По умолчанию** is that field; age references do not fill the cell. `Fractions.create_fraction` stores `default_value` the same way as `update_fraction`.
 - `receivematerial/` - biomaterial reception. Excel `journal-get-material` (page «Забор биоматериала», modal «Печать отчёта забора биоматериала») has column **Дата и время забора** after **Карта**. The value is `TubesRegistration.time_get` for that collector and period, local time `DD.MM.YYYY HH:MM`. Several distinct minutes on one patient row are joined with a comma, earliest first.
 
 ### Organizational Domain
