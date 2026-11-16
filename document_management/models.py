@@ -6577,9 +6577,7 @@ class DocumentEmployeeApprove(models.Model):
 
 class DocumentEmployeeSign(models.Model):
     document = models.ForeignKey(Documents, related_name="sign_rows", db_index=True, on_delete=models.CASCADE)
-    employee = models.ForeignKey(
-        DoctorProfile, related_name="document_signs", db_index=True, default=None, blank=True, null=True, help_text="Подписант", on_delete=models.SET_NULL
-    )
+    employee = models.ForeignKey(DoctorProfile, related_name="document_signs", db_index=True, default=None, blank=True, null=True, help_text="Подписант", on_delete=models.SET_NULL)
     who_create = models.ForeignKey(
         DoctorProfile, related_name="document_signs_created", db_index=True, default=None, blank=True, null=True, help_text="Кто указал на подпись", on_delete=models.SET_NULL
     )
