@@ -1566,6 +1566,8 @@ def user_view(request):
             "date_stop_certificate": None,
             "resource_schedule": resource_researches,
             "notControlAnketa": False,
+            "canSignDocuments": False,
+            "isChief": False,
             "additionalInfo": "{}",
             "dismissed": False,
             "allowed_employee_departments": [],
@@ -1634,6 +1636,8 @@ def user_view(request):
             "date_extract_employee": doc.date_extract_employee,
             "resource_schedule": resource_researches,
             "notControlAnketa": doc.not_control_anketa,
+            "canSignDocuments": doc.can_sign_documents,
+            "isChief": doc.is_chief,
             "replace_doctor_cda": doc.replace_doctor_cda_id if doc.replace_doctor_cda_id else -1,
             "department_doctors": [{"id": x.pk, "label": f"{x.get_fio()}"} for x in department_doctors],
             "additionalInfo": doc.additional_info,
@@ -1716,6 +1720,8 @@ def user_save_view(request):
     send_password = ud.get("sendPassword", False)
     external_access = ud.get("external_access", False)
     not_control_anketa = ud.get("notControlAnketa", False)
+    can_sign_documents = bool(ud.get("canSignDocuments", False))
+    is_chief = bool(ud.get("isChief", False))
     date_stop_external_access = ud.get("date_stop_external_access")
     additional_info = ud.get("additionalInfo", "{}")
     dismissed = ud.get("dismissed", False)
@@ -1842,6 +1848,8 @@ def user_save_view(request):
             doc.district_group_id = district
             doc.external_access = external_access
             doc.not_control_anketa = not_control_anketa
+            doc.can_sign_documents = can_sign_documents
+            doc.is_chief = is_chief
             doc.date_stop_external_access = date_stop_external_access
             doc.date_extract_employee = date_extract_employee
             doc.date_stop_certificate = date_stop_certificate

@@ -19,8 +19,10 @@ from document_management.models import (  # noqa: I001
     DocumentCase,
     DocumentBlock,
     DocumentEmployeeApprove,
+    DocumentEmployeeSign,
     DocumentManagerLog,
     Documents,
+    DocumentJournal,
     GroupDocuments,
     PlaceSection,
     DouTest,
@@ -125,10 +127,13 @@ def types_update(request):
         data.get("layoutTemplateIds"),
         data.get("creatorIds"),
         data.get("placeSectionId"),
+        data.get("journalId"),
         data.get("monitoringId"),
         data.get("testId"),
         data.get("isPlan"),
         data.get("isTestDefaulta"),
+        data.get("approveLabel"),
+        data.get("showApprove", True),
     )
     if result.get("ok"):
         _audit(request, DocumentManagerLog.TYPE, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
@@ -573,6 +578,51 @@ def documents_approve_cancel(request):
 
 @login_required
 @group_required("ДОУ: просмотр документов")
+def documents_signers(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.filter(pk=data.get("id")).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = DocumentEmployeeSign.set_signers(document, doctor, data.get("members"))
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_sign_file(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.filter(pk=data.get("id")).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    result = DocumentEmployeeSign.sign_file(document, doctor)
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_sign(request):
+    from directions.models import SignatureCertificateDetails
+
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    document = Documents.objects.filter(pk=data.get("id")).first()
+    if not document or not Documents.can_see_document(document, doctor):
+        return status_response(False, "Документ не найден")
+    certificate = SignatureCertificateDetails.get_or_update(str(data.get("certThumbprint") or ""), data.get("certDetails"))
+    result = DocumentEmployeeSign.sign(document, doctor, data.get("sign"), certificate)
+    if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
 def documents_case(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
@@ -757,14 +807,42 @@ def structure_update(request):
 
 
 @login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def journals_list(request):
+    return JsonResponse({"result": DocumentJournal.list_json()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def journals_update(request):
+    data = _request_data(request)
+    result = DocumentJournal.save_journal(data.get("id", -1), data.get("title", ""))
+    if result.get("ok"):
+        _audit(request, DocumentManagerLog.JOURNAL, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+def _document_list_counts(doctor):
+    return {
+        "pendingReviewCount": DocumentReview.pending_count(doctor),
+        "pendingSignatureCount": DocumentEmployeeSign.pending_count(doctor),
+        "internalIncomingCount": Documents.chief_signed_count(),
+    }
+
+
+@login_required
 @group_required("ДОУ: просмотр документов")
 def documents_list(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
+    counts = _document_list_counts(doctor)
     if data.get("countOnly"):
-        return JsonResponse({"pendingReviewCount": DocumentReview.pending_count(doctor)})
+        return JsonResponse(counts)
+    if data.get("filter") == "internalIncoming":
+        return JsonResponse({"result": Documents.chief_signed_rows(), **counts})
     if data.get("filter") == "onControl":
-        return JsonResponse({"result": Documents.control_plan_rows(doctor), "pendingReviewCount": DocumentReview.pending_count(doctor)})
+        return JsonResponse({"result": Documents.control_plan_rows(doctor), **counts})
     if data.get("participant"):
         rows = []
         message = None
@@ -780,14 +858,22 @@ def documents_list(request):
                 rows.extend(found.get("result") or [])
             elif not message:
                 message = found.get("message")
-        payload = {"result": rows, "pendingReviewCount": DocumentReview.pending_count(doctor)}
+        payload = {"result": rows, **counts}
         if message:
             payload["message"] = message
         return JsonResponse(payload)
     return JsonResponse(
         {
-            "result": Documents.get_list(data.get("typeId"), data.get("groupId"), data.get("filter"), doctor, data.get("hidden"), data.get("myCases")),
-            "pendingReviewCount": DocumentReview.pending_count(doctor),
+            "result": Documents.get_list(
+                data.get("typeId"),
+                data.get("groupId"),
+                data.get("filter"),
+                doctor,
+                data.get("hidden"),
+                data.get("myCases"),
+                data.get("journalId"),
+            ),
+            **counts,
         }
     )
 
@@ -824,6 +910,7 @@ def documents_search(request):
         who=request.user.doctorprofile,
         date_from=data.get("dateFrom"),
         date_to=data.get("dateTo"),
+        journal_id=data.get("journalId"),
     )
     if result.get("ok"):
         return JsonResponse(result)
@@ -834,7 +921,7 @@ def documents_search(request):
 @group_required("ДОУ: просмотр документов")
 def documents_recent(request):
     data = _request_data(request)
-    return JsonResponse(DocumentRecent.get_page(request.user.doctorprofile, data.get("page", 1), data.get("pageSize")))
+    return JsonResponse(DocumentRecent.get_page(request.user.doctorprofile, data.get("page", 1), data.get("pageSize"), data.get("journalId")))
 
 
 @login_required
@@ -1098,5 +1185,6 @@ def addressees_employees(request):
             data.get("page", 1),
             page_size,
             allow_all,
+            bool(data.get("signersOnly")),
         )
     )

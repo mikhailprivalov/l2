@@ -75,7 +75,7 @@
               :checked="roleFilter === 'onSignature'"
               tabindex="-1"
             >
-            <span>Подписать</span>
+            <span>Подписать {{ pendingSignatureCount }}</span>
           </label>
         </div>
         <div class="side-check-line">
@@ -410,7 +410,7 @@
           :block-id="selectedBlock"
         />
         <div
-          v-else-if="showControlSheet"
+          v-else-if="showControlSheet && !showCreatedForm"
           class="control-tasks"
         >
           <div
@@ -532,10 +532,12 @@
           :case-id="viewerCaseId"
           :show-case-documents="showCaseDocumentsOnViewer"
           :focus-form="showCreatedForm"
-          :approval-mode="roleFilter === 'toBeAgreed'"
+          :approval-mode="roleFilter === 'toBeAgreed' && !showCreatedForm"
+          :signature-mode="roleFilter === 'onSignature' && !showCreatedForm"
           @visibility-change="onVisibilityChange"
           @reviewed="onReviewed"
           @approved="onApproved"
+          @signed="onApproved"
           @link-document="startLink"
         />
       </div>
@@ -802,6 +804,7 @@ const participantPlans = ref(true);
 const participantDocuments = ref(true);
 const participantCases = ref(true);
 const pendingReviewCount = ref(0);
+const pendingSignatureCount = ref(0);
 type ControlTask = {
   id: number;
   title: string;
@@ -1022,9 +1025,13 @@ const toggleRole = (id: string) => {
   roleFilter.value = next;
 };
 
+const applyListCounts = (data?: { pendingReviewCount?: number; pendingSignatureCount?: number } | null) => {
+  pendingReviewCount.value = Number(data?.pendingReviewCount) || 0;
+  pendingSignatureCount.value = Number(data?.pendingSignatureCount) || 0;
+};
+
 const loadPendingCount = async () => {
-  const { pendingReviewCount: count } = await api('document-manager/documents/list', { countOnly: true });
-  pendingReviewCount.value = Number(count) || 0;
+  applyListCounts(await api('document-manager/documents/list', { countOnly: true }));
 };
 
 const loadRecent = async (append = false) => {
@@ -1081,6 +1088,7 @@ const loadDocuments = async (keepSelection = false) => {
     || roleFilter.value === 'toReview'
     || roleFilter.value === 'recent'
     || roleFilter.value === 'toBeAgreed'
+    || roleFilter.value === 'onSignature'
     || roleFilter.value === 'onControl';
   if (showTests.value) {
     selectedDocument.value = null;
@@ -1148,7 +1156,7 @@ const loadDocuments = async (keepSelection = false) => {
       }
       documents.value = data?.result || [];
       caseSearch.value = true;
-      pendingReviewCount.value = Number(data?.pendingReviewCount) || 0;
+      applyListCounts(data);
       if (previousCase && documents.value.some(row => row.isCase && row.id === previousCase)) {
         selectedCase.value = previousCase;
       }
@@ -1177,10 +1185,11 @@ const loadDocuments = async (keepSelection = false) => {
     const listFilter = roleFilter.value === 'created'
       || roleFilter.value === 'toReview'
       || roleFilter.value === 'toBeAgreed'
+      || roleFilter.value === 'onSignature'
       || roleFilter.value === 'onControl'
       ? roleFilter.value
       : null;
-    const { result, pendingReviewCount: count } = await api('document-manager/documents/list', {
+    const data = await api('document-manager/documents/list', {
       filter: listFilter,
       hidden: Boolean(canViewHidden.value && showHidden.value),
       myCases: Boolean(showMyCases.value),
@@ -1188,8 +1197,8 @@ const loadDocuments = async (keepSelection = false) => {
     if (loadId !== documentsLoadId) {
       return;
     }
-    documents.value = result || [];
-    pendingReviewCount.value = Number(count) || 0;
+    documents.value = data?.result || [];
+    applyListCounts(data);
     if (
       !keepSelection
       && !openedFromDocumentLink.value
@@ -1575,6 +1584,7 @@ const selectDocument = (id: number) => {
 };
 
 const selectControl = (row: ListRow) => {
+  showCreatedForm.value = false;
   selectedControlKey.value = controlKey(row);
 };
 

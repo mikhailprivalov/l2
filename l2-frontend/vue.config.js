@@ -73,6 +73,9 @@ module.exports = {
   },
   devServer: {
     port: 8081,
+    devMiddleware: {
+      writeToDisk: true,
+    },
     allowedHosts: 'all',
     headers: {
       'Access-Control-Allow-Origin': '*',

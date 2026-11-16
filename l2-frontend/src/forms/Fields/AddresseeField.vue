@@ -290,9 +290,11 @@ const props = withDefaults(defineProps<{
   disabled?: boolean;
   header?: string;
   hidePreview?: boolean;
+  signersOnly?: boolean;
 }>(), {
   header: 'Адресаты',
   hidePreview: false,
+  signersOnly: false,
 });
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
@@ -399,6 +401,7 @@ const loadAllEmployees = async (groupId = selectedGroupId.value, search = query.
     hospitalId: hospitalId.value,
     query: search,
     all: true,
+    signersOnly: props.signersOnly,
   });
   return (data.result || []) as Employee[];
 };
@@ -461,6 +464,7 @@ const loadEmployees = async (append = false) => {
       query: query.value,
       page: nextPage,
       pageSize: PAGE_SIZE,
+      signersOnly: props.signersOnly,
     });
     const rows = data.result || [];
     page.value = data.page || nextPage;
@@ -497,6 +501,7 @@ const loadEveryone = async (append = false) => {
       query: query.value,
       page: nextPage,
       pageSize: PAGE_SIZE,
+      signersOnly: props.signersOnly,
     });
     const rows = data.result || [];
     allPage.value = data.page || nextPage;

@@ -523,6 +523,40 @@
               </div>
             </div>
           </div>
+          <div class="row">
+            <div class="col-xs-4 left-padding right-padding">
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <label
+                  class="input-group-addon"
+                  style="height: 34px; text-align: left"
+                >
+                  <input
+                    v-model="user.canSignDocuments"
+                    type="checkbox"
+                  > Может подписывать документы
+                </label>
+              </div>
+            </div>
+            <div class="col-xs-4 left-padding right-padding">
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <label
+                  class="input-group-addon"
+                  style="height: 34px; text-align: left"
+                >
+                  <input
+                    v-model="user.isChief"
+                    type="checkbox"
+                  > Руководитель
+                </label>
+              </div>
+            </div>
+          </div>
           <div class="more-title">
             Запрет на создание направлений с назначениями:
             <button
@@ -1230,6 +1264,8 @@ const user = ref({
   date_stop_external_access: '',
   resource_schedule: [],
   notControlAnketa: false,
+  canSignDocuments: false,
+  isChief: false,
   date_extract_employee: '',
   date_stop_certificate: '',
   replace_doctor_cda: -1,
@@ -1548,6 +1584,8 @@ const close = async () => {
     date_stop_external_access: '',
     resource_schedule: [],
     notControlAnketa: false,
+    canSignDocuments: false,
+    isChief: false,
     date_extract_employee: '',
     date_stop_certificate: '',
     replace_doctor_cda: -1,

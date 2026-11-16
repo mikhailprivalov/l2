@@ -45,7 +45,7 @@
           :checked="roleFilter === 'onSignature'"
           tabindex="-1"
         >
-        <span>Подписать</span>
+        <span>Подписать {{ pendingSignatureCount }}</span>
       </label>
       <label
         class="filter-check"
@@ -177,6 +177,7 @@
       v-model="direction"
       class="direction-row"
       :variants="directionVariants"
+      :bages="directionBadges"
     />
     <div
       ref="splitEl"
@@ -440,14 +441,25 @@ const DOU_RESEARCH_KEY = String(2 - DOU_TYPE[0]);
 const DOCUMENT_PK_SHIFT = 1000000000;
 const CASE_PK_SHIFT = 2000000000;
 
-const directionVariants = [
-  'Входящие',
-  'Исходящие',
-  'Внутренние входящие',
-  'Внутренние исходящие',
-  'Внутренние ОРД',
-];
-const direction = ref('Входящие');
+type DocumentJournalRow = {
+  id: number;
+  title: string;
+  showsSignedChiefs: boolean;
+};
+const journals = ref<DocumentJournalRow[]>([]);
+const direction = ref('');
+const directionVariants = computed(() => journals.value.map(row => row.title));
+const selectedJournal = computed(() => journals.value.find(row => row.title === direction.value) || null);
+const internalIncomingCount = ref(0);
+const directionBadges = computed(() => {
+  const badges: Record<string, string> = {};
+  journals.value.forEach(row => {
+    if (row.showsSignedChiefs) {
+      badges[row.title] = String(internalIncomingCount.value);
+    }
+  });
+  return badges;
+});
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -539,7 +551,16 @@ const showMyCases = ref(storedListFilter.myCases);
 const showTopics = ref(storedListFilter.topics);
 const showTests = ref(storedListFilter.tests);
 const pendingReviewCount = ref(0);
-const documents = ref<{ id: number; title: string; confirmed?: boolean }[]>([]);
+const pendingSignatureCount = ref(0);
+const documents = ref<{
+  id: number;
+  title?: string;
+  confirmed?: boolean;
+  number?: string;
+  typeTitle?: string;
+  department?: string;
+  fio?: string;
+}[]>([]);
 const listQuery = ref('');
 const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
 const tests = ref<{ id: number; title: string }[]>([]);
@@ -592,7 +613,12 @@ const userGroups = computed(() => store.getters.user_groups || []);
 const canViewHidden = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Скрытие документа'));
 const canCreateBlocks = computed(() => userGroups.value.includes('Admin') || userGroups.value.includes('Создание блоков'));
 const listFilterActive = computed(() => Boolean(
-  roleFilter.value || showHidden.value || showMyCases.value || showTopics.value || showTests.value,
+  selectedJournal.value
+  || roleFilter.value
+  || showHidden.value
+  || showMyCases.value
+  || showTopics.value
+  || showTests.value,
 ));
 if (!canViewHidden.value) {
   showHidden.value = false;
@@ -610,9 +636,18 @@ const toggleRole = (id: string) => {
   roleFilter.value = next;
 };
 
+const applyListCounts = (data?: {
+  pendingReviewCount?: number;
+  pendingSignatureCount?: number;
+  internalIncomingCount?: number;
+} | null) => {
+  pendingReviewCount.value = Number(data?.pendingReviewCount) || 0;
+  pendingSignatureCount.value = Number(data?.pendingSignatureCount) || 0;
+  internalIncomingCount.value = Number(data?.internalIncomingCount) || 0;
+};
+
 const loadPendingCount = async () => {
-  const { pendingReviewCount: count } = await api('document-manager/documents/list', { countOnly: true });
-  pendingReviewCount.value = Number(count) || 0;
+  applyListCounts(await api('document-manager/documents/list', { countOnly: true }));
 };
 
 const loadRecent = async (append = false) => {
@@ -628,6 +663,7 @@ const loadRecent = async (append = false) => {
     const data = await api('document-manager/documents/recent', {
       page: nextPage,
       pageSize: RECENT_PAGE_SIZE,
+      journalId: selectedJournal.value?.id || null,
     });
     if (loadId !== documentsLoadId) {
       return;
@@ -660,6 +696,7 @@ const loadDocuments = async () => {
   recentPage.value = 1;
   recentHasMore.value = false;
   const hasListFilter = roleFilter.value === 'created' || roleFilter.value === 'toReview' || roleFilter.value === 'recent';
+  const journalId = selectedJournal.value?.id || null;
   if (showTests.value) {
     selectedDocument.value = null;
     selectedBlock.value = null;
@@ -705,7 +742,24 @@ const loadDocuments = async () => {
   blocks.value = [];
   selectedBlock.value = null;
   if (!hasListFilter && !showHidden.value && !showMyCases.value) {
-    await loadPendingCount();
+    if (!journalId) {
+      await loadPendingCount();
+      return;
+    }
+    await store.dispatch(actions.INC_LOADING);
+    try {
+      const data = await api('document-manager/documents/list', { journalId });
+      if (loadId !== documentsLoadId) {
+        return;
+      }
+      documents.value = data?.result || [];
+      applyListCounts(data);
+      if (selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
+        selectedDocument.value = null;
+      }
+    } finally {
+      await store.dispatch(actions.DEC_LOADING);
+    }
     return;
   }
   await store.dispatch(actions.INC_LOADING);
@@ -715,16 +769,17 @@ const loadDocuments = async () => {
       await loadPendingCount();
       return;
     }
-    const { result, pendingReviewCount: count } = await api('document-manager/documents/list', {
+    const data = await api('document-manager/documents/list', {
       filter: roleFilter.value === 'created' || roleFilter.value === 'toReview' ? roleFilter.value : null,
       hidden: Boolean(canViewHidden.value && showHidden.value),
       myCases: Boolean(showMyCases.value),
+      journalId,
     });
     if (loadId !== documentsLoadId) {
       return;
     }
-    documents.value = result || [];
-    pendingReviewCount.value = Number(count) || 0;
+    documents.value = data?.result || [];
+    applyListCounts(data);
     if (selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
       selectedDocument.value = null;
     }
@@ -838,6 +893,7 @@ const searchDocuments = async () => {
       byText: byText.value,
       dateFrom: toApiDate(dateRange.value[0]),
       dateTo: toApiDate(dateRange.value[1]),
+      journalId: selectedJournal.value?.id || null,
     });
     if (listSearch && loadId !== documentsLoadId) {
       return;
@@ -883,7 +939,10 @@ const visibleDocuments = computed(() => {
   if (!filterText) {
     return documents.value;
   }
-  return documents.value.filter(row => folded(row.title).includes(filterText));
+  return documents.value.filter(row => {
+    const haystack = row.title;
+    return folded(haystack || '').includes(filterText);
+  });
 });
 
 const visibleBlocks = computed(() => {
@@ -1087,6 +1146,17 @@ const onLeftWidthChange = (value: number) => {
   }
 };
 
+const loadJournals = async () => {
+  const data = await api('document-manager/journals/list');
+  journals.value = data?.result || [];
+  const current = journals.value.find(row => row.title === direction.value);
+  if (!current && journals.value.length) {
+    direction.value = journals.value[0].title;
+    return;
+  }
+  await loadDocuments();
+};
+
 onMounted(async () => {
   if (storedLeftWidth == null) {
     await nextTick();
@@ -1103,10 +1173,14 @@ onMounted(async () => {
     ready.value = true;
     await store.dispatch(actions.DEC_LOADING);
   }
-  await loadDocuments();
+  await loadJournals();
 });
 
 watch(roleFilter, () => {
+  loadDocuments();
+});
+
+watch(direction, () => {
   loadDocuments();
 });
 
@@ -1291,6 +1365,39 @@ watch([roleFilter, showHidden, showMyCases, showTopics, showTests], () => {
   flex: 0 0 auto;
   height: 34px;
   border-radius: 0;
+}
+
+.incoming-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 16px;
+  color: #434a54;
+
+  th,
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #b1b1b1;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+
+  tbody tr {
+    cursor: pointer;
+  }
+
+  tbody tr:hover,
+  &__active {
+    background: #434a54;
+    color: #fff;
+  }
 }
 
 .doc-row {

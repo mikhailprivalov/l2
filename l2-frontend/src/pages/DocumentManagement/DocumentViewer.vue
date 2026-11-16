@@ -617,7 +617,7 @@
         </div>
       </div>
       <div
-        v-if="!caseListMode && !approvalMode && (research || loaded)"
+        v-if="showApprove && !caseListMode && !approvalMode && (research || loaded)"
         class="doc-case-select doc-approvers"
       >
         <span>Согласовать</span>
@@ -635,6 +635,29 @@
           >
             Отправил: {{ line }}
           </div>
+        </div>
+      </div>
+      <div
+        v-if="!caseListMode && !approvalMode && (research || loaded)"
+        class="doc-case-select doc-approvers"
+      >
+        <span>На подпись</span>
+        <div class="doc-case-select__field doc-approvers__body">
+          <AddresseeField
+            header="На подпись"
+            :value="signers"
+            :disabled="!canEditSigners"
+            @input="onSigners"
+          />
+          <button
+            v-if="signatureMode && canSign"
+            class="btn btn-blue-nb sign-doc-btn"
+            type="button"
+            :disabled="signBusy"
+            @click="openSign"
+          >
+            Подписать
+          </button>
         </div>
       </div>
       <div
@@ -742,6 +765,77 @@
         </div>
       </div>
     </Modal>
+    <Modal
+      v-if="signOpen"
+      show-footer="true"
+      white-bg="true"
+      min-width="640px"
+      @close="closeSign"
+    >
+      <span slot="header">Подписать</span>
+      <div
+        slot="body"
+        class="sign-body"
+      >
+        <div v-if="!signChecked">
+          загрузка
+        </div>
+        <div
+          v-else-if="!signHasPlugin"
+          class="status-error"
+        >
+          Плагин CSP не настроен
+        </div>
+        <template v-else>
+          <select
+            v-if="signCertificates.length"
+            v-model="selectedThumbprint"
+            class="form-control"
+          >
+            <option
+              v-for="certificate in signCertificates"
+              :key="certificate.thumbprint"
+              :value="certificate.thumbprint"
+            >
+              {{ certificate.name }}
+            </option>
+          </select>
+          <div
+            v-else
+            class="status-error"
+          >
+            Нет сертификатов
+          </div>
+          <div
+            v-if="selectedCertificate"
+            class="sign-body__cert"
+          >
+            <div>{{ selectedCertificate.thumbprint }}</div>
+            <div>{{ selectedCertificate.validFrom }} — {{ selectedCertificate.validTo }}</div>
+          </div>
+        </template>
+      </div>
+      <div
+        slot="footer"
+        class="sign-footer"
+      >
+        <button
+          type="button"
+          class="btn btn-blue-nb"
+          @click="closeSign"
+        >
+          Закрыть
+        </button>
+        <button
+          type="button"
+          class="btn btn-blue-nb"
+          :disabled="signBusy || !selectedThumbprint"
+          @click="confirmSign"
+        >
+          Подписать
+        </button>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -749,6 +843,14 @@
 import {
   computed, getCurrentInstance, nextTick, onMounted, onUnmounted, ref, watch,
 } from 'vue';
+import moment from 'moment';
+import {
+  createDetachedSignature,
+  createHash,
+  getCertificate,
+  getSystemInfo,
+  getUserCertificates,
+} from 'crypto-pro';
 import Treeselect from '@riophae/vue-treeselect';
 
 import { useStore } from '@/store';
@@ -761,6 +863,7 @@ import DouPlanEditor from '@/construct/DouPlanEditor.vue';
 import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
 import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 import Modal from '@/ui-cards/Modal.vue';
+import { convertSubjectNameToTitle } from '@/utils';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
@@ -770,6 +873,7 @@ const props = defineProps<{
   showCaseDocuments?: boolean;
   focusForm?: boolean;
   approvalMode?: boolean;
+  signatureMode?: boolean;
   controlPlanId?: number | null;
 }>();
 
@@ -778,6 +882,7 @@ const emit = defineEmits<{
   (e: 'visibility-change'): void;
   (e: 'reviewed'): void;
   (e: 'approved'): void;
+  (e: 'signed'): void;
   (e: 'link-document'): void;
 }>();
 
@@ -832,6 +937,26 @@ const canChangeBlock = ref(true);
 const approvers = ref('[]');
 const approvalSentSource = ref('[]');
 const canEditApprovers = ref(false);
+const showApprove = ref(true);
+const signers = ref('[]');
+const canEditSigners = ref(false);
+const canSign = ref(false);
+type SignCertificateRow = {
+  thumbprint: string;
+  name: string;
+  validFrom: string;
+  validTo: string;
+};
+const signOpen = ref(false);
+const signChecked = ref(false);
+const signHasPlugin = ref(false);
+const signBusy = ref(false);
+const signPdf = ref('');
+const signCertificates = ref<SignCertificateRow[]>([]);
+const selectedThumbprint = ref('');
+const selectedCertificate = computed(() => (
+  signCertificates.value.find(row => row.thumbprint === selectedThumbprint.value) || null
+));
 const canCancelApproval = ref(false);
 type ApprovalStatusRow = {
   id: number;
@@ -1275,7 +1400,17 @@ const openLinkMap = async () => {
   }
 };
 
+const closeSign = () => {
+  signOpen.value = false;
+  signChecked.value = false;
+  signHasPlugin.value = false;
+  signPdf.value = '';
+  signCertificates.value = [];
+  selectedThumbprint.value = '';
+};
+
 const load = async () => {
+  closeSign();
   title.value = '';
   research.value = null;
   isPlan.value = false;
@@ -1311,6 +1446,10 @@ const load = async () => {
   approvers.value = '[]';
   approvalSentSource.value = '[]';
   canEditApprovers.value = false;
+  showApprove.value = true;
+  signers.value = '[]';
+  canEditSigners.value = false;
+  canSign.value = false;
   canCancelApproval.value = false;
   approvalStatuses.value = [];
   approvalComment.value = '';
@@ -1367,6 +1506,10 @@ const load = async () => {
       approvalSentSource.value = approvers.value;
       canEditApprovers.value = Boolean(result.canEditApprovers);
       canCancelApproval.value = Boolean(result.canCancelApproval);
+      showApprove.value = result.showApprove !== false;
+      signers.value = JSON.stringify(result.signers || []);
+      canEditSigners.value = Boolean(result.canEditSigners);
+      canSign.value = Boolean(result.canSign);
       approvalStatuses.value = result.approvalStatuses || [];
       whoConfirmed.value = result.whoConfirmed || '';
       parentDocument.value = linkRow(result.parentDocument);
@@ -1669,6 +1812,120 @@ const cancelApproval = async (row: ApprovalStatusRow) => {
     emit('approved');
   } else {
     root.$emit('msg', 'error', result?.message || 'Не удалось отменить согласование');
+  }
+};
+
+const onSigners = async (value: string) => {
+  if (!props.documentId || !canEditSigners.value || value === signers.value) {
+    return;
+  }
+  const previous = signers.value;
+  signers.value = value;
+  let members = [];
+  try {
+    members = JSON.parse(value);
+  } catch {
+    members = [];
+  }
+  const result = await api('document-manager/documents/signers', { id: props.documentId, members });
+  if (result?.ok) {
+    signers.value = JSON.stringify(result.signers || members);
+    canSign.value = Boolean(result.canSign);
+    root.$emit('msg', 'ok', 'Список на подпись сохранён');
+  } else {
+    signers.value = previous;
+    root.$emit('msg', 'error', result?.message || 'Не удалось сохранить список на подпись');
+  }
+};
+
+const loadSignCertificates = async () => {
+  signChecked.value = false;
+  signHasPlugin.value = false;
+  signCertificates.value = [];
+  selectedThumbprint.value = '';
+  try {
+    await getSystemInfo();
+    signHasPlugin.value = true;
+    const certificates = await getUserCertificates();
+    signCertificates.value = certificates.map(certificate => ({
+      thumbprint: certificate.thumbprint,
+      name: convertSubjectNameToTitle(null, certificate.subjectName) || certificate.thumbprint,
+      validFrom: moment(certificate.validFrom).format('DD.MM.YYYY HH:mm'),
+      validTo: moment(certificate.validTo).format('DD.MM.YYYY HH:mm'),
+    }));
+    if (signCertificates.value.length) {
+      selectedThumbprint.value = signCertificates.value[0].thumbprint;
+    }
+  } catch (error) {
+    if (error) {
+      signHasPlugin.value = false;
+    }
+  } finally {
+    signChecked.value = true;
+  }
+};
+
+const openSign = async () => {
+  if (!props.documentId || !canSign.value || signBusy.value) {
+    return;
+  }
+  signBusy.value = true;
+  try {
+    const result = await api('document-manager/documents/sign-file', { id: props.documentId });
+    if (!result?.ok || !result.pdf) {
+      root.$emit('msg', 'error', result?.message || 'Не удалось подготовить документ');
+      return;
+    }
+    signPdf.value = result.pdf;
+    signOpen.value = true;
+    await loadSignCertificates();
+  } finally {
+    signBusy.value = false;
+  }
+};
+
+const confirmSign = async () => {
+  if (!props.documentId || !signPdf.value || !selectedThumbprint.value || signBusy.value) {
+    return;
+  }
+  signBusy.value = true;
+  try {
+    const binary = Uint8Array.from(atob(signPdf.value), char => char.charCodeAt(0));
+    const hashed = await createHash(binary);
+    const signature = await createDetachedSignature(selectedThumbprint.value, hashed);
+    let certificate = null;
+    try {
+      certificate = await getCertificate(selectedThumbprint.value);
+    } catch (error) {
+      if (error) {
+        certificate = null;
+      }
+    }
+    const result = await api('document-manager/documents/sign', {
+      id: props.documentId,
+      sign: signature,
+      certThumbprint: selectedThumbprint.value,
+      certDetails: certificate ? {
+        subjectName: certificate.subjectName,
+        validFrom: certificate.validFrom,
+        validTo: certificate.validTo,
+      } : null,
+    });
+    if (!result?.ok) {
+      root.$emit('msg', 'error', result?.message || 'Не удалось подписать');
+      return;
+    }
+    signers.value = JSON.stringify(result.signers || []);
+    canSign.value = false;
+    closeSign();
+    root.$emit('msg', 'ok', 'Подписано');
+    emit('signed');
+  } catch (error) {
+    if (error) {
+      root.$emit('msg', 'error', 'Не удалось подписать');
+    }
+  } finally {
+    signBusy.value = false;
   }
 };
 
@@ -2208,6 +2465,29 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
 
 .doc-approvers__sent {
   line-height: 1.3;
+}
+
+.sign-doc-btn {
+  align-self: flex-start;
+}
+
+.sign-body {
+  min-height: 120px;
+  padding: 12px;
+
+  &__cert {
+    margin-top: 8px;
+  }
+}
+
+.sign-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.status-error {
+  color: #da4453;
 }
 
 .approval-status {

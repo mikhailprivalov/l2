@@ -27,6 +27,7 @@ from document_management.models import (
     DocumentCase,
     DocumentCaseAccess,
     DocumentCaseLink,
+    DocumentJournal,
     DocumentBlockLink,
     TypeCases,
     TypeDocumentCreator,
@@ -42,6 +43,12 @@ from document_management.models import (
 @admin.register(GroupDocuments)
 class GroupDocumentsAdmin(admin.ModelAdmin):
     list_display = ("pk", "title")
+    search_fields = ("title",)
+
+
+@admin.register(DocumentJournal)
+class DocumentJournalAdmin(admin.ModelAdmin):
+    list_display = ("pk", "title", "sort_order", "shows_signed_chiefs")
     search_fields = ("title",)
 
 
@@ -86,8 +93,8 @@ class TypeDocumentCreatorInline(admin.TabularInline):
 
 @admin.register(TypeDocuments)
 class TypeDocumentsAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "code", "group_document", "place_section", "layout_template", "monitoring", "test", "is_plan")
-    raw_id_fields = ("monitoring", "test")
+    list_display = ("pk", "title", "code", "group_document", "place_section", "journal", "layout_template", "monitoring", "test", "is_plan")
+    raw_id_fields = ("monitoring", "test", "journal")
     search_fields = ("title", "code")
     list_filter = ("group_document", "place_section")
     inlines = (TypeDocumentLayoutTemplateInline, TypeDocumentCreatorInline)
