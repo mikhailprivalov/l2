@@ -66,6 +66,12 @@
             >
               {{ row.groupTitle || row.placeSectionTitle || row.typeSectionTitle || row.defaultTypeDocumentTitle }}
             </span>
+            <span
+              v-if="row.journalTitle"
+              class="object-row__sub"
+            >
+              {{ row.journalTitle }}
+            </span>
           </div>
         </div>
       </template>
@@ -88,10 +94,12 @@
         :test-title-value="selectedItem?.testTitle"
         :is-plan-value="selectedItem?.isPlan"
         :is-test-defaulta-value="selectedItem?.isTestDefaulta"
+        :show-approve-value="selectedItem?.showApprove"
         :test-default-owner-title="testDefaultOwnerTitle"
         :creators-value="selectedItem?.creators"
         :default-type-document-id-value="selectedItem?.defaultTypeDocumentId"
         :place-section-id-value="selectedItem?.placeSectionId"
+        :journal-id-value="selectedItem?.journalId"
         :columns-count-value="selectedItem?.columnsCount"
         :type-section-id-value="selectedItem?.typeSectionId"
         :access-mode-value="selectedItem?.accessMode"
@@ -99,6 +107,7 @@
         :print-template-name-value="selectedItem?.printTemplateName"
         :groups="groups"
         :places="places"
+        :journals="journals"
         :section-types="sectionTypes"
         @saved="onCatalogSaved"
         @print-template="onPrintTemplate"
@@ -191,11 +200,14 @@ interface CatalogItem {
   testTitle?: string;
   isPlan?: boolean;
   isTestDefaulta?: boolean;
+  showApprove?: boolean;
   creators?: { id: number; fio: string; department?: string }[];
   defaultTypeDocumentId?: number | null;
   defaultTypeDocumentTitle?: string;
   placeSectionId?: number | null;
   placeSectionTitle?: string;
+  journalId?: number | null;
+  journalTitle?: string;
   typeSectionId?: number | null;
   typeSectionTitle?: string;
   columnsCount?: number;
@@ -207,7 +219,7 @@ interface CatalogItem {
 
 const LAYOUT_TEMPLATE_DEPARTMENT = -17;
 const WORKING_NAV = [
-  'document_groups', 'document_types', 'document_templates', 'indicators',
+  'document_groups', 'document_types', 'document_journals', 'document_templates', 'indicators',
   'plans', 'tests', 'skeleton', 'addressees', 'cases', 'place_section', 'type_section',
 ];
 
@@ -219,6 +231,7 @@ const titleFilter = ref('');
 const items = ref<CatalogItem[]>([]);
 const groups = ref<CatalogItem[]>([]);
 const places = ref<CatalogItem[]>([]);
+const journals = ref<CatalogItem[]>([]);
 const sectionTypes = ref<CatalogItem[]>([]);
 const selectedId = ref<number | null>(null);
 const directionForms = ref([]);
@@ -231,6 +244,7 @@ const isWorkingSection = computed(() => WORKING_NAV.includes(selectedNavId.value
 const canAdd = computed(() => (
   selectedNavId.value === 'document_groups'
   || selectedNavId.value === 'document_types'
+  || selectedNavId.value === 'document_journals'
   || selectedNavId.value === 'document_templates'
   || selectedNavId.value === 'indicators'
   || selectedNavId.value === 'plans'
@@ -240,9 +254,12 @@ const canAdd = computed(() => (
   || selectedNavId.value === 'place_section'
   || selectedNavId.value === 'type_section'
 ));
-const catalogKind = computed<'group' | 'type' | 'case' | 'place' | 'section'>(() => {
+const catalogKind = computed<'group' | 'type' | 'journal' | 'case' | 'place' | 'section'>(() => {
   if (selectedNavId.value === 'document_groups') {
     return 'group';
+  }
+  if (selectedNavId.value === 'document_journals') {
+    return 'journal';
   }
   if (selectedNavId.value === 'cases') {
     return 'case';
@@ -281,6 +298,7 @@ const showCatalogEditor = computed(
   () => (
     selectedNavId.value === 'document_groups'
     || selectedNavId.value === 'document_types'
+    || selectedNavId.value === 'document_journals'
     || selectedNavId.value === 'cases'
     || selectedNavId.value === 'place_section'
     || selectedNavId.value === 'type_section'
@@ -336,6 +354,11 @@ const loadPlaces = async () => {
   places.value = result || [];
 };
 
+const loadJournals = async () => {
+  const { result } = await api('document-manager/journals/list');
+  journals.value = result || [];
+};
+
 const loadSectionTypes = async () => {
   const { result } = await api('document-manager/section-types/list');
   sectionTypes.value = result || [];
@@ -383,6 +406,10 @@ const loadItems = async () => {
       const { result } = await api('document-manager/section-types/list');
       items.value = result || [];
       sectionTypes.value = result || [];
+    } else if (selectedNavId.value === 'document_journals') {
+      const { result } = await api('document-manager/journals/list');
+      items.value = result || [];
+      journals.value = result || [];
     } else if (selectedNavId.value === 'cases') {
       await loadPlaces();
       const { result } = await api('document-manager/cases/list');
@@ -396,6 +423,7 @@ const loadItems = async () => {
     } else {
       await loadGroups();
       await loadPlaces();
+      await loadJournals();
       const { result } = await api('document-manager/types/list');
       items.value = result || [];
     }

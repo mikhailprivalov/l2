@@ -126,6 +126,7 @@ l2/
 - `frontend_watch.sh` - frontend watch mode
 - `frontend_hmr.sh` - Hot Module Replacement
 - `manage.py` - Django management
+- `yarn --cwd l2-frontend serve` writes the dev build to `assets/webpack_bundles` (`devServer.devMiddleware.writeToDisk`). Django without `FRONTEND_HMR` loads those files through `manifest.json`. A serve process started before that setting keeps new hashes only in memory on port 8081, so the page script URLs 404 until the files are copied to disk or serve is started again.
 
 ### Versioning
 - Git version control

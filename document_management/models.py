@@ -271,7 +271,7 @@ class AddresseeGroup(models.Model):
         return default.pk if default else None
 
     @classmethod
-    def get_employees(cls, group_id, hospital_id, query="", page=1, page_size=100, allow_all=False):
+    def get_employees(cls, group_id, hospital_id, query="", page=1, page_size=100, allow_all=False, signers_only=False):
         try:
             group_id = int(group_id)
         except (TypeError, ValueError):
@@ -286,6 +286,8 @@ class AddresseeGroup(models.Model):
             dismissed=False,
             hospital_id=hospital_pk,
         ).select_related("user", "podrazdeleniye")
+        if signers_only:
+            doctors = doctors.filter(can_sign_documents=True)
         if group_id and group_id > 0:
             doctors = doctors.filter(addressee_group_members__group_id=group_id)
         query = (query or "").strip()
@@ -758,6 +760,16 @@ class TypeDocuments(models.Model):
         help_text="Подраздел/место в пикере ДОУ",
         on_delete=models.SET_NULL,
     )
+    journal = models.ForeignKey(
+        "DocumentJournal",
+        related_name="type_documents",
+        default=None,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Журнал куда отнести",
+        on_delete=models.SET_NULL,
+    )
     code = models.CharField(max_length=55, blank=True, null=True)
     layout_template = models.ForeignKey(
         "directory.Researches",
@@ -790,6 +802,8 @@ class TypeDocuments(models.Model):
     )
     is_plan = models.BooleanField(default=False, blank=True, help_text="План")
     is_test_defaulta = models.BooleanField(default=False, blank=True, help_text="Это тест по умолчанию")
+    approve_label = models.CharField(max_length=64, blank=True, default="Согласовать", help_text="Подпись согласования на форме документа")
+    show_approve = models.BooleanField(default=True, blank=True, help_text="Показывать согласование на форме документа")
     print_docx = models.FileField(upload_to=get_print_docx_path, default=None, null=True, blank=True, help_text="Шаблон печати docx")
 
     class Meta:
@@ -826,6 +840,17 @@ class TypeDocuments(models.Model):
             rows = self.creators.select_related("doctor__podrazdeleniye").order_by("doctor__family", "doctor__name", "pk")
         return [AddresseeGroup._employee_json(row.doctor) for row in rows if row.doctor_id]
 
+    def approve_title(self):
+        text = (self.approve_label or "").strip()
+        return text or "Согласовать"
+
+    @staticmethod
+    def normalize_approve_label(value):
+        text = (value or "").strip()
+        if len(text) > 64:
+            return None
+        return text or "Согласовать"
+
     def can_create(self, doctor):
         if not doctor:
             return False
@@ -846,6 +871,8 @@ class TypeDocuments(models.Model):
             "groupTitle": self.group_document.title if self.group_document else "",
             "placeSectionId": self.place_section_id,
             "placeSectionTitle": self.place_section.title if self.place_section else "",
+            "journalId": self.journal_id,
+            "journalTitle": self.journal.title if self.journal_id and self.journal else "",
             "layoutTemplateId": template_ids[0] if template_ids else self.layout_template_id,
             "layoutTemplateIds": template_ids,
             "layoutTemplates": [{"id": row.pk, "label": row.title} for row in templates],
@@ -855,6 +882,8 @@ class TypeDocuments(models.Model):
             "testTitle": self.test.title if self.test_id and self.test else "",
             "isPlan": bool(self.is_plan),
             "isTestDefaulta": bool(self.is_test_defaulta),
+            "approveLabel": self.approve_title(),
+            "showApprove": bool(self.show_approve),
             "creators": self.get_creators(),
             "hasPrintTemplate": bool(self.print_docx),
             "printTemplateName": os.path.basename(self.print_docx.name) if self.print_docx else "",
@@ -880,7 +909,7 @@ class TypeDocuments(models.Model):
     @staticmethod
     def get_list(group_id=None, doctor=None, available_only=False):
         qs = (
-            TypeDocuments.objects.select_related("group_document", "layout_template", "monitoring", "test", "place_section")
+            TypeDocuments.objects.select_related("group_document", "layout_template", "monitoring", "test", "place_section", "journal")
             .prefetch_related(
                 models.Prefetch(
                     "layout_template_links",
@@ -1030,16 +1059,22 @@ class TypeDocuments(models.Model):
         layout_template_ids=None,
         creator_ids=None,
         place_section_id=None,
+        journal_id=None,
         monitoring_id=None,
         test_id=None,
         is_plan=False,
         is_test_defaulta=False,
+        approve_label=None,
+        show_approve=True,
     ):
         from directory.models import Researches
 
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
+        approve_label = TypeDocuments.normalize_approve_label(approve_label)
+        if approve_label is None:
+            return {"ok": False, "message": "Подпись согласования длиннее 64 символов"}
         test_default_flag = bool(is_test_defaulta)
         if test_default_flag:
             group_id = None
@@ -1048,6 +1083,7 @@ class TypeDocuments(models.Model):
             layout_template_ids = []
             creator_ids = []
             place_section_id = None
+            journal_id = None
             monitoring_id = None
             test_id = None
             is_plan = False
@@ -1061,6 +1097,11 @@ class TypeDocuments(models.Model):
             place = PlaceSection.objects.filter(pk=place_section_id).first()
             if not place:
                 return {"ok": False, "message": "Подраздел/место не найден"}
+        journal = None
+        if journal_id not in (None, "", -1, "-1"):
+            journal = DocumentJournal.objects.filter(pk=journal_id).first()
+            if not journal:
+                return {"ok": False, "message": "Журнал не найден"}
         template_ids = TypeDocuments._parse_template_ids(layout_template_ids, layout_template_id)
         templates = []
         for template_id in template_ids:
@@ -1092,6 +1133,7 @@ class TypeDocuments(models.Model):
                 title,
                 group,
                 place,
+                journal,
                 code,
                 first_template,
                 templates,
@@ -1100,6 +1142,8 @@ class TypeDocuments(models.Model):
                 plan_flag,
                 test_default_flag,
                 creator_ids,
+                approve_label,
+                bool(show_approve),
             )
         except IntegrityError:
             if not test_default_flag:
@@ -1121,6 +1165,7 @@ class TypeDocuments(models.Model):
         title,
         group,
         place,
+        journal,
         code,
         first_template,
         templates,
@@ -1129,6 +1174,8 @@ class TypeDocuments(models.Model):
         plan_flag,
         test_default_flag,
         creator_ids,
+        approve_label="Согласовать",
+        show_approve=True,
     ):
         with transaction.atomic():
             if test_default_flag:
@@ -1142,12 +1189,15 @@ class TypeDocuments(models.Model):
                     title=title,
                     group_document=group,
                     place_section=place,
+                    journal=journal,
                     code=code or "",
                     layout_template=first_template,
                     monitoring=monitoring,
                     test=test,
                     is_plan=plan_flag,
                     is_test_defaulta=test_default_flag,
+                    approve_label=approve_label,
+                    show_approve=show_approve,
                 )
             else:
                 obj = TypeDocuments.objects.filter(pk=pk).first()
@@ -1156,12 +1206,15 @@ class TypeDocuments(models.Model):
                 obj.title = title
                 obj.group_document = group
                 obj.place_section = place
+                obj.journal = journal
                 obj.code = code or ""
                 obj.layout_template = first_template
                 obj.monitoring = monitoring
                 obj.test = test
                 obj.is_plan = plan_flag
                 obj.is_test_defaulta = test_default_flag
+                obj.approve_label = approve_label
+                obj.show_approve = show_approve
             obj.save()
             TypeDocumentLayoutTemplate.objects.filter(type_document=obj).delete()
             TypeDocumentLayoutTemplate.objects.bulk_create([TypeDocumentLayoutTemplate(type_document=obj, layout_template=row, order=index) for index, row in enumerate(templates)])
@@ -4037,6 +4090,54 @@ class DocumentBlockLink(models.Model):
         return f"{self.document_id} {self.block_id}"
 
 
+class DocumentJournal(models.Model):
+    title = models.CharField(max_length=128, help_text="Название журнала")
+    sort_order = models.PositiveIntegerField(default=0, help_text="Порядок на странице")
+    shows_signed_chiefs = models.BooleanField(
+        default=False,
+        blank=True,
+        help_text="Показывать подписанные документы, где адресат — руководитель",
+    )
+
+    class Meta:
+        verbose_name = "Журнал документов"
+        verbose_name_plural = "Журналы документов"
+        ordering = ["sort_order", "pk"]
+
+    def __str__(self):
+        return self.title
+
+    def json(self):
+        return {"id": self.pk, "title": self.title, "showsSignedChiefs": bool(self.shows_signed_chiefs)}
+
+    @classmethod
+    def list_json(cls):
+        return [row.json() for row in cls.objects.order_by("sort_order", "pk")]
+
+    @staticmethod
+    def save_journal(pk, title):
+        title = (title or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        if len(title) > 128:
+            return {"ok": False, "message": "Название длиннее 128 символов"}
+        same_title = DocumentJournal.objects.filter(title=title)
+        if pk not in (None, -1, "-1"):
+            same_title = same_title.exclude(pk=pk)
+        if same_title.exists():
+            return {"ok": False, "message": "Журнал с таким названием уже есть"}
+        if pk in (None, -1, "-1"):
+            last = DocumentJournal.objects.order_by("-sort_order", "-pk").first()
+            obj = DocumentJournal(title=title, sort_order=(last.sort_order + 1) if last else 1)
+        else:
+            obj = DocumentJournal.objects.filter(pk=pk).first()
+            if not obj:
+                return {"ok": False, "message": "Журнал не найден"}
+            obj.title = title
+        obj.save()
+        return {"ok": True, "id": obj.pk, "title": obj.title}
+
+
 class Documents(models.Model):
     type_document = models.ForeignKey(TypeDocuments, db_index=True, default=None, blank=True, null=True, help_text="Тип документа", on_delete=models.SET_NULL)
     schema = models.ForeignKey(
@@ -4158,7 +4259,9 @@ class Documents(models.Model):
     LOG_APPROVE = 260007
     LOG_REJECT = 260008
     LOG_APPROVE_CANCEL = 260009
-    LOG_TYPES = (LOG_CREATE, LOG_SAVE, LOG_CONFIRM, LOG_RESET, LOG_HIDE, LOG_SHOW, LOG_APPROVERS, LOG_APPROVE, LOG_REJECT, LOG_APPROVE_CANCEL)
+    LOG_SIGNERS = 260036
+    LOG_SIGN = 260037
+    LOG_TYPES = (LOG_CREATE, LOG_SAVE, LOG_CONFIRM, LOG_RESET, LOG_HIDE, LOG_SHOW, LOG_APPROVERS, LOG_APPROVE, LOG_REJECT, LOG_APPROVE_CANCEL, LOG_SIGNERS, LOG_SIGN)
 
     class Meta:
         verbose_name = "Документ-экземпляр"
@@ -4456,7 +4559,7 @@ class Documents(models.Model):
             return True
         cases = Documents.linked_cases(obj)
         if cases and not any(case.can_access(who) for case in cases):
-            if not DocumentEmployeeApprove.is_assigned(obj, who):
+            if not DocumentEmployeeApprove.is_assigned(obj, who) and not DocumentEmployeeSign.is_assigned(obj, who):
                 return False
         if not obj.is_hidden:
             return True
@@ -4547,7 +4650,7 @@ class Documents(models.Model):
         return start, end, None
 
     @staticmethod
-    def search(query, by_number=False, by_text=False, by_case=False, who=None, limit=50, date_from=None, date_to=None):
+    def search(query, by_number=False, by_text=False, by_case=False, who=None, limit=50, date_from=None, date_to=None, journal_id=None):
         query = (query or "").strip()
         if not query:
             return {"ok": False, "message": "Введите запрос"}
@@ -4642,6 +4745,9 @@ class Documents(models.Model):
             return {"ok": False, "message": "Документ не найден"}
         visible = Documents.objects.select_related("type_document", "document_case").filter(pk__in=found_ids[:limit])
         docs = [doc for doc in visible if Documents.can_see_document(doc, who)]
+        journal_pk = Documents.journal_filter_id(journal_id)
+        if journal_pk:
+            docs = [doc for doc in docs if doc.type_document_id and doc.type_document.journal_id == journal_pk]
         order = {pk: index for index, pk in enumerate(found_ids)}
         docs.sort(key=lambda doc: order.get(doc.pk, 0))
         if not docs:
@@ -4972,7 +5078,71 @@ class Documents(models.Model):
         return [{key: value for key, value in item.items() if key != "key"} for item in grouped]
 
     @staticmethod
-    def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False):
+    def chief_signed_document_ids():
+        chief_ids = set(DoctorProfile.objects.filter(is_chief=True).values_list("pk", flat=True))
+        if not chief_ids:
+            return set()
+        signed_ids = set(DocumentEmployeeSign.objects.filter(signed_at__isnull=False, document__is_hidden=False).values_list("document_id", flat=True).distinct())
+        if not signed_ids:
+            return set()
+        from directions.models import ParaclinicResult
+
+        found = set()
+        rows = ParaclinicResult.objects.filter(field_type=ADDRESSEE_FIELD_TYPE, issledovaniye__document_id__in=signed_ids).values_list("issledovaniye__document_id", "value")
+        for document_id, value in rows.iterator():
+            if document_id in found:
+                continue
+            if chief_ids.intersection(DocumentReview.parse_addressee_ids(value)):
+                found.add(document_id)
+        return found
+
+    @staticmethod
+    def chief_signed_count():
+        return len(Documents.chief_signed_document_ids())
+
+    @staticmethod
+    def chief_signed_rows():
+        document_ids = Documents.chief_signed_document_ids()
+        if not document_ids:
+            return []
+        documents = Documents.objects.filter(pk__in=document_ids).select_related("type_document").order_by("-pk")
+        signs = (
+            DocumentEmployeeSign.objects.filter(document_id__in=document_ids, signed_at__isnull=False)
+            .select_related("employee", "employee__podrazdeleniye")
+            .order_by("document_id", "-signed_at", "-pk")
+        )
+        latest = {}
+        for row in signs:
+            if row.document_id not in latest:
+                latest[row.document_id] = row
+        result = []
+        for document in documents:
+            sign = latest.get(document.pk)
+            employee = sign.employee if sign and sign.employee_id else None
+            department = employee.podrazdeleniye.title if employee and employee.podrazdeleniye_id and employee.podrazdeleniye else ""
+            result.append(
+                {
+                    "id": document.pk,
+                    "number": document.number_registration or str(document.pk),
+                    "typeTitle": document.type_document.title if document.type_document_id and document.type_document else "",
+                    "department": department,
+                    "fio": employee.get_full_fio() if employee else "",
+                }
+            )
+        return result
+
+    @staticmethod
+    def journal_filter_id(journal_id):
+        if journal_id in (None, "", -1, "-1", 0, "0"):
+            return None
+        try:
+            value = int(journal_id)
+        except (TypeError, ValueError):
+            return None
+        return value if value > 0 else None
+
+    @staticmethod
+    def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False, journal_id=None):
         qs = (
             Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case")
             .prefetch_related(models.Prefetch("case_links", queryset=DocumentCaseLink.objects.select_related("document_case").order_by("pk")))
@@ -4986,6 +5156,14 @@ class Documents(models.Model):
                 documentemployeeapprove__employee_id=who.pk,
                 documentemployeeapprove__is_cancel=False,
                 documentemployeeapprove__time_approve__isnull=True,
+            )
+        elif role_filter == "onSignature":
+            if not who:
+                return []
+            qs = qs.filter(
+                is_hidden=False,
+                sign_rows__employee_id=who.pk,
+                sign_rows__signed_at__isnull=True,
             )
         else:
             qs = qs.filter(Documents.case_access_q(who))
@@ -5017,6 +5195,9 @@ class Documents(models.Model):
                 qs = qs.filter(is_hidden=True)
             else:
                 qs = qs.filter(is_hidden=False)
+        journal_pk = Documents.journal_filter_id(journal_id)
+        if journal_pk:
+            qs = qs.filter(type_document__journal_id=journal_pk)
         docs = list(qs.distinct())
         if not docs:
             return []
@@ -5529,6 +5710,10 @@ class Documents(models.Model):
                     "documentemployeeapprove_set",
                     queryset=DocumentEmployeeApprove.objects.filter(is_cancel=False, employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye", "who_create"),
                 ),
+                Prefetch(
+                    "sign_rows",
+                    queryset=DocumentEmployeeSign.objects.filter(employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye", "who_create"),
+                ),
             )
             .filter(pk=pk)
             .first()
@@ -5580,6 +5765,11 @@ class Documents(models.Model):
         payload["approvalStatuses"] = DocumentEmployeeApprove.statuses_json(obj)
         payload["canEditApprovers"] = DocumentEmployeeApprove.can_edit(obj, who)
         payload["canCancelApproval"] = DocumentEmployeeApprove.can_cancel(who)
+        payload["approveLabel"] = "Согласовать"
+        payload["showApprove"] = bool(obj.type_document.show_approve) if obj.type_document_id and obj.type_document else True
+        payload["signers"] = DocumentEmployeeSign.signers_json(obj)
+        payload["canEditSigners"] = DocumentEmployeeSign.can_edit(obj, who)
+        payload["canSign"] = DocumentEmployeeSign.can_sign(obj, who)
         payload["isFavorite"] = record_favorite_status(who, obj)
         payload["hasPrintTemplate"] = bool(obj.type_document_id and obj.type_document.print_docx)
         parent_rows = Documents.link_rows([obj.parent_document] if obj.parent_document_id else [], who)
@@ -6385,6 +6575,182 @@ class DocumentEmployeeApprove(models.Model):
         return {"ok": True, "approvers": cls.approvers_json(document), "approvalStatuses": cls.statuses_json(document)}
 
 
+class DocumentEmployeeSign(models.Model):
+    document = models.ForeignKey(Documents, related_name="sign_rows", db_index=True, on_delete=models.CASCADE)
+    employee = models.ForeignKey(DoctorProfile, related_name="document_signs", db_index=True, default=None, blank=True, null=True, help_text="Подписант", on_delete=models.SET_NULL)
+    who_create = models.ForeignKey(
+        DoctorProfile, related_name="document_signs_created", db_index=True, default=None, blank=True, null=True, help_text="Кто указал на подпись", on_delete=models.SET_NULL
+    )
+    created_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Когда указан на подпись")
+    signed_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Когда подписал")
+    sign_value = models.TextField(blank=True, default="", help_text="Отсоединённая подпись PDF")
+    sign_certificate = models.ForeignKey(
+        "directions.SignatureCertificateDetails",
+        null=True,
+        blank=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        help_text="Сертификат подписи",
+    )
+
+    class Meta:
+        verbose_name = "Подписание документа"
+        verbose_name_plural = "Подписания документов"
+
+    def __str__(self):
+        return f"{self.document} {self.employee} {self.signed_at}"
+
+    @classmethod
+    def is_assigned(cls, document, who):
+        if not document or not who:
+            return False
+        return cls.objects.filter(document=document, employee_id=who.pk).exists()
+
+    @classmethod
+    def _rows(cls, document):
+        cache = getattr(document, "_prefetched_objects_cache", None) or {}
+        prefetched = cache.get("sign_rows")
+        if prefetched is not None:
+            return [row for row in prefetched if row.employee_id]
+        return list(cls.objects.filter(document=document, employee_id__isnull=False).select_related("employee", "employee__podrazdeleniye", "who_create"))
+
+    @classmethod
+    def signers_json(cls, document):
+        from laboratory.utils import strdatetimeru
+
+        seen = set()
+        result = []
+        for row in cls._rows(document):
+            if row.employee_id in seen or not row.employee:
+                continue
+            seen.add(row.employee_id)
+            item = AddresseeGroup._employee_json(row.employee)
+            item["signedAt"] = strdatetimeru(row.signed_at) if row.signed_at else ""
+            result.append(item)
+        return result
+
+    @staticmethod
+    def can_edit(document, who):
+        return DocumentEmployeeApprove.can_edit(document, who)
+
+    @classmethod
+    def can_sign(cls, document, who):
+        if not document or not who:
+            return False
+        return any(row.employee_id == who.pk and not row.signed_at for row in cls._rows(document))
+
+    @classmethod
+    def pending_count(cls, who):
+        if not who:
+            return 0
+        return Documents.objects.filter(is_hidden=False, sign_rows__employee_id=who.pk, sign_rows__signed_at__isnull=True).distinct().count()
+
+    @classmethod
+    def set_signers(cls, document, who, members):
+        if not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if document.approval_journal_copy:
+            return {"ok": False, "message": "Документ заполняется из показателей куратора"}
+        if not cls.can_edit(document, who):
+            if Documents.document_is_confirmed(document):
+                return {"ok": False, "message": "Документ подтверждён"}
+            return {"ok": False, "message": "Нет прав"}
+        if not isinstance(members, list):
+            return {"ok": False, "message": "Некорректный список"}
+        ids = []
+        seen = set()
+        for item in members:
+            raw = item.get("id") if isinstance(item, dict) else item
+            try:
+                doctor_id = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if doctor_id > 0 and doctor_id not in seen:
+                seen.add(doctor_id)
+                ids.append(doctor_id)
+        doctors = {row.pk: row for row in DoctorProfile.objects.filter(pk__in=ids)}
+        missing = [doctor_id for doctor_id in ids if doctor_id not in doctors]
+        if missing:
+            return {"ok": False, "message": "Сотрудник не найден"}
+        from django.utils import timezone
+
+        now = timezone.now()
+        before_ids = list(dict.fromkeys(cls.objects.filter(document=document, employee_id__isnull=False).order_by("pk").values_list("employee_id", flat=True)))
+        before_set = set(before_ids)
+        added_ids = [doctor_id for doctor_id in ids if doctor_id not in before_set]
+        removed_ids = [doctor_id for doctor_id in before_ids if doctor_id not in set(ids)]
+        with transaction.atomic():
+            if ids:
+                cls.objects.filter(document=document).exclude(employee_id__in=ids).delete()
+            else:
+                cls.objects.filter(document=document).delete()
+            existing = set(cls.objects.filter(document=document, employee_id__in=ids).values_list("employee_id", flat=True)) if ids else set()
+            cls.objects.bulk_create(
+                [
+                    cls(
+                        document=document,
+                        employee_id=doctor_id,
+                        who_create=who,
+                        created_at=now,
+                    )
+                    for doctor_id in ids
+                    if doctor_id not in existing
+                ]
+            )
+        cache = getattr(document, "_prefetched_objects_cache", None)
+        if cache is not None:
+            cache.pop("sign_rows", None)
+        if added_ids or removed_ids:
+            fio_by_id = {doctor.pk: doctor.get_fio() for doctor in DoctorProfile.objects.filter(pk__in=added_ids + removed_ids)}
+            extra = {}
+            if added_ids:
+                extra["added"] = ", ".join(fio_by_id.get(doctor_id) or str(doctor_id) for doctor_id in added_ids)
+            if removed_ids:
+                extra["removed"] = ", ".join(fio_by_id.get(doctor_id) or str(doctor_id) for doctor_id in removed_ids)
+            Documents.log_action(document.pk, Documents.LOG_SIGNERS, who, extra)
+        return {"ok": True, "signers": cls.signers_json(document), "canSign": cls.can_sign(document, who)}
+
+    @classmethod
+    def sign_file(cls, document, who):
+        if not document or not who or not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if not cls.can_sign(document, who):
+            return {"ok": False, "message": "Подпись не требуется"}
+        import base64
+
+        from document_management.print_docx import render_document_pdf_bytes
+
+        pdf_bytes, pdf_error = render_document_pdf_bytes(document)
+        if pdf_error or not pdf_bytes:
+            return {"ok": False, "message": pdf_error or "Не удалось сделать PDF"}
+        return {"ok": True, "pdf": base64.b64encode(pdf_bytes).decode("ascii")}
+
+    @classmethod
+    def sign(cls, document, who, sign_value, certificate):
+        if not document or not who or not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        sign_value = str(sign_value or "").strip()
+        if not sign_value:
+            return {"ok": False, "message": "Некорректная подпись"}
+        if not certificate:
+            return {"ok": False, "message": "Некорректный сертификат"}
+        from django.utils import timezone
+
+        now = timezone.now()
+        updated = cls.objects.filter(document=document, employee=who, signed_at__isnull=True).update(
+            signed_at=now,
+            sign_value=sign_value,
+            sign_certificate=certificate,
+        )
+        if not updated:
+            return {"ok": False, "message": "Подпись не требуется"}
+        cache = getattr(document, "_prefetched_objects_cache", None)
+        if cache is not None:
+            cache.pop("sign_rows", None)
+        Documents.log_action(document.pk, Documents.LOG_SIGN, who, {"employeeFio": who.get_fio()})
+        return {"ok": True, "signers": cls.signers_json(document), "canSign": False}
+
+
 class DocumentResolution(models.Model):
     document = models.ForeignKey(Documents, db_index=True, on_delete=models.CASCADE)
     employee = models.ForeignKey(DoctorProfile, related_name="employee_resolution", db_index=True, default=None, blank=True, null=True, help_text="Исполнитель", on_delete=models.SET_NULL)
@@ -6568,7 +6934,7 @@ class DocumentRecent(models.Model):
             cls.objects.filter(pk__in=extra_ids).delete()
 
     @classmethod
-    def get_page(cls, who, page=1, page_size=None):
+    def get_page(cls, who, page=1, page_size=None, journal_id=None):
         if not who:
             return {"result": [], "page": 1, "pageSize": cls.PAGE_SIZE, "hasMore": False}
         try:
@@ -6586,6 +6952,9 @@ class DocumentRecent(models.Model):
             .order_by("-opened_at", "-pk")
             .distinct()
         )
+        journal_pk = Documents.journal_filter_id(journal_id)
+        if journal_pk:
+            qs = qs.filter(document__type_document__journal_id=journal_pk)
         offset = (page - 1) * page_size
         rows = list(qs[offset : offset + page_size + 1])
         has_more = len(rows) > page_size
@@ -6680,6 +7049,9 @@ class DocumentManagerLog(models.Model):
     PRINT_ERROR = 260033
     PICKER_FAVORITE = 260034
     TEST = 260035
+    SIGNERS = 260036
+    SIGN = 260037
+    JOURNAL = 260038
     ACTIONS = (
         (CREATE, "ДОУ: создание"),
         (SAVE, "ДОУ: сохранение"),
@@ -6717,6 +7089,9 @@ class DocumentManagerLog(models.Model):
         (PRINT_ERROR, "ДОУ: ошибка печати"),
         (PICKER_FAVORITE, "ДОУ: избранное подбора"),
         (TEST, "ДОУ: тест"),
+        (SIGNERS, "ДОУ: на подпись"),
+        (SIGN, "ДОУ: подписание"),
+        (JOURNAL, "ДОУ: журнал документа"),
     )
 
     action = models.IntegerField(choices=ACTIONS, db_index=True)

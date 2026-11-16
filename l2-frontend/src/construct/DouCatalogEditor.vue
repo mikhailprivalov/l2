@@ -102,61 +102,65 @@
         v-if="kind === 'type'"
         class="templates-block"
       >
-        <div
-          class="template-row"
-          :class="{ 'is-locked': planLocked || isTestDefaulta }"
-        >
-          <span class="input-group-addon">План</span>
-          <label class="plan-flag">
-            <input
-              v-model="isPlan"
-              type="checkbox"
-              :disabled="planLocked || isTestDefaulta"
-            >
-          </label>
+        <div class="template-row">
+          <div
+            class="row-part"
+            :class="{ 'is-locked': planLocked || isTestDefaulta }"
+          >
+            <span class="input-group-addon">План</span>
+            <label class="plan-flag">
+              <input
+                v-model="isPlan"
+                type="checkbox"
+                :disabled="planLocked || isTestDefaulta"
+              >
+            </label>
+          </div>
+          <div class="row-part">
+            <span class="input-group-addon">Это тест по умолчанию</span>
+            <label class="plan-flag">
+              <input
+                v-model="isTestDefaulta"
+                type="checkbox"
+              >
+            </label>
+          </div>
         </div>
         <div class="template-row">
-          <span class="input-group-addon">Это тест по умолчанию</span>
-          <label class="plan-flag">
-            <input
-              v-model="isTestDefaulta"
-              type="checkbox"
-            >
-          </label>
-        </div>
-        <div
-          class="template-row"
-          :class="{ 'is-locked': monitoringLocked || isTestDefaulta }"
-        >
-          <span class="input-group-addon">Ссылка на мониторинг</span>
-          <Treeselect
-            v-model="monitoringId"
-            class="treeselect-wide treeselect-34px template-select"
-            :multiple="false"
-            :disable-branch-nodes="true"
-            :options="monitoringOptions"
-            placeholder="Не выбрана"
-            :append-to-body="true"
-            :clearable="true"
-            :disabled="monitoringLocked || isTestDefaulta"
-          />
-        </div>
-        <div
-          class="template-row"
-          :class="{ 'is-locked': testLocked || isTestDefaulta }"
-        >
-          <span class="input-group-addon">Ссылка на тест</span>
-          <Treeselect
-            v-model="testId"
-            class="treeselect-wide treeselect-34px template-select"
-            :multiple="false"
-            :disable-branch-nodes="true"
-            :options="testOptions"
-            placeholder="Не выбран"
-            :append-to-body="true"
-            :clearable="true"
-            :disabled="testLocked || isTestDefaulta"
-          />
+          <div
+            class="row-part row-part--half"
+            :class="{ 'is-locked': monitoringLocked || isTestDefaulta }"
+          >
+            <span class="input-group-addon">Ссылка на мониторинг</span>
+            <Treeselect
+              v-model="monitoringId"
+              class="treeselect-wide treeselect-34px template-select"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="monitoringOptions"
+              placeholder="Не выбрана"
+              :append-to-body="true"
+              :clearable="true"
+              :disabled="monitoringLocked || isTestDefaulta"
+            />
+          </div>
+          <div
+            class="row-part row-part--half"
+            :class="{ 'is-locked': testLocked || isTestDefaulta }"
+          >
+            <span class="input-group-addon">Ссылка на тест</span>
+            <Treeselect
+              v-model="testId"
+              class="treeselect-wide treeselect-34px template-select"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="testOptions"
+              placeholder="Не выбран"
+              :append-to-body="true"
+              :clearable="true"
+              :disabled="testLocked || isTestDefaulta"
+            />
+          </div>
         </div>
         <div
           class="template-row"
@@ -258,6 +262,15 @@
           &#123;&#123;id_dolzhnost&#125;&#125;,
           &#123;&#123;id_podrazdelenie&#125;&#125;
         </div>
+        <div class="template-row">
+          <span class="input-group-addon">Согласовать</span>
+          <label class="plan-flag">
+            <input
+              v-model="showApprove"
+              type="checkbox"
+            >
+          </label>
+        </div>
         <div
           class="template-row"
           :class="{ 'is-locked': isTestDefaulta }"
@@ -293,6 +306,28 @@
           >
             <i class="glyphicon glyphicon-remove" />
           </button>
+        </div>
+        <div
+          class="template-row"
+          :class="{ 'is-locked': isTestDefaulta }"
+        >
+          <span class="input-group-addon">Журнал куда отнести</span>
+          <select
+            v-model.number="journalId"
+            class="form-control journal-select"
+            :disabled="isTestDefaulta"
+          >
+            <option :value="-1">
+              Не выбран
+            </option>
+            <option
+              v-for="journal in journals || []"
+              :key="journal.id"
+              :value="journal.id"
+            >
+              {{ journal.title }}
+            </option>
+          </select>
         </div>
       </div>
       <div
@@ -428,7 +463,7 @@ interface CreatorPerson {
 }
 
 const props = defineProps<{
-  kind: 'group' | 'type' | 'case' | 'place' | 'section';
+  kind: 'group' | 'type' | 'journal' | 'case' | 'place' | 'section';
   itemId: number;
   titleValue?: string;
   codeValue?: string;
@@ -442,10 +477,12 @@ const props = defineProps<{
   testTitleValue?: string;
   isPlanValue?: boolean;
   isTestDefaultaValue?: boolean;
+  showApproveValue?: boolean;
   testDefaultOwnerTitle?: string;
   creatorsValue?: CreatorPerson[];
   defaultTypeDocumentIdValue?: number | null;
   placeSectionIdValue?: number | null;
+  journalIdValue?: number | null;
   columnsCountValue?: number | null;
   typeSectionIdValue?: number | null;
   accessModeValue?: string | null;
@@ -453,6 +490,7 @@ const props = defineProps<{
   printTemplateNameValue?: string;
   groups?: CatalogGroup[];
   places?: CatalogGroup[];
+  journals?: CatalogGroup[];
   sectionTypes?: CatalogGroup[];
 }>();
 
@@ -478,9 +516,11 @@ const testId = ref<number | null>(null);
 const testOptions = ref<LayoutTemplateOption[]>([]);
 const isPlan = ref(false);
 const isTestDefaulta = ref(false);
+const showApprove = ref(true);
 const creators = ref<CreatorPerson[]>([]);
 const defaultTypeDocumentId = ref<number>(-1);
 const placeSectionId = ref<number>(-1);
+const journalId = ref<number>(-1);
 const typeSectionId = ref<number | null>(null);
 const columnsCount = ref<number>(10);
 const accessMode = ref<'white' | 'black'>('black');
@@ -584,6 +624,7 @@ const clearTestDefaultFields = () => {
   code.value = '';
   groupId.value = -1;
   placeSectionId.value = -1;
+  journalId.value = -1;
   isPlan.value = false;
   monitoringId.value = null;
   testId.value = null;
@@ -606,6 +647,7 @@ const fill = () => {
   ensureTestOption();
   isPlan.value = Boolean(props.isPlanValue);
   isTestDefaulta.value = Boolean(props.isTestDefaultaValue);
+  showApprove.value = props.showApproveValue !== false;
   creators.value = (props.creatorsValue || []).map(row => ({
     id: row.id,
     fio: row.fio || '',
@@ -615,6 +657,9 @@ const fill = () => {
     ? Number(props.defaultTypeDocumentIdValue)
     : -1;
   placeSectionId.value = props.placeSectionIdValue || -1;
+  journalId.value = props.journalIdValue && Number(props.journalIdValue) > 0
+    ? Number(props.journalIdValue)
+    : -1;
   typeSectionId.value = props.typeSectionIdValue || null;
   const n = Number(props.columnsCountValue);
   columnsCount.value = Number.isFinite(n) && n >= 1 ? n : 10;
@@ -645,9 +690,11 @@ watch(
     props.testTitleValue,
     props.isPlanValue,
     props.isTestDefaultaValue,
+    props.showApproveValue,
     props.creatorsValue,
     props.defaultTypeDocumentIdValue,
     props.placeSectionIdValue,
+    props.journalIdValue,
     props.typeSectionIdValue,
     props.columnsCountValue,
     props.accessModeValue,
@@ -912,6 +959,8 @@ const save = async () => {
   let endpoint = 'document-manager/types/update';
   if (props.kind === 'group') {
     endpoint = 'document-manager/groups/update';
+  } else if (props.kind === 'journal') {
+    endpoint = 'document-manager/journals/update';
   } else if (props.kind === 'place') {
     endpoint = 'document-manager/places/update';
   } else if (props.kind === 'section') {
@@ -948,12 +997,14 @@ const save = async () => {
         code: code.value,
         groupId: groupId.value,
         placeSectionId: placeSectionId.value,
+        journalId: journalId.value,
         layoutTemplateId: selectedTemplates.value[0]?.id ?? null,
         layoutTemplateIds: selectedTemplates.value.map(row => row.id),
         monitoringId: monitoringId.value,
         testId: testId.value,
         isPlan: isPlan.value,
         isTestDefaulta: isTestDefaulta.value,
+        showApprove: showApprove.value,
         creatorIds: creators.value.map(row => row.id),
       };
     }
@@ -1116,6 +1167,39 @@ const save = async () => {
   background: #fff;
   border: 1px solid #ccc;
   border-left: 0;
+}
+
+.row-part {
+  display: flex;
+  align-items: stretch;
+  flex: 0 0 auto;
+  min-width: 0;
+
+  &.is-locked {
+    opacity: 0.55;
+  }
+}
+
+.row-part--half {
+  flex: 1 1 50%;
+  max-width: 50%;
+}
+
+.journal-select {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  line-height: 22px;
+  font-size: 14px;
+  color: #434A54;
+  background: #fff;
+  border-top: none;
+  border-left: 1px solid #96a0ad;
+  border-right: none;
+  border-bottom: 1px solid #96a0ad;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .template-row {

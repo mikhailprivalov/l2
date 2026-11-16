@@ -728,7 +728,7 @@ const STATS_CATEGORIES = {
   },
   common: {
     title: 'Общая статистика',
-    groups: ['Статистика-вакцинация', 'Статистика-онкоподозрение', 'Статистика-реестры'],
+    groups: ['Статистика-вакцинация', 'Статистика-онкоподозрение', 'Статистика-реестры', 'Просмотр статистики'],
     reports: {
       vac: {
         groups: ['Статистика-вакцинация'],
@@ -753,6 +753,13 @@ const STATS_CATEGORIES = {
         title: 'Реестр по врачам',
         params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.DOCTORS],
         url: '/statistic/xls?type=reestr-doctor&date-start=<date-start>&date-end=<date-end>&doctor=<doctor>',
+      },
+      userLogin: {
+        groups: ['Статистика-вакцинация', 'Статистика-онкоподозрение', 'Статистика-реестры', 'Просмотр статистики'],
+        title: 'Вход в систему',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        unlimitPeriod: true,
+        url: '/statistic/xls?type=user-login&date-start=<date-start>&date-end=<date-end>',
       },
     },
   },

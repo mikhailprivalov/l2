@@ -131,6 +131,8 @@ class DoctorProfile(models.Model):
     dismissed = models.BooleanField(default=False, help_text="Уволен")
     is_structure_data_in_protocol = models.BooleanField(default=False, help_text="Только структурированные текст в протоколе")
     is_curator = models.BooleanField(default=False, help_text="Куратор показателей в мониторинге")
+    can_sign_documents = models.BooleanField(default=False, blank=True, help_text="Может подписывать документы")
+    is_chief = models.BooleanField(default=False, blank=True, help_text="Руководитель")
     service_code_ambulatory = models.CharField(max_length=255, default="", blank=True)
     uuid = models.CharField(max_length=64, blank=True, default='', db_index=True, help_text='Внешний идентификатор оператора для интеграций')
 

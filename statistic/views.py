@@ -58,6 +58,7 @@ from .report import (
     reestr_hospital,
     hospital_discharge_epicrisis,
     epid_numbers,
+    user_login,
 )
 from .sql_func import (
     attached_female_on_month,
@@ -170,7 +171,7 @@ def statistic_xls(request):
     if hasattr(request.user, 'unlimited_access'):
         unlimited_access = True
 
-    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate", "statistics-epid-numbers"] and not unlimited_access:
+    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate", "statistics-epid-numbers", "user-login"] and not unlimited_access:
         for i in UNLIMIT_PERIOD_STATISTIC_GROUP:
             if i not in [str(x) for x in request.user.groups.all()]:
                 pk_research = request_data.get("research")
@@ -745,6 +746,8 @@ def statistic_xls(request):
         return swab_covid.swab_covid(request_data, response, tr, COVID_QUESTION_ID)
     elif tp == "cert-not-workt":
         return cert_notwork.cert_notwork(request_data, response, tr, COVID_QUESTION_ID)
+    elif tp == "user-login":
+        return user_login.user_login_xls(request_data, response, tr)
 
     elif tp == "statistics-onco":
         d_s = request_data.get("date-start")
