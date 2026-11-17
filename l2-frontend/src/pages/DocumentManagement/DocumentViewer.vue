@@ -25,7 +25,14 @@
           >
             <i class="fa fa-star" />
           </button>
-          <span class="research-title-text">{{ title || '' }}</span>
+          <a
+            v-if="documentId"
+            class="a-under doc-number"
+            :href="caseDocumentHref(documentId)"
+            target="_blank"
+            rel="noopener"
+          >{{ documentId }}</a>
+          <span class="research-title-text">{{ displayTitle }}</span>
           <span
             v-if="anyApproverRejected"
             class="doc-agreed doc-agreed--no"
@@ -476,7 +483,14 @@
           <i class="fa-solid fa-diagram-project" />
         </button>
         <div class="res-title">
-          {{ title }}:
+          <a
+            v-if="documentId"
+            class="a-under doc-number"
+            :href="caseDocumentHref(documentId)"
+            target="_blank"
+            rel="noopener"
+          >{{ documentId }}</a>
+          {{ displayTitle }}:
         </div>
         <a
           v-if="hasPrintTemplate && documentId"
@@ -891,6 +905,18 @@ const root = getCurrentInstance().proxy.$root;
 
 const contentEl = ref<HTMLElement | null>(null);
 const title = ref('');
+const displayTitle = computed(() => {
+  const text = (title.value || '').trim();
+  const id = Number(props.documentId);
+  if (!Number.isFinite(id) || id < 1) {
+    return text;
+  }
+  const suffix = `№${id}`;
+  if (text.endsWith(suffix)) {
+    return text.slice(0, -suffix.length).trim();
+  }
+  return text;
+});
 const research = ref(null);
 const isPlan = ref(false);
 const testId = ref<number | null>(null);
@@ -2203,6 +2229,11 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.doc-number {
+  flex: 0 0 auto;
+  margin-right: 6px;
 }
 
 .doc-agreed {

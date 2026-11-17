@@ -29,6 +29,7 @@ from document_management.models import (  # noqa: I001
     DouTestAttempt,
     DouIndicator,
     Plans,
+    DocumentPlanPeople,
     ControlPlan,
     TypeCases,
     TypeDocuments,
@@ -665,6 +666,17 @@ def plans_preview(request):
             document = None
     addressees = data.get("addressees") if "addressees" in data else None
     return JsonResponse({"ok": True, "result": Plans.preview_for(ids, doctor, document, addressees=addressees)})
+
+
+@login_required
+@group_required("Конструктор: ДОУ", "ДОУ: просмотр документов")
+def plans_people(request):
+    data = _request_data(request)
+    doctor = getattr(request.user, "doctorprofile", None)
+    result = DocumentPlanPeople.save_for(data, doctor)
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
 
 
 @login_required

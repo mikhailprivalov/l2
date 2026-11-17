@@ -2307,6 +2307,7 @@ class Plans(models.Model):
             Plans.fill_empty_curators(row, doctor)
             Plans.fill_empty_executors(row, executors)
             result.append(row)
+        DocumentPlanPeople.apply_preview(document, result)
         return result
 
     @staticmethod
@@ -6077,6 +6078,89 @@ class Documents(models.Model):
         return [{"type": f"Документ №{pk}", "events": [item[2] for item in packed]}]
 
 
+class DocumentPlanPeople(models.Model):
+    document = models.ForeignKey(Documents, related_name="plan_people", db_index=True, on_delete=models.CASCADE, help_text="Документ")
+    plan = models.ForeignKey(Plans, related_name="document_people", db_index=True, on_delete=models.CASCADE, help_text="План")
+    indicator = models.ForeignKey(DouIndicator, related_name="document_plan_people", db_index=True, on_delete=models.CASCADE, help_text="Задача")
+    executors = models.JSONField(null=True, blank=True, default=None, help_text="Исполнители, выбранные на документе")
+    curator = models.JSONField(null=True, blank=True, default=None, help_text="Кураторы, выбранные на документе")
+
+    class Meta:
+        db_table = "document_plan_people"
+        verbose_name = "Исполнители задачи документа"
+        verbose_name_plural = "Исполнители задач документа"
+        unique_together = (("document", "plan", "indicator"),)
+
+    def __str__(self):
+        return f"{self.document_id} – {self.plan_id} – {self.indicator_id}"
+
+    @staticmethod
+    def map_for(document, plan_ids):
+        if document is None or not plan_ids:
+            return {}
+        rows = DocumentPlanPeople.objects.filter(document=document, plan_id__in=plan_ids)
+        return {(row.plan_id, row.indicator_id): row for row in rows}
+
+    @staticmethod
+    def apply_preview(document, payloads):
+        found = DocumentPlanPeople.map_for(document, [row.get("id") for row in payloads or [] if row.get("id")])
+        if not found:
+            return payloads
+        for payload in payloads or []:
+            for row in Plans.iter_indicators(payload):
+                override = found.get((payload.get("id"), row.get("indicatorId")))
+                if not override:
+                    continue
+                if override.executors is not None:
+                    row["executors"] = override.executors
+                if override.curator is not None:
+                    row["curator"] = override.curator
+        return payloads
+
+    @staticmethod
+    def for_plan(document, plan):
+        rows = DocumentPlanPeople.objects.filter(document=document, plan=plan)
+        return {row.indicator_id: row for row in rows}
+
+    @staticmethod
+    def drop_stale(document, plan):
+        keep = [task.indicator_id for task in ControlPlan._iter_tasks(plan) if task.indicator_id]
+        DocumentPlanPeople.objects.filter(document=document, plan=plan).exclude(indicator_id__in=keep).delete()
+
+    @staticmethod
+    def save_for(data, who):
+        kind = data.get("kind")
+        if kind not in ("executors", "curator"):
+            return {"ok": False, "message": "Некорректные данные"}
+        try:
+            document_id = int(data.get("documentId"))
+            plan_id = int(data.get("planId"))
+            indicator_id = int(data.get("indicatorId"))
+        except (TypeError, ValueError):
+            return {"ok": False, "message": "Некорректные данные"}
+        document = Documents.objects.filter(pk=document_id).first()
+        if not document or not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if document.approval_journal_copy:
+            return {"ok": False, "message": "Документ только для чтения"}
+        if document.time_confirm:
+            return {"ok": False, "message": "Документ подтверждён"}
+        plan = Plans.objects.filter(pk=plan_id).first()
+        on_document = plan_id in Plans.ids_on_document(document) or document.plan_id == plan_id
+        if not plan or (plan_id not in Plans.allowed_ids(who) and not on_document):
+            return {"ok": False, "message": "План недоступен"}
+        if not PlanIndicator.objects.filter(plan_id=plan_id, indicator_id=indicator_id).exists():
+            return {"ok": False, "message": "Задача не найдена"}
+        people = PlanIndicator.clean_executors(data.get("people"))
+        row, _created = DocumentPlanPeople.objects.get_or_create(document=document, plan=plan, indicator_id=indicator_id)
+        if kind == "executors":
+            row.executors = people
+        else:
+            row.curator = people
+        row.save(update_fields=["executors", "curator"])
+        return {"ok": True, "people": people}
+
+
 class ControlPlan(models.Model):
     document = models.ForeignKey(
         Documents,
@@ -6152,7 +6236,9 @@ class ControlPlan(models.Model):
         ControlPlan.objects.filter(document=document).delete()
         plan_ids = ControlPlan.plan_ids_for_document(document)
         if not plan_ids:
+            DocumentPlanPeople.objects.filter(document=document).delete()
             return
+        DocumentPlanPeople.objects.filter(document=document).exclude(plan_id__in=plan_ids).delete()
         plans = Plans.objects.filter(pk__in=plan_ids).prefetch_related(
             Prefetch(
                 "indicator_groups",
@@ -6170,7 +6256,9 @@ class ControlPlan(models.Model):
             plan = by_id.get(plan_id)
             if not plan:
                 continue
-            prepared = ControlPlan._prepared_tasks(plan, addressees, curators_fallback)
+            DocumentPlanPeople.drop_stale(document, plan)
+            overrides = DocumentPlanPeople.for_plan(document, plan)
+            prepared = ControlPlan._prepared_tasks(plan, addressees, curators_fallback, overrides)
             position = ControlPlan._create_prepared(document, plan, prepared, position)
 
     @staticmethod
@@ -6182,14 +6270,22 @@ class ControlPlan(models.Model):
         return tasks
 
     @staticmethod
-    def _prepared_tasks(plan, addressees, curators_fallback):
+    def _prepared_tasks(plan, addressees, curators_fallback, overrides=None):
         prepared = []
         seen = set()
+        overrides = overrides or {}
         for task in ControlPlan._iter_tasks(plan):
             if not task.indicator_id or task.indicator_id in seen:
                 continue
-            executors = task.executors if isinstance(task.executors, list) and task.executors else addressees
-            curators = task.curator if isinstance(task.curator, list) and task.curator else curators_fallback
+            override = overrides.get(task.indicator_id)
+            if override is not None and override.executors is not None:
+                executors = override.executors if isinstance(override.executors, list) else []
+            else:
+                executors = task.executors if isinstance(task.executors, list) and task.executors else addressees
+            if override is not None and override.curator is not None:
+                curators = override.curator if isinstance(override.curator, list) else []
+            else:
+                curators = task.curator if isinstance(task.curator, list) and task.curator else curators_fallback
             executor_ids = Plans.people_ids(executors)
             curator_ids = Plans.people_ids(curators)
             if not executor_ids:
@@ -6224,7 +6320,9 @@ class ControlPlan(models.Model):
         old_count = len(orders)
         addressees = Plans.addressees_on_document(document)
         curators_fallback = Plans.curator_from_doctor(document.who_create)
-        prepared = ControlPlan._prepared_tasks(plan, addressees, curators_fallback)
+        DocumentPlanPeople.drop_stale(document, plan)
+        overrides = DocumentPlanPeople.for_plan(document, plan)
+        prepared = ControlPlan._prepared_tasks(plan, addressees, curators_fallback, overrides)
         ControlPlan.objects.filter(document=document, plan=plan).delete()
         extra = len(prepared) - old_count
         if extra > 0:
@@ -6282,9 +6380,11 @@ class ControlPlan(models.Model):
         today = timezone.now().date()
         dates = []
         doctors = list(DoctorProfile.objects.filter(pk__in=executor_ids).only("pk", "snils", "hospital_id"))
-        links = DoctorProfileEmployeePosition.objects.filter(doctor_profile_id__in=[doctor.pk for doctor in doctors], employee_position__isnull=False).select_related(
-            "employee_position"
-        ).order_by("pk")
+        links = (
+            DoctorProfileEmployeePosition.objects.filter(doctor_profile_id__in=[doctor.pk for doctor in doctors], employee_position__isnull=False)
+            .select_related("employee_position")
+            .order_by("pk")
+        )
         by_doctor = {}
         for link in links:
             by_doctor.setdefault(link.doctor_profile_id, []).append(link.employee_position)
