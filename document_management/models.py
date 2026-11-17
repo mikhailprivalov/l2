@@ -2534,6 +2534,8 @@ class Plans(models.Model):
                 PlanIndicator.objects.create(plan=plan, group=None, **row)
             for row in cleaned_loose_tests:
                 PlanTest.objects.create(plan=plan, group=None, **row)
+            if pk not in (None, -1, "-1"):
+                ControlPlan.refresh_for_saved_plan(plan)
         return {"ok": True, "id": plan.pk, "title": plan.title}
 
 
@@ -4977,6 +4979,8 @@ class Documents(models.Model):
             )
             .order_by("order", "pk")
         )
+        stored = list(stored)
+        ControlPlan.fill_empty_employment_due_dates(stored)
         grouped = {}
         for row in stored:
             key = (row.document_id, row.plan_id)
@@ -5035,6 +5039,8 @@ class Documents(models.Model):
             )
             .order_by("-document__create_at", "-document_id", "order", "pk")
         )
+        stored = list(stored)
+        ControlPlan.fill_empty_employment_due_dates(stored)
         grouped = []
         current = None
         for row in stored:
@@ -6160,46 +6166,133 @@ class ControlPlan(models.Model):
         addressees = Plans.addressees_on_document(document)
         curators_fallback = Plans.curator_from_doctor(document.who_create)
         position = 0
-        written = set()
         for plan_id in plan_ids:
             plan = by_id.get(plan_id)
             if not plan:
                 continue
-            tasks = []
-            for group in plan.indicator_groups.all():
-                tasks.extend(group.indicators.all())
-            tasks.extend(row for row in plan.indicators.all() if row.group_id is None)
-            for task in tasks:
-                if not task.indicator_id or (plan.pk, task.indicator_id) in written:
-                    continue
-                executors = task.executors if isinstance(task.executors, list) and task.executors else addressees
-                curators = task.curator if isinstance(task.curator, list) and task.curator else curators_fallback
-                executor_ids = Plans.people_ids(executors)
-                curator_ids = Plans.people_ids(curators)
-                if not executor_ids:
-                    continue
-                written.add((plan.pk, task.indicator_id))
-                control = ControlPlan.objects.create(
-                    document=document,
-                    plan=plan,
-                    task_id=task.indicator_id,
-                    due_date=ControlPlan.due_date_for(task, executor_ids),
-                    order=position,
-                )
-                position += 1
-                ControlPlanExecutor.objects.bulk_create([ControlPlanExecutor(control_plan=control, doctor_id=doctor_id) for doctor_id in executor_ids])
-                ControlPlanCurator.objects.bulk_create([ControlPlanCurator(control_plan=control, doctor_id=doctor_id) for doctor_id in curator_ids])
+            prepared = ControlPlan._prepared_tasks(plan, addressees, curators_fallback)
+            position = ControlPlan._create_prepared(document, plan, prepared, position)
+
+    @staticmethod
+    def _iter_tasks(plan):
+        tasks = []
+        for group in plan.indicator_groups.all():
+            tasks.extend(group.indicators.all())
+        tasks.extend(row for row in plan.indicators.all() if row.group_id is None)
+        return tasks
+
+    @staticmethod
+    def _prepared_tasks(plan, addressees, curators_fallback):
+        prepared = []
+        seen = set()
+        for task in ControlPlan._iter_tasks(plan):
+            if not task.indicator_id or task.indicator_id in seen:
+                continue
+            executors = task.executors if isinstance(task.executors, list) and task.executors else addressees
+            curators = task.curator if isinstance(task.curator, list) and task.curator else curators_fallback
+            executor_ids = Plans.people_ids(executors)
+            curator_ids = Plans.people_ids(curators)
+            if not executor_ids:
+                continue
+            seen.add(task.indicator_id)
+            prepared.append((task, executor_ids, curator_ids))
+        return prepared
+
+    @staticmethod
+    def _create_prepared(document, plan, prepared, position):
+        for task, executor_ids, curator_ids in prepared:
+            control = ControlPlan.objects.create(
+                document=document,
+                plan=plan,
+                task_id=task.indicator_id,
+                due_date=ControlPlan.due_date_for(task, executor_ids),
+                order=position,
+            )
+            position += 1
+            ControlPlanExecutor.objects.bulk_create([ControlPlanExecutor(control_plan=control, doctor_id=doctor_id) for doctor_id in executor_ids])
+            ControlPlanCurator.objects.bulk_create([ControlPlanCurator(control_plan=control, doctor_id=doctor_id) for doctor_id in curator_ids])
+        return position
+
+    @staticmethod
+    def replace_plan_on_document(document, plan):
+        from django.db.models import F
+
+        orders = list(ControlPlan.objects.filter(document=document, plan=plan).order_by("order", "pk").values_list("order", flat=True))
+        if not orders:
+            return
+        start = orders[0]
+        old_count = len(orders)
+        addressees = Plans.addressees_on_document(document)
+        curators_fallback = Plans.curator_from_doctor(document.who_create)
+        prepared = ControlPlan._prepared_tasks(plan, addressees, curators_fallback)
+        ControlPlan.objects.filter(document=document, plan=plan).delete()
+        extra = len(prepared) - old_count
+        if extra > 0:
+            ControlPlan.objects.filter(document=document, order__gte=start + old_count).update(order=F("order") + extra)
+        ControlPlan._create_prepared(document, plan, prepared, start)
+
+    @staticmethod
+    def refresh_for_saved_plan(plan):
+        from django.db.models import Prefetch
+
+        document_ids = list(Documents.objects.filter(time_confirm__isnull=False, control_plans__plan=plan).values_list("pk", flat=True).distinct())
+        if not document_ids:
+            return
+        loaded = (
+            Plans.objects.filter(pk=plan.pk)
+            .prefetch_related(
+                Prefetch(
+                    "indicator_groups",
+                    queryset=PlanIndicatorGroup.objects.order_by("order", "pk").prefetch_related(
+                        Prefetch("indicators", queryset=PlanIndicator.objects.order_by("order", "pk")),
+                    ),
+                ),
+                Prefetch("indicators", queryset=PlanIndicator.objects.order_by("order", "pk")),
+            )
+            .first()
+        )
+        if not loaded:
+            return
+        documents = Documents.objects.filter(pk__in=document_ids).select_related("who_create")
+        for document in documents:
+            ControlPlan.replace_plan_on_document(document, loaded)
+
+    @staticmethod
+    def _schedule_position(positions):
+        rows = [position for position in positions if position is not None]
+        if not rows:
+            return None
+        if len(rows) == 1:
+            return rows[0]
+        for position in rows:
+            rate = position.rate
+            if rate is None:
+                continue
+            if abs(float(rate) - 1) < 1e-6:
+                return position
+        return None
 
     @staticmethod
     def earliest_employment(executor_ids):
         from django.utils import timezone
 
         from employees.models import Employee, EmployeePosition
+        from users.models import DoctorProfileEmployeePosition
 
         today = timezone.now().date()
         dates = []
-        doctors = DoctorProfile.objects.filter(pk__in=executor_ids).only("pk", "snils", "hospital_id")
+        doctors = list(DoctorProfile.objects.filter(pk__in=executor_ids).only("pk", "snils", "hospital_id"))
+        links = DoctorProfileEmployeePosition.objects.filter(doctor_profile_id__in=[doctor.pk for doctor in doctors], employee_position__isnull=False).select_related(
+            "employee_position"
+        ).order_by("pk")
+        by_doctor = {}
+        for link in links:
+            by_doctor.setdefault(link.doctor_profile_id, []).append(link.employee_position)
         for doctor in doctors:
+            chosen = ControlPlan._schedule_position(by_doctor.get(doctor.pk, []))
+            if chosen and chosen.date_employment:
+                dates.append(chosen.date_employment)
+                continue
             snils = (doctor.snils or "").strip()
             if not snils:
                 continue
@@ -6211,6 +6304,30 @@ class ControlPlan(models.Model):
             )
             dates.extend(position.date_employment for position in positions)
         return min(dates) if dates else None
+
+    @staticmethod
+    def fill_empty_employment_due_dates(rows):
+        missing = [row for row in rows if not row.due_date and row.plan_id and row.task_id]
+        if not missing:
+            return
+        indicators = PlanIndicator.objects.filter(
+            plan_id__in={row.plan_id for row in missing},
+            indicator_id__in={row.task_id for row in missing},
+            due_kind=PlanIndicator.DUE_EMPLOYMENT,
+        )
+        by_key = {}
+        for indicator in indicators:
+            by_key.setdefault((indicator.plan_id, indicator.indicator_id), indicator)
+        for row in missing:
+            task = by_key.get((row.plan_id, row.task_id))
+            if not task:
+                continue
+            executor_ids = [link.doctor_id for link in row.executor_rows.all() if link.doctor_id]
+            due = ControlPlan.due_date_for(task, executor_ids)
+            if not due:
+                continue
+            row.due_date = due
+            row.save(update_fields=["due_date"])
 
     @staticmethod
     def due_date_for(task, executor_ids):
