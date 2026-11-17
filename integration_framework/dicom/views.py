@@ -96,16 +96,19 @@ def dcm_order_create(request):
         return Response({"ok": False, "message": 'sex должно быть "м" или "ж"'})
 
     individual, individuals = None, None
-    if enp:
-        individuals = Individual.objects.filter(tfoms_enp=enp, owner=hospital, owner_patient_id=patient["internalId"])
-        if not individuals.exists():
-            individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title="Полис ОМС") | Q(document__document_type__title="ЕНП"))
+    try:
+        if enp:
+            individuals = Individual.objects.filter(tfoms_enp=enp, owner=hospital, owner_patient_id=patient["internalId"])
+            if not individuals.exists():
+                individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title="Полис ОМС") | Q(document__document_type__title="ЕНП"))
 
-    if not individual and snils:
-        individuals = Individual.objects.filter(document__number=snils, document__document_type__title="СНИЛС")
-    if individuals:
-        if individuals.exists():
-            individual = individuals.objects.filter(owner=hospital, owner_patient_id=patient["internalId"]).first()
+        if not individual and snils:
+            individuals = Individual.objects.filter(document__number=snils, document__document_type__title="СНИЛС")
+        if individuals:
+            if individuals.exists():
+                individual = individuals.objects.filter(owner=hospital, owner_patient_id=patient["internalId"]).first()
+    except:
+        individual = None
 
     card = None
     if not individual and lastname:

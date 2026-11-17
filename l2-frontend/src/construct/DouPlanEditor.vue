@@ -58,6 +58,26 @@
           >
             <button
               v-if="!readonly"
+              class="btn btn-blue-nb row-move"
+              type="button"
+              title="Выше"
+              :disabled="isFirstIndicator(group.indicators, row)"
+              @click="moveIndicator(group.indicators, row, -1)"
+            >
+              <i class="glyphicon glyphicon-arrow-up" />
+            </button>
+            <button
+              v-if="!readonly"
+              class="btn btn-blue-nb row-move"
+              type="button"
+              title="Ниже"
+              :disabled="isLastIndicator(group.indicators, row)"
+              @click="moveIndicator(group.indicators, row, 1)"
+            >
+              <i class="glyphicon glyphicon-arrow-down" />
+            </button>
+            <button
+              v-if="!readonly"
               class="btn btn-blue-nb row-remove"
               type="button"
               title="Удалить"
@@ -229,6 +249,26 @@
             :key="row.clientKey"
             class="indicator-row"
           >
+            <button
+              v-if="!readonly"
+              class="btn btn-blue-nb row-move"
+              type="button"
+              title="Выше"
+              :disabled="isFirstIndicator(looseIndicators, row)"
+              @click="moveIndicator(looseIndicators, row, -1)"
+            >
+              <i class="glyphicon glyphicon-arrow-up" />
+            </button>
+            <button
+              v-if="!readonly"
+              class="btn btn-blue-nb row-move"
+              type="button"
+              title="Ниже"
+              :disabled="isLastIndicator(looseIndicators, row)"
+              @click="moveIndicator(looseIndicators, row, 1)"
+            >
+              <i class="glyphicon glyphicon-arrow-down" />
+            </button>
             <button
               v-if="!readonly"
               class="btn btn-blue-nb row-remove"
@@ -757,6 +797,44 @@ const removeIndicator = (rows: PlanIndicatorRow[], row: PlanIndicatorRow) => {
   }
 };
 
+const indicatorPlace = (rows: PlanIndicatorRow[], row: PlanIndicatorRow) => (
+  curatorIndicators(rows).findIndex(item => item.clientKey === row.clientKey)
+);
+
+const isFirstIndicator = (rows: PlanIndicatorRow[], row: PlanIndicatorRow) => indicatorPlace(rows, row) <= 0;
+
+const isLastIndicator = (rows: PlanIndicatorRow[], row: PlanIndicatorRow) => {
+  const visible = curatorIndicators(rows);
+  const index = visible.findIndex(item => item.clientKey === row.clientKey);
+  return index < 0 || index === visible.length - 1;
+};
+
+const moveIndicator = (rows: PlanIndicatorRow[], row: PlanIndicatorRow, direction: -1 | 1) => {
+  const visible = curatorIndicators(rows);
+  const index = visible.findIndex(item => item.clientKey === row.clientKey);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= visible.length) {
+    return;
+  }
+  const ranked = [...visible];
+  const [moved] = ranked.splice(index, 1);
+  if (!moved) {
+    return;
+  }
+  ranked.splice(target, 0, moved);
+  const queue = [...ranked];
+  const merged = orderedIndicators(rows).map(entry => {
+    if (!ranked.some(item => item.clientKey === entry.clientKey)) {
+      return entry;
+    }
+    return queue.shift() || entry;
+  });
+  for (let itemIndex = 0; itemIndex < merged.length; itemIndex += 1) {
+    const entry = merged[itemIndex];
+    entry.order = itemIndex;
+  }
+};
+
 const addTest = (rows: PlanTestRow[]) => {
   const order = rows.reduce((max, row) => Math.max(max, row.order), 0) + 1;
   nextKey += 1;
@@ -1121,6 +1199,20 @@ watch(() => props.preset, () => {
     line-height: 32px;
     vertical-align: top;
   }
+}
+
+.row-move {
+  flex: 0 0 34px;
+  width: 34px;
+  color: #fff;
+}
+
+.row-move:disabled,
+.row-move:disabled:hover {
+  background-color: #aab2bd !important;
+  border-color: #aab2bd !important;
+  opacity: 0.45;
+  cursor: default;
 }
 
 .row-remove {

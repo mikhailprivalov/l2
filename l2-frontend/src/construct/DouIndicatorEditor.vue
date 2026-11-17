@@ -7,8 +7,8 @@
           v-model="title"
           type="text"
           class="form-control"
-          :disabled="loose"
-          :placeholder="loose ? 'Без группы' : 'Название группы'"
+          :disabled="itemId === 0"
+          :placeholder="itemId === 0 ? 'Без группы' : 'Название группы'"
         >
       </div>
     </div>
@@ -198,7 +198,7 @@ const save = async () => {
   try {
     const result = await api('document-manager/indicators/update', {
       id: props.itemId,
-      title: loose.value ? '' : title.value,
+      title: props.itemId === 0 ? '' : title.value,
       indicators: indicators.value.map(row => ({ id: row.id, title: row.title })),
     });
     if (result?.ok) {
