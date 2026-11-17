@@ -6282,9 +6282,11 @@ class ControlPlan(models.Model):
         today = timezone.now().date()
         dates = []
         doctors = list(DoctorProfile.objects.filter(pk__in=executor_ids).only("pk", "snils", "hospital_id"))
-        links = DoctorProfileEmployeePosition.objects.filter(doctor_profile_id__in=[doctor.pk for doctor in doctors], employee_position__isnull=False).select_related(
-            "employee_position"
-        ).order_by("pk")
+        links = (
+            DoctorProfileEmployeePosition.objects.filter(doctor_profile_id__in=[doctor.pk for doctor in doctors], employee_position__isnull=False)
+            .select_related("employee_position")
+            .order_by("pk")
+        )
         by_doctor = {}
         for link in links:
             by_doctor.setdefault(link.doctor_profile_id, []).append(link.employee_position)
