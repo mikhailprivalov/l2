@@ -30,6 +30,7 @@ urlpatterns = [
     path('plans/list', views.plans_list),
     path('plans/choices', views.plans_choices),
     path('plans/preview', views.plans_preview),
+    path('plans/people', views.plans_people),
     path('plans/details', views.plans_details),
     path('plans/update', views.plans_update),
     path('indicators/list', views.indicators_list),

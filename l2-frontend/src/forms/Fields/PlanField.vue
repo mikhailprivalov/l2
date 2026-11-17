@@ -94,15 +94,17 @@
                   <AddresseeField
                     class="executor"
                     header="Исполнители"
-                    disabled
+                    :disabled="peopleLocked"
                     :value="row.executors"
+                    @input="onPeople(plan.id, row, 'executors', $event)"
                   />
                   <span class="executor-label">Куратор</span>
                   <AddresseeField
                     class="executor"
                     header="Куратор"
-                    disabled
+                    :disabled="peopleLocked"
                     :value="row.curator"
+                    @input="onPeople(plan.id, row, 'curator', $event)"
                   />
                 </div>
                 <div
@@ -144,15 +146,17 @@
                   <AddresseeField
                     class="executor"
                     header="Исполнители"
-                    disabled
+                    :disabled="peopleLocked"
                     :value="row.executors"
+                    @input="onPeople(plan.id, row, 'executors', $event)"
                   />
                   <span class="executor-label">Куратор</span>
                   <AddresseeField
                     class="executor"
                     header="Куратор"
-                    disabled
+                    :disabled="peopleLocked"
                     :value="row.curator"
+                    @input="onPeople(plan.id, row, 'curator', $event)"
                   />
                 </div>
                 <div
@@ -192,7 +196,7 @@
 
 <script setup lang="ts">
 import {
-  computed, ref, watch,
+  computed, getCurrentInstance, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -209,6 +213,7 @@ interface PlanOption {
 
 interface PlanLine {
   id: number;
+  indicatorId: number;
   title: string;
   dueKind: 'absolute' | 'employment';
   dueDate: string;
@@ -251,6 +256,7 @@ const emit = defineEmits<{
   (e: 'input', value: string): void;
 }>();
 
+const root = getCurrentInstance()?.proxy?.$root;
 const pickerKey = ref(0);
 const globalPlans = ref<PlanOption[]>([]);
 const minePlans = ref<PlanOption[]>([]);
@@ -283,6 +289,7 @@ const parseIds = (value: unknown): number[] => {
 };
 
 const selectedIds = computed(() => parseIds(props.value));
+const peopleLocked = computed(() => Boolean(props.disabled) || !props.documentId);
 
 const titleById = computed(() => {
   const map = new Map<number, string>();
@@ -310,6 +317,7 @@ const executorsText = (value: unknown) => {
 const planLines = (rows: Record<string, unknown>[] | undefined): PlanLine[] => (
   (rows || []).map(row => ({
     id: Number(row.id) || 0,
+    indicatorId: Number(row.indicatorId) || 0,
     title: String(row.title || ''),
     dueKind: row.dueKind === 'employment' ? 'employment' : 'absolute',
     dueDate: String(row.dueDate || ''),
@@ -461,6 +469,48 @@ const onPick = (value: unknown) => {
 
 const removePlan = (id: number) => {
   emit('input', JSON.stringify(selectedIds.value.filter(item => item !== id)));
+};
+
+const peopleLine = (planId: number, row: PlanLine) => {
+  const plan = previews.value.find(item => item.id === planId);
+  const lines = [
+    ...(plan?.indicators || []),
+    ...(plan?.groups || []).flatMap(group => group.indicators),
+  ];
+  return lines.find(item => item.id === row.id) || null;
+};
+
+const setPeople = (planId: number, row: PlanLine, kind: 'executors' | 'curator', value: string) => {
+  const line = peopleLine(planId, row);
+  if (!line) {
+    return;
+  }
+  if (kind === 'executors') {
+    line.executors = value;
+  } else {
+    line.curator = value;
+  }
+};
+
+const onPeople = async (planId: number, row: PlanLine, kind: 'executors' | 'curator', value: string) => {
+  const next = value || '[]';
+  setPeople(planId, row, kind, next);
+  if (!props.documentId || !row.indicatorId) {
+    return;
+  }
+  const data = await api('document-manager/plans/people', {
+    documentId: props.documentId,
+    planId,
+    indicatorId: row.indicatorId,
+    kind,
+    people: next,
+  });
+  if (!data?.ok) {
+    root?.$emit('msg', 'error', data?.message || 'Не удалось сохранить');
+    loadTitles(selectedIds.value);
+    return;
+  }
+  setPeople(planId, row, kind, JSON.stringify(data.people || []));
 };
 
 watch(
@@ -688,6 +738,19 @@ loadChoices();
     padding: 4px 8px;
     font-size: 12px;
     line-height: 18px;
+  }
+
+  :deep(.executor.addressee-field) {
+    height: 28px;
+    min-height: 28px;
+  }
+
+  :deep(.executor .addressee-field__btn) {
+    height: 28px;
+    min-height: 28px;
+    padding: 0 8px;
+    border-radius: 0;
+    line-height: 26px;
   }
 }
 
