@@ -109,12 +109,12 @@ def patients_search_card(request):
     extended_search = d.get('extendedSearch', False)
     limit = min(int(d.get('limit', 10)), 20)
     form = d.get('form', {})
-    p = re.compile(r'^[а-яё]{3}[0-9]{8}$', re.IGNORECASE)
+    p = re.compile(r'^[а-яёa-z]{3}[0-9]{8}$', re.IGNORECASE)
     if ALLOW_DIGITS_IN_FAMILY:
-        p2 = re.compile(r'^([А-яЁё\-0-9]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
+        p2 = re.compile(r'^([А-яЁёA-Za-z\-0-9]+)( ([А-яЁёA-Za-z\-]+)(( ([А-яЁёA-Za-z\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
     else:
-        p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
-    p_tfoms = re.compile(r'^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$')
+        p2 = re.compile(r'^([А-яЁёA-Za-z\-]+)( ([А-яЁёA-Za-z\-]+)(( ([А-яЁёA-Za-z\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
+    p_tfoms = re.compile(r'^([А-яЁёA-Za-z\-]+) ([А-яЁёA-Za-z\-]+)( ([А-яЁёA-Za-z\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$')
     p3 = re.compile(r'^[0-9]{1,15}$')
     p_enp_re = re.compile(r'^[0-9]{16}$')
     p_enp = bool(re.search(p_enp_re, query))

@@ -335,8 +335,8 @@ export const validateSnils = (
 
 export const replaceAll = (s: string, a: string, b: string) => s.replace(new RegExp(a, 'gm'), b);
 
-const reName = /[^-а-яёА-ЯЁA-Z.’',() ]/g;
-const reNameWithDigits = /[^-а-яёА-ЯЁA-Z0-9.’',() ]/g;
+const reName = /[^-а-яёА-ЯЁA-Za-z.’',() ]/g;
+const reNameWithDigits = /[^-а-яёА-ЯЁA-Za-z0-9.’',() ]/g;
 export const reSpaceDuplication = / +/g;
 
 const NAME_REPLACERS = {
@@ -344,7 +344,7 @@ const NAME_REPLACERS = {
 };
 
 export const normalizeNamePart = (stringOrig: string, allowDigits = false): string => {
-  let string = swapLayouts(stringOrig).replace(reSpaceDuplication, ' ');
+  let string = stringOrig.replace(reSpaceDuplication, ' ');
   string = string.replace(allowDigits ? reNameWithDigits : reName, '');
 
   for (const nameReplacer of Object.keys(NAME_REPLACERS)) {
