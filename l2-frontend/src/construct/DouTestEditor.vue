@@ -9,6 +9,7 @@
               v-model="title"
               type="text"
               class="form-control"
+              maxlength="512"
             >
           </div>
         </div>

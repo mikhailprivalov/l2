@@ -2952,7 +2952,7 @@ class DouTest(models.Model):
     PICK_ALL = "all"
     PICK_RANDOM = "random"
 
-    title = models.CharField(max_length=128, blank=True, null=True)
+    title = models.CharField(max_length=512, blank=True, null=True)
     professional_direction = models.TextField(blank=True, default="", verbose_name="Направление профессиональной деятельности")
     competencies = models.TextField(blank=True, default="", verbose_name="Компетенции")
     order_mode = models.CharField(max_length=16, default=ORDER_SEQUENTIAL)
@@ -3092,6 +3092,8 @@ class DouTest(models.Model):
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
+        if len(title) > 512:
+            return {"ok": False, "message": "Название длиннее 512 символов"}
         cleaned_questions = []
         for index, question in enumerate(questions or []):
             text = (question.get("text") or "").strip()
