@@ -701,6 +701,7 @@ def plans_update(request):
         data.get("groups"),
         data.get("indicators"),
         data.get("tests"),
+        short_title=data.get("shortTitle", ""),
     )
     if result.get("ok"):
         _audit(request, DocumentManagerLog.PLAN, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
@@ -775,6 +776,7 @@ def tests_update(request):
         data.get("competencies", ""),
         data.get("passPercent"),
         data.get("attemptLimit"),
+        data.get("shortTitle", ""),
     )
     if result.get("ok"):
         _audit(request, DocumentManagerLog.TEST, {"id": result.get("id"), "title": result.get("title")}, object_key=result.get("id"))
@@ -1066,6 +1068,7 @@ def documents_plan(request):
         data.get("indicators"),
         data.get("tests"),
         with_confirm=bool(data.get("withConfirm")),
+        short_title=data.get("shortTitle", ""),
     )
     if result.get("ok"):
         return status_response(True, data=result)

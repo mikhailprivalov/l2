@@ -52,7 +52,7 @@
             @keydown.enter.prevent="selectedId = row.id"
             @keydown.space.prevent="selectedId = row.id"
           >
-            <span class="object-row__label">{{ row.title }}</span>
+            <span class="object-row__label">{{ row.shortTitle || row.title }}</span>
             <span
               v-if="row.code"
               class="object-row__code"
@@ -214,6 +214,7 @@ interface CatalogItem {
   accessMode?: string;
   accessMembers?: { id: number; fio: string; department?: string }[];
   printTemplateName?: string;
+  shortTitle?: string;
   hide?: boolean;
 }
 
@@ -280,6 +281,7 @@ const filteredItems = computed(() => {
   }
   return items.value.filter(row => (
     (row.title || '').toLowerCase().includes(search)
+    || (row.shortTitle || '').toLowerCase().includes(search)
     || (row.code || '').toLowerCase().includes(search)
   ));
 });
@@ -380,9 +382,10 @@ const loadItems = async () => {
       items.value = result || [];
     } else if (selectedNavId.value === 'document_templates') {
       const data = await api('researches/by-department', { department: LAYOUT_TEMPLATE_DEPARTMENT, isConstructor: true });
-      items.value = (data.researches || []).map((row: { pk: number; title: string; hide?: boolean }) => ({
+      items.value = (data.researches || []).map((row: { pk: number; title: string; short_title?: string; hide?: boolean }) => ({
         id: row.pk,
         title: row.title,
+        shortTitle: row.short_title || '',
         hide: row.hide,
       }));
       directionForms.value = data.direction_forms || [];

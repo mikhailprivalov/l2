@@ -11,6 +11,13 @@
               class="form-control"
               maxlength="512"
             >
+            <span class="input-group-addon">Синоним</span>
+            <input
+              v-model="shortTitle"
+              type="text"
+              class="form-control"
+              maxlength="512"
+            >
           </div>
         </div>
       </div>
@@ -246,6 +253,7 @@ const emit = defineEmits<{
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const title = ref('');
+const shortTitle = ref('');
 const professionalDirections = ref('');
 const competencies = ref('');
 const questions = ref<QuestionRow[]>([]);
@@ -342,6 +350,7 @@ const applySettings = (data: {
 
 const load = async () => {
   title.value = '';
+  shortTitle.value = '';
   professionalDirections.value = '';
   competencies.value = '';
   questions.value = [];
@@ -354,6 +363,7 @@ const load = async () => {
       return;
     }
     title.value = data.title || '';
+    shortTitle.value = data.shortTitle || '';
     professionalDirections.value = data.professionalDirections || '';
     competencies.value = data.competencies || '';
     applySettings(data);
@@ -383,6 +393,7 @@ const save = async () => {
     const result = await api('document-manager/tests/update', {
       id: props.testId,
       title: title.value,
+      shortTitle: shortTitle.value,
       professionalDirections: professionalDirections.value,
       competencies: competencies.value,
       orderMode: orderMode.value,

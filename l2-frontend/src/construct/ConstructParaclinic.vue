@@ -35,7 +35,7 @@
           :class="{ rhide: row.hide }"
           @click="open_editor(row.pk)"
         >
-          {{ row.title }}
+          {{ row.short_title || row.title }}
         </div>
       </div>
       <button
@@ -132,7 +132,12 @@ export default {
         return [];
       }
       return this.researches_list.filter(
-        (row) => row.title.trim().toLowerCase().indexOf(this.title_filter.trim().toLowerCase()) >= 0,
+        (row) => {
+          const search = this.title_filter.trim().toLowerCase();
+          const title = (row.title || '').toLowerCase();
+          const synonym = (row.short_title || '').toLowerCase();
+          return title.indexOf(search) >= 0 || synonym.indexOf(search) >= 0;
+        },
       );
     },
     ...mapGetters({

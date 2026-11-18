@@ -12,7 +12,7 @@ def participant_plans(doctor_id, date_from, date_to, tz):
             """
             SELECT
                 p.id AS plan_id,
-                COALESCE(NULLIF(BTRIM(p.title), ''), 'План ' || p.id::text) AS plan_title,
+                COALESCE(NULLIF(BTRIM(p.short_title), ''), NULLIF(BTRIM(p.title), ''), 'План ' || p.id::text) AS plan_title,
                 d.id AS document_id,
                 d.time_confirm,
                 BOOL_OR(roles.role = 'executor') AS is_executor,
@@ -36,7 +36,7 @@ def participant_plans(doctor_id, date_from, date_to, tz):
               AND d.time_confirm IS NOT NULL
               AND (%(date_from)s IS NULL OR (d.time_confirm AT TIME ZONE %(tz)s)::date >= %(date_from)s)
               AND (%(date_to)s IS NULL OR (d.time_confirm AT TIME ZONE %(tz)s)::date <= %(date_to)s)
-            GROUP BY p.id, p.title, d.id, d.time_confirm
+            GROUP BY p.id, p.title, p.short_title, d.id, d.time_confirm
             ORDER BY d.time_confirm DESC, d.id DESC, p.id
             """,
             params={

@@ -218,7 +218,7 @@
                   type="button"
                   @click="selectTest(test.id)"
                 >
-                  <span class="doc-title">{{ test.title }}</span>
+                  <span class="doc-title">{{ test.shortTitle || test.title }}</span>
                 </button>
               </div>
             </template>
@@ -563,7 +563,7 @@ const documents = ref<{
 }[]>([]);
 const listQuery = ref('');
 const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
-const tests = ref<{ id: number; title: string }[]>([]);
+const tests = ref<{ id: number; title: string; shortTitle?: string }[]>([]);
 const selectedDocument = ref<number | null>(null);
 const selectedBlock = ref<number | null>(null);
 const selectedTest = ref<number | null>(null);
@@ -962,7 +962,8 @@ const visibleTests = computed(() => {
   if (!filterText) {
     return tests.value;
   }
-  return tests.value.filter(row => folded(row.title).includes(filterText));
+  return tests.value.filter(row => folded(row.shortTitle || row.title).includes(filterText)
+    || folded(row.title).includes(filterText));
 });
 
 const selectTest = (id: number) => {

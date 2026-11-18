@@ -10,10 +10,28 @@
             <div class="field-slot">
               <span class="input-group-addon">Название</span>
               <input
+                v-if="documentMode"
+                :value="shownTitle"
+                type="text"
+                class="form-control"
+                :readonly="readonly || hasShortTitle"
+                @input="onDocumentNameInput"
+              >
+              <input
+                v-else
                 v-model="title"
                 type="text"
                 class="form-control"
               >
+              <template v-if="!documentMode || !readonly">
+                <span class="input-group-addon">Синоним</span>
+                <input
+                  v-model="shortTitle"
+                  type="text"
+                  class="form-control"
+                  maxlength="128"
+                >
+              </template>
             </div>
             <button
               v-if="documentMode && !readonly"
@@ -643,6 +661,7 @@ interface IndicatorCatalog {
 
 interface PlanPreset {
   title?: string;
+  shortTitle?: string;
   indicatorCatalog?: IndicatorCatalog;
   groups?: {
     title?: string;
@@ -674,6 +693,15 @@ const emit = defineEmits<{
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const title = ref('');
+const shortTitle = ref('');
+const hasShortTitle = computed(() => shortTitle.value.trim().length > 0);
+const shownTitle = computed(() => shortTitle.value.trim() || title.value);
+const onDocumentNameInput = (event: Event) => {
+  if (hasShortTitle.value) {
+    return;
+  }
+  title.value = (event.target as HTMLInputElement).value;
+};
 const groups = ref<PlanGroupRow[]>([]);
 const looseIndicators = ref<PlanIndicatorRow[]>([]);
 const looseTests = ref<PlanTestRow[]>([]);
@@ -944,6 +972,7 @@ const applyCatalog = (data: PlanPreset) => {
 
 const applyData = (data: PlanPreset) => {
   title.value = data.title || '';
+  shortTitle.value = data.shortTitle || '';
   indicatorOptions.value = data.indicatorOptions || [];
   applyCatalog(data);
   testOptions.value = data.testOptions || [];
@@ -994,6 +1023,7 @@ const addTask = async () => {
 
 const planBody = () => ({
   title: title.value,
+  shortTitle: shortTitle.value,
   groups: orderedGroups.value.map((group, index) => ({
     title: group.title,
     order: index,
@@ -1010,6 +1040,7 @@ const load = async () => {
     return;
   }
   title.value = '';
+  shortTitle.value = '';
   groups.value = [];
   looseIndicators.value = [];
   looseTests.value = [];

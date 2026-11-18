@@ -879,7 +879,7 @@ class TypeDocuments(models.Model):
             "monitoringId": self.monitoring_id,
             "monitoringTitle": self.monitoring.title if self.monitoring_id and self.monitoring else "",
             "testId": self.test_id,
-            "testTitle": self.test.title if self.test_id and self.test else "",
+            "testTitle": self.test.display_title() if self.test_id and self.test else "",
             "isPlan": bool(self.is_plan),
             "isTestDefaulta": bool(self.is_test_defaulta),
             "approveLabel": self.approve_title(),
@@ -2160,6 +2160,7 @@ def list_record_favorites(doctor, cases=False):
 
 class Plans(models.Model):
     title = models.CharField(max_length=128, blank=True, null=True)
+    short_title = models.CharField(max_length=128, blank=True, default="", help_text="Синоним названия")
     user_created = models.BooleanField(default=False, db_index=True, help_text="Создан пользователем")
     who_create = models.ForeignKey(
         DoctorProfile,
@@ -2179,9 +2180,13 @@ class Plans(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+    def display_title(self):
+        synonym = (self.short_title or "").strip()
+        return synonym or (self.title or "")
+
     @property
     def json(self):
-        return {"id": self.id, "title": self.title or ""}
+        return {"id": self.id, "title": self.title or "", "shortTitle": (self.short_title or "").strip()}
 
     @staticmethod
     def get_list():
@@ -2247,7 +2252,7 @@ class Plans(models.Model):
 
         def test_row(row):
             data = row.as_json()
-            data["title"] = row.test.title if row.test_id and getattr(row, "test", None) else ""
+            data["title"] = row.test.display_title() if row.test_id and getattr(row, "test", None) else ""
             return data
 
         groups = []
@@ -2265,7 +2270,7 @@ class Plans(models.Model):
         loose_tests = [test_row(row) for row in plan.tests.all() if row.group_id is None]
         return {
             "id": plan.pk,
-            "title": plan.title or "",
+            "title": plan.display_title(),
             "groups": groups,
             "indicators": loose_indicators,
             "tests": loose_tests,
@@ -2420,7 +2425,7 @@ class Plans(models.Model):
     @staticmethod
     def test_options():
         rows = DouTest.objects.all().order_by("title", "pk")
-        return [{"id": row.pk, "label": row.title or ""} for row in rows]
+        return [{"id": row.pk, "label": row.display_title()} for row in rows]
 
     @staticmethod
     def get_details(pk, who=None):
@@ -2431,6 +2436,7 @@ class Plans(models.Model):
                 "ok": True,
                 "id": -1,
                 "title": "",
+                "shortTitle": "",
                 "groups": [],
                 "indicators": [],
                 "tests": [],
@@ -2458,6 +2464,7 @@ class Plans(models.Model):
             "ok": True,
             "id": plan.pk,
             "title": plan.title or "",
+            "shortTitle": (plan.short_title or "").strip(),
             "groups": groups,
             "indicators": loose,
             "tests": loose_tests,
@@ -2468,12 +2475,15 @@ class Plans(models.Model):
         }
 
     @staticmethod
-    def save_plan(pk, title, groups, indicators, tests=None, allow_user=False, who=None, default_curator=None):
+    def save_plan(pk, title, groups, indicators, tests=None, allow_user=False, who=None, default_curator=None, short_title=""):
         from django.db import transaction
 
         title = (title or "").strip()
         if not title:
             return {"ok": False, "message": "Укажите название"}
+        short_title = (short_title or "").strip()
+        if len(short_title) > 128:
+            return {"ok": False, "message": "Синоним длиннее 128 символов"}
         groups = groups or []
         indicators = indicators or []
         tests = tests or []
@@ -2521,6 +2531,7 @@ class Plans(models.Model):
                 if not plan or bool(plan.user_created) != bool(allow_user):
                     return {"ok": False, "message": "План не найден"}
                 plan.title = title
+            plan.short_title = short_title
             plan.save()
             PlanTest.objects.filter(plan=plan).delete()
             PlanIndicator.objects.filter(plan=plan).delete()
@@ -2537,7 +2548,7 @@ class Plans(models.Model):
                 PlanTest.objects.create(plan=plan, group=None, **row)
             if pk not in (None, -1, "-1"):
                 ControlPlan.refresh_for_saved_plan(plan)
-        return {"ok": True, "id": plan.pk, "title": plan.title}
+        return {"ok": True, "id": plan.pk, "title": plan.title, "shortTitle": plan.short_title or ""}
 
 
 class DouIndicatorGroup(models.Model):
@@ -2953,6 +2964,7 @@ class DouTest(models.Model):
     PICK_RANDOM = "random"
 
     title = models.CharField(max_length=512, blank=True, null=True)
+    short_title = models.CharField(max_length=512, blank=True, default="", help_text="Синоним названия")
     professional_direction = models.TextField(blank=True, default="", verbose_name="Направление профессиональной деятельности")
     competencies = models.TextField(blank=True, default="", verbose_name="Компетенции")
     order_mode = models.CharField(max_length=16, default=ORDER_SEQUENTIAL)
@@ -2968,9 +2980,13 @@ class DouTest(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+    def display_title(self):
+        synonym = (self.short_title or "").strip()
+        return synonym or (self.title or "")
+
     @property
     def json(self):
-        return {"id": self.id, "title": self.title or ""}
+        return {"id": self.id, "title": self.title or "", "shortTitle": (self.short_title or "").strip()}
 
     @staticmethod
     def get_list():
@@ -2979,7 +2995,7 @@ class DouTest(models.Model):
     @staticmethod
     def get_details(pk):
         if pk in (None, -1, "-1"):
-            return {"ok": True, "id": -1, "title": "", "questions": [], **DouTest.empty_settings(), **DouTest.empty_texts()}
+            return {"ok": True, "id": -1, "title": "", "shortTitle": "", "questions": [], **DouTest.empty_settings(), **DouTest.empty_texts()}
         test = DouTest.objects.filter(pk=pk).prefetch_related("questions__answers").first()
         if not test:
             return {"ok": False, "message": "Тест не найден"}
@@ -2993,7 +3009,15 @@ class DouTest(models.Model):
                     "answers": [row.as_json() for row in question.answers.all().order_by("order", "pk")],
                 }
             )
-        return {"ok": True, "id": test.pk, "title": test.title or "", "questions": questions, **test.settings_json(), **test.texts_json()}
+        return {
+            "ok": True,
+            "id": test.pk,
+            "title": test.title or "",
+            "shortTitle": (test.short_title or "").strip(),
+            "questions": questions,
+            **test.settings_json(),
+            **test.texts_json(),
+        }
 
     @staticmethod
     def empty_settings():
@@ -3086,6 +3110,7 @@ class DouTest(models.Model):
         competencies="",
         pass_percent=None,
         attempt_limit=None,
+        short_title="",
     ):
         from django.db import transaction
 
@@ -3094,6 +3119,9 @@ class DouTest(models.Model):
             return {"ok": False, "message": "Укажите название"}
         if len(title) > 512:
             return {"ok": False, "message": "Название длиннее 512 символов"}
+        short_title = (short_title or "").strip()
+        if len(short_title) > 512:
+            return {"ok": False, "message": "Синоним длиннее 512 символов"}
         cleaned_questions = []
         for index, question in enumerate(questions or []):
             text = (question.get("text") or "").strip()
@@ -3134,6 +3162,7 @@ class DouTest(models.Model):
                 if not test:
                     return {"ok": False, "message": "Тест не найден"}
                 test.title = title
+            test.short_title = short_title
             test.professional_direction = professional_direction
             test.competencies = competencies
             test.order_mode = settings["order_mode"]
@@ -3147,7 +3176,7 @@ class DouTest(models.Model):
                 question = DouTestQuestion.objects.create(test=test, text=row["text"], order=row["order"])
                 for answer in row["answers"]:
                     DouTestAnswer.objects.create(question=question, **answer)
-        return {"ok": True, "id": test.pk, "title": test.title, **test.texts_json()}
+        return {"ok": True, "id": test.pk, "title": test.title, "shortTitle": test.short_title or "", **test.texts_json()}
 
     @staticmethod
     def _cell_text(value):
@@ -3364,7 +3393,7 @@ class DouTestAttempt(models.Model):
         payload = {
             "ok": True,
             "id": test.pk,
-            "title": test.title or "",
+            "title": test.display_title(),
             **test.texts_json(),
             "questions": public_questions,
             "selected": selected,
@@ -3961,7 +3990,7 @@ class TypeDocumentsSchema(models.Model):
         if type_doc and type_doc.test_id and type_doc.test:
             return {
                 "pk": None,
-                "title": type_doc.test.title or "",
+                "title": type_doc.test.display_title(),
                 "wide_headers": False,
                 "layoutTemplateIds": [],
                 "testId": type_doc.test_id,
@@ -4781,9 +4810,9 @@ class Documents(models.Model):
         title, type_title = DouTestAttempt._log_title(document)
         test_title = ""
         if test is not None:
-            test_title = test.title or ""
+            test_title = test.display_title()
         elif document.test_id and getattr(document, "test", None):
-            test_title = document.test.title or ""
+            test_title = document.test.display_title()
         Documents.log_action(
             document.plan_document_id,
             action,
@@ -4943,10 +4972,10 @@ class Documents(models.Model):
             grouped.setdefault(test.plan_id, []).append(
                 {
                     "id": -test.pk,
-                    "title": "Т {}".format(test.test.title if test.test_id and test.test else "").rstrip(),
+                    "title": "Т {}".format(test.test.display_title() if test.test_id and test.test else "").rstrip(),
                     "testId": test.test_id,
                     "planTestId": test.pk,
-                    "testTitle": test.test.title if test.test_id and test.test else "",
+                    "testTitle": test.test.display_title() if test.test_id and test.test else "",
                     "passedDocumentId": passed.pk if passed else None,
                     "dueDate": due.strftime("%Y-%m-%d") if due else "",
                     "done": bool(passed),
@@ -5053,7 +5082,7 @@ class Documents(models.Model):
             if current is None or current["key"] != key:
                 created = timezone.localtime(row.document.create_at) if row.document.create_at else None
                 date_text = created.strftime("%d.%m.%y") if created else ""
-                plan_title = row.plan.title or f"План {row.plan_id}"
+                plan_title = row.plan.display_title() or f"План {row.plan_id}"
                 current = {
                     "key": key,
                     "id": row.document_id,
@@ -5413,7 +5442,7 @@ class Documents(models.Model):
                 Documents.attach_plan_cases(plan_document, [created_doc])
             return {"ok": True, "id": created["id"], "created": True}
 
-    def save_user_plan(self, who, title, groups, indicators, tests, with_confirm=False):
+    def save_user_plan(self, who, title, groups, indicators, tests, with_confirm=False, short_title=""):
         from django.utils import timezone
 
         if not Documents.can_see_document(self, who):
@@ -5433,6 +5462,7 @@ class Documents(models.Model):
             allow_user=True,
             who=who,
             default_curator=self.who_create,
+            short_title=short_title,
         )
         if not result.get("ok"):
             return result
@@ -5499,6 +5529,38 @@ class Documents(models.Model):
         if not snapshot:
             return None
         return self._research_from_schema(snapshot, iss)
+
+    @staticmethod
+    def _service_form_title(snapshot):
+        from directory.models import Researches
+
+        if not isinstance(snapshot, dict):
+            return ""
+        raw_ids = [snapshot.get("monitoringId")] if snapshot.get("monitoringId") else list(snapshot.get("layoutTemplateIds") or [])
+        if not raw_ids and snapshot.get("pk"):
+            raw_ids = [snapshot.get("pk")]
+        ids = []
+        for raw in raw_ids:
+            try:
+                pk = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if pk > 0 and pk not in ids:
+                ids.append(pk)
+        if not ids:
+            return snapshot.get("title") or ""
+        rows = {row.pk: row for row in Researches.objects.filter(pk__in=ids).only("pk", "title", "short_title")}
+        titles = []
+        for pk in ids:
+            row = rows.get(pk)
+            if not row:
+                continue
+            text = (row.short_title or "").strip() or (row.title or "").strip()
+            if text and text not in titles:
+                titles.append(text)
+        if titles:
+            return ", ".join(titles)
+        return snapshot.get("title") or ""
 
     def _research_from_schema(self, snapshot, iss=None):
         from directions.models import ParaclinicResult, ParaclinicResultFile
@@ -5598,7 +5660,7 @@ class Documents(models.Model):
             groups.append(g)
         return {
             "pk": snapshot.get("pk"),
-            "title": snapshot.get("title"),
+            "title": Documents._service_form_title(snapshot),
             "version": 0,
             "wide_headers": bool(snapshot.get("wide_headers")),
             "groups": groups,
