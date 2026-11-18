@@ -231,15 +231,24 @@
                 >
                   У вида не выбран шаблон
                 </div>
-                <DescriptiveForm
-                  v-else
-          :key="`${row.id}-${row.issPk}-${row.confirmed}-${row.approvalJournalCopy}`"
-          :research="row.research"
-          :confirmed="row.confirmed || row.approvalJournalCopy"
-                  :patient="patient"
-                  :pk="row.issPk"
-                  :document-id="row.id"
-                />
+                <template v-else>
+                  <div
+                    v-if="serviceFormTitle(row.research)"
+                    class="group"
+                  >
+                    <div class="group-title">
+                      {{ serviceFormTitle(row.research) }}
+                    </div>
+                  </div>
+                  <DescriptiveForm
+                    :key="`${row.id}-${row.issPk}-${row.confirmed}-${row.approvalJournalCopy}`"
+                    :research="row.research"
+                    :confirmed="row.confirmed || row.approvalJournalCopy"
+                    :patient="patient"
+                    :pk="row.issPk"
+                    :document-id="row.id"
+                  />
+                </template>
               </template>
               <template v-if="row.loaded && (row.research || row.testId)">
                 <div
@@ -444,6 +453,14 @@
         v-if="!caseListMode && research && !isPlan && !testId"
         data-document-form
       >
+        <div
+          v-if="serviceFormTitle(research)"
+          class="group"
+        >
+          <div class="group-title">
+            {{ serviceFormTitle(research) }}
+          </div>
+        </div>
         <DescriptiveForm
           :key="`${documentId}-${issPk}-${formLocked}`"
           :research="research"
@@ -905,6 +922,14 @@ const root = getCurrentInstance().proxy.$root;
 
 const contentEl = ref<HTMLElement | null>(null);
 const title = ref('');
+const serviceFormTitle = (value: { title?: string; groups?: unknown[] } | null) => {
+  const text = String(value?.title || '').trim();
+  if (!text || !Array.isArray(value?.groups) || !value.groups.length) {
+    return '';
+  }
+  return text;
+};
+
 const displayTitle = computed(() => {
   const text = (title.value || '').trim();
   const id = Number(props.documentId);

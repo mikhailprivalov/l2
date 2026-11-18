@@ -208,6 +208,7 @@ import PlanDue from '@/forms/Fields/PlanDue.vue';
 interface PlanOption {
   id: number;
   title?: string;
+  shortTitle?: string;
   label?: string;
 }
 
@@ -233,6 +234,7 @@ interface PlanGroup {
 interface PlanPreview {
   id: number;
   title: string;
+  shortTitle?: string;
   groups: PlanGroup[];
   indicators: PlanLine[];
   tests: PlanLine[];
@@ -294,7 +296,7 @@ const peopleLocked = computed(() => Boolean(props.disabled) || !props.documentId
 const titleById = computed(() => {
   const map = new Map<number, string>();
   const remember = (row: PlanOption | PlanPreview) => {
-    const title = row.title || ('label' in row ? row.label : '') || '';
+    const title = row.shortTitle || row.title || ('label' in row ? row.label : '') || '';
     if (title) {
       map.set(row.id, title);
     }
@@ -392,7 +394,7 @@ const planHasBody = (plan: PlanRow) => {
   return plan.groups.length > 0 || plan.indicators.length > 0 || plan.tests.length > 0;
 };
 
-const optionLabel = (row: PlanOption) => row.title || row.label || String(row.id);
+const optionLabel = (row: PlanOption) => row.shortTitle || row.title || row.label || String(row.id);
 
 const options = computed(() => {
   const selected = new Set(selectedIds.value);

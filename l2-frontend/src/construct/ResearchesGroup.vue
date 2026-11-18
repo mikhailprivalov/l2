@@ -38,7 +38,7 @@
           </div>
         </td>
         <VueTippyTd
-          :text="research.title"
+          :text="research.shortTitle || research.title"
           tippy-max-width="340px"
           :class="research.hide ? 'border research-title hide-background' : 'border research-title'"
         />

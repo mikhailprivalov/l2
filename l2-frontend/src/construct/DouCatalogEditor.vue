@@ -909,9 +909,9 @@ const loadTests = async () => {
     return;
   }
   const { result } = await api('document-manager/tests/list');
-  testOptions.value = (result || []).map((row: { id: number; title: string }) => ({
+  testOptions.value = (result || []).map((row: { id: number; title: string; shortTitle?: string }) => ({
     id: row.id,
-    label: row.title,
+    label: row.shortTitle || row.title,
   }));
   ensureTestOption();
 };
