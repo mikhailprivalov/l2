@@ -4862,6 +4862,86 @@ class Documents(models.Model):
         return {"ok": True, "result": rows}
 
     @staticmethod
+    def _test_only_plan_ids():
+        tested = set(PlanTest.objects.values_list("plan_id", flat=True).distinct())
+        if not tested:
+            return set()
+        indicated = set(PlanIndicator.objects.filter(plan_id__in=tested).values_list("plan_id", flat=True).distinct())
+        return tested - indicated
+
+    @staticmethod
+    def _confirmed_in_period(start, end):
+        qs = Documents.objects.filter(is_hidden=False, time_confirm__isnull=False)
+        if start:
+            qs = qs.filter(time_confirm__date__gte=start)
+        if end:
+            qs = qs.filter(time_confirm__date__lte=end)
+        return qs
+
+    @staticmethod
+    def _participant_test_only_rows(who, start, end, skip):
+        from collections import namedtuple
+
+        from directions.models import ParaclinicResult
+
+        plan_ids = Documents._test_only_plan_ids()
+        if not plan_ids or not who or not getattr(who, "pk", None):
+            return []
+        period = Documents._confirmed_in_period(start, end)
+        direct = period.filter(plan_id__in=plan_ids, plan__user_created=True).select_related("plan", "who_create")
+        plans_by_document = {}
+        field_rows = ParaclinicResult.objects.filter(field_type=PLAN_FIELD_TYPE, issledovaniye__document__in=period).order_by("pk").values_list("issledovaniye__document_id", "value")
+        field_doc_ids = set()
+        for document_id, value in field_rows:
+            chosen = [pk for pk in (Plans.parse_ids(value) or []) if pk in plan_ids]
+            if not chosen:
+                continue
+            bucket = plans_by_document.setdefault(document_id, [])
+            for pk in chosen:
+                if pk not in bucket:
+                    bucket.append(pk)
+            field_doc_ids.add(document_id)
+        known = {doc.pk: doc for doc in direct}
+        missing = field_doc_ids - set(known)
+        if missing:
+            known.update({doc.pk: doc for doc in period.filter(pk__in=missing).select_related("plan", "who_create")})
+        pairs = []
+        for doc in known.values():
+            ids = []
+            if doc.plan_id in plan_ids and doc.plan_id and getattr(doc.plan, "user_created", False):
+                ids.append(doc.plan_id)
+            for pk in plans_by_document.get(doc.pk, []):
+                if pk not in ids:
+                    ids.append(pk)
+            for pk in ids:
+                if (doc.pk, pk) not in skip:
+                    pairs.append((doc, pk))
+        if not pairs:
+            return []
+        address_values = {}
+        address_rows = ParaclinicResult.objects.filter(
+            field_type=ADDRESSEE_FIELD_TYPE,
+            issledovaniye__document_id__in={doc.pk for doc, _plan_id in pairs},
+        ).values_list("issledovaniye__document_id", "value")
+        for document_id, value in address_rows:
+            address_values.setdefault(document_id, []).append(value)
+        plans = {plan.pk: plan for plan in Plans.objects.filter(pk__in={plan_id for _doc, plan_id in pairs})}
+        row_type = namedtuple("ParticipantPlanRow", ["plan_id", "plan_title", "document_id", "time_confirm", "is_executor", "is_curator"])
+        doctor_id = who.pk
+        rows = []
+        for doc, plan_id in pairs:
+            plan = plans.get(plan_id)
+            if not plan:
+                continue
+            executor_ids = Plans.people_ids(Plans.people_from_addressee_values(address_values.get(doc.pk, [])))
+            is_executor = doctor_id in executor_ids
+            is_curator = doc.who_create_id == doctor_id
+            if not is_executor and not is_curator:
+                continue
+            rows.append(row_type(plan.pk, plan.display_title() or f"План {plan.pk}", doc.pk, doc.time_confirm, is_executor, is_curator))
+        return rows
+
+    @staticmethod
     def participant_plans(who, date_from=None, date_to=None):
         from django.utils import timezone
 
@@ -4874,6 +4954,8 @@ class Documents(models.Model):
         if date_error:
             return {"ok": False, "message": date_error, "result": []}
         found = list(query_plans(who.pk, start, end, TIME_ZONE))
+        found.extend(Documents._participant_test_only_rows(who, start, end, {(row.document_id, row.plan_id) for row in found}))
+        found.sort(key=lambda row: (row.time_confirm, row.document_id, -row.plan_id), reverse=True)
         tasks_by_pair = Documents._participant_plan_tasks(found)
         task_lists = [tasks_by_pair.get((row.document_id, row.plan_id), []) for row in found]
         executor_labels = Documents._executor_labels(task_lists)
