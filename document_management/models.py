@@ -2310,9 +2310,10 @@ class Plans(models.Model):
                 continue
             row = Plans.preview_one(plan)
             Plans.fill_empty_curators(row, doctor)
-            Plans.fill_empty_executors(row, executors)
             result.append(row)
         DocumentPlanPeople.apply_preview(document, result)
+        for row in result:
+            Plans.fill_empty_executors(row, executors)
         return result
 
     @staticmethod
@@ -6428,6 +6429,8 @@ class ControlPlan(models.Model):
                 executors = override.executors if isinstance(override.executors, list) else []
             else:
                 executors = task.executors if isinstance(task.executors, list) and task.executors else addressees
+            if not Plans.people_ids(executors):
+                executors = addressees
             if override is not None and override.curator is not None:
                 curators = override.curator if isinstance(override.curator, list) else []
             else:
