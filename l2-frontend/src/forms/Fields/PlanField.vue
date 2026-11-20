@@ -95,9 +95,19 @@
                     class="executor"
                     header="Исполнители"
                     :disabled="peopleLocked"
-                    :value="row.executors"
+                    :value="shownExecutors(row)"
                     @input="onPeople(plan.id, row, 'executors', $event)"
                   />
+                  <button
+                    v-if="showPeopleCopy(plan, row)"
+                    type="button"
+                    class="column-copy"
+                    title="Такой же исполнитель у остальных задач"
+                    :disabled="copyingPeople"
+                    @click="applyPeopleToRest(plan, 'executors')"
+                  >
+                    <i class="glyphicon glyphicon-arrow-down" />
+                  </button>
                   <span class="executor-label">Куратор</span>
                   <AddresseeField
                     class="executor"
@@ -106,6 +116,16 @@
                     :value="row.curator"
                     @input="onPeople(plan.id, row, 'curator', $event)"
                   />
+                  <button
+                    v-if="showPeopleCopy(plan, row)"
+                    type="button"
+                    class="column-copy"
+                    title="Такой же куратор у остальных задач"
+                    :disabled="copyingPeople"
+                    @click="applyPeopleToRest(plan, 'curator')"
+                  >
+                    <i class="glyphicon glyphicon-arrow-down" />
+                  </button>
                 </div>
                 <div
                   v-for="row in shownTests(group.tests, plan.id)"
@@ -147,9 +167,19 @@
                     class="executor"
                     header="Исполнители"
                     :disabled="peopleLocked"
-                    :value="row.executors"
+                    :value="shownExecutors(row)"
                     @input="onPeople(plan.id, row, 'executors', $event)"
                   />
+                  <button
+                    v-if="showPeopleCopy(plan, row)"
+                    type="button"
+                    class="column-copy"
+                    title="Такой же исполнитель у остальных задач"
+                    :disabled="copyingPeople"
+                    @click="applyPeopleToRest(plan, 'executors')"
+                  >
+                    <i class="glyphicon glyphicon-arrow-down" />
+                  </button>
                   <span class="executor-label">Куратор</span>
                   <AddresseeField
                     class="executor"
@@ -158,6 +188,16 @@
                     :value="row.curator"
                     @input="onPeople(plan.id, row, 'curator', $event)"
                   />
+                  <button
+                    v-if="showPeopleCopy(plan, row)"
+                    type="button"
+                    class="column-copy"
+                    title="Такой же куратор у остальных задач"
+                    :disabled="copyingPeople"
+                    @click="applyPeopleToRest(plan, 'curator')"
+                  >
+                    <i class="glyphicon glyphicon-arrow-down" />
+                  </button>
                 </div>
                 <div
                   v-for="row in shownTests(plan.tests, plan.id)"
@@ -260,6 +300,7 @@ const emit = defineEmits<{
 
 const root = getCurrentInstance()?.proxy?.$root;
 const pickerKey = ref(0);
+const copyingPeople = ref(false);
 const globalPlans = ref<PlanOption[]>([]);
 const minePlans = ref<PlanOption[]>([]);
 const previews = ref<PlanPreview[]>([]);
@@ -387,6 +428,27 @@ const togglePlan = (id: number) => {
     : [...openIds.value, id];
 };
 
+const visibleCuratorTasks = (plan: PlanRow) => [
+  ...shownGroups(plan).flatMap(group => curatorTasks(group.indicators, plan.id)),
+  ...curatorTasks(plan.indicators, plan.id),
+];
+
+const showPeopleCopy = (plan: PlanRow, row: PlanLine) => (
+  !peopleLocked.value
+  && visibleCuratorTasks(plan).length > 1
+  && visibleCuratorTasks(plan)[0]?.id === row.id
+);
+
+const samePeople = (left: string, right: string) => {
+  const first = peopleIds(left);
+  const second = peopleIds(right);
+  return first.length === second.length && first.every((id, index) => id === second[index]);
+};
+
+const shownExecutors = (row: PlanLine) => (
+  peopleIds(row.executors).length ? row.executors : (props.addressees || '[]')
+);
+
 const planHasBody = (plan: PlanRow) => {
   if (controlsPlan(plan.id)) {
     return curatorTasks(plan.indicators, plan.id).length > 0 || shownGroups(plan).length > 0;
@@ -498,7 +560,7 @@ const onPeople = async (planId: number, row: PlanLine, kind: 'executors' | 'cura
   const next = value || '[]';
   setPeople(planId, row, kind, next);
   if (!props.documentId || !row.indicatorId) {
-    return;
+    return false;
   }
   const data = await api('document-manager/plans/people', {
     documentId: props.documentId,
@@ -510,9 +572,34 @@ const onPeople = async (planId: number, row: PlanLine, kind: 'executors' | 'cura
   if (!data?.ok) {
     root?.$emit('msg', 'error', data?.message || 'Не удалось сохранить');
     loadTitles(selectedIds.value);
-    return;
+    return false;
   }
   setPeople(planId, row, kind, JSON.stringify(data.people || []));
+  return true;
+};
+
+const applyPeopleToRest = async (plan: PlanRow, kind: 'executors' | 'curator') => {
+  const tasks = visibleCuratorTasks(plan);
+  const source = tasks[0];
+  if (copyingPeople.value || !source || tasks.length < 2 || peopleLocked.value) {
+    return;
+  }
+  copyingPeople.value = true;
+  try {
+    const value = kind === 'executors' ? shownExecutors(source) : (source.curator || '[]');
+    for (const row of tasks.slice(1)) {
+      const current = kind === 'executors' ? row.executors : row.curator;
+      if (samePeople(current, value)) {
+        continue;
+      }
+      const saved = await onPeople(plan.id, row, kind, value);
+      if (!saved) {
+        break;
+      }
+    }
+  } finally {
+    copyingPeople.value = false;
+  }
 };
 
 watch(
@@ -753,6 +840,31 @@ loadChoices();
     padding: 0 8px;
     border-radius: 0;
     line-height: 26px;
+  }
+
+  .column-copy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    color: #fff;
+    background: #aab2bd;
+    border: 0;
+    border-bottom: 1px solid #96a0ad;
+    border-left: 1px solid #96a0ad;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #656d78;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
   }
 }
 
