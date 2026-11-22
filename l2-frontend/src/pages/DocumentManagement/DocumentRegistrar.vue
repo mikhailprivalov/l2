@@ -238,6 +238,68 @@
                 </button>
               </div>
             </template>
+            <table
+              v-else-if="tableMode"
+              class="incoming-table"
+            >
+              <thead>
+                <tr>
+                  <th>Номер</th>
+                  <th>Вид документа</th>
+                  <th>Подразделение</th>
+                  <th>Подписал ЭЦП</th>
+                  <th>Подтвердил</th>
+                  <th class="incoming-table__eye" />
+                  <th class="incoming-table__reg" />
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="document in visibleDocuments"
+                  :key="`${document.id}-${document.caseId || 0}`"
+                  :class="{ 'incoming-table__active': isRowSelected(document) }"
+                >
+                  <td>{{ document.number || document.id }}</td>
+                  <td>{{ document.typeTitle }}</td>
+                  <td>{{ document.department }}</td>
+                  <td>{{ document.signedBy }}</td>
+                  <td>{{ document.confirmedBy }}</td>
+                  <td class="incoming-table__eye">
+                    <button
+                      class="doc-eye"
+                      type="button"
+                      title="Открыть"
+                      @click="selectListRow(document)"
+                    >
+                      <i class="fas fa-eye" />
+                    </button>
+                  </td>
+                  <td class="incoming-table__reg">
+                    <button
+                      v-if="!document.registrationNumber"
+                      class="doc-reg"
+                      type="button"
+                      title="Зарегистрировать"
+                      @click="registerRow(document)"
+                    >
+                      Р
+                    </button>
+                    <template v-else>
+                      <span>{{ document.registrationNumber }}</span>
+                      <button
+                        v-if="internalJournal"
+                        class="doc-resolution"
+                        type="button"
+                        title="Резолюция"
+                        @click="openResolution(document)"
+                      >
+                        <i class="fa-regular fa-pen-to-square" />
+                      </button>
+                    </template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             <template v-else>
               <div
                 v-for="document in visibleDocuments"
@@ -246,9 +308,9 @@
               >
               <button
                 class="doc-btn"
-                :class="{ 'active-button': selectedDocument === document.id }"
+                :class="{ 'active-button': isRowSelected(document) }"
                 type="button"
-                @click="selectDocument(document.id)"
+                @click="selectListRow(document)"
               >
                 <span class="doc-title">{{ document.title }}</span>
                 <i
@@ -277,6 +339,79 @@
               v-else-if="showTopics"
               :block-id="selectedBlock"
             />
+            <DocumentViewer
+              v-else
+              :document-id="viewerDocumentId"
+              :case-id="viewerCaseId"
+              :show-case-documents="Boolean(viewerCaseId)"
+              :registered-number="openRegistrationNumber"
+              @reviewed="loadPendingCount"
+              @opened="loadPendingCount"
+              @visibility-change="loadDocuments"
+            />
+            <div
+              v-if="resolutionDocumentId"
+              class="resolution-pane"
+            >
+              <div class="resolution-pane__title">
+                Резолюция {{ resolutionNumber }}
+              </div>
+              <div
+                ref="resolutionBody"
+                class="resolution-pane__body"
+              >
+                <div
+                  v-for="(row, index) in resolutionRows"
+                  :key="row.key"
+                  class="resolution-pair"
+                >
+                  <textarea
+                    v-model="row.note"
+                    class="form-control resolution-note"
+                    rows="1"
+                    maxlength="255"
+                    placeholder="Резолюция"
+                    @input="fitResolutionNote"
+                  />
+                  <AddresseeField
+                    :value="row.addressee"
+                    header="Адресат"
+                    @input="onResolutionAddressee(row.key, $event)"
+                  />
+                  <button
+                    class="resolution-remove"
+                    type="button"
+                    title="Убрать"
+                    @click="removeResolutionRow(index)"
+                  >
+                    ×
+                  </button>
+                </div>
+                <button
+                  class="btn btn-blue-nb resolution-add"
+                  type="button"
+                  @click="addResolutionRow"
+                >
+                  Добавить
+                </button>
+              </div>
+              <div class="resolution-pane__footer">
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="closeResolution"
+                >
+                  Закрыть
+                </button>
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="saveResolutions"
+                >
+                  Сохранить
+                </button>
+              </div>
+            </div>
           </div>
         </template>
       </TwoSidedLayout>
@@ -431,8 +566,11 @@ import Modal from '@/ui-cards/Modal.vue';
 import DocumentBlockPanel from '@/pages/DocumentManagement/DocumentBlockPanel.vue';
 import MonitoringPeriodModal from '@/pages/DocumentManagement/MonitoringPeriodModal.vue';
 import DocumentTestPanel from '@/pages/DocumentManagement/DocumentTestPanel.vue';
+import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
+import AddresseeField from '@/forms/Fields/AddresseeField.vue';
 
 const LEFT_WIDTH_STORAGE_KEY = 'document-registrar-left-width';
+const TABLE_LEFT_WIDTH_STORAGE_KEY = 'document-registrar-left-width-table';
 const MIN_SIDE_WIDTH_PX = 80;
 const ISSUING_BUTTON_CENTER = 0.3;
 
@@ -450,12 +588,12 @@ const journals = ref<DocumentJournalRow[]>([]);
 const direction = ref('');
 const directionVariants = computed(() => journals.value.map(row => row.title));
 const selectedJournal = computed(() => journals.value.find(row => row.title === direction.value) || null);
-const internalIncomingCount = ref(0);
+const journalBadges = ref<Record<string, number>>({});
 const directionBadges = computed(() => {
   const badges: Record<string, string> = {};
   journals.value.forEach(row => {
     if (row.showsSignedChiefs) {
-      badges[row.title] = String(internalIncomingCount.value);
+      badges[row.title] = String(Number(journalBadges.value[String(row.id)]) || 0);
     }
   });
   return badges;
@@ -484,9 +622,9 @@ type CreatePayload = {
 const pendingCreate = ref<CreatePayload | null>(null);
 const splitEl = ref<HTMLElement | null>(null);
 
-const readStoredLeftWidth = (): number | null => {
+const readStoredLeftWidth = (key: string): number | null => {
   try {
-    const value = Number(localStorage.getItem(LEFT_WIDTH_STORAGE_KEY));
+    const value = Number(localStorage.getItem(key));
     if (Number.isFinite(value) && value >= MIN_SIDE_WIDTH_PX) {
       return value;
     }
@@ -497,8 +635,10 @@ const readStoredLeftWidth = (): number | null => {
 };
 
 const issuingButtonCenter = (width: number) => Math.round(width * ISSUING_BUTTON_CENTER);
-const storedLeftWidth = readStoredLeftWidth();
-const leftWidthPx = ref(storedLeftWidth ?? issuingButtonCenter(window.innerWidth));
+const storedLeftWidth = readStoredLeftWidth(LEFT_WIDTH_STORAGE_KEY);
+const plainWidthPx = ref(storedLeftWidth ?? issuingButtonCenter(window.innerWidth));
+const tableWidthPx = ref<number | null>(readStoredLeftWidth(TABLE_LEFT_WIDTH_STORAGE_KEY));
+const leftWidthPx = ref(plainWidthPx.value);
 const query = ref('');
 const byNumber = ref(true);
 const byCase = ref(false);
@@ -550,6 +690,16 @@ const showHidden = ref(storedListFilter.hidden);
 const showMyCases = ref(storedListFilter.myCases);
 const showTopics = ref(storedListFilter.topics);
 const showTests = ref(storedListFilter.tests);
+const tableMode = computed(() => {
+  if (showTests.value || showTopics.value || showMyCases.value) {
+    return false;
+  }
+  const title = (selectedJournal.value?.title || '').trim().toLocaleLowerCase();
+  return title === 'исходящие' || title === 'внутренние' || title === 'внутренние входящие';
+});
+const internalJournal = computed(() => (
+  (selectedJournal.value?.title || '').trim().toLocaleLowerCase() === 'внутренние'
+));
 const pendingReviewCount = ref(0);
 const pendingSignatureCount = ref(0);
 const documents = ref<{
@@ -559,12 +709,37 @@ const documents = ref<{
   number?: string;
   typeTitle?: string;
   department?: string;
+  signedBy?: string;
+  confirmedBy?: string;
+  registrationNumber?: string;
   fio?: string;
+  caseId?: number;
 }[]>([]);
 const listQuery = ref('');
 const blocks = ref<{ id: number; title: string; creator: string; createdAt: string }[]>([]);
 const tests = ref<{ id: number; title: string; shortTitle?: string }[]>([]);
 const selectedDocument = ref<number | null>(null);
+const selectedCase = ref<number | null>(null);
+
+const clearSelection = () => {
+  selectedDocument.value = null;
+  selectedCase.value = null;
+};
+
+const keepSelection = () => {
+  if (showMyCases.value && selectedCase.value) {
+    const row = documents.value.find(item => item.caseId === selectedCase.value);
+    if (!row) {
+      clearSelection();
+      return;
+    }
+    selectedDocument.value = row.id;
+    return;
+  }
+  if (selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
+    clearSelection();
+  }
+};
 const selectedBlock = ref<number | null>(null);
 const selectedTest = ref<number | null>(null);
 const blockModalOpen = ref(false);
@@ -639,15 +814,19 @@ const toggleRole = (id: string) => {
 const applyListCounts = (data?: {
   pendingReviewCount?: number;
   pendingSignatureCount?: number;
-  internalIncomingCount?: number;
+  journalBadges?: Record<string, number>;
 } | null) => {
   pendingReviewCount.value = Number(data?.pendingReviewCount) || 0;
   pendingSignatureCount.value = Number(data?.pendingSignatureCount) || 0;
-  internalIncomingCount.value = Number(data?.internalIncomingCount) || 0;
+  const next: Record<string, number> = {};
+  Object.entries(data?.journalBadges || {}).forEach(([key, value]) => {
+    next[String(key)] = Number(value) || 0;
+  });
+  journalBadges.value = next;
 };
 
 const loadPendingCount = async () => {
-  applyListCounts(await api('document-manager/documents/list', { countOnly: true }));
+  applyListCounts(await api('document-manager/documents/list', { countOnly: true, registrar: true }));
 };
 
 const loadRecent = async (append = false) => {
@@ -664,6 +843,7 @@ const loadRecent = async (append = false) => {
       page: nextPage,
       pageSize: RECENT_PAGE_SIZE,
       journalId: selectedJournal.value?.id || null,
+      registrar: true,
     });
     if (loadId !== documentsLoadId) {
       return;
@@ -698,7 +878,7 @@ const loadDocuments = async () => {
   const hasListFilter = roleFilter.value === 'created' || roleFilter.value === 'toReview' || roleFilter.value === 'recent';
   const journalId = selectedJournal.value?.id || null;
   if (showTests.value) {
-    selectedDocument.value = null;
+    clearSelection();
     selectedBlock.value = null;
     blocks.value = [];
     await loadPendingCount();
@@ -721,7 +901,7 @@ const loadDocuments = async () => {
   tests.value = [];
   selectedTest.value = null;
   if (showTopics.value) {
-    selectedDocument.value = null;
+    clearSelection();
     await loadPendingCount();
     await store.dispatch(actions.INC_LOADING);
     try {
@@ -748,15 +928,13 @@ const loadDocuments = async () => {
     }
     await store.dispatch(actions.INC_LOADING);
     try {
-      const data = await api('document-manager/documents/list', { journalId });
+      const data = await api('document-manager/documents/list', { journalId, registrar: true });
       if (loadId !== documentsLoadId) {
         return;
       }
       documents.value = data?.result || [];
       applyListCounts(data);
-      if (selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
-        selectedDocument.value = null;
-      }
+      keepSelection();
     } finally {
       await store.dispatch(actions.DEC_LOADING);
     }
@@ -774,15 +952,14 @@ const loadDocuments = async () => {
       hidden: Boolean(canViewHidden.value && showHidden.value),
       myCases: Boolean(showMyCases.value),
       journalId,
+      registrar: true,
     });
     if (loadId !== documentsLoadId) {
       return;
     }
     documents.value = data?.result || [];
     applyListCounts(data);
-    if (selectedDocument.value && !documents.value.some(row => row.id === selectedDocument.value)) {
-      selectedDocument.value = null;
-    }
+    keepSelection();
   } finally {
     await store.dispatch(actions.DEC_LOADING);
   }
@@ -795,7 +972,7 @@ const toggleHidden = () => {
   const next = !showHidden.value;
   listQuery.value = '';
   showHidden.value = next;
-  selectedDocument.value = null;
+  clearSelection();
   if (next) {
     showMyCases.value = false;
     showTopics.value = false;
@@ -812,7 +989,7 @@ const toggleMyCases = () => {
   listQuery.value = '';
   const next = !showMyCases.value;
   showMyCases.value = next;
-  selectedDocument.value = null;
+  clearSelection();
   if (next) {
     showHidden.value = false;
     showTopics.value = false;
@@ -829,7 +1006,7 @@ const toggleTopics = () => {
   listQuery.value = '';
   const next = !showTopics.value;
   showTopics.value = next;
-  selectedDocument.value = null;
+  clearSelection();
   if (next) {
     showHidden.value = false;
     showMyCases.value = false;
@@ -846,7 +1023,7 @@ const toggleTests = () => {
   listQuery.value = '';
   const next = !showTests.value;
   showTests.value = next;
-  selectedDocument.value = null;
+  clearSelection();
   if (next) {
     showHidden.value = false;
     showMyCases.value = false;
@@ -894,6 +1071,7 @@ const searchDocuments = async () => {
       dateFrom: toApiDate(dateRange.value[0]),
       dateTo: toApiDate(dateRange.value[1]),
       journalId: selectedJournal.value?.id || null,
+      registrar: true,
     });
     if (listSearch && loadId !== documentsLoadId) {
       return;
@@ -908,14 +1086,20 @@ const searchDocuments = async () => {
         documents.value = rows;
         recentPage.value = 1;
         recentHasMore.value = false;
-        selectedDocument.value = rows[0]?.id || null;
+        if (tableMode.value) {
+          clearSelection();
+        } else {
+          const first = rows[0];
+          selectedDocument.value = first?.id || null;
+          selectedCase.value = showMyCases.value && first?.caseId ? first.caseId : null;
+        }
       }
       root.$emit('msg', 'ok', result.message || 'Найдено');
     } else {
       if (listSearch) {
         documents.value = [];
         recentHasMore.value = false;
-        selectedDocument.value = null;
+        clearSelection();
       }
       root.$emit('msg', 'error', result?.message || 'Документ не найден');
     }
@@ -924,8 +1108,219 @@ const searchDocuments = async () => {
   }
 };
 
-const selectDocument = (id: number) => {
-  selectedDocument.value = id;
+const selectListRow = (row: { id: number; caseId?: number }) => {
+  selectedDocument.value = row.id;
+  selectedCase.value = showMyCases.value && row.caseId ? row.caseId : null;
+};
+
+const isRowSelected = (row: { id: number; caseId?: number }) => (
+  showMyCases.value && row.caseId
+    ? selectedCase.value === row.caseId
+    : selectedDocument.value === row.id
+);
+
+const viewerCaseId = computed(() => (
+  showMyCases.value && selectedCase.value ? selectedCase.value : null
+));
+
+const viewerDocumentId = computed(() => (
+  viewerCaseId.value ? null : selectedDocument.value
+));
+
+const openRegistrationNumber = computed(() => {
+  const id = viewerDocumentId.value;
+  if (!id) {
+    return '';
+  }
+  const row = documents.value.find(item => item.id === id);
+  return row?.registrationNumber || '';
+});
+
+const registerRow = async (row: { id: number; registrationNumber?: string }) => {
+  if (!row.id || row.registrationNumber) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/documents/register', { id: row.id });
+    if (result?.ok) {
+      const current = documents.value.find(item => item.id === row.id);
+      if (current) {
+        current.registrationNumber = result.number || '';
+      }
+      root.$emit('msg', 'ok', 'Зарегистрировано');
+    } else {
+      root.$emit('msg', 'error', result?.message || 'Ошибка регистрации');
+    }
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+type ResolutionFormRow = {
+  key: number;
+  id: number;
+  note: string;
+  addressee: string;
+};
+
+const resolutionDocumentId = ref<number | null>(null);
+const resolutionNumber = ref('');
+const resolutionRows = ref<ResolutionFormRow[]>([]);
+const resolutionBody = ref<HTMLElement | null>(null);
+let resolutionKey = 0;
+
+const growNote = (field: HTMLTextAreaElement) => {
+  const area = field;
+  area.style.height = '34px';
+  const border = area.offsetHeight - area.clientHeight;
+  area.style.height = `${area.scrollHeight + border}px`;
+};
+
+const fitResolutionNote = (event: Event) => {
+  const field = event.target;
+  if (field instanceof HTMLTextAreaElement) {
+    growNote(field);
+  }
+};
+
+const fitResolutionNotes = () => {
+  nextTick(() => {
+    resolutionBody.value?.querySelectorAll('textarea').forEach(node => {
+      growNote(node as HTMLTextAreaElement);
+    });
+  });
+};
+
+const nextResolutionKey = () => {
+  resolutionKey += 1;
+  return resolutionKey;
+};
+
+const resolutionAddressee = (id?: number, fio?: string, department?: string) => {
+  if (!id) {
+    return '[]';
+  }
+  return JSON.stringify([{ id, fio: fio || '', department: department || '' }]);
+};
+
+const oneAddressee = (raw: string) => {
+  try {
+    const parsed = JSON.parse(raw || '[]');
+    if (!Array.isArray(parsed) || !parsed.length) {
+      return '[]';
+    }
+    const first = parsed[0];
+    const id = Number(first?.id);
+    if (!id) {
+      return '[]';
+    }
+    return JSON.stringify([{
+      id,
+      fio: first.fio || '',
+      department: first.department || '',
+    }]);
+  } catch {
+    return '[]';
+  }
+};
+
+const employeeIdFrom = (raw: string) => {
+  try {
+    const parsed = JSON.parse(raw || '[]');
+    const id = Number(Array.isArray(parsed) ? parsed[0]?.id : 0);
+    return id > 0 ? id : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const blankResolutionRow = (): ResolutionFormRow => ({
+  key: nextResolutionKey(),
+  id: 0,
+  note: '',
+  addressee: '[]',
+});
+
+const closeResolution = () => {
+  resolutionDocumentId.value = null;
+  resolutionNumber.value = '';
+  resolutionRows.value = [];
+};
+
+const addResolutionRow = () => {
+  resolutionRows.value.push(blankResolutionRow());
+};
+
+const removeResolutionRow = (index: number) => {
+  resolutionRows.value.splice(index, 1);
+};
+
+const onResolutionAddressee = (key: number, value: string) => {
+  const current = resolutionRows.value.find(item => item.key === key);
+  if (current) {
+    current.addressee = oneAddressee(value);
+  }
+};
+
+const resolutionRowsFrom = (rows: {
+  id: number;
+  note?: string;
+  employeeId?: number;
+  employeeFio?: string;
+  employeeDepartment?: string;
+}[]) => (rows || []).map(item => ({
+  key: nextResolutionKey(),
+  id: item.id,
+  note: item.note || '',
+  addressee: resolutionAddressee(item.employeeId, item.employeeFio, item.employeeDepartment),
+}));
+
+const openResolution = async (row: { id: number; registrationNumber?: string }) => {
+  resolutionDocumentId.value = row.id;
+  resolutionNumber.value = row.registrationNumber || '';
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/documents/resolutions', { id: row.id });
+    if (!result?.ok) {
+      closeResolution();
+      root.$emit('msg', 'error', result?.message || 'Резолюции не найдены');
+      return;
+    }
+    resolutionRows.value = resolutionRowsFrom(result.rows || []);
+    if (!resolutionRows.value.length) {
+      addResolutionRow();
+    }
+    fitResolutionNotes();
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+const saveResolutions = async () => {
+  if (!resolutionDocumentId.value) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const result = await api('document-manager/documents/resolutions/save', {
+      id: resolutionDocumentId.value,
+      rows: resolutionRows.value.map(item => ({
+        id: item.id,
+        note: item.note,
+        employeeId: employeeIdFrom(item.addressee),
+      })),
+    });
+    if (!result?.ok) {
+      root.$emit('msg', 'error', result?.message || 'Ошибка сохранения');
+      return;
+    }
+    resolutionRows.value = resolutionRowsFrom(result.rows || []);
+    fitResolutionNotes();
+    root.$emit('msg', 'ok', 'Сохранено');
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
 };
 
 const blockLabel = (block: { title: string; creator: string; createdAt: string }) => (
@@ -940,8 +1335,10 @@ const visibleDocuments = computed(() => {
     return documents.value;
   }
   return documents.value.filter(row => {
-    const haystack = row.title;
-    return folded(haystack || '').includes(filterText);
+    const haystack = [
+      row.title, row.number, row.typeTitle, row.department, row.signedBy, row.confirmedBy, row.registrationNumber,
+    ].join(' ');
+    return folded(haystack).includes(filterText);
   });
 });
 
@@ -1046,11 +1443,10 @@ const runCreate = async (payload: CreatePayload) => {
     if (result?.ok) {
       if (result.emptyCase) {
         root.$emit('msg', 'ok', 'Дело создано');
-        selectedDocument.value = null;
       } else {
         root.$emit('msg', 'ok', 'Документ создан');
-        selectedDocument.value = result.id;
       }
+      clearSelection();
     } else {
       root.$emit('msg', 'error', result?.message || 'Ошибка создания');
     }
@@ -1138,10 +1534,25 @@ const confirmCaseTopic = async () => {
   await runCreate(payload);
 };
 
+const applyJournalWidth = () => {
+  if (tableMode.value) {
+    const width = splitEl.value?.clientWidth || window.innerWidth;
+    leftWidthPx.value = tableWidthPx.value ?? Math.max(MIN_SIDE_WIDTH_PX, Math.round(width * (2 / 3)));
+    return;
+  }
+  leftWidthPx.value = plainWidthPx.value;
+};
+
 const onLeftWidthChange = (value: number) => {
   leftWidthPx.value = value;
+  const key = tableMode.value ? TABLE_LEFT_WIDTH_STORAGE_KEY : LEFT_WIDTH_STORAGE_KEY;
+  if (tableMode.value) {
+    tableWidthPx.value = value;
+  } else {
+    plainWidthPx.value = value;
+  }
   try {
-    localStorage.setItem(LEFT_WIDTH_STORAGE_KEY, String(value));
+    localStorage.setItem(key, String(value));
   } catch {
     // ignore storage errors
   }
@@ -1162,7 +1573,8 @@ onMounted(async () => {
   if (storedLeftWidth == null) {
     await nextTick();
     const width = splitEl.value?.clientWidth || window.innerWidth;
-    onLeftWidthChange(issuingButtonCenter(width));
+    plainWidthPx.value = issuingButtonCenter(width);
+    leftWidthPx.value = plainWidthPx.value;
   }
   await store.dispatch(actions.INC_LOADING);
   try {
@@ -1181,8 +1593,24 @@ watch(roleFilter, () => {
   loadDocuments();
 });
 
-watch(direction, () => {
+watch(internalJournal, (value) => {
+  if (!value) {
+    closeResolution();
+  }
+});
+
+watch(direction, async () => {
+  if (tableMode.value) {
+    clearSelection();
+  }
+  await nextTick();
+  applyJournalWidth();
   loadDocuments();
+});
+
+watch(tableMode, async () => {
+  await nextTick();
+  applyJournalWidth();
 });
 
 watch([roleFilter, showHidden, showMyCases, showTopics, showTests], () => {
@@ -1326,6 +1754,13 @@ watch([roleFilter, showHidden, showMyCases, showTopics, showTests], () => {
   background-color: #fff;
 }
 
+.split-right {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .doc-pane {
   display: flex;
   flex-direction: column;
@@ -1391,14 +1826,175 @@ watch([roleFilter, showHidden, showMyCases, showTopics, showTests], () => {
   }
 
   tbody tr {
-    cursor: pointer;
+    cursor: default;
   }
 
-  tbody tr:hover,
-  &__active {
-    background: #434a54;
+  tbody tr:hover {
+    background: #f3f3f3;
+    color: #434a54;
+  }
+
+  tbody tr.incoming-table__active,
+  tbody tr.incoming-table__active:hover {
+    background: #049372;
     color: #fff;
   }
+
+  &__eye {
+    width: 34px;
+    text-align: center;
+  }
+
+  &__reg {
+    width: 1%;
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+.doc-reg {
+  box-sizing: border-box;
+  min-width: 22px;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #aab2bd;
+  border-radius: 0;
+  background: #aab2bd;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+
+  &:hover {
+    background: #434a54;
+    border-color: #434a54;
+    color: #fff;
+  }
+}
+
+.doc-resolution {
+  box-sizing: border-box;
+  min-width: 22px;
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0;
+  border: 1px solid #aab2bd;
+  border-radius: 0;
+  background: #aab2bd;
+  color: #fff;
+  font-size: 12px;
+  line-height: 20px;
+
+  &:hover {
+    background: #434a54;
+    border-color: #434a54;
+    color: #fff;
+  }
+}
+
+.resolution-pane {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  background: #f8f7f7;
+}
+
+.resolution-pane__title {
+  flex: 0 0 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: #aab2bd;
+  color: #fff;
+  font-size: 14px;
+}
+
+.resolution-pane__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+}
+
+.resolution-pair {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.resolution-note {
+  flex: 1 1 40%;
+  min-width: 0;
+  min-height: 34px;
+  height: 34px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  overflow: hidden;
+  line-height: 20px;
+  resize: none;
+  border-radius: 0;
+}
+
+.resolution-pair :deep(.addressee-field) {
+  flex: 1 1 40%;
+  min-width: 0;
+}
+
+.resolution-remove {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #aab2bd;
+  border-radius: 0;
+  background: #aab2bd;
+  color: #fff;
+  font-size: 18px;
+  line-height: 32px;
+
+  &:hover {
+    background: #434a54;
+    border-color: #434a54;
+    color: #fff;
+  }
+}
+
+.resolution-add {
+  height: 34px;
+  border-radius: 0;
+}
+
+.resolution-pane__footer {
+  flex: 0 0 34px;
+  display: flex;
+  justify-content: flex-end;
+  background: #f4f4f4;
+  border-top: 1px solid #b1b1b1;
+
+  .btn {
+    height: 34px;
+    border-radius: 0;
+  }
+}
+
+.doc-eye {
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  line-height: 22px;
 }
 
 .doc-row {

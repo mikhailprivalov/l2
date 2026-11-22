@@ -14,6 +14,7 @@ from document_management.models import (  # noqa: I001
     AddresseeGroup,
     DocumentFieldGroups,
     DocumentRecent,
+    DocumentResolution,
     DocumentReview,
     DocumentPickerFavorite,
     DocumentCase,
@@ -23,6 +24,7 @@ from document_management.models import (  # noqa: I001
     DocumentManagerLog,
     Documents,
     DocumentJournal,
+    DocumentNumberGenerator,
     GroupDocuments,
     PlaceSection,
     DouTest,
@@ -837,12 +839,49 @@ def journals_update(request):
     return status_response(False, result.get("message"))
 
 
-def _document_list_counts(doctor):
-    return {
-        "pendingReviewCount": DocumentReview.pending_count(doctor),
-        "pendingSignatureCount": DocumentEmployeeSign.pending_count(doctor),
+@login_required
+@group_required("Конструктор: ДОУ")
+def number_generators_list(request):
+    return JsonResponse({"result": DocumentNumberGenerator.list_json()})
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def number_generators_details(request):
+    data = _request_data(request)
+    result = DocumentNumberGenerator.get_details(data.get("id"))
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def number_generators_update(request):
+    data = _request_data(request)
+    result = DocumentNumberGenerator.save_generator(data.get("id", -1), data.get("title", ""), data.get("mask", ""), data.get("journalId"), data.get("resetEachYear"))
+    if result.get("ok"):
+        _audit(request, DocumentManagerLog.NUMBER_GENERATOR, {"id": result.get("id")}, object_key=result.get("id"))
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+def _registrar_filters(doctor, data):
+    registrar = bool(data.get("registrar"))
+    signed_only = registrar and Documents.registrar_mode(doctor) == "signed"
+    confirmed_only = (not signed_only) and (registrar or bool(data.get("confirmedOnly")))
+    return registrar, signed_only, confirmed_only
+
+
+def _document_list_counts(doctor, confirmed_only=False, signed_only=False, registrar=False):
+    counts = {
+        "pendingReviewCount": DocumentReview.pending_count(doctor, confirmed_only, signed_only),
+        "pendingSignatureCount": DocumentEmployeeSign.pending_count(doctor, confirmed_only or registrar),
         "internalIncomingCount": Documents.chief_signed_count(),
     }
+    if registrar:
+        counts["journalBadges"] = Documents.registrar_journal_badges(doctor)
+    return counts
 
 
 @login_required
@@ -850,7 +889,8 @@ def _document_list_counts(doctor):
 def documents_list(request):
     data = _request_data(request)
     doctor = request.user.doctorprofile
-    counts = _document_list_counts(doctor)
+    registrar, signed_only, confirmed_only = _registrar_filters(doctor, data)
+    counts = _document_list_counts(doctor, confirmed_only, signed_only, registrar)
     if data.get("countOnly"):
         return JsonResponse(counts)
     if data.get("filter") == "internalIncoming":
@@ -886,6 +926,9 @@ def documents_list(request):
                 data.get("hidden"),
                 data.get("myCases"),
                 data.get("journalId"),
+                confirmed_only,
+                signed_only,
+                registrar,
             ),
             **counts,
         }
@@ -916,15 +959,20 @@ def documents_find(request):
 @group_required("ДОУ: просмотр документов")
 def documents_search(request):
     data = _request_data(request)
+    doctor = request.user.doctorprofile
+    _registrar, signed_only, confirmed_only = _registrar_filters(doctor, data)
     result = Documents.search(
         data.get("query"),
         by_number=bool(data.get("byNumber")),
         by_text=bool(data.get("byText")),
         by_case=bool(data.get("byCase")),
-        who=request.user.doctorprofile,
+        who=doctor,
         date_from=data.get("dateFrom"),
         date_to=data.get("dateTo"),
         journal_id=data.get("journalId"),
+        confirmed_only=confirmed_only,
+        signed_only=signed_only,
+        table=_registrar,
     )
     if result.get("ok"):
         return JsonResponse(result)
@@ -935,7 +983,9 @@ def documents_search(request):
 @group_required("ДОУ: просмотр документов")
 def documents_recent(request):
     data = _request_data(request)
-    return JsonResponse(DocumentRecent.get_page(request.user.doctorprofile, data.get("page", 1), data.get("pageSize"), data.get("journalId")))
+    doctor = request.user.doctorprofile
+    _registrar, signed_only, _confirmed = _registrar_filters(doctor, data)
+    return JsonResponse(DocumentRecent.get_page(doctor, data.get("page", 1), data.get("pageSize"), data.get("journalId"), signed_only, _registrar))
 
 
 @login_required
@@ -1004,6 +1054,39 @@ def documents_save(request):
 def documents_confirm(request):
     result = _save_from_request(request, with_confirm=True)
     if result.get("ok"):
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_register(request):
+    data = _request_data(request)
+    doctor = request.user.doctorprofile
+    result = Documents.register(data.get("id"), doctor)
+    if result.get("ok"):
+        _audit(request, DocumentManagerLog.REGISTER, {"id": result.get("id"), "number": result.get("number")}, document_id=result.get("id"))
+        return status_response(True, data=result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_resolutions(request):
+    data = _request_data(request)
+    result = DocumentResolution.list_for(data.get("id"), request.user.doctorprofile)
+    if result.get("ok"):
+        return JsonResponse(result)
+    return status_response(False, result.get("message"))
+
+
+@login_required
+@group_required("ДОУ: просмотр документов")
+def documents_resolutions_save(request):
+    data = _request_data(request)
+    result = DocumentResolution.save_for(data.get("id"), data.get("rows"), request.user.doctorprofile)
+    if result.get("ok"):
+        _audit(request, DocumentManagerLog.RESOLUTION, {"id": result.get("id")}, document_id=result.get("id"))
         return status_response(True, data=result)
     return status_response(False, result.get("message"))
 

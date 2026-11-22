@@ -34,6 +34,10 @@
           >{{ documentId }}</a>
           <span class="research-title-text">{{ displayTitle }}</span>
           <span
+            v-if="registrationNumber && registrationNumber !== displayTitle"
+            class="doc-reg-number"
+          >{{ registrationNumber }}</span>
+          <span
             v-if="anyApproverRejected"
             class="doc-agreed doc-agreed--no"
           >Не согласован</span>
@@ -233,11 +237,11 @@
                 </div>
                 <template v-else>
                   <div
-                    v-if="serviceFormTitle(row.research)"
+                    v-if="row.authorLine"
                     class="group"
                   >
                     <div class="group-title">
-                      {{ serviceFormTitle(row.research) }}
+                      {{ row.authorLine }}
                     </div>
                   </div>
                   <DescriptiveForm
@@ -454,11 +458,11 @@
         data-document-form
       >
         <div
-          v-if="serviceFormTitle(research)"
+          v-if="authorLine"
           class="group"
         >
           <div class="group-title">
-            {{ serviceFormTitle(research) }}
+            {{ authorLine }}
           </div>
         </div>
         <DescriptiveForm
@@ -906,12 +910,14 @@ const props = defineProps<{
   approvalMode?: boolean;
   signatureMode?: boolean;
   controlPlanId?: number | null;
+  registeredNumber?: string;
 }>();
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
   (e: 'visibility-change'): void;
   (e: 'reviewed'): void;
+  (e: 'opened'): void;
   (e: 'approved'): void;
   (e: 'signed'): void;
   (e: 'link-document'): void;
@@ -922,13 +928,14 @@ const root = getCurrentInstance().proxy.$root;
 
 const contentEl = ref<HTMLElement | null>(null);
 const title = ref('');
-const serviceFormTitle = (value: { title?: string; groups?: unknown[] } | null) => {
-  const text = String(value?.title || '').trim();
-  if (!text || !Array.isArray(value?.groups) || !value.groups.length) {
-    return '';
+const authorLine = ref('');
+const registrationNumber = ref('');
+
+watch(() => props.registeredNumber, (value) => {
+  if (value) {
+    registrationNumber.value = value;
   }
-  return text;
-};
+});
 
 const displayTitle = computed(() => {
   const text = (title.value || '').trim();
@@ -1112,6 +1119,7 @@ type CaseDocumentRow = {
   canReset: boolean;
   hasPrintTemplate: boolean;
   whoConfirmed: string;
+  authorLine: string;
   caseIds: number[];
   availableCases: { id: number; label: string }[];
 };
@@ -1149,6 +1157,7 @@ const blankDocumentBody = () => ({
   canReset: false,
   hasPrintTemplate: false,
   whoConfirmed: '',
+  authorLine: '',
   caseIds: [],
   availableCases: [],
 });
@@ -1212,6 +1221,7 @@ const loadDocumentBody = async (id: number) => {
       canReset: Boolean(result.canReset),
       hasPrintTemplate: Boolean(result.hasPrintTemplate),
       whoConfirmed: result.whoConfirmed || '',
+      authorLine: result.authorLine || '',
       caseIds: idList(result.caseIds),
       availableCases: result.availableCases || [],
       loaded: true,
@@ -1506,6 +1516,8 @@ const load = async () => {
   approvalComment.value = '';
   caseDocuments.value = [];
   whoConfirmed.value = '';
+  authorLine.value = '';
+  registrationNumber.value = '';
   parentDocument.value = null;
   linkedDocuments.value = [];
   closeLinkMap();
@@ -1563,11 +1575,14 @@ const load = async () => {
       canSign.value = Boolean(result.canSign);
       approvalStatuses.value = result.approvalStatuses || [];
       whoConfirmed.value = result.whoConfirmed || '';
+      authorLine.value = result.authorLine || '';
+      registrationNumber.value = result.registrationNumber || '';
       parentDocument.value = linkRow(result.parentDocument);
       linkedDocuments.value = linkRows(result.linkedDocuments);
       if (result.reviewedNow) {
         emit('reviewed');
       }
+      emit('opened');
     } else {
       root.$emit('msg', 'error', result?.message || 'Ошибка загрузки');
     }
@@ -2253,6 +2268,12 @@ watch(() => [props.documentId, props.caseId], load, { immediate: true });
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-reg-number {
+  flex: 0 0 auto;
+  margin-left: 8px;
   white-space: nowrap;
 }
 

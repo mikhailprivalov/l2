@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 
 import simplejson as json
@@ -3420,7 +3421,10 @@ class DouTestAttempt(models.Model):
     def _quiz(test, attempt, doctor, document=None, editable=None):
         questions, _valid = DouTestAttempt._questions(test)
         linked = document or (attempt.document if attempt and attempt.document_id else None)
-        return DouTestAttempt.as_quiz(test, attempt, questions, DouTestAttempt._can_reset(doctor), linked, editable)
+        can_reset = DouTestAttempt._can_reset(doctor)
+        if linked and (linked.number_registration or "").strip():
+            can_reset = False
+        return DouTestAttempt.as_quiz(test, attempt, questions, can_reset, linked, editable)
 
     @staticmethod
     def get_for(test_id, doctor):
@@ -3518,7 +3522,7 @@ class DouTestAttempt(models.Model):
         from directions.models import Issledovaniya
 
         document = Documents.objects.filter(pk=document_id).first()
-        if not document or not document.time_confirm:
+        if not document or not document.time_confirm or (document.number_registration or "").strip():
             return
         iss = Issledovaniya.objects.filter(document=document).order_by("pk").first()
         if iss:
@@ -3619,6 +3623,10 @@ class DouTestAttempt(models.Model):
             if not test:
                 return {"ok": False, "message": "Тест не найден"}
             rows = list(DouTestAttempt.objects.select_for_update().filter(test=test))
+            document_ids = [row.document_id for row in rows if row.document_id]
+            registered = Documents.objects.filter(pk__in=document_ids).values_list("number_registration", flat=True)
+            if any((number or "").strip() for number in registered):
+                return {"ok": False, "message": "Зарегистрированный документ нельзя сбросить"}
             for row in rows:
                 if row.document_id:
                     DouTestAttempt._clear_confirm(row.document_id, doctor)
@@ -4173,6 +4181,134 @@ class DocumentJournal(models.Model):
         return {"ok": True, "id": obj.pk, "title": obj.title}
 
 
+class DocumentNumberGenerator(models.Model):
+    _TOKEN = re.compile(r"\{(n(?::(\d{1,2}))?|yyyy|yy|mm|dd)\}")
+
+    title = models.CharField(max_length=128, help_text="Название")
+    mask = models.CharField(max_length=64, help_text="Маска номера")
+    journal = models.ForeignKey(DocumentJournal, related_name="number_generators", blank=True, null=True, help_text="Журнал куда отнести", on_delete=models.PROTECT)
+    is_active = models.BooleanField(default=True, blank=True, db_index=True, help_text="Активный генератор журнала")
+    last = models.PositiveIntegerField(default=0, help_text="Последний выданный номер")
+    year = models.PositiveSmallIntegerField(default=0, help_text="Год последнего номера")
+    reset_each_year = models.BooleanField(default=True, blank=True, help_text="Сбрасывать номер каждый год")
+
+    class Meta:
+        verbose_name = "Генератор номеров"
+        verbose_name_plural = "Генераторы номеров"
+
+    def __str__(self):
+        return self.title
+
+    def json(self):
+        journal = self.journal if self.journal_id else None
+        return {
+            "id": self.pk,
+            "title": self.title or "",
+            "mask": self.mask or "",
+            "journalId": self.journal_id,
+            "journalTitle": journal.title if journal else "",
+            "active": bool(self.is_active),
+            "resetEachYear": bool(self.reset_each_year),
+            "last": int(self.last or 0),
+            "year": int(self.year or 0),
+        }
+
+    @classmethod
+    def list_json(cls):
+        rows = cls.objects.select_related("journal").order_by("-is_active", "title", "pk")
+        return [row.json() for row in rows]
+
+    @classmethod
+    def get_details(cls, pk):
+        obj = cls.objects.select_related("journal").filter(pk=pk).first()
+        if not obj:
+            return {"ok": False, "message": "Генератор не найден"}
+        return {"ok": True, **obj.json()}
+
+    @staticmethod
+    def _mask_ok(mask):
+        return bool(DocumentNumberGenerator._TOKEN.search(mask)) and "{n" in mask
+
+    @staticmethod
+    def _journal(journal_id):
+        try:
+            journal_id = int(journal_id)
+        except (TypeError, ValueError):
+            journal_id = 0
+        if journal_id < 1:
+            return None
+        return DocumentJournal.objects.filter(pk=journal_id).first()
+
+    @classmethod
+    def save_generator(cls, pk, title, mask, journal_id, reset_each_year):
+        title = (title or "").strip()
+        mask = (mask or "").strip()
+        if not title:
+            return {"ok": False, "message": "Укажите название"}
+        if len(title) > 128:
+            return {"ok": False, "message": "Название длиннее 128 символов"}
+        if not mask:
+            return {"ok": False, "message": "Укажите маску"}
+        if len(mask) > 64:
+            return {"ok": False, "message": "Маска длиннее 64 символов"}
+        if not cls._mask_ok(mask):
+            return {"ok": False, "message": "В маске нужен номер {n}"}
+        reset_each_year = bool(reset_each_year)
+        creating = pk in (None, -1, "-1")
+        if creating:
+            journal = cls._journal(journal_id)
+            if not journal:
+                return {"ok": False, "message": "Укажите журнал"}
+            with transaction.atomic():
+                list(cls.objects.select_for_update().filter(journal=journal))
+                cls.objects.filter(journal=journal, is_active=True).update(is_active=False)
+                obj = cls.objects.create(title=title, mask=mask, journal=journal, is_active=True, reset_each_year=reset_each_year)
+            return {"ok": True, "id": obj.pk}
+        with transaction.atomic():
+            obj = cls.objects.select_for_update().filter(pk=pk).first()
+            if not obj:
+                return {"ok": False, "message": "Генератор не найден"}
+            obj.title = title
+            obj.mask = mask
+            obj.reset_each_year = reset_each_year
+            fields = ["title", "mask", "reset_each_year"]
+            if not obj.journal_id:
+                journal = cls._journal(journal_id)
+                if not journal:
+                    return {"ok": False, "message": "Укажите журнал"}
+                list(cls.objects.select_for_update().filter(journal=journal).exclude(pk=obj.pk))
+                if obj.is_active:
+                    cls.objects.filter(journal=journal, is_active=True).exclude(pk=obj.pk).update(is_active=False)
+                obj.journal = journal
+                fields.append("journal")
+            obj.save(update_fields=fields)
+        return {"ok": True, "id": obj.pk}
+
+    def next_value(self, moment):
+        if self.reset_each_year and self.year and self.year != moment.year:
+            return 1
+        return int(self.last or 0) + 1
+
+    def render(self, number, moment):
+        def replace(match):
+            kind = match.group(1)
+            width = match.group(2)
+            if kind.startswith("n"):
+                text = str(number)
+                if width:
+                    text = text.zfill(min(int(width), 20))
+                return text
+            if kind == "yyyy":
+                return f"{moment.year:04d}"
+            if kind == "yy":
+                return f"{moment.year % 100:02d}"
+            if kind == "mm":
+                return f"{moment.month:02d}"
+            return f"{moment.day:02d}"
+
+        return self._TOKEN.sub(replace, self.mask or "")
+
+
 class Documents(models.Model):
     type_document = models.ForeignKey(TypeDocuments, db_index=True, default=None, blank=True, null=True, help_text="Тип документа", on_delete=models.SET_NULL)
     schema = models.ForeignKey(
@@ -4188,7 +4324,7 @@ class Documents(models.Model):
     who_create = models.ForeignKey(DoctorProfile, db_index=True, default=None, blank=True, null=True, help_text="Создатель документа", on_delete=models.SET_NULL)
     create_at = models.DateTimeField(auto_now_add=True, help_text="Дата создания документа", db_index=True)
     time_registration = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время регистрации")
-    number_registration = models.CharField(max_length=20, blank=True, help_text="Регистрационный номер документа", db_index=True)
+    number_registration = models.CharField(max_length=64, blank=True, help_text="Регистрационный номер документа", db_index=True)
     is_registered = models.BooleanField(default=False, blank=True, help_text="Прошел регистрацию", db_index=True)
     need_approve = models.BooleanField(default=False, blank=True, help_text="Находится на согласовании", db_index=True)
     need_control = models.BooleanField(default=False, blank=True, help_text="Находится на контроле", db_index=True)
@@ -4485,6 +4621,53 @@ class Documents(models.Model):
         return f"{doctor}, {strdatetimeru(moment)}"
 
     @staticmethod
+    def author_line(doctor):
+        if not doctor:
+            return ""
+        name = (doctor.get_fio() or "").strip()
+        department = doctor.podrazdeleniye.title.strip() if doctor.podrazdeleniye_id and doctor.podrazdeleniye else ""
+        if department and name:
+            return f"{department}, {name}"
+        return department or name
+
+    @staticmethod
+    def register(pk, who):
+        from django.utils import timezone
+
+        try:
+            pk = int(pk)
+        except (TypeError, ValueError):
+            pk = 0
+        if pk < 1:
+            return {"ok": False, "message": "Документ не найден"}
+        with transaction.atomic():
+            obj = Documents.objects.select_for_update(of=("self",)).select_related("type_document").filter(pk=pk).first()
+            if not obj or not Documents.can_see_document(obj, who):
+                return {"ok": False, "message": "Документ не найден"}
+            current = (obj.number_registration or "").strip()
+            if current:
+                return {"ok": True, "id": obj.pk, "number": current}
+            journal_id = obj.type_document.journal_id if obj.type_document_id and obj.type_document else None
+            generator = None
+            if journal_id:
+                generator = DocumentNumberGenerator.objects.select_for_update().filter(journal_id=journal_id, is_active=True).order_by("-pk").first()
+            if not generator:
+                return {"ok": False, "message": "Генератор номеров не задан"}
+            moment = timezone.localtime()
+            number = generator.next_value(moment)
+            rendered = generator.render(number, moment)
+            if not rendered or len(rendered) > 64:
+                return {"ok": False, "message": "Номер длиннее 64 символов"}
+            generator.last = number
+            generator.year = moment.year
+            generator.save(update_fields=["last", "year"])
+            obj.number_registration = rendered
+            obj.is_registered = True
+            obj.time_registration = timezone.now()
+            obj.save(update_fields=["number_registration", "is_registered", "time_registration"])
+        return {"ok": True, "id": obj.pk, "number": rendered}
+
+    @staticmethod
     def linked_cases(obj):
         if not obj:
             return []
@@ -4685,7 +4868,20 @@ class Documents(models.Model):
         return start, end, None
 
     @staticmethod
-    def search(query, by_number=False, by_text=False, by_case=False, who=None, limit=50, date_from=None, date_to=None, journal_id=None):
+    def search(
+        query,
+        by_number=False,
+        by_text=False,
+        by_case=False,
+        who=None,
+        limit=50,
+        date_from=None,
+        date_to=None,
+        journal_id=None,
+        confirmed_only=False,
+        signed_only=False,
+        table=False,
+    ):
         query = (query or "").strip()
         if not query:
             return {"ok": False, "message": "Введите запрос"}
@@ -4783,6 +4979,11 @@ class Documents(models.Model):
         journal_pk = Documents.journal_filter_id(journal_id)
         if journal_pk:
             docs = [doc for doc in docs if doc.type_document_id and doc.type_document.journal_id == journal_pk]
+        if signed_only:
+            allowed = Documents.chief_signed_document_ids()
+            docs = [doc for doc in docs if doc.pk in allowed]
+        elif confirmed_only:
+            docs = [doc for doc in docs if doc.time_confirm]
         order = {pk: index for index, pk in enumerate(found_ids)}
         docs.sort(key=lambda doc: order.get(doc.pk, 0))
         if not docs:
@@ -4797,6 +4998,8 @@ class Documents(models.Model):
         for doc in docs:
             title = doc.list_title(iss_by_doc.get(doc.pk), topic_by_doc.get(doc.pk))
             rows.append({"id": doc.pk, "title": Documents.title_with_id(doc.pk, title)})
+        if table:
+            Documents.attach_registrar_table(rows)
         message = rows[0]["title"] if len(rows) == 1 else f"Найдено {len(rows)}"
         return {"ok": True, "result": rows, "message": message}
 
@@ -5199,11 +5402,14 @@ class Documents(models.Model):
         return [{key: value for key, value in item.items() if key != "key"} for item in grouped]
 
     @staticmethod
-    def chief_signed_document_ids():
+    def chief_signed_document_ids(include_hidden=False):
         chief_ids = set(DoctorProfile.objects.filter(is_chief=True).values_list("pk", flat=True))
         if not chief_ids:
             return set()
-        signed_ids = set(DocumentEmployeeSign.objects.filter(signed_at__isnull=False, document__is_hidden=False).values_list("document_id", flat=True).distinct())
+        signed = DocumentEmployeeSign.objects.filter(signed_at__isnull=False)
+        if not include_hidden:
+            signed = signed.filter(document__is_hidden=False)
+        signed_ids = set(signed.values_list("document_id", flat=True).distinct())
         if not signed_ids:
             return set()
         from directions.models import ParaclinicResult
@@ -5220,6 +5426,104 @@ class Documents(models.Model):
     @staticmethod
     def chief_signed_count():
         return len(Documents.chief_signed_document_ids())
+
+    @staticmethod
+    def _department_ids(setting_name):
+        from django.conf import settings
+
+        found = set()
+        for item in getattr(settings, setting_name, None) or []:
+            try:
+                value = int(item)
+            except (TypeError, ValueError):
+                continue
+            if value > 0:
+                found.add(value)
+        return found
+
+    @staticmethod
+    def registrar_mode(doctor):
+        try:
+            dept_id = int(getattr(doctor, "podrazdeleniye_id", None) or 0)
+        except (TypeError, ValueError):
+            dept_id = 0
+        if dept_id in Documents._department_ids("DOCUMENT_REGISTRAR_SIGNED_DEPARTMENTS"):
+            return "signed"
+        return "confirmed"
+
+    @staticmethod
+    def registrar_journal_badges(doctor):
+        if not doctor:
+            return {}
+        journals = list(DocumentJournal.objects.filter(shows_signed_chiefs=True))
+        if not journals:
+            return {}
+        signed_mode = Documents.registrar_mode(doctor) == "signed"
+        signed_ids = Documents.chief_signed_document_ids() if signed_mode else set()
+        seen = set(DocumentRegistrarSeen.objects.filter(doctor=doctor).values_list("document_id", flat=True))
+        badges = {}
+        for journal in journals:
+            qs = Documents.objects.filter(is_hidden=False, type_document__journal_id=journal.pk).filter(Documents.case_access_q(doctor))
+            if signed_mode:
+                qs = qs.filter(pk__in=signed_ids) if signed_ids else qs.none()
+            else:
+                qs = qs.filter(time_confirm__isnull=False)
+            badges[journal.pk] = len(set(qs.values_list("pk", flat=True)) - seen)
+        return badges
+
+    @staticmethod
+    def attach_registrar_table(rows):
+        ids = []
+        for row in rows or []:
+            if not isinstance(row, dict) or row.get("caseId") or row.get("isCase"):
+                continue
+            try:
+                pk = int(row.get("id"))
+            except (TypeError, ValueError):
+                continue
+            if pk > 0 and pk not in ids:
+                ids.append(pk)
+        if not ids:
+            return rows
+        docs = Documents.objects.filter(pk__in=ids).select_related("type_document", "who_create", "who_create__podrazdeleniye", "who_confirm")
+        by_id = {doc.pk: doc for doc in docs}
+        from directions.models import Issledovaniya
+
+        iss_by_doc = {}
+        for iss in Issledovaniya.objects.filter(document_id__in=ids).select_related("doc_confirmation").order_by("pk"):
+            iss_by_doc.setdefault(iss.document_id, iss)
+        signed_by = {}
+        seen = {}
+        signs = DocumentEmployeeSign.objects.filter(document_id__in=ids, signed_at__isnull=False, employee_id__isnull=False).select_related("employee").order_by("signed_at", "pk")
+        for sign in signs:
+            if not sign.employee:
+                continue
+            used = seen.setdefault(sign.document_id, set())
+            if sign.employee_id in used:
+                continue
+            used.add(sign.employee_id)
+            name = (sign.employee.get_fio() or "").strip()
+            if name:
+                signed_by.setdefault(sign.document_id, []).append(name)
+        for row in rows:
+            doc = by_id.get(row.get("id"))
+            if not doc:
+                continue
+            iss = iss_by_doc.get(doc.pk)
+            confirmer = None
+            if iss is not None and getattr(iss, "time_confirmation", None) and getattr(iss, "doc_confirmation_id", None):
+                confirmer = iss.doc_confirmation
+            elif doc.time_confirm and doc.who_confirm_id:
+                confirmer = doc.who_confirm
+            creator = doc.who_create if doc.who_create_id else None
+            department = creator.podrazdeleniye.title.strip() if creator and creator.podrazdeleniye_id and creator.podrazdeleniye else ""
+            row["number"] = str(doc.pk)
+            row["typeTitle"] = doc.type_document.title if doc.type_document_id and doc.type_document else ""
+            row["department"] = department
+            row["signedBy"] = ", ".join(signed_by.get(doc.pk, []))
+            row["confirmedBy"] = (confirmer.get_fio() or "").strip() if confirmer else ""
+            row["registrationNumber"] = (doc.number_registration or "").strip()
+        return rows
 
     @staticmethod
     def chief_signed_rows():
@@ -5263,7 +5567,7 @@ class Documents(models.Model):
         return value if value > 0 else None
 
     @staticmethod
-    def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False, journal_id=None):
+    def get_list(type_id=None, group_id=None, role_filter=None, who=None, hidden=False, my_cases=False, journal_id=None, confirmed_only=False, signed_only=False, table=False):
         qs = (
             Documents.objects.select_related("type_document", "type_document__group_document", "schema", "document_case")
             .prefetch_related(models.Prefetch("case_links", queryset=DocumentCaseLink.objects.select_related("document_case").order_by("pk")))
@@ -5319,6 +5623,11 @@ class Documents(models.Model):
         journal_pk = Documents.journal_filter_id(journal_id)
         if journal_pk:
             qs = qs.filter(type_document__journal_id=journal_pk)
+        if signed_only:
+            ids = Documents.chief_signed_document_ids(include_hidden=bool(hidden))
+            qs = qs.filter(pk__in=ids) if ids else qs.none()
+        elif confirmed_only:
+            qs = qs.filter(time_confirm__isnull=False)
         docs = list(qs.distinct())
         if not docs:
             return []
@@ -5372,6 +5681,8 @@ class Documents(models.Model):
                 title = " ".join(part for part in (topic, type_doc) if part)
                 payload["title"] = Documents.title_with_id(doc.pk, title)
             result.append(payload)
+        if table:
+            Documents.attach_registrar_table(result)
         return result
 
     @staticmethod
@@ -5880,6 +6191,9 @@ class Documents(models.Model):
         iss = obj.get_issledovaniye()
         research = obj.build_research(iss)
         payload = obj.json
+        topic = (obj.topic_value(iss, research=research) or "").strip()
+        type_title = obj.type_document.title if obj.type_document_id and obj.type_document else "Документ"
+        payload["title"] = topic or type_title
         payload["ok"] = True
         payload["issPk"] = iss.pk if iss else None
         payload["research"] = research
@@ -5887,11 +6201,13 @@ class Documents(models.Model):
         payload["confirmed"] = bool(iss and iss.time_confirmation) or bool(obj.time_confirm)
         payload["approvalJournalCopy"] = bool(obj.approval_journal_copy)
         payload["whoConfirmed"] = Documents.confirmation_text(obj, iss) if payload["confirmed"] else ""
+        payload["authorLine"] = Documents.author_line(obj.who_create if obj.who_create_id else None)
+        payload["registrationNumber"] = (obj.number_registration or "").strip()
         can_hide = Documents.HIDDEN_DOCS_GROUP in group_names
         if not can_hide and who and obj.who_create_id == getattr(who, "pk", None) and not payload["confirmed"]:
             can_hide = True
         payload["canHide"] = can_hide
-        payload["canReset"] = Documents.RESET_GROUP in group_names
+        payload["canReset"] = not payload["registrationNumber"] and Documents.RESET_GROUP in group_names
         payload["isCase"] = bool(obj.type_case_id)
         cases = Documents.linked_cases(obj)
         case_options = DocumentCase.available_options(who)
@@ -5940,6 +6256,7 @@ class Documents(models.Model):
         payload["reviewedNow"] = DocumentReview.mark_opened(obj, who, iss=iss) if payload["confirmed"] else False
         type_doc = obj.type_document.title if obj.type_document else ""
         DocumentRecent.remember(who, obj, topic=obj.topic_value(iss, research=research), type_doc=type_doc)
+        DocumentRegistrarSeen.mark(who, obj)
         return payload
 
     @staticmethod
@@ -6091,6 +6408,8 @@ class Documents(models.Model):
             return {"ok": False, "message": "Нет прав"}
         if not Documents.can_see_document(obj, who):
             return {"ok": False, "message": "Документ не найден"}
+        if (obj.number_registration or "").strip():
+            return {"ok": False, "message": "Зарегистрированный документ нельзя сбросить"}
         iss = Issledovaniya.objects.filter(document=obj).order_by("pk").first()
         attempt = DouTestAttempt.objects.filter(document=obj).first()
         confirmed = bool(obj.time_confirm) or bool(iss and iss.time_confirmation) or bool(attempt and attempt.confirmed_at)
@@ -7006,10 +7325,13 @@ class DocumentEmployeeSign(models.Model):
         return any(row.employee_id == who.pk and not row.signed_at for row in cls._rows(document))
 
     @classmethod
-    def pending_count(cls, who):
+    def pending_count(cls, who, confirmed_only=False):
         if not who:
             return 0
-        return Documents.objects.filter(is_hidden=False, sign_rows__employee_id=who.pk, sign_rows__signed_at__isnull=True).distinct().count()
+        qs = Documents.objects.filter(is_hidden=False, sign_rows__employee_id=who.pk, sign_rows__signed_at__isnull=True)
+        if confirmed_only:
+            qs = qs.filter(time_confirm__isnull=False)
+        return qs.distinct().count()
 
     @classmethod
     def set_signers(cls, document, who, members):
@@ -7136,6 +7458,104 @@ class DocumentResolution(models.Model):
     def __str__(self):
         return f"{self.document} {self.employee} {self.time_resolution} {self.is_cancel}"
 
+    @staticmethod
+    def _internal_registered(document):
+        if not document or not (document.number_registration or "").strip():
+            return False
+        type_document = document.type_document if document.type_document_id else None
+        journal = type_document.journal if type_document and type_document.journal_id else None
+        title = (journal.title or "").strip().lower() if journal else ""
+        return title == "внутренние"
+
+    def row_json(self):
+        employee = self.employee if self.employee_id else None
+        department = ""
+        if employee and employee.podrazdeleniye_id and employee.podrazdeleniye:
+            department = employee.podrazdeleniye.title or ""
+        return {
+            "id": self.pk,
+            "note": self.note_resolution or "",
+            "employeeId": self.employee_id,
+            "employeeFio": employee.get_fio() if employee else "",
+            "employeeDepartment": department,
+        }
+
+    @classmethod
+    def list_for(cls, pk, who):
+        try:
+            pk = int(pk)
+        except (TypeError, ValueError):
+            pk = 0
+        document = Documents.objects.select_related("type_document", "type_document__journal").filter(pk=pk).first()
+        if not document or not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if not cls._internal_registered(document):
+            return {"ok": False, "message": "Резолюция доступна для зарегистрированного внутреннего документа"}
+        rows = cls.objects.filter(document=document, is_cancel=False).select_related("employee", "employee__podrazdeleniye").order_by("pk")
+        return {"ok": True, "id": document.pk, "rows": [row.row_json() for row in rows]}
+
+    @classmethod
+    def save_for(cls, pk, raw_rows, who):
+        from django.utils import timezone
+
+        try:
+            pk = int(pk)
+        except (TypeError, ValueError):
+            pk = 0
+        document = Documents.objects.select_related("type_document", "type_document__journal").filter(pk=pk).first()
+        if not document or not Documents.can_see_document(document, who):
+            return {"ok": False, "message": "Документ не найден"}
+        if not cls._internal_registered(document):
+            return {"ok": False, "message": "Резолюция доступна для зарегистрированного внутреннего документа"}
+        prepared = []
+        for raw in raw_rows or []:
+            if not isinstance(raw, dict):
+                continue
+            note = str(raw.get("note") or "").strip()
+            try:
+                employee_id = int(raw.get("employeeId"))
+            except (TypeError, ValueError):
+                employee_id = 0
+            try:
+                row_id = int(raw.get("id"))
+            except (TypeError, ValueError):
+                row_id = 0
+            if not note or employee_id < 1:
+                continue
+            if len(note) > 255:
+                return {"ok": False, "message": "Резолюция длиннее 255 символов"}
+            prepared.append({"id": row_id if row_id > 0 else 0, "note": note, "employeeId": employee_id})
+        employees = {row.pk: row for row in DoctorProfile.objects.filter(pk__in={item["employeeId"] for item in prepared})}
+        if any(item["employeeId"] not in employees for item in prepared):
+            return {"ok": False, "message": "Адресат не найден"}
+        now = timezone.now()
+        with transaction.atomic():
+            existing = {row.pk: row for row in cls.objects.select_for_update().filter(document=document, is_cancel=False)}
+            kept = []
+            for item in prepared:
+                current = existing.get(item["id"]) if item["id"] else None
+                employee = employees[item["employeeId"]]
+                if current:
+                    current.note_resolution = item["note"]
+                    current.employee = employee
+                    current.save(update_fields=["note_resolution", "employee"])
+                    kept.append(current.pk)
+                else:
+                    created = cls.objects.create(
+                        document=document,
+                        employee=employee,
+                        note_resolution=item["note"],
+                        who_create=who,
+                        time_resolution=now,
+                        is_cancel=False,
+                    )
+                    kept.append(created.pk)
+            for row_id, row in existing.items():
+                if row_id not in kept:
+                    row.is_cancel = True
+                    row.save(update_fields=["is_cancel"])
+        return cls.list_for(document.pk, who)
+
 
 class DocumentControl(models.Model):
     document = models.ForeignKey(Documents, db_index=True, on_delete=models.CASCADE)
@@ -7177,10 +7597,16 @@ class DocumentReview(models.Model):
         return cls.pending_qs(who).values("document_id")
 
     @classmethod
-    def pending_count(cls, who):
+    def pending_count(cls, who, confirmed_only=False, signed_only=False):
         if not who:
             return 0
-        return cls.pending_qs(who).values("document_id").distinct().count()
+        qs = cls.pending_qs(who)
+        if signed_only:
+            ids = Documents.chief_signed_document_ids()
+            qs = qs.filter(document_id__in=ids) if ids else qs.none()
+        elif confirmed_only:
+            qs = qs.filter(document__time_confirm__isnull=False)
+        return qs.values("document_id").distinct().count()
 
     @classmethod
     def mark_opened(cls, document, who, iss=None):
@@ -7257,6 +7683,32 @@ class DocumentReview(models.Model):
         cls.sync_for_document(document, cls.collect_ids_from_research(research))
 
 
+class DocumentRegistrarSeen(models.Model):
+    doctor = models.ForeignKey(DoctorProfile, related_name="registrar_seen", on_delete=models.CASCADE, help_text="Пользователь")
+    document = models.ForeignKey(Documents, related_name="registrar_seen", on_delete=models.CASCADE, help_text="Документ")
+    seen_at = models.DateTimeField(auto_now=True, help_text="Когда открыт")
+
+    class Meta:
+        verbose_name = "Просмотр в регистраторе"
+        verbose_name_plural = "Просмотры в регистраторе"
+        db_table = "document_registrar_seen"
+        unique_together = (("doctor", "document"),)
+
+    @classmethod
+    def mark(cls, doctor, document):
+        if not doctor or not getattr(doctor, "pk", None) or not document or not getattr(document, "pk", None):
+            return
+        from django.utils import timezone
+
+        now = timezone.now()
+        if cls.objects.filter(doctor=doctor, document=document).update(seen_at=now):
+            return
+        try:
+            cls.objects.create(doctor=doctor, document=document, seen_at=now)
+        except IntegrityError:
+            cls.objects.filter(doctor=doctor, document=document).update(seen_at=now)
+
+
 class DocumentRecent(models.Model):
     PAGE_SIZE = 50
     MAX_ITEMS = 200
@@ -7300,7 +7752,7 @@ class DocumentRecent(models.Model):
             cls.objects.filter(pk__in=extra_ids).delete()
 
     @classmethod
-    def get_page(cls, who, page=1, page_size=None, journal_id=None):
+    def get_page(cls, who, page=1, page_size=None, journal_id=None, signed_only=False, table=False):
         if not who:
             return {"result": [], "page": 1, "pageSize": cls.PAGE_SIZE, "hasMore": False}
         try:
@@ -7312,12 +7764,17 @@ class DocumentRecent(models.Model):
         except (TypeError, ValueError):
             page_size = cls.PAGE_SIZE
         qs = (
-            cls.objects.filter(doctor=who, document__is_hidden=False, document__time_confirm__isnull=False)
+            cls.objects.filter(doctor=who, document__is_hidden=False)
             .filter(Documents.case_access_q(who, "document__"))
             .select_related("document", "document__type_document", "document__schema")
             .order_by("-opened_at", "-pk")
             .distinct()
         )
+        if signed_only:
+            ids = Documents.chief_signed_document_ids()
+            qs = qs.filter(document_id__in=ids) if ids else qs.none()
+        else:
+            qs = qs.filter(document__time_confirm__isnull=False)
         journal_pk = Documents.journal_filter_id(journal_id)
         if journal_pk:
             qs = qs.filter(document__type_document__journal_id=journal_pk)
@@ -7348,6 +7805,8 @@ class DocumentRecent(models.Model):
                     "typeDoc": type_doc,
                 }
             )
+        if table:
+            Documents.attach_registrar_table(result)
         return {
             "result": result,
             "page": page,
@@ -7418,6 +7877,9 @@ class DocumentManagerLog(models.Model):
     SIGNERS = 260036
     SIGN = 260037
     JOURNAL = 260038
+    NUMBER_GENERATOR = 260039
+    REGISTER = 260040
+    RESOLUTION = 260041
     ACTIONS = (
         (CREATE, "ДОУ: создание"),
         (SAVE, "ДОУ: сохранение"),
@@ -7458,6 +7920,9 @@ class DocumentManagerLog(models.Model):
         (SIGNERS, "ДОУ: на подпись"),
         (SIGN, "ДОУ: подписание"),
         (JOURNAL, "ДОУ: журнал документа"),
+        (NUMBER_GENERATOR, "ДОУ: генератор номеров"),
+        (REGISTER, "ДОУ: регистрация"),
+        (RESOLUTION, "ДОУ: резолюция"),
     )
 
     action = models.IntegerField(choices=ACTIONS, db_index=True)
