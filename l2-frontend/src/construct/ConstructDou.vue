@@ -45,7 +45,11 @@
             v-for="row in filteredItems"
             :key="row.id"
             class="object-row"
-            :class="{ 'object-row--active': selectedId === row.id, 'object-row--hide': row.hide }"
+            :class="{
+              'object-row--active': selectedId === row.id,
+              'object-row--hide': row.hide,
+              'object-row--inactive': row.active === false,
+            }"
             role="button"
             tabindex="0"
             @click="selectedId = row.id"
@@ -141,6 +145,14 @@
         @saved="onCatalogSaved"
         @cancel="selectedId = null"
       />
+      <DouNumberGeneratorEditor
+        v-else-if="showGeneratorEditor"
+        :key="`generator-${selectedId}`"
+        :item-id="selectedId || -1"
+        :journals="journals"
+        @saved="onCatalogSaved"
+        @cancel="selectedId = null"
+      />
       <DouIndicatorEditor
         v-else-if="showIndicatorEditor"
         :key="`indicator-${selectedId}`"
@@ -178,6 +190,7 @@ import DouAddresseeEditor from '@/construct/DouAddresseeEditor.vue';
 import DouPlanEditor from '@/construct/DouPlanEditor.vue';
 import DouTestEditor from '@/construct/DouTestEditor.vue';
 import DouIndicatorEditor from '@/construct/DouIndicatorEditor.vue';
+import DouNumberGeneratorEditor from '@/construct/DouNumberGeneratorEditor.vue';
 import ParaclinicResearchEditor from '@/construct/ParaclinicResearchEditor.vue';
 
 interface NavButton {
@@ -216,12 +229,14 @@ interface CatalogItem {
   printTemplateName?: string;
   shortTitle?: string;
   hide?: boolean;
+  active?: boolean;
 }
 
 const LAYOUT_TEMPLATE_DEPARTMENT = -17;
 const WORKING_NAV = [
   'document_groups', 'document_types', 'document_journals', 'document_templates', 'indicators',
   'plans', 'tests', 'skeleton', 'addressees', 'cases', 'place_section', 'type_section',
+  'number_generators',
 ];
 
 const store = useStore();
@@ -254,6 +269,7 @@ const canAdd = computed(() => (
   || selectedNavId.value === 'cases'
   || selectedNavId.value === 'place_section'
   || selectedNavId.value === 'type_section'
+  || selectedNavId.value === 'number_generators'
 ));
 const catalogKind = computed<'group' | 'type' | 'journal' | 'case' | 'place' | 'section'>(() => {
   if (selectedNavId.value === 'document_groups') {
@@ -331,6 +347,10 @@ const showPlanEditor = computed(
 
 const showTestEditor = computed(
   () => selectedNavId.value === 'tests' && selectedId.value !== null,
+);
+
+const showGeneratorEditor = computed(
+  () => selectedNavId.value === 'number_generators' && selectedId.value !== null,
 );
 
 const loadNavButtons = async () => {
@@ -422,6 +442,10 @@ const loadItems = async () => {
       items.value = result || [];
     } else if (selectedNavId.value === 'tests') {
       const { result } = await api('document-manager/tests/list');
+      items.value = result || [];
+    } else if (selectedNavId.value === 'number_generators') {
+      await loadJournals();
+      const { result } = await api('document-manager/number-generators/list');
       items.value = result || [];
     } else {
       await loadGroups();
@@ -609,6 +633,10 @@ onUnmounted(() => {
   white-space: nowrap;
   font-size: 12px;
   opacity: 0.85;
+}
+
+.object-row--inactive {
+  background-color: #d0d0d0;
 }
 
 .object-row:hover {

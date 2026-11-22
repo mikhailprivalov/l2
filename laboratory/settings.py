@@ -381,6 +381,7 @@ DOU_CONSTRUCTOR_NAV_BUTTONS = [
     {"id": "schema", "title": "Схемы (pdf, cda, docx)"},
     {"id": "skeleton", "title": "Структура документа"},
     {"id": "autofill_templates", "title": "Шаблоны заполнения"},
+    {"id": "number_generators", "title": "Генераторы номеров"},
 ]
 
 SHOW_LABORANT_RENTGEN_AFTER_DATE = None
@@ -568,6 +569,12 @@ CDA_TOPIC_ID_FOR_DOCUMENT_MANAGER = -1
 # Кнопка и страница ДОУ доступны всем авторизованным. Переопределение в laboratory/local_settings.py
 DOCUMENT_MANAGER_VIEW_GROUP = "ДОУ: просмотр документов"
 DOCUMENT_MANAGER_FOR_ALL = False
+# Регистратор /ui/document-registrar. Списки pk подразделений (Podrazdeleniya), подразделение врача — DoctorProfile.podrazdeleniye.
+# Подразделение из SIGNED: слева и в бейдже журнала только подписанные документы (есть подпись, в адресатах есть руководитель).
+# Подразделение из CONFIRMED и любое, кого нет в SIGNED: только подтверждённые. Если подразделение в обоих списках, действует SIGNED.
+# Бейдж журнала считает документы этого набора, которые врач ещё не открывал. Переопределение в laboratory/local_settings.py
+DOCUMENT_REGISTRAR_CONFIRMED_DEPARTMENTS = []
+DOCUMENT_REGISTRAR_SIGNED_DEPARTMENTS = []
 # Старая страница /ui/document-manager удалена. ДОУ-2 и ДОУ-Р остаются.
 # Флаг сохранён для уже заданных local_settings и на меню не влияет.
 HIDE_DOCUMENT_MANAGER = False
