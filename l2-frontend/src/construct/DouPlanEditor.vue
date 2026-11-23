@@ -1057,28 +1057,39 @@ const load = async () => {
   }
 };
 
-const save = async (withConfirm = false) => {
+const save = async (withConfirm = false, confirmDuplicate = false) => {
   await store.dispatch(actions.INC_LOADING);
+  let result;
   try {
     const body = planBody();
-    const result = props.documentMode
+    result = props.documentMode
       ? await api('document-manager/documents/plan', {
         id: props.documentId,
         withConfirm,
+        confirmDuplicate,
         ...body,
       })
       : await api('document-manager/plans/update', {
         id: props.planId,
         ...body,
       });
-    if (result?.ok) {
-      root.$emit('msg', 'ok', withConfirm ? 'Подтверждено' : 'Сохранено');
-      emit('saved', { id: result.id });
-    } else {
-      root.$emit('msg', 'error', result?.message || 'Ошибка сохранения');
-    }
   } finally {
     await store.dispatch(actions.DEC_LOADING);
+  }
+  if (result?.duplicatePlan) {
+    try {
+      await root.$dialog.confirm(result.message || 'Уверены, что хотите повторно сохранить?');
+    } catch (e) {
+      return;
+    }
+    await save(withConfirm, true);
+    return;
+  }
+  if (result?.ok) {
+    root.$emit('msg', 'ok', withConfirm ? 'Подтверждено' : 'Сохранено');
+    emit('saved', { id: result.id });
+  } else {
+    root.$emit('msg', 'error', result?.message || 'Ошибка сохранения');
   }
 };
 

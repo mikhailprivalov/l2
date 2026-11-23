@@ -496,12 +496,10 @@
                 @mouseenter.native="prepareClipTip"
               />
               <AddresseeField
-                v-tippy
-                class="executor"
+                class="executor executor--curators"
                 header="Куратор"
                 disabled
                 :value="peopleText(task.curator)"
-                @mouseenter.native="prepareClipTip"
               />
               <select
                 class="form-control control-task__done"
@@ -1835,7 +1833,7 @@ onMounted(async () => {
   await openTestFromQuery();
   await store.dispatch(actions.INC_LOADING);
   try {
-    const data = await researchesPoint.getResearches({ params: { dou: 1 } });
+    const data = await researchesPoint.getResearches({ params: { dou: 1, hideTestDefault: 1 } });
     overrideDepartments.value = data?.departments || [];
     const researches = data?.researches || {};
     overrideResearches.value = researches[DOU_RESEARCH_KEY] || [];
@@ -2250,7 +2248,8 @@ const onReviewed = () => {
 .control-task__doc,
 .control-task__plan {
   display: block;
-  height: 34px;
+  min-height: 34px;
+  height: auto;
   padding: 0 8px;
   overflow: hidden;
   color: #434a54;
@@ -2265,7 +2264,8 @@ const onReviewed = () => {
 
 .control-task__done {
   width: 100%;
-  height: 34px;
+  min-height: 34px;
+  height: auto;
   padding: 0 4px;
   color: #434a54;
   border: 1px solid #96a0ad;
@@ -2276,7 +2276,8 @@ const onReviewed = () => {
 .control-task__date {
   width: 100%;
   max-width: none;
-  height: 34px;
+  min-height: 34px;
+  height: auto;
   padding: 0 8px;
   color: #434a54;
   border: 1px solid #96a0ad;
@@ -2295,12 +2296,13 @@ const onReviewed = () => {
 
 .control-task__name {
   min-width: 0;
-  height: 34px;
+  min-height: 34px;
+  height: auto;
   padding: 0 10px;
   overflow: hidden;
   color: #434a54;
   font-size: 14px;
-  line-height: 34px;
+  line-height: 32px;
   text-overflow: ellipsis;
   white-space: nowrap;
   border: 1px solid #96a0ad;
@@ -2310,6 +2312,25 @@ const onReviewed = () => {
 .executor {
   min-width: 0;
   width: 100%;
+}
+
+.executor--curators {
+  height: auto;
+}
+
+.executor--curators :deep(.addressee-field) {
+  height: 100%;
+  min-height: 34px;
+  align-items: stretch;
+}
+
+.executor--curators :deep(.addressee-field__preview) {
+  height: auto;
+  min-height: 34px;
+  line-height: 20px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 .doc-draft {

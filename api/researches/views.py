@@ -81,8 +81,9 @@ def get_researches(request, last_used=False):
 
         doctorprofile = request.user.doctorprofile
         dou_key = str(2 - Podrazdeleniya.DOU)
+        hide_test_default = str(get_params.get("hideTestDefault") or "").lower() in ("1", "true")
         result = {
-            "researches": {dou_key: PlaceSection.picker_researches(doctor=doctorprofile, available_only=True)},
+            "researches": {dou_key: PlaceSection.picker_researches(doctor=doctorprofile, available_only=True, hide_test_default=hide_test_default)},
             "departments": PlaceSection.picker_departments(doctorprofile),
             "tubes": [],
         }

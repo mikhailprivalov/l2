@@ -88,6 +88,7 @@ def _save_from_request(request, with_confirm=None):
         request.user.doctorprofile,
         request_files,
         rb.get("caseTopic"),
+        confirm_duplicate=bool(rb.get("confirmDuplicate")),
     )
 
 
@@ -1040,22 +1041,23 @@ def documents_links(request):
     return status_response(False, result.get("message"))
 
 
+def _document_save_response(result):
+    if result.get("ok"):
+        return status_response(True, data=result)
+    extra = {"duplicatePlan": True} if result.get("duplicatePlan") else None
+    return status_response(False, result.get("message"), extra)
+
+
 @login_required
 @group_required("ДОУ: просмотр документов")
 def documents_save(request):
-    result = _save_from_request(request)
-    if result.get("ok"):
-        return status_response(True, data=result)
-    return status_response(False, result.get("message"))
+    return _document_save_response(_save_from_request(request))
 
 
 @login_required
 @group_required("ДОУ: просмотр документов")
 def documents_confirm(request):
-    result = _save_from_request(request, with_confirm=True)
-    if result.get("ok"):
-        return status_response(True, data=result)
-    return status_response(False, result.get("message"))
+    return _document_save_response(_save_from_request(request, with_confirm=True))
 
 
 @login_required
@@ -1152,10 +1154,9 @@ def documents_plan(request):
         data.get("tests"),
         with_confirm=bool(data.get("withConfirm")),
         short_title=data.get("shortTitle", ""),
+        confirm_duplicate=bool(data.get("confirmDuplicate")),
     )
-    if result.get("ok"):
-        return status_response(True, data=result)
-    return status_response(False, result.get("message"))
+    return _document_save_response(result)
 
 
 @login_required
