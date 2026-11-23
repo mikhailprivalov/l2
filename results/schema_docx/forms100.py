@@ -351,7 +351,6 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
         result = get_paraclinic_results_by_direction(iss.napravleniye_id)
         data = {r.cda_title_field: r.value for r in result}
-        print(data)
         reason_visit = f"{data.get('пр-Диагноз', '')} {data.get('пр-Причина', '')}"
         stage = f"{data.get('пр-Этап исследования', '')}"
         limit_visual = f"{data.get('пр-Ограничения визуализации', '')}"
@@ -396,7 +395,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             dicom_link_data = dicom_link.split("=")
             dcm_tag = dicom_link_data[1]
             qr_code_link = f"{abs_qr_code_link}={dcm_tag}"
-        print(result_data)
+
         context = {
             **meta_info,
             **result_data,
