@@ -713,8 +713,8 @@ class PlaceSection(models.Model):
         return rows
 
     @staticmethod
-    def picker_researches(doctor=None, available_only=False):
-        docs = TypeDocuments.picker_researches(doctor=doctor, available_only=available_only)
+    def picker_researches(doctor=None, available_only=False, hide_test_default=False):
+        docs = TypeDocuments.picker_researches(doctor=doctor, available_only=available_only, hide_test_default=hide_test_default)
         cases = TypeCases.picker_researches()
         if doctor is None:
             return docs + cases
@@ -1029,8 +1029,10 @@ class TypeDocuments(models.Model):
         }
 
     @staticmethod
-    def picker_researches(doctor=None, available_only=False):
+    def picker_researches(doctor=None, available_only=False, hide_test_default=False):
         qs = TypeDocuments.objects.select_related("place_section", "monitoring").order_by("title", "pk")
+        if hide_test_default:
+            qs = qs.filter(is_test_defaulta=False)
         if available_only:
             if not doctor:
                 return []
@@ -2408,6 +2410,37 @@ class Plans(models.Model):
                     return "План недоступен"
                 field["value"] = json.dumps(ids)
         return None
+
+    @staticmethod
+    def plans_and_addressees(document, groups, visibility_state):
+        v_g = (visibility_state or {}).get("groups") or {}
+        v_f = (visibility_state or {}).get("fields") or {}
+        plan_ids = []
+        seen = set()
+        addressee_values = []
+        has_addressee = False
+        for group in groups or []:
+            if not v_g.get(str(group.get("pk")), True):
+                continue
+            for field in group.get("fields") or []:
+                field_pk = field.get("pk")
+                if field_pk and not v_f.get(str(field_pk), True):
+                    continue
+                field_type = field.get("field_type")
+                if field_type == PLAN_FIELD_TYPE:
+                    parsed = Plans.parse_ids(field.get("value")) or []
+                    for pk in parsed:
+                        if pk not in seen:
+                            seen.add(pk)
+                            plan_ids.append(pk)
+                elif field_type == ADDRESSEE_FIELD_TYPE:
+                    has_addressee = True
+                    addressee_values.append(field.get("value"))
+        if has_addressee:
+            addressees = Plans.people_from_addressee_values(addressee_values)
+        else:
+            addressees = Plans.addressees_on_document(document)
+        return plan_ids, addressees
 
     @staticmethod
     def indicator_options():
@@ -5836,7 +5869,7 @@ class Documents(models.Model):
                 Documents.attach_plan_cases(plan_document, [created_doc])
             return {"ok": True, "id": created["id"], "created": True}
 
-    def save_user_plan(self, who, title, groups, indicators, tests, with_confirm=False, short_title=""):
+    def save_user_plan(self, who, title, groups, indicators, tests, with_confirm=False, short_title="", confirm_duplicate=False):
         from django.utils import timezone
 
         if not Documents.can_see_document(self, who):
@@ -5847,6 +5880,11 @@ class Documents(models.Model):
             return {"ok": False, "message": "Документ заполняется из показателей куратора"}
         if Documents.document_is_confirmed(self):
             return {"ok": False, "message": "Документ подтверждён"}
+        if (title or "").strip() and not confirm_duplicate:
+            pairs = ControlPlan.pairs_for_indicator_rows(self.plan_id, groups, indicators, Plans.addressees_on_document(self))
+            message = ControlPlan.duplicate_message(self, pairs)
+            if message:
+                return {"ok": False, "duplicatePlan": True, "message": message}
         result = Plans.save_plan(
             self.plan_id,
             title,
@@ -6260,7 +6298,7 @@ class Documents(models.Model):
         return payload
 
     @staticmethod
-    def save_paraclinic_result(iss_pk, research, with_confirm, visibility_state, who, request_files=None, case_topic=None):
+    def save_paraclinic_result(iss_pk, research, with_confirm, visibility_state, who, request_files=None, case_topic=None, confirm_duplicate=False):
         from django.utils import timezone
 
         from directory.models import ParaclinicInputField
@@ -6290,6 +6328,11 @@ class Documents(models.Model):
         plan_error = Plans.validate_document_fields(groups, iss, who)
         if plan_error:
             return {"ok": False, "message": plan_error}
+        if not confirm_duplicate:
+            plan_ids, addressees = Plans.plans_and_addressees(document, groups, visibility_state)
+            message = ControlPlan.duplicate_message(document, ControlPlan.pairs_for_plans(document, plan_ids, addressees))
+            if message:
+                return {"ok": False, "duplicatePlan": True, "message": message}
         files_by_field = {}
         body_values = dict(document.body_values) if isinstance(document.body_values, dict) else {}
         addressee_ids = []
@@ -6761,6 +6804,106 @@ class ControlPlan(models.Model):
             seen.add(task.indicator_id)
             prepared.append((task, executor_ids, curator_ids))
         return prepared
+
+    @staticmethod
+    def pairs_for_plans(document, plan_ids, addressees):
+        ids = []
+        seen_plans = set()
+        for plan_id in plan_ids or []:
+            try:
+                plan_id = int(plan_id)
+            except (TypeError, ValueError):
+                continue
+            if plan_id < 1 or plan_id in seen_plans:
+                continue
+            seen_plans.add(plan_id)
+            ids.append(plan_id)
+        if not ids:
+            return set()
+        from django.db.models import Prefetch
+
+        plans = Plans.objects.filter(pk__in=ids).prefetch_related(
+            Prefetch(
+                "indicator_groups",
+                queryset=PlanIndicatorGroup.objects.order_by("order", "pk").prefetch_related(
+                    Prefetch("indicators", queryset=PlanIndicator.objects.order_by("order", "pk")),
+                ),
+            ),
+            Prefetch("indicators", queryset=PlanIndicator.objects.order_by("order", "pk")),
+        )
+        by_id = {plan.pk: plan for plan in plans}
+        pairs = set()
+        for plan_id in ids:
+            plan = by_id.get(plan_id)
+            if not plan:
+                continue
+            overrides = DocumentPlanPeople.for_plan(document, plan)
+            for _task, executor_ids, _curator_ids in ControlPlan._prepared_tasks(plan, addressees, [], overrides):
+                for doctor_id in executor_ids:
+                    pairs.add((plan_id, doctor_id))
+        return pairs
+
+    @staticmethod
+    def pairs_for_indicator_rows(plan_id, groups, indicators, addressees):
+        try:
+            plan_id = int(plan_id)
+        except (TypeError, ValueError):
+            return set()
+        if plan_id < 1:
+            return set()
+        fallback = Plans.people_ids(addressees)
+        rows = []
+        for group in groups or []:
+            rows.extend(group.get("indicators") or [])
+        rows.extend(indicators or [])
+        pairs = set()
+        for row in rows:
+            doctor_ids = DocumentReview.parse_addressee_ids(row.get("executors"))
+            if not doctor_ids:
+                doctor_ids = fallback
+            for doctor_id in doctor_ids:
+                pairs.add((plan_id, doctor_id))
+        return pairs
+
+    @staticmethod
+    def duplicate_message(document, pairs):
+        if not document or not pairs:
+            return None
+        plan_ids = {plan_id for plan_id, _doctor_id in pairs}
+        doctor_ids = {doctor_id for _plan_id, doctor_id in pairs}
+        found = set(
+            ControlPlanExecutor.objects.filter(
+                doctor_id__in=doctor_ids,
+                control_plan__plan_id__in=plan_ids,
+                control_plan__document__time_confirm__isnull=False,
+                control_plan__document__is_hidden=False,
+            )
+            .exclude(control_plan__document_id=document.pk)
+            .values_list("control_plan__plan_id", "doctor_id")
+            .distinct()
+        )
+        matched = found & set(pairs)
+        if not matched:
+            return None
+        plans = {plan.pk: plan for plan in Plans.objects.filter(pk__in={plan_id for plan_id, _doctor_id in matched})}
+        doctors = {doctor.pk: doctor for doctor in DoctorProfile.objects.filter(pk__in={doctor_id for _plan_id, doctor_id in matched})}
+        lines = []
+        for plan_id, doctor_id in matched:
+            plan = plans.get(plan_id)
+            doctor = doctors.get(doctor_id)
+            if not plan or not doctor:
+                continue
+            title = plan.display_title() or f"План {plan.pk}"
+            fio = doctor.get_fio(dots=True, with_space=False)
+            lines.append((title, fio))
+        lines.sort()
+        if not lines:
+            return None
+        if len(lines) == 1:
+            title, fio = lines[0]
+            return f"У {fio} уже есть план «{title}». Уверены, что хотите повторно сохранить?"
+        listed = "; ".join(f"«{title}» — {fio}" for title, fio in lines)
+        return f"Уже такой план есть: {listed}. Уверены, что хотите повторно сохранить?"
 
     @staticmethod
     def _create_prepared(document, plan, prepared, position):

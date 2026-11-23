@@ -1310,6 +1310,30 @@ const saveRequest = async (payload) => {
   return api('document-manager/documents/save', payload);
 };
 
+const saveWithDuplicateCheck = async (payload) => {
+  await store.dispatch(actions.INC_LOADING);
+  let result;
+  try {
+    result = await saveRequest(payload);
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+  if (!result?.duplicatePlan) {
+    return result;
+  }
+  try {
+    await root.$dialog.confirm(result.message || 'Уверены, что хотите повторно сохранить?');
+  } catch (e) {
+    return null;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    return await saveRequest({ ...payload, confirmDuplicate: true });
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
 const fillCase = (caseData) => {
   if (!caseData) {
     return;
@@ -2052,20 +2076,18 @@ const save = async () => {
     root.$emit('msg', 'error', 'Укажите тему дела');
     return false;
   }
-  await store.dispatch(actions.INC_LOADING);
-  try {
-    const result = await saveRequest(savePayload(false));
-    if (result?.ok) {
-      applyFilesByField(result.files_by_field);
-      root.$emit('msg', 'ok', 'Сохранено');
-      emit('visibility-change');
-      return true;
-    }
-    root.$emit('msg', 'error', result?.message || 'Ошибка сохранения');
+  const result = await saveWithDuplicateCheck(savePayload(false));
+  if (!result) {
     return false;
-  } finally {
-    await store.dispatch(actions.DEC_LOADING);
   }
+  if (result?.ok) {
+    applyFilesByField(result.files_by_field);
+    root.$emit('msg', 'ok', 'Сохранено');
+    emit('visibility-change');
+    return true;
+  }
+  root.$emit('msg', 'error', result?.message || 'Ошибка сохранения');
+  return false;
 };
 
 const confirm = async () => {
@@ -2076,20 +2098,18 @@ const confirm = async () => {
     root.$emit('msg', 'error', 'Укажите тему дела');
     return;
   }
-  await store.dispatch(actions.INC_LOADING);
-  try {
-    const result = await saveRequest(savePayload(true));
-    if (result?.ok) {
-      applyFilesByField(result.files_by_field);
-      confirmed.value = true;
-      whoConfirmed.value = result.whoConfirmed || '';
-      root.$emit('msg', 'ok', 'Подтверждено');
-      emit('visibility-change');
-    } else {
-      root.$emit('msg', 'error', result?.message || 'Ошибка подтверждения');
-    }
-  } finally {
-    await store.dispatch(actions.DEC_LOADING);
+  const result = await saveWithDuplicateCheck(savePayload(true));
+  if (!result) {
+    return;
+  }
+  if (result?.ok) {
+    applyFilesByField(result.files_by_field);
+    confirmed.value = true;
+    whoConfirmed.value = result.whoConfirmed || '';
+    root.$emit('msg', 'ok', 'Подтверждено');
+    emit('visibility-change');
+  } else {
+    root.$emit('msg', 'error', result?.message || 'Ошибка подтверждения');
   }
 };
 
@@ -2140,23 +2160,21 @@ const saveDocument = async (id: number) => {
     root.$emit('msg', 'error', 'Укажите тему дела');
     return;
   }
-  await store.dispatch(actions.INC_LOADING);
-  try {
-    const result = await saveRequest({
-      data: { pk: current.issPk, research: current.research },
-      with_confirm: false,
-      visibility_state: visibilityStateFor(current.research),
-      ...(caseBlock.value ? { caseTopic: caseTopic.value } : {}),
-    });
-    if (result?.ok) {
-      applyFilesByField(result.files_by_field, current.research);
-      root.$emit('msg', 'ok', 'Сохранено');
-      emit('visibility-change');
-    } else {
-      root.$emit('msg', 'error', result?.message || 'Ошибка сохранения');
-    }
-  } finally {
-    await store.dispatch(actions.DEC_LOADING);
+  const result = await saveWithDuplicateCheck({
+    data: { pk: current.issPk, research: current.research },
+    with_confirm: false,
+    visibility_state: visibilityStateFor(current.research),
+    ...(caseBlock.value ? { caseTopic: caseTopic.value } : {}),
+  });
+  if (!result) {
+    return;
+  }
+  if (result?.ok) {
+    applyFilesByField(result.files_by_field, current.research);
+    root.$emit('msg', 'ok', 'Сохранено');
+    emit('visibility-change');
+  } else {
+    root.$emit('msg', 'error', result?.message || 'Ошибка сохранения');
   }
 };
 
@@ -2169,24 +2187,22 @@ const confirmDocument = async (id: number) => {
     root.$emit('msg', 'error', 'Укажите тему дела');
     return;
   }
-  await store.dispatch(actions.INC_LOADING);
-  try {
-    const result = await saveRequest({
-      data: { pk: current.issPk, research: current.research },
-      with_confirm: true,
-      visibility_state: visibilityStateFor(current.research),
-      ...(caseBlock.value ? { caseTopic: caseTopic.value } : {}),
-    });
-    if (result?.ok) {
-      applyFilesByField(result.files_by_field, current.research);
-      patchDocument(id, { confirmed: true, whoConfirmed: result.whoConfirmed || '' });
-      root.$emit('msg', 'ok', 'Подтверждено');
-      emit('visibility-change');
-    } else {
-      root.$emit('msg', 'error', result?.message || 'Ошибка подтверждения');
-    }
-  } finally {
-    await store.dispatch(actions.DEC_LOADING);
+  const result = await saveWithDuplicateCheck({
+    data: { pk: current.issPk, research: current.research },
+    with_confirm: true,
+    visibility_state: visibilityStateFor(current.research),
+    ...(caseBlock.value ? { caseTopic: caseTopic.value } : {}),
+  });
+  if (!result) {
+    return;
+  }
+  if (result?.ok) {
+    applyFilesByField(result.files_by_field, current.research);
+    patchDocument(id, { confirmed: true, whoConfirmed: result.whoConfirmed || '' });
+    root.$emit('msg', 'ok', 'Подтверждено');
+    emit('visibility-change');
+  } else {
+    root.$emit('msg', 'error', result?.message || 'Ошибка подтверждения');
   }
 };
 
