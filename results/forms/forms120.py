@@ -186,7 +186,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     final = text_to_bold(final)
     objs.append(Paragraph(final, styleJustified))
     objs.append(Spacer(1, 3 * mm))
-    print(data)
     if data.get('пр-Рекомендации'):
         objs.append(Paragraph("РЕКОМЕНДАЦИИ", styleBold))
         recomindation = data.get('пр-Рекомендации').replace('<', '&lt;').replace('>', '&gt;').replace("\n", f"<br/>{space_symbol*5}")
