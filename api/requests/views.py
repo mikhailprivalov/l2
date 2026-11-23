@@ -19,7 +19,7 @@ from ftp_orders.json_export import spool_order_json, spool_study_link_json
 from laboratory.decorators import group_required
 from laboratory.utils import strfdatetime
 from utils.response import status_response
-from directions.models import Napravleniya, IstochnikiFinansirovaniya, NapravleniyaFiles
+from directions.models import Napravleniya, IstochnikiFinansirovaniya, NapravleniyaFiles, ParaclinicResult
 from clients.models import Card
 from integration_framework.models import EquipmentReceive, EquipmentReceiveLink
 from hospitals.models import Hospitals, TitleResearchHospital
@@ -857,6 +857,7 @@ def update_request(request):
         is_cito = request_fields.get('cito', False)
 
         if iss.research_id != research_id:
+            ParaclinicResult.objects.filter(issledovaniye=iss).exclude(field__group__research_id=research_id).delete()
             iss.research_id = research_id
             iss.save(update_fields=['research'])
 
