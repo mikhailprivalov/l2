@@ -83,4 +83,5 @@ urlpatterns = [
     path('dicom/', include('integration_framework.dicom.urls')),
     path('admission-cert/', include('integration_framework.admission_cert.urls')),
     path('patient-visits/', include('integration_framework.patient_visits.urls')),
+    path('xml/', include('integration_framework.xml.urls')),
 ]
