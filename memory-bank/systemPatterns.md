@@ -149,7 +149,7 @@ Result (Result)
 
 ## Document Generation Patterns
 
-- **Template Method** - Base templates for document types
+- **Template Method** - Base templates for document types. Instrumental CDA edition 5 is `xml_generate/templates/remd/paraclinic_5.xml` (`CDA_TEMPLATE_XML_DIRECTORY` is `templates/`). `Researches.cda_template_file` stores `remd/paraclinic_5.xml`. `gen_result_cda_files` renders it when `l2_cdator` is on. An empty bound value stays in the XML as `{{ variable }}`. EDS signs that CDA file with the existing detached signature.
 - **Builder** - Step-by-step complex document construction (PDF, DOCX via reportlab, python-docx)
 - **Form Constructor** - Dynamic form creation via `construct/`, JSON-based configuration
 - **Tube barcodes** (`/barcodes/tubes`): label size `BARCODE_SIZE` (`43x25`), left offset `tube_barcode_offset_x` (mm, default `TUBE_BARCODE_OFFSET_X` `-3`), long-number bar index `TUBE_BARCODE_WIDTH_MINDEX`. Overall Code128 width is `tube_barcode_width_mm` (mm; `0` keeps the digit-length formula). Override per request with `barcode_width`. Runtime values live in `appconf.Setting` and are edited under constructor **Штрих-коды ёмкостей** (`/ui/construct/tube-barcode`, group **Конструктор: Ёмкости для биоматериала**). `laboratory/settings.py` / `local_settings.py` are defaults until first save.
