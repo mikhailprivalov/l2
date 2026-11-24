@@ -5125,9 +5125,16 @@ class Documents(models.Model):
         if not plan_ids or not who or not getattr(who, "pk", None):
             return []
         period = Documents._confirmed_in_period(start, end)
+        doc_ids = list(period.values_list("pk", flat=True))
+        if not doc_ids:
+            return []
         direct = period.filter(plan_id__in=plan_ids, plan__user_created=True).select_related("plan", "who_create")
         plans_by_document = {}
-        field_rows = ParaclinicResult.objects.filter(field_type=PLAN_FIELD_TYPE, issledovaniye__document__in=period).order_by("pk").values_list("issledovaniye__document_id", "value")
+        field_rows = (
+            ParaclinicResult.objects.filter(issledovaniye__document_id__in=doc_ids, field_type=PLAN_FIELD_TYPE)
+            .order_by("pk")
+            .values_list("issledovaniye__document_id", "value")
+        )
         field_doc_ids = set()
         for document_id, value in field_rows:
             chosen = [pk for pk in (Plans.parse_ids(value) or []) if pk in plan_ids]
