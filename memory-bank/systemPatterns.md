@@ -87,6 +87,7 @@
 
 ### Integration Domain
 - `integration_framework/` - integration framework
+- **IEMK AddMedRecord** (`POST /if/xml/add-med-record`, JSON `{"pk": <direction>}`): returns a SOAP envelope when the direction has a non-archive CDA file and both signatures **Врач** and **Медицинская организация**. `b:Data` is the CDA file encoded once. Signature values stay as stored base64. `idPatientMis` is `Card.pk`, `b:IdDocumentMis` is the direction pk, `idLpu` is `Hospitals.n3_id` of the signing doctor, `guid` is `N3_IEMK_GUID`. A missing CDA or either signature returns JSON `{"ok": false, "message": "..."}`. Test route `POST /if/xml/add-med-record-template` renders the same check through Jinja `xml_generate/templates/remd/add_med_record.xml` (`d4p3` / `d9p1` / `d5p1`). There `idPatientMis` is the card number, `IdPosition` is `DoctorProfile.n3_id`, `IdSpeciality` is the doctor's speciality `n3_id`, and an empty research med-document type is `309`. `idLpu` falls back to `N3_IEMK_ID_LPU`. An empty template value stays as `{{ name }}`.
 - `rmis_integration/` - RMIS
 - `external_system/` - external systems
 - `ecp_integration/` - digital signatures
