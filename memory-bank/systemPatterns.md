@@ -58,7 +58,7 @@
 ### Clinical Domain
 - `doctor_call/` - house calls
 - `cases/` - treatment cases
-- `stationar/` - inpatient (via api/stationar/)
+- `stationar/` - inpatient (via api/stationar/). On `/ui/hospitalization-board` the discharged heading is **Выписаны - N**. After **Проверены** succeeds it becomes **Выписаны - N / M**: N stays the extract count, M is how many unique discharged directions in the period were returned as checked (the green rows). A reload of the board hides the slash until the next check. The arrow immediately left of **Проверены** is one control: up lists checked rows first, down lists unchecked rows first. Order inside each group stays as loaded. Search and quick filters run before that sort.
 - `pharmacotherapy/` - pharmacotherapy
 - `medical_certificates/` - medical certificates
 - `treatment/` - treatment

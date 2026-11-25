@@ -639,16 +639,33 @@
                     href="#"
                     class="board-discharged-heading-link"
                     @click.prevent="openExtractsDetailForm"
-                  >Выписаны - {{ extractsCount }}</a>
+                  >
+                    Выписаны - {{ extractsCount }}<template
+                      v-if="expertiseCheckDone"
+                    > / {{ dischargedVerifiedCount }}</template>
+                  </a>
                 </h5>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-blue-nb board-discharged-check-btn"
-                  :disabled="!canCheckDischargedExpertise"
-                  @click="checkDischargedExpertise"
-                >
-                  {{ expertiseCheckLoading ? '…' : 'Проверены' }}
-                </button>
+                <div class="board-discharged-actions">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-blue-nb board-discharged-sort-btn"
+                    :title="dischargedCheckedFirst ? 'Сначала проверенные' : 'Сначала непроверенные'"
+                    @click="toggleDischargedExpertiseSort"
+                  >
+                    <i
+                      class="glyphicon"
+                      :class="dischargedCheckedFirst ? 'glyphicon-arrow-up' : 'glyphicon-arrow-down'"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-blue-nb board-discharged-check-btn"
+                    :disabled="!canCheckDischargedExpertise"
+                    @click="checkDischargedExpertise"
+                  >
+                    {{ expertiseCheckLoading ? '…' : 'Проверены' }}
+                  </button>
+                </div>
               </div>
               <div class="board-aside-section-body">
                 <p
@@ -1137,6 +1154,8 @@ const extractsCount = ref(0);
 const extractsDirectionList = ref<number[]>([]);
 const verifiedExpertiseDirections = ref<Set<number>>(new Set());
 const expertiseCheckLoading = ref(false);
+const expertiseCheckDone = ref(false);
+const dischargedCheckedFirst = ref(true);
 const defaultHospitalizationPeriodDays = ref(3);
 const viewMode = ref<ViewMode>('day');
 const anchorDate = ref(moment());
@@ -2264,17 +2283,51 @@ const extractCountForDay = (dayKey: string) => {
   return count;
 };
 
+const sortDischargedRows = (list: DischargedPatientRow[]) => {
+  const checkedFirst = dischargedCheckedFirst.value;
+  const verified = verifiedExpertiseDirections.value;
+  return list
+    .map((row, index) => ({ row, index }))
+    .sort((a, b) => {
+      const aChecked = verified.has(a.row.directionPk);
+      const bChecked = verified.has(b.row.directionPk);
+      if (aChecked !== bChecked) {
+        if (checkedFirst) {
+          return aChecked ? -1 : 1;
+        }
+        return aChecked ? 1 : -1;
+      }
+      return a.index - b.index;
+    })
+    .map((item) => item.row);
+};
+
 const dischargedPatientsInPeriod = computed(() => {
   let list = dischargedPatientsInPeriodAll.value;
   const q = boardSearchQuery.value;
   if (q) {
     list = list.filter((row) => textMatchesBoardSearch(row.name, q));
   }
-  if (!hasActiveBoardQuickFilters.value) {
-    return list;
+  if (hasActiveBoardQuickFilters.value) {
+    list = list.filter((row) => dischargedRowMatchesQuickFilters(row));
   }
-  return list.filter((row) => dischargedRowMatchesQuickFilters(row));
+  return sortDischargedRows(list);
 });
+
+const dischargedVerifiedCount = computed(() => {
+  const verified = verifiedExpertiseDirections.value;
+  const seen = new Set<number>();
+  for (const row of dischargedPatientsInPeriodAll.value) {
+    if (verified.has(row.directionPk)) {
+      seen.add(row.directionPk);
+    }
+  }
+  return seen.size;
+});
+
+const toggleDischargedExpertiseSort = () => {
+  dischargedCheckedFirst.value = !dischargedCheckedFirst.value;
+};
 
 const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriodAll.value.length > 0);
 
@@ -2313,6 +2366,7 @@ const checkDischargedExpertise = async () => {
       ? response.data.expertise_direction_pks.map((pk: unknown) => Number(pk)).filter((pk: number) => Number.isFinite(pk))
       : [];
     verifiedExpertiseDirections.value = new Set(pks);
+    expertiseCheckDone.value = true;
   } finally {
     expertiseCheckLoading.value = false;
     await store.dispatch(actions.DEC_LOADING);
@@ -2891,10 +2945,11 @@ const unallocatedGenderClass = (p: UnallocatedPatient) => {
 };
 
 const loadCalendar = async () => {
+  verifiedExpertiseDirections.value = new Set();
+  expertiseCheckDone.value = false;
   if (!departmentPk.value || visibleDays.value.length === 0) {
     return;
   }
-  verifiedExpertiseDirections.value = new Set();
   await store.dispatch(actions.INC_LOADING);
   const start = visibleDays.value[0].key;
   const end = visibleDays.value[visibleDays.value.length - 1].key;
@@ -4303,6 +4358,8 @@ onBeforeUnmount(() => {
 
 .board-discharged-heading {
   margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .board-discharged-heading-link {
@@ -4317,6 +4374,24 @@ onBeforeUnmount(() => {
 .board-discharged-heading-link:focus {
   color: #1565c0;
   text-decoration: underline;
+}
+
+.board-discharged-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.board-discharged-sort-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .board-discharged-check-btn {
