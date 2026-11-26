@@ -3598,6 +3598,52 @@ def last_field_result(request):
         if date_time:
             val = date_time.strftime("%H:%M")
         result = {"value": val}
+    elif request_data["fieldPk"].startswith('%current_hosp'):
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 2:
+            result = {"value": ""}
+        else:
+            parent_iss = Napravleniya.objects.get(pk=num_dir).parent_id
+            if data[1] == "laboratory":
+                lab_research = data[2]
+                days_ago = int(data[4])
+                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=(parent_iss,), client_pk=client_pk)
+            else:
+                field_pks, logical_or, logical_and, logical_group_or = split_link_field_expr(data[1])
+                result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, parent_iss=(parent_iss,))
+    elif request_data["fieldPk"].startswith('%root_hosp'):
+        data = request_data["fieldPk"].split('#')
+        logical_or = True
+        hosp_dirs = hosp_get_hosp_direction(num_dir)
+        parent_iss = [i['issledovaniye'] for i in hosp_dirs]
+        result = None
+        if len(data) < 2:
+            result = {"value": ""}
+        else:
+            if data[1] == "cda":
+                # %root_hosp#cda#code
+                search_by_cda = True
+                cda_code = data[2]
+                cda_id = list(CdaFields.get_cda_id_by_codes([int(cda_code)]))
+                paraclinic_field = ParaclinicInputField.objects.filter(cda_option_id__in=cda_id).values_list("pk", flat=True)
+                field_pks = list(paraclinic_field)
+                field_pks = [i for i in field_pks]
+                if len(data) == 4 and data[3] == "diagTable":
+                    is_diag_table = True
+                if not is_diag_table and not result:
+                    result = field_get_link_data_by_cda(tuple(field_pks), client_pk, parent_iss=tuple(parent_iss), use_parent_iss='1')
+            if data[1] == "laboratory":
+                lab_research = data[2]
+                days_ago = int(data[4])
+                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=tuple(parent_iss), client_pk=client_pk)
+            else:
+                field_pks, logical_or, logical_and, logical_group_or = split_link_field_expr(data[1])
+
+            if is_diag_table and not result:
+                field_pks = [str(i) for i in field_pks]
+                result = field_get_link_diag_table(field_pks, client_pk, parent_iss=tuple(parent_iss))
+            if not result and not search_by_cda:
+                result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_root_hosp=True, parent_iss=tuple(parent_iss), search_by_cda=search_by_cda)
     elif request_data["fieldPk"].find("|") > -1:
         field_is_link = True
         logical_or = True
@@ -3637,53 +3683,6 @@ def last_field_result(request):
             field_pks = [data[1]]
             logical_or = True
             result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or)
-    elif request_data["fieldPk"].find('%current_hosp') != -1:
-        data = request_data["fieldPk"].split('#')
-        if len(data) < 2:
-            result = {"value": ""}
-        else:
-            parent_iss = Napravleniya.objects.get(pk=num_dir).parent_id
-            if data[1] == "laboratory":
-                lab_research = data[2]
-                days_ago = int(data[4])
-                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=(parent_iss,), client_pk=client_pk)
-            else:
-                field_pks = [data[1]]
-                logical_or = True
-                result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, parent_iss=(parent_iss,))
-    elif request_data["fieldPk"].find('%root_hosp') != -1:
-        data = request_data["fieldPk"].split('#')
-        logical_or = True
-        hosp_dirs = hosp_get_hosp_direction(num_dir)
-        parent_iss = [i['issledovaniye'] for i in hosp_dirs]
-        result = None
-        if len(data) < 2:
-            result = {"value": ""}
-        else:
-            if data[1] == "cda":
-                # %root_hosp#cda#code
-                search_by_cda = True
-                cda_code = data[2]
-                cda_id = list(CdaFields.get_cda_id_by_codes([int(cda_code)]))
-                paraclinic_field = ParaclinicInputField.objects.filter(cda_option_id__in=cda_id).values_list("pk", flat=True)
-                field_pks = list(paraclinic_field)
-                field_pks = [i for i in field_pks]
-                if len(data) == 4 and data[3] == "diagTable":
-                    is_diag_table = True
-                if not is_diag_table and not result:
-                    result = field_get_link_data_by_cda(tuple(field_pks), client_pk, parent_iss=tuple(parent_iss), use_parent_iss='1')
-            if data[1] == "laboratory":
-                lab_research = data[2]
-                days_ago = int(data[4])
-                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=tuple(parent_iss), client_pk=client_pk)
-            else:
-                field_pks = [data[1]]
-
-            if is_diag_table and not result:
-                field_pks = [str(i) for i in field_pks]
-                result = field_get_link_diag_table(field_pks, client_pk, parent_iss=tuple(parent_iss))
-            if not result and not search_by_cda:
-                result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_root_hosp=True, parent_iss=tuple(parent_iss), search_by_cda=search_by_cda)
     elif request_data["fieldPk"].find('%cda') != -1:
         data = request_data["fieldPk"].split('#')
         logical_or = True
@@ -3771,6 +3770,22 @@ def last_field_result(request):
 
 def get_current_direction(current_iss):
     return Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+
+
+def split_link_field_expr(expr):
+    logical_or, logical_and, logical_group_or = False, False, False
+    if expr.find('|') > -1:
+        logical_or = True
+        field_pks = expr.split('|')
+        if expr.find('@') > -1:
+            logical_group_or = True
+    elif expr.find('&') > -1:
+        logical_and = True
+        field_pks = expr.split('&')
+    else:
+        logical_or = True
+        field_pks = [expr]
+    return field_pks, logical_or, logical_and, logical_group_or
 
 
 def field_get_link_data(

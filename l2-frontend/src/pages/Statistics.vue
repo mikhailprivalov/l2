@@ -575,13 +575,7 @@ const PARAMS_TYPES = {
   SPECIAL_FIELDS: 'SPECIAL_FIELDS',
   TYPE_DEPARTMENT: 'TYPE_DEPARTMENT',
   BY_CREATE_DIRECTION: 'BY_CREATE_DIRECTION',
-  PARTNER_REPORT_KIND: 'PARTNER_REPORT_KIND',
 };
-
-const PARTNER_REPORT_KINDS = [
-  { id: 'current', label: 'По умолчанию' },
-  { id: 'detailed', label: 'Детальный' },
-];
 
 const STATS_CATEGORIES = {
   labs: {
@@ -834,15 +828,9 @@ const STATS_CATEGORIES = {
       partnerCreateDirection: {
         groups: ['Статистика-контрагент-заказы'],
         title: 'Заказы',
-        params: [
-          PARAMS_TYPES.DATE_RANGE,
-          PARAMS_TYPES.PERIOD_DATE,
-          PARAMS_TYPES.BY_CREATE_DIRECTION,
-          PARAMS_TYPES.PARTNER_REPORT_KIND,
-        ],
+        params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.BY_CREATE_DIRECTION],
         url: '/statistic/xls?type=statistics-corp-create&date_type=<date-type>&date_values=<date-values>'
-            + '&date-start=<date-start>&date-end=<date-end>'
-            + '&by-create-direction=<by-create-direction>&report-kind=<report-kind>',
+            + '&date-start=<date-start>&date-end=<date-end>&by-create-direction=<by-create-direction>',
       },
     },
   },
@@ -878,7 +866,6 @@ const getVaues = () => ({
   medicalExam: false,
   isLabResult: false,
   byCreateDirection: false,
-  reportKind: 'current',
 });
 
 const formatDate = (date: Date) => moment(date).format('DD.MM.YYYY');
@@ -922,7 +909,6 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       medicalExam: false,
       isLabResult: false,
       byCreateDirection: false,
-      partnerReportKinds: PARTNER_REPORT_KINDS,
       resultTreatment: [],
       titleReportStattalonFields: [],
       titleReportAllFinSourceNeed: [],
@@ -996,8 +982,6 @@ export default class Statistics extends Vue {
   medicalExam: boolean;
 
   byCreateDirection: boolean;
-
-  partnerReportKinds: { id: string; label: string }[];
 
   isLabResult: boolean;
 
@@ -1328,10 +1312,6 @@ export default class Statistics extends Vue {
           url = url.replace('<by-create-direction>', false);
         }
         url = url.replace('<by-create-direction>', this.values.byCreateDirection);
-      }
-
-      if (this.PARAMS_TYPES.PARTNER_REPORT_KIND === p) {
-        url = url.replace('<report-kind>', this.values.reportKind || 'current');
       }
 
       if (this.PARAMS_TYPES.MONTH_YEAR === p) {
