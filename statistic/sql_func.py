@@ -2294,11 +2294,8 @@ def _statistics_corp_detailed(d_start, d_end, by_create):
             cc.id as patient_card,
             dtr.number as tube_number,
             to_char(di.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as confirm_date,
-            COALESCE(
-                ro.order_number::text,
-                NULLIF(dn.ecp_direction_number, ''),
-                NULLIF(dn.id_in_hospital, '')
-            ) as external_direction_number
+            ro.order_number::text as external_direction_number,
+            dn.order_redirection_number as order_redirection_number
             FROM directions_issledovaniya di
             LEFT JOIN directions_napravleniya dn on dn.id = di.napravleniye_id
             LEFT JOIN directory_researches dr on dr.id = di.research_id

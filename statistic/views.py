@@ -1090,7 +1090,6 @@ def statistic_xls(request):
                 ws.write(daterow + 1, col_num, row[col_num], font_style)
 
     elif tp == "lab":
-
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Лаборатория_{}_{}-{}.xls\"".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr)
 
@@ -2376,6 +2375,7 @@ def statistic_xls(request):
                         "tube_number": i.tube_number,
                         "confirm_date": i.confirm_date,
                         "external_direction_number": i.external_direction_number,
+                        "order_redirection_number": i.order_redirection_number,
                     }
                 )
             ws = partner_coast_data.partner_coast_detailed_base(ws)

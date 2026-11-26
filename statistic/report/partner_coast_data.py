@@ -88,6 +88,7 @@ def partner_coast_detailed_base(ws1):
         ('Карта', 20),
         ('Направление', 20),
         ('Номер направления внешнего заказа', 36),
+        ('Номер 1С', 24),
         ('Номер контейнера', 24),
         ('Услуга', 40),
         ('Код услуги внутренний', 28),
@@ -120,12 +121,13 @@ def partner_coast_detailed_fill_data(ws1, result_query):
         ws1.cell(row=r, column=3).value = v.get("patient_card") or ""
         ws1.cell(row=r, column=4).value = v.get("direction_num") or ""
         ws1.cell(row=r, column=5).value = v.get("external_direction_number") or ""
-        ws1.cell(row=r, column=6).value = v.get("tube_number") or ""
-        ws1.cell(row=r, column=7).value = v.get("research_title") or ""
-        ws1.cell(row=r, column=8).value = v.get("internal_code") or ""
-        ws1.cell(row=r, column=9).value = v.get("confirm_date") or ""
+        ws1.cell(row=r, column=6).value = v.get("order_redirection_number") or ""
+        ws1.cell(row=r, column=7).value = v.get("tube_number") or ""
+        ws1.cell(row=r, column=8).value = v.get("research_title") or ""
+        ws1.cell(row=r, column=9).value = v.get("internal_code") or ""
+        ws1.cell(row=r, column=10).value = v.get("confirm_date") or ""
 
-        for c in range(1, 10):
+        for c in range(1, 11):
             ws1.cell(row=r, column=c).style = style_border1
 
     return ws1
