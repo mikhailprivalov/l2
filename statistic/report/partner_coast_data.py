@@ -73,3 +73,61 @@ def partner_coast_fill_data(ws1, result_query):
                 cell.fill = green_fill
 
     return ws1
+
+
+def partner_coast_detailed_base(ws1):
+    style_border = NamedStyle(name="style_border_ca_detailed")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    columns = [
+        ('Контрагент', 60),
+        ('Пациент', 40),
+        ('Карта', 20),
+        ('Направление', 20),
+        ('Номер направления внешнего заказа', 36),
+        ('Номер 1С', 24),
+        ('Номер контейнера', 24),
+        ('Услуга', 40),
+        ('Код услуги внутренний', 28),
+        ('Дата подтверждения результата', 28),
+    ]
+
+    row = 5
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=row, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=row, column=idx).style = style_border
+
+    return ws1
+
+
+def partner_coast_detailed_fill_data(ws1, result_query):
+    style_border1 = NamedStyle(name="style_border_detailed_row")
+    bd = Side(style='thin', color="000000")
+    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border1.font = Font(bold=False, size=11)
+    style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    r = 5
+    for v in result_query:
+        r += 1
+        birthday = v.get("patient_birthday") or ""
+        patient = f'{v.get("patient_family") or ""} {v.get("patient_name") or ""} {v.get("patient_patronymic") or ""} {birthday}'.strip()
+        ws1.cell(row=r, column=1).value = v.get("hospital_title") or ""
+        ws1.cell(row=r, column=2).value = patient
+        ws1.cell(row=r, column=3).value = v.get("patient_card") or ""
+        ws1.cell(row=r, column=4).value = v.get("direction_num") or ""
+        ws1.cell(row=r, column=5).value = v.get("external_direction_number") or ""
+        ws1.cell(row=r, column=6).value = v.get("order_redirection_number") or ""
+        ws1.cell(row=r, column=7).value = v.get("tube_number") or ""
+        ws1.cell(row=r, column=8).value = v.get("research_title") or ""
+        ws1.cell(row=r, column=9).value = v.get("internal_code") or ""
+        ws1.cell(row=r, column=10).value = v.get("confirm_date") or ""
+
+        for c in range(1, 11):
+            ws1.cell(row=r, column=c).style = style_border1
+
+    return ws1

@@ -78,6 +78,7 @@
 - `dashboards/` - dashboards
 - `statistics_tickets/` - ticket statistics
 - Statistics UI catalog lives in `l2-frontend/src/pages/Statistics.vue` (`STATS_CATEGORIES`); each report `type` is handled in `statistic/views.py`
+- **Контрагенты → Заказы** (`statistics-corp-create`) has a **Вид отчета** treeselect. **По умолчанию** (`report-kind=current`) is the existing coast sheet. **Детальный** (`report-kind=detailed`) is one row per service and tube. **Номер направления внешнего заказа** is `RegisteredOrders.order_number` of `Napravleniya.external_order`. The next column **Номер 1С** is `Napravleniya.order_redirection_number`. An empty link or number is an empty cell.
 - Registry sheets **Реестр по больницам** (`reestr-hospital`), **Реестр по врачам** (`reestr-doctor`), and doctor workload (`statistics-workload`) share `statistic/report/reestr_hospital.py`. After **Область исследования/ Услуга** the column **Второе название** holds the `TitleResearchHospital` title for that request hospital and service. A missing synonym is an empty cell.
 - Magazine **Статус пользователей** (`statistic/report/current_users_role.py`, local `MAGAZINE_REPORT` key `6`) lists doctors and roles. Column **Суперадмин** is `Да` when `auth_user.is_superuser` is true, otherwise `нет`.
 - Report `unlimitPeriod: true` skips the 2-month date range check on the frontend; backend excludes that `type` from the 60-day cap
