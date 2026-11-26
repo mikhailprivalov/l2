@@ -2274,6 +2274,58 @@ def get_expertise_grade(parent_ids):
     return rows
 
 
+def _statistics_corp_detailed(d_start, d_end, by_create):
+    if by_create:
+        date_filter = "dn.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s"
+    else:
+        date_filter = "di.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s"
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            SELECT
+            dn.id as direction_num,
+            dr.title as research_title,
+            dr.internal_code as internal_code,
+            hh.title as hospital_title,
+            ci.family as patient_family,
+            ci.name as patient_name,
+            ci.patronymic as patient_patronymic,
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as patient_birthday,
+            cc.id as patient_card,
+            dtr.number as tube_number,
+            to_char(di.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as confirm_date,
+            COALESCE(
+                ro.order_number::text,
+                NULLIF(dn.ecp_direction_number, ''),
+                NULLIF(dn.id_in_hospital, '')
+            ) as external_direction_number
+            FROM directions_issledovaniya di
+            LEFT JOIN directions_napravleniya dn on dn.id = di.napravleniye_id
+            LEFT JOIN directory_researches dr on dr.id = di.research_id
+            LEFT JOIN hospitals_hospitals hh on hh.id = dn.hospital_id
+            LEFT JOIN clients_card cc on cc.id = dn.client_id
+            LEFT JOIN clients_individual ci on cc.individual_id = ci.id
+            LEFT JOIN directions_issledovaniya_tubes dit on dit.issledovaniya_id = di.id
+            LEFT JOIN directions_tubesregistration dtr on dit.tubesregistration_id = dtr.id
+            LEFT JOIN directions_registeredorders ro on ro.id = dn.external_order_id
+            WHERE
+            {date_filter}
+            ORDER BY hh.title, cc.id, dtr.number, dr.title
+            """,
+            params={'d_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def statistics_corp_detailed_by_create_direction(d_start, d_end):
+    return _statistics_corp_detailed(d_start, d_end, True)
+
+
+def statistics_corp_detailed_by_confirm_direction(d_start, d_end):
+    return _statistics_corp_detailed(d_start, d_end, False)
+
+
 def statistics_corp_by_create_direction(d_start, d_end):
     with connection.cursor() as cursor:
         cursor.execute(

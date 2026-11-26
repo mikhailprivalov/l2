@@ -2353,117 +2353,145 @@ def statistic_xls(request):
         if 'Статистика-все МО' in user_groups:
             hospital_id = -1
 
-        if by_create_direction:
-            researches_sql = sql_func.statistics_corp_by_create_direction(start_date, end_date)
+        report_kind = request_data.get("report-kind") or "current"
+        if report_kind == "detailed":
+            response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги детальный.xlsx\"", tr)
+            if by_create_direction:
+                researches_sql = sql_func.statistics_corp_detailed_by_create_direction(start_date, end_date)
+            else:
+                researches_sql = sql_func.statistics_corp_detailed_by_confirm_direction(start_date, end_date)
+            result = []
+            for i in researches_sql:
+                result.append(
+                    {
+                        "direction_num": i.direction_num,
+                        "research_title": i.research_title,
+                        "internal_code": i.internal_code,
+                        "hospital_title": i.hospital_title,
+                        "patient_family": i.patient_family,
+                        "patient_name": i.patient_name,
+                        "patient_patronymic": i.patient_patronymic,
+                        "patient_birthday": i.patient_birthday,
+                        "patient_card": i.patient_card,
+                        "tube_number": i.tube_number,
+                        "confirm_date": i.confirm_date,
+                        "external_direction_number": i.external_direction_number,
+                    }
+                )
+            ws = partner_coast_data.partner_coast_detailed_base(ws)
+            ws = partner_coast_data.partner_coast_detailed_fill_data(ws, result)
         else:
-            researches_sql = sql_func.statistics_corp_by_confirm_direction(start_date, end_date)
+            if by_create_direction:
+                researches_sql = sql_func.statistics_corp_by_create_direction(start_date, end_date)
+            else:
+                researches_sql = sql_func.statistics_corp_by_confirm_direction(start_date, end_date)
 
-        result = []
-        step = 0
-        old_patient_summ = 0
-        old_hospital_summ = 0
-        old_hosp_title = None
-        old_patient_card = None
-        old_patient_family = None
-        old_patient_name = None
-        old_patient_patronymic = None
-        old_patient_birthday = None
+            result = []
+            step = 0
+            old_patient_summ = 0
+            old_hospital_summ = 0
+            old_hosp_title = None
+            old_patient_card = None
+            old_patient_family = None
+            old_patient_name = None
+            old_patient_patronymic = None
+            old_patient_birthday = None
 
-        for i in researches_sql:
-            if step != 0 and (i.patient_card != old_patient_card):
+            for i in researches_sql:
+                if step != 0 and (i.patient_card != old_patient_card):
+                    result.append(
+                        {
+                            "direction_num": "",
+                            "target_date": "",
+                            "research_title": "",
+                            "hospital_title": old_hosp_title,
+                            "patient_family": old_patient_family,
+                            "patient_name": old_patient_name,
+                            "patient_patronymic": old_patient_patronymic,
+                            "patient_birthday": old_patient_birthday,
+                            "patient_card": "Итого по пациенту",
+                            "research_coast": old_patient_summ,
+                            "tube_number": "",
+                        }
+                    )
+                    old_patient_summ = 0
+
+                if step != 0 and (i.hospital_title != old_hosp_title):
+                    result.append(
+                        {
+                            "direction_num": "",
+                            "target_date": "",
+                            "research_title": "",
+                            "hospital_title": old_hosp_title,
+                            "patient_family": "",
+                            "patient_name": "",
+                            "patient_patronymic": "",
+                            "patient_birthday": "",
+                            "patient_card": "Итого по контрагенту",
+                            "research_coast": old_hospital_summ,
+                            "tube_number": "",
+                        }
+                    )
+                    old_hospital_summ = 0
+
+                old_hosp_title = i.hospital_title
+                old_patient_card = i.patient_card
+                old_patient_family = i.patient_family
+                old_patient_name = i.patient_name
+                old_patient_patronymic = i.patient_patronymic
+                old_patient_birthday = i.patient_birthday
+                old_patient_summ += i.research_coast if i.research_coast else 0
+                old_hospital_summ += i.research_coast if i.research_coast else 0
                 result.append(
                     {
-                        "direction_num": "",
-                        "target_date": "",
-                        "research_title": "",
-                        "hospital_title": old_hosp_title,
-                        "patient_family": old_patient_family,
-                        "patient_name": old_patient_name,
-                        "patient_patronymic": old_patient_patronymic,
-                        "patient_birthday": old_patient_birthday,
-                        "patient_card": "Итого по пациенту",
-                        "research_coast": old_patient_summ,
-                        "tube_number": "",
+                        "direction_num": i.direction_num,
+                        "target_date": i.target_date,
+                        "research_title": i.research_title,
+                        "hospital_title": i.hospital_title,
+                        "patient_family": i.patient_family,
+                        "patient_name": i.patient_name,
+                        "patient_patronymic": i.patient_patronymic,
+                        "patient_birthday": i.patient_birthday,
+                        "patient_card": i.patient_card,
+                        "research_coast": i.research_coast if i.research_coast else 0,
+                        "tube_number": i.tube_number if i.tube_number else "-",
                     }
                 )
-                old_patient_summ = 0
+                step += 1
 
-            if step != 0 and (i.hospital_title != old_hosp_title):
-                result.append(
-                    {
-                        "direction_num": "",
-                        "target_date": "",
-                        "research_title": "",
-                        "hospital_title": old_hosp_title,
-                        "patient_family": "",
-                        "patient_name": "",
-                        "patient_patronymic": "",
-                        "patient_birthday": "",
-                        "patient_card": "Итого по контрагенту",
-                        "research_coast": old_hospital_summ,
-                        "tube_number": "",
-                    }
-                )
-                old_hospital_summ = 0
-
-            old_hosp_title = i.hospital_title
-            old_patient_card = i.patient_card
-            old_patient_family = i.patient_family
-            old_patient_name = i.patient_name
-            old_patient_patronymic = i.patient_patronymic
-            old_patient_birthday = i.patient_birthday
-            old_patient_summ += i.research_coast if i.research_coast else 0
-            old_hospital_summ += i.research_coast if i.research_coast else 0
             result.append(
                 {
-                    "direction_num": i.direction_num,
-                    "target_date": i.target_date,
-                    "research_title": i.research_title,
-                    "hospital_title": i.hospital_title,
-                    "patient_family": i.patient_family,
-                    "patient_name": i.patient_name,
-                    "patient_patronymic": i.patient_patronymic,
-                    "patient_birthday": i.patient_birthday,
-                    "patient_card": i.patient_card,
-                    "research_coast": i.research_coast if i.research_coast else 0,
-                    "tube_number": i.tube_number if i.tube_number else "-",
+                    "direction_num": "",
+                    "target_date": "",
+                    "research_title": "",
+                    "hospital_title": old_hosp_title,
+                    "patient_family": old_patient_family,
+                    "patient_name": old_patient_name,
+                    "patient_patronymic": old_patient_patronymic,
+                    "patient_birthday": old_patient_birthday,
+                    "patient_card": "Итого по пациенту",
+                    "research_coast": old_patient_summ,
+                    "tube_number": "",
                 }
             )
-            step += 1
+            result.append(
+                {
+                    "direction_num": "",
+                    "target_date": "",
+                    "research_title": "",
+                    "hospital_title": old_hosp_title,
+                    "patient_family": "",
+                    "patient_name": "",
+                    "patient_patronymic": "",
+                    "patient_birthday": "",
+                    "patient_card": "Итого по контрагенту",
+                    "research_coast": old_hospital_summ,
+                    "tube_number": "",
+                }
+            )
 
-        result.append(
-            {
-                "direction_num": "",
-                "target_date": "",
-                "research_title": "",
-                "hospital_title": old_hosp_title,
-                "patient_family": old_patient_family,
-                "patient_name": old_patient_name,
-                "patient_patronymic": old_patient_patronymic,
-                "patient_birthday": old_patient_birthday,
-                "patient_card": "Итого по пациенту",
-                "research_coast": old_patient_summ,
-                "tube_number": "",
-            }
-        )
-        result.append(
-            {
-                "direction_num": "",
-                "target_date": "",
-                "research_title": "",
-                "hospital_title": old_hosp_title,
-                "patient_family": "",
-                "patient_name": "",
-                "patient_patronymic": "",
-                "patient_birthday": "",
-                "patient_card": "Итого по контрагенту",
-                "research_coast": old_hospital_summ,
-                "tube_number": "",
-            }
-        )
-
-        ws = partner_coast_data.partner_coast_base(ws)
-        ws = partner_coast_data.partner_coast_fill_data(ws, result)
+            ws = partner_coast_data.partner_coast_base(ws)
+            ws = partner_coast_data.partner_coast_fill_data(ws, result)
 
     elif tp == "statistics-workload":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Нагрузка.xlsx\"", tr)
