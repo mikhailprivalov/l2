@@ -1301,10 +1301,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@openfonts/open-sans_all@^1.44.2":
-  version "1.44.2"
-  resolved "https://registry.yarnpkg.com/@openfonts/open-sans_all/-/open-sans_all-1.44.2.tgz#5365e8cbc5aee53684b86512b82f6b75dfadae59"
-  integrity sha512-SuLQ9tKnow0+ur62tHif7/HQ530h0EkxJuwPFngP2xLJb+hrGqF6OZGjXCZSSbEEsTbk3VxgY+fSbdaOWUP9Yw==
+"@openfonts/open-sans_all@^1.44.3":
+  version "1.44.3"
+  resolved "https://registry.yarnpkg.com/@openfonts/open-sans_all/-/open-sans_all-1.44.3.tgz#82b94b530b83f34ac082c66f6b44a7cab7947b63"
+  integrity sha512-MSBFYhy7DM4UiNcDuo/s/bj3dA+Rset3Nr1gkcBVxLwpCMrWC1DQX91sd7igmWWCxMGyA/GVRONekvK45RukLQ==
 
 "@polka/url@^1.0.0-next.20":
   version "1.0.0-next.21"
