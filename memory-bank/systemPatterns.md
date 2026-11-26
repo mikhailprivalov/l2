@@ -59,6 +59,7 @@
 - `doctor_call/` - house calls
 - `cases/` - treatment cases
 - `stationar/` - inpatient (via api/stationar/). On `/ui/hospitalization-board` the discharged heading is **Выписаны - N**. After **Проверены** succeeds it becomes **Выписаны - N / M**: N stays the extract count, M is how many unique discharged directions in the period were returned as checked (the green rows). A reload of the board hides the slash until the next check. The arrow immediately left of **Проверены** is one control: up lists checked rows first, down lists unchecked rows first. Order inside each group stays as loaded. Search and quick filters run before that sort.
+- **Paraclinic link fields:** In `last_field_result`, a formula that starts with `%current_hosp#` or `%root_hosp#` is parsed before `|` and `&`. A tail such as `1426@&2171@` is an AND of those groups. `%current_hosp#` searches directions whose `Napravleniya.parent_id` is the current direction's parent (current department). `%root_hosp#` searches from the root hospitalization history: every department `issledovaniye` returned by `hosp_get_hosp_direction`.
 - `pharmacotherapy/` - pharmacotherapy
 - `medical_certificates/` - medical certificates
 - `treatment/` - treatment
@@ -78,6 +79,7 @@
 - `dashboards/` - dashboards
 - `statistics_tickets/` - ticket statistics
 - Statistics UI catalog lives in `l2-frontend/src/pages/Statistics.vue` (`STATS_CATEGORIES`); each report `type` is handled in `statistic/views.py`
+- **Контрагенты → Заказы** (`statistics-corp-create`) has a **Вид отчета** treeselect. **По умолчанию** (`report-kind=current`) is the existing coast sheet. **Детальный** (`report-kind=detailed`) is one row per service and tube: counterparty, patient, card, local direction, external direction number (registered order, else ECP number, else `id_in_hospital`), tube, service, `Researches.internal_code`, confirmation date `DD.MM.YYYY`. The same period and **По дате создания** filter both kinds. Empty integration number, tube, code, and confirmation date stay blank. No totals and no price column.
 - Registry sheets **Реестр по больницам** (`reestr-hospital`), **Реестр по врачам** (`reestr-doctor`), and doctor workload (`statistics-workload`) share `statistic/report/reestr_hospital.py`. After **Область исследования/ Услуга** the column **Второе название** holds the `TitleResearchHospital` title for that request hospital and service. A missing synonym is an empty cell.
 - Magazine **Статус пользователей** (`statistic/report/current_users_role.py`, local `MAGAZINE_REPORT` key `6`) lists doctors and roles. Column **Суперадмин** is `Да` when `auth_user.is_superuser` is true, otherwise `нет`.
 - Report `unlimitPeriod: true` skips the 2-month date range check on the frontend; backend excludes that `type` from the 60-day cap
