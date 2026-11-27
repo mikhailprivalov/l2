@@ -276,13 +276,16 @@
     </div>
     <div
       v-if="priceIsSelected"
-      class="card-no-hover card card-1"
+      class="card-no-hover card card-1 price-coasts"
     >
       <div class="scroll">
         <table class="table">
           <colgroup>
             <col>
             <col>
+            <col width="100">
+            <col width="100">
+            <col width="100">
             <col width="100">
             <col width="100">
             <col width="100">
@@ -304,6 +307,15 @@
               </th>
               <th class="text-center border-right">
                 <strong>Cito</strong>
+              </th>
+              <th class="text-center border-right">
+                <strong>Экспресс</strong>
+              </th>
+              <th class="text-center border-right">
+                <strong>Динамика</strong>
+              </th>
+              <th class="text-center border-right">
+                <strong>Ночные</strong>
               </th>
               <th
                 class="border-right delete-all-coast"
@@ -327,7 +339,7 @@
             class="text-center"
           >
             <td
-              colspan="6"
+              colspan="9"
               class="border-top"
             >
               Нет данных
@@ -378,6 +390,36 @@
                 class="text-right form-control"
               >
             </td>
+            <td class="border">
+              <input
+                v-model="coastResearch.coastExpress"
+                :disabled="!priceIsActive"
+                type="number"
+                min="0.01"
+                step="0.01"
+                class="text-right form-control"
+              >
+            </td>
+            <td class="border">
+              <input
+                v-model="coastResearch.coastDynamics"
+                :disabled="!priceIsActive"
+                type="number"
+                min="0.01"
+                step="0.01"
+                class="text-right form-control"
+              >
+            </td>
+            <td class="border">
+              <input
+                v-model="coastResearch.coastNight"
+                :disabled="!priceIsActive"
+                type="number"
+                min="0.01"
+                step="0.01"
+                class="text-right form-control"
+              >
+            </td>
             <td
               class="border"
             >
@@ -410,9 +452,12 @@
       Добавить исследование в прайс
     </h4>
     <div v-if="priceIsActive && priceIsSelected">
-      <table>
+      <table class="add-research">
         <colgroup>
           <col>
+          <col width="100">
+          <col width="100">
+          <col width="100">
           <col width="100">
           <col width="100">
           <col width="100">
@@ -456,6 +501,36 @@
               min="0.01"
               step="0.01"
               placeholder="Cito"
+            >
+          </td>
+          <td class="border">
+            <input
+              v-model="coastExpress"
+              type="number"
+              class="text-right form-control"
+              min="0.01"
+              step="0.01"
+              placeholder="Экспресс"
+            >
+          </td>
+          <td class="border">
+            <input
+              v-model="coastDynamics"
+              type="number"
+              class="text-right form-control"
+              min="0.01"
+              step="0.01"
+              placeholder="Динамика"
+            >
+          </td>
+          <td class="border">
+            <input
+              v-model="coastNight"
+              type="number"
+              class="text-right form-control"
+              min="0.01"
+              step="0.01"
+              placeholder="Ночные"
             >
           </td>
           <td class="border">
@@ -509,6 +584,9 @@ export default {
       selectedResearch: null,
       coast: '',
       coastCito: '',
+      coastExpress: '',
+      coastDynamics: '',
+      coastNight: '',
       numberService: '',
       researchList: {},
       search: '',
@@ -717,6 +795,9 @@ export default {
           coastResearchId: coastResearch.id,
           coast: coastResearch.coast,
           coastCito: coastResearch.coastCito,
+          coastExpress: coastResearch.coastExpress,
+          coastDynamics: coastResearch.coastDynamics,
+          coastNight: coastResearch.coastNight,
           numberService: coastResearch.numberService,
           hospitalSynonym: coastResearch.hospitalSynonym,
         });
@@ -776,6 +857,9 @@ export default {
           researchId: this.selectedResearch,
           coast: this.coast,
           coastCito: this.coastCito,
+          coastExpress: this.coastExpress,
+          coastDynamics: this.coastDynamics,
+          coastNight: this.coastNight,
           numberService: this.numberService,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
@@ -785,6 +869,9 @@ export default {
           this.selectedResearch = null;
           this.coast = '';
           this.coastCito = '';
+          this.coastExpress = '';
+          this.coastDynamics = '';
+          this.coastNight = '';
         } else {
           this.$root.$emit('msg', 'error', message);
         }
@@ -820,6 +907,14 @@ export default {
 }
 .table {
   margin-bottom: 0;
+  table-layout: fixed;
+}
+.price-coasts {
+  margin-left: 0;
+  margin-right: 0;
+}
+.add-research {
+  width: 100%;
   table-layout: fixed;
 }
 .margin-bottom {
@@ -903,6 +998,8 @@ export default {
 }
 .negative-margin-top {
   margin-top: -20px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 .height-row {
   height: 37px;

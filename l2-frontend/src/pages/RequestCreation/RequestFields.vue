@@ -47,7 +47,7 @@
           </div>
         </div>
         <div class="request-fields">
-          <div :class="showCode ? 'third-width' : 'half-width'">
+          <div class="third-width">
             <label class="formulate-input-label date-time-label">Контраст</label>
             <treeselect
               v-model="formValues.currentContrast"
@@ -59,29 +59,34 @@
             />
           </div>
           <FormulateInput
-            :class="showCode ? 'third-width' : 'half-width'"
+            class="third-width"
             type="number"
             name="contrastAmount"
             placeholder="Объём, мг"
             label="Объём"
           />
-          <FormulateInput
-            v-if="showCode"
-            class="third-width"
-            type="text"
-            name="requestCode"
-            placeholder="Код"
-            label="Код"
-            maxlength="100"
-          />
+          <div class="third-width">
+            <label class="formulate-input-label date-time-label">Источник финансирования</label>
+            <treeselect
+              v-model="formValues.finSource"
+              :multiple="false"
+              :clearable="false"
+              :options="finSourceOptions"
+              :append-to-body="true"
+              placeholder="Источник финансирования"
+              @input="onInput"
+              @select="onFinSourcePicked"
+            />
+          </div>
         </div>
 
         <div
-          v-if="showAnatomicalArea"
+          v-if="showAnatomicalArea || showCode"
           class="request-fields"
         >
           <FormulateInput
-            class="half-width"
+            v-if="showAnatomicalArea"
+            :class="clinicalCellClass"
             type="text"
             name="anatomy"
             label="Анатомическая область"
@@ -89,12 +94,22 @@
             maxlength="255"
           />
           <FormulateInput
-            class="half-width"
+            v-if="showAnatomicalArea"
+            :class="clinicalCellClass"
             type="text"
             name="visitReason"
             label="Причина обращения"
             placeholder="Причина обращения"
             maxlength="255"
+          />
+          <FormulateInput
+            v-if="showCode"
+            :class="clinicalCellClass"
+            type="text"
+            name="requestCode"
+            placeholder="Код"
+            label="Код"
+            maxlength="100"
           />
         </div>
         <div class="request-fields">
@@ -198,6 +213,7 @@ import useNotify from '@/hooks/useNotify';
 import researchesPoint from '@/api/researches-point';
 import { useStore } from '@/store';
 
+import finSourceOptionsForBase from './finSourceOptions';
 import {
   requestFileAccept,
   requestFileHint,
@@ -205,7 +221,10 @@ import {
   takeRequestFiles,
 } from './requestFiles';
 
-const props = defineProps<{ value: Record<string, any> }>();
+const props = defineProps<{
+  value: Record<string, any>;
+  basePk?: number | null;
+}>();
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
@@ -213,13 +232,55 @@ const emit = defineEmits<{
   (e: 'create:request'): void
 }>();
 
-const formValues = ref({ ...props.value, currentContrast: props.value.currentContrast || null });
+const formValues = ref({
+  ...props.value,
+  currentContrast: props.value.currentContrast || null,
+  finSource: props.value.finSource ?? null,
+});
 const selectedFiles = ref<File[]>([]);
 const fileInput = ref<HTMLInputElement>();
 const notify = useNotify();
 const store = useStore();
+const finSourceTouched = ref(false);
 const showCode = computed(() => !!store.getters.modules.show_code_in_request_creation);
 const showAnatomicalArea = computed(() => !!store.getters.modules.show_anatomical_area_in_request_creation);
+const clinicalCellClass = computed(() => (showCode.value ? 'third-width' : 'half-width'));
+const finSourceOptions = computed(() => finSourceOptionsForBase(store.getters.bases, props.basePk));
+
+function fallbackFinSourceId(options: Array<{ id: number; label: string }>) {
+  const oms = options.find((row) => String(row.label).trim().toUpperCase() === 'ОМС');
+  return (oms || options[0])?.id ?? null;
+}
+
+function preferredFinSourceId(options: Array<{ id: number; label: string }>) {
+  const hospitalDefault = store.getters.user_data?.defaultFinSource;
+  if (hospitalDefault != null && options.some((row) => row.id === hospitalDefault)) {
+    return hospitalDefault;
+  }
+  return fallbackFinSourceId(options);
+}
+
+function onFinSourcePicked() {
+  finSourceTouched.value = true;
+}
+
+function onInput() {
+  emit('input', formValues.value);
+}
+
+function ensureFinSource() {
+  const options = finSourceOptions.value;
+  const current = formValues.value.finSource;
+  if (finSourceTouched.value && options.some((row) => row.id === current)) {
+    return;
+  }
+  const next = preferredFinSourceId(options);
+  if (next === current || (next == null && (current == null || current === ''))) {
+    return;
+  }
+  formValues.value.finSource = next;
+  onInput();
+}
 const fileLimits = computed(() => requestFileLimitsFromModules(store.getters.modules));
 const fileUploadHint = computed(() => requestFileHint(fileLimits.value));
 const fileAccept = computed(() => requestFileAccept(fileLimits.value));
@@ -295,19 +356,27 @@ function createRequest() {
   emit('create:request');
 }
 
-function onInput() {
-  emit('input', formValues.value);
-}
-
 watch(() => props.value, (val) => {
   if (!isEqual(val, formValues.value)) {
-    formValues.value = { ...val };
+    formValues.value = { ...val, finSource: val.finSource ?? null };
+    if (val.finSource == null) {
+      finSourceTouched.value = false;
+    }
   }
 
   if (!val.files || val.files.length === 0) {
     selectedFiles.value = [];
   }
+  ensureFinSource();
 }, { deep: true });
+
+watch(finSourceOptions, () => {
+  ensureFinSource();
+}, { immediate: true });
+
+watch(() => store.getters.user_data?.defaultFinSource, () => {
+  ensureFinSource();
+});
 
 watch(() => formValues.value.requestCode, (val) => {
   if (typeof val === 'string' && /[/\\]/.test(val)) {

@@ -38,6 +38,7 @@ from laboratory.settings import (
 from statistic.models import TypeReport
 from utils.response import status_response
 
+from django.core.files.base import ContentFile
 from django.core.validators import validate_email
 from django.db.utils import IntegrityError
 from utils.data_verification import as_model, data_parse
@@ -700,6 +701,7 @@ def current_user_info(request):
             ret["user_services"] = [x.pk for x in doctorprofile.users_services.all() if x not in ret["restricted"]]
             ret["hospital"] = doctorprofile.get_hospital_id()
             ret["hospital_title"] = doctorprofile.get_hospital_title()
+            ret["defaultFinSource"] = doctorprofile.hospital.default_fin_source_id if doctorprofile.hospital_id else None
             ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
             ret["specialities"] = [] if not doctorprofile.specialities else [doctorprofile.specialities.title]
             database_groups = list(user.groups.values_list("name", flat=True))
@@ -2371,6 +2373,16 @@ def organization_data(request):
         "currentManager": hospital.current_manager,
         "okpo": hospital.okpo,
         "needSendMail": hospital.need_send_result,
+        "oid": hospital.oid or "",
+        "hide": hospital.hide,
+        "timeZone": hospital.time_zone or "",
+        "strictDataOwnership": hospital.strict_data_ownership,
+        "defaultFinSource": hospital.default_fin_source_id,
+        "finSources": [
+            {"id": source.pk, "label": f"{source.base.title} — {source.title}"}
+            for source in directions.IstochnikiFinansirovaniya.objects.filter(hide=False).select_related("base").order_by("base__title", "title")
+        ],
+        "schemaDocxResultName": os.path.basename(hospital.schema_docx_result_created_direction_hospital.name) if hospital.schema_docx_result_created_direction_hospital else "",
     }
 
     if SettingManager.l2("ftp") and request.user.doctorprofile.has_group("Конструктор: Настройка всех организаций"):
@@ -2379,13 +2391,55 @@ def organization_data(request):
         org["resultPullFtpServerUrl"] = hospital.result_pull_by_numbers or ""
         org["isExternalPerformingOrganization"] = hospital.is_external_performing_organization
         org["strictTubeNumbers"] = hospital.strict_tube_numbers
-        org["strictDataOwnership"] = hospital.strict_data_ownership
         org["strictExternalNumbers"] = hospital.strict_external_numbers
         org["hl7SenderApplication"] = hospital.hl7_sender_application
         org["hl7ReceiverAapplication"] = hospital.hl7_receiver_appplication
         org["isAutotransfer"] = hospital.is_auto_transfer_hl7_file
 
     return JsonResponse({"org": org})
+
+
+def _org_schema_docx_name(hospital):
+    stored = hospital.schema_docx_result_created_direction_hospital
+    return os.path.basename(stored.name) if stored else ""
+
+
+def _org_schema_docx_error(payload):
+    if not payload:
+        return None
+    name = os.path.basename(str(payload.get("name") or ""))
+    if not name.lower().endswith(".docx"):
+        return "Нужен файл .docx"
+    content = payload.get("content") or ""
+    if isinstance(content, str) and content.startswith("data:") and "," in content:
+        content = content.split(",", 1)[1]
+    if not content:
+        return "Не удалось прочитать файл"
+    try:
+        base64.b64decode(content)
+    except Exception:
+        return "Не удалось прочитать файл"
+    return None
+
+
+def _org_schema_docx_next_name(hospital, payload, clear):
+    if payload:
+        return os.path.basename(str(payload.get("name") or "schema.docx"))
+    if clear:
+        return ""
+    return _org_schema_docx_name(hospital)
+
+
+def _apply_org_schema_docx(hospital, payload, clear):
+    if payload:
+        name = os.path.basename(str(payload.get("name") or "schema.docx"))
+        content = payload.get("content") or ""
+        if isinstance(content, str) and content.startswith("data:") and "," in content:
+            content = content.split(",", 1)[1]
+        hospital.schema_docx_result_created_direction_hospital.save(name, ContentFile(base64.b64decode(content)), save=False)
+        return
+    if clear and hospital.schema_docx_result_created_direction_hospital:
+        hospital.schema_docx_result_created_direction_hospital.delete(save=False)
 
 
 @login_required
@@ -2414,6 +2468,12 @@ def organization_data_update(request):
         "hl7ReceiverAapplication": str,
         "isAutotransfer": bool,
         "needSendMail": bool,
+        "oid": str,
+        "hide": bool,
+        "timeZone": str,
+        "defaultFinSource": int,
+        "clearSchemaDocxResult": bool,
+        "schemaDocxResult": dict,
     }
 
     data = data_parse(
@@ -2434,6 +2494,11 @@ def organization_data_update(request):
             "hl7ReceiverAapplication": None,
             "isAutotransfer": False,
             "needSendMail": False,
+            "oid": "",
+            "timeZone": "",
+            "defaultFinSource": None,
+            "clearSchemaDocxResult": False,
+            "schemaDocxResult": None,
         },
     )
 
@@ -2459,9 +2524,29 @@ def organization_data_update(request):
     hl7_receiver_appplication: Optional[str] = data[19] or None
     is_auto_transfer = data[20] if data[20] else False
     need_send_mail = data[21] if data[21] else False
+    oid = (data[22] or "").strip()
+    hide = bool(data[23])
+    time_zone = (data[24] or "").strip()
+    default_fin_source_id = data[25]
+    clear_schema_docx = bool(data[26])
+    schema_docx_result = data[27]
 
     if not title:
         return status_response(False, "Название не может быть пустым")
+    if len(oid) > 128:
+        return status_response(False, "OID слишком длинный")
+    if len(time_zone) > 100:
+        return status_response(False, "Часовой пояс слишком длинный")
+
+    fin_source = None
+    if default_fin_source_id:
+        fin_source = directions.IstochnikiFinansirovaniya.objects.filter(pk=default_fin_source_id, hide=False).first()
+        if not fin_source:
+            return status_response(False, "Источник финансирования недоступен")
+
+    schema_error = _org_schema_docx_error(schema_docx_result)
+    if schema_error:
+        return status_response(False, schema_error)
 
     hospital: Hospitals = request.user.doctorprofile.get_hospital()
     if hospital_pk is not None and hospital_pk != hospital.pk:
@@ -2483,13 +2568,18 @@ def organization_data_update(request):
         "email": hospital.email,
         "need_send_mail": hospital.need_send_result,
         "okpo": hospital.okpo,
+        "oid": hospital.oid,
+        "hide": hospital.hide,
+        "time_zone": hospital.time_zone,
+        "strict_data_ownership": hospital.strict_data_ownership,
+        "default_fin_source_id": hospital.default_fin_source_id,
+        "schema_docx_result": _org_schema_docx_name(hospital),
         **(
             {
                 "orders_pull_by_numbers": hospital.orders_pull_by_numbers,
                 "orders_push_by_numbers": hospital.orders_push_by_numbers,
                 "is_external_performing_organization": hospital.is_external_performing_organization,
                 "strict_tube_numbers": hospital.strict_tube_numbers,
-                "strict_data_ownership": hospital.strict_data_ownership,
                 "strict_external_numbers": hospital.strict_external_numbers,
                 "result_pull_by_numbers": hospital.result_pull_by_numbers,
             }
@@ -2510,13 +2600,18 @@ def organization_data_update(request):
         "email": email,
         "need_send_mail": need_send_mail,
         "okpo": okpo,
+        "oid": oid,
+        "hide": hide,
+        "time_zone": time_zone,
+        "strict_data_ownership": strict_data_ownership,
+        "default_fin_source_id": fin_source.pk if fin_source else None,
+        "schema_docx_result": _org_schema_docx_next_name(hospital, schema_docx_result, clear_schema_docx),
         **(
             {
                 "orders_pull_by_numbers": orders_pull_by_numbers,
                 "orders_push_by_numbers": orders_push_by_numbers,
                 "is_external_performing_organization": is_external_performing_organization,
                 "strict_tube_numbers": strict_tube_numbers,
-                "strict_data_ownership": strict_data_ownership,
                 "strict_external_numbers": strict_external_numbers,
                 "result_pull_by_numbers": result_pull_by_numbers,
                 "hl7_sender_application": hl7_sender_application,
@@ -2541,13 +2636,18 @@ def organization_data_update(request):
     hospital.hl7_sender_application = hl7_sender_application
     hospital.is_auto_transfer_hl7_file = is_auto_transfer
     hospital.need_send_result = need_send_mail
+    hospital.oid = oid
+    hospital.hide = hide
+    hospital.time_zone = time_zone
+    hospital.strict_data_ownership = strict_data_ownership
+    hospital.default_fin_source = fin_source
+    _apply_org_schema_docx(hospital, schema_docx_result, clear_schema_docx)
 
     if has_full_ftp_access:
         hospital.orders_pull_by_numbers = orders_pull_by_numbers
         hospital.orders_push_by_numbers = orders_push_by_numbers
         hospital.is_external_performing_organization = is_external_performing_organization
         hospital.strict_tube_numbers = strict_tube_numbers
-        hospital.strict_data_ownership = strict_data_ownership
         hospital.strict_external_numbers = strict_external_numbers
         hospital.result_pull_by_numbers = result_pull_by_numbers
     hospital.save()
@@ -3012,6 +3112,9 @@ def copy_price(request):
                 research=pc.research,
                 coast=pc.coast,
                 coast_cito=pc.coast_cito,
+                coast_express=pc.coast_express,
+                coast_dynamics=pc.coast_dynamics,
+                coast_night=pc.coast_night,
                 number_services_by_contract=pc.number_services_by_contract,
             )
             new_price_coast.save()
@@ -3021,16 +3124,16 @@ def copy_price(request):
     return status_response(True)
 
 
-def parse_coast_cito(value):
+def parse_optional_coast(value):
     if value is None or value == "":
         return None
     try:
-        coast_cito = float(value)
+        coast = float(value)
     except (TypeError, ValueError):
         return None
-    if coast_cito <= 0:
+    if coast <= 0:
         return None
-    return coast_cito
+    return coast
 
 
 @login_required
@@ -3044,9 +3147,15 @@ def update_coast_research_in_price(request):
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     old_coast = current_coast_research.coast
     old_coast_cito = current_coast_research.coast_cito
+    old_coast_express = current_coast_research.coast_express
+    old_coast_dynamics = current_coast_research.coast_dynamics
+    old_coast_night = current_coast_research.coast_night
     old_number = current_coast_research.number_services_by_contract
     current_coast_research.coast = request_data["coast"]
-    current_coast_research.coast_cito = parse_coast_cito(request_data.get("coastCito"))
+    current_coast_research.coast_cito = parse_optional_coast(request_data.get("coastCito"))
+    current_coast_research.coast_express = parse_optional_coast(request_data.get("coastExpress"))
+    current_coast_research.coast_dynamics = parse_optional_coast(request_data.get("coastDynamics"))
+    current_coast_research.coast_night = parse_optional_coast(request_data.get("coastNight"))
     current_coast_research.number_services_by_contract = request_data.get("numberService", 0)
     current_coast_research.save()
     price = current_coast_research.price_name
@@ -3064,6 +3173,12 @@ def update_coast_research_in_price(request):
             "new_coast": current_coast_research.coast,
             "old_coast_cito": old_coast_cito,
             "new_coast_cito": current_coast_research.coast_cito,
+            "old_coast_express": old_coast_express,
+            "new_coast_express": current_coast_research.coast_express,
+            "old_coast_dynamics": old_coast_dynamics,
+            "new_coast_dynamics": current_coast_research.coast_dynamics,
+            "old_coast_night": old_coast_night,
+            "new_coast_night": current_coast_research.coast_night,
             "old_number": old_number,
             "new_number": current_coast_research.number_services_by_contract,
         },
@@ -3167,7 +3282,10 @@ def add_research_in_price(request):
         price_name_id=request_data["priceId"],
         research_id=request_data["researchId"],
         coast=request_data["coast"],
-        coast_cito=parse_coast_cito(request_data.get("coastCito")),
+        coast_cito=parse_optional_coast(request_data.get("coastCito")),
+        coast_express=parse_optional_coast(request_data.get("coastExpress")),
+        coast_dynamics=parse_optional_coast(request_data.get("coastDynamics")),
+        coast_night=parse_optional_coast(request_data.get("coastNight")),
         number_services_by_contract=request_data.get("numberService", 0),
     )
     current_coast_research.save()
@@ -3181,6 +3299,9 @@ def add_research_in_price(request):
             "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
             "coast": current_coast_research.coast,
             "coast_cito": current_coast_research.coast_cito,
+            "coast_express": current_coast_research.coast_express,
+            "coast_dynamics": current_coast_research.coast_dynamics,
+            "coast_night": current_coast_research.coast_night,
         },
     )
     return JsonResponse({"ok": "ok"})

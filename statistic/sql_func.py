@@ -1025,9 +1025,11 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                     cc.number as card_number,
                     ci.family as patient_family,
                     ci.name as patient_name,
-                    ci.patronymic as patient_patronymic
+                    ci.patronymic as patient_patronymic,
+                    directions_istochnikifinansirovaniya.title as fin_source_title
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN directions_istochnikifinansirovaniya ON directions_napravleniya.istochnik_f_id = directions_istochnikifinansirovaniya.id
                 LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
                 LEFT JOIN clients_card cc ON directions_napravleniya.client_id = cc.id
                 LEFT JOIN clients_individual ci ON ci.id = cc.individual_id

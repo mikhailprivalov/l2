@@ -302,7 +302,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['input']);
+const emit = defineEmits(['input', 'base']);
 
 const store = useStore();
 const instance = getCurrentInstance();
@@ -654,6 +654,7 @@ watch(tfomsQuery, (nv) => {
 watch(base, (nv) => {
   root.$emit('global:select-base', nv);
   window.localStorage.setItem('selected-base', String(nv));
+  emit('base', nv);
 }, { immediate: true });
 
 onMounted(() => {

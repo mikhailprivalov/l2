@@ -469,19 +469,17 @@
                         placeholder="мг"
                       >
                     </div>
-                    <div
-                      v-if="showCode"
-                      class="detail-params-field detail-params-field--code"
-                    >
-                      <label class="detail-params-label">Код</label>
-                      <input
-                        v-model="editForm.requestCode"
-                        type="text"
-                        maxlength="100"
-                        class="form-control detail-edit-input detail-edit-input--code"
-                        placeholder="Код"
-                        @input="onRequestCodeInput"
-                      >
+                    <div class="detail-params-field detail-params-field--fin">
+                      <label class="detail-params-label">Источник финансирования</label>
+                      <Treeselect
+                        v-model="editForm.finSource"
+                        :multiple="false"
+                        :clearable="false"
+                        :options="detailFinSourceOptions"
+                        :append-to-body="true"
+                        placeholder="Источник финансирования"
+                        class="detail-edit-treeselect"
+                      />
                     </div>
                   </div>
                 </template>
@@ -514,15 +512,12 @@
                       :class="{ 'empty-value': !requestDetails.contrastAmount }"
                     >{{ requestDetails.contrastAmount || '(не указан)' }}</span>
                   </div>
-                  <div
-                    v-if="showCode"
-                    class="detail-row"
-                  >
-                    <span class="detail-label">Код:</span>
+                  <div class="detail-row">
+                    <span class="detail-label">Источник финансирования:</span>
                     <span
                       class="detail-value"
-                      :class="{ 'empty-value': !requestDetails.requestCode }"
-                    >{{ requestDetails.requestCode || '(не указан)' }}</span>
+                      :class="{ 'empty-value': !requestDetails.finSourceTitle }"
+                    >{{ requestDetails.finSourceTitle || '(не указан)' }}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Контраст:</span>
@@ -567,10 +562,13 @@
                   Клинические данные
                 </h4>
                 <div
-                  v-if="showAnatomicalArea"
+                  v-if="showAnatomicalArea || showCode"
                   class="detail-pair-row"
                 >
-                  <div class="detail-pair-field">
+                  <div
+                    v-if="showAnatomicalArea"
+                    class="detail-pair-field"
+                  >
                     <span class="detail-label">Анатомическая область:</span>
                     <input
                       v-if="requestDetails.editable"
@@ -587,7 +585,10 @@
                       v-text="requestDetails.anatomy || '(не указана)'"
                     />
                   </div>
-                  <div class="detail-pair-field">
+                  <div
+                    v-if="showAnatomicalArea"
+                    class="detail-pair-field"
+                  >
                     <span class="detail-label">Причина обращения:</span>
                     <input
                       v-if="requestDetails.editable"
@@ -602,6 +603,27 @@
                       class="detail-textarea-value detail-anatomy-value"
                       :class="{ 'empty-value': !requestDetails.visitReason }"
                       v-text="requestDetails.visitReason || '(не указана)'"
+                    />
+                  </div>
+                  <div
+                    v-if="showCode"
+                    class="detail-pair-field"
+                  >
+                    <span class="detail-label">Код:</span>
+                    <input
+                      v-if="requestDetails.editable"
+                      v-model="editForm.requestCode"
+                      type="text"
+                      maxlength="100"
+                      class="form-control detail-edit-input"
+                      placeholder="Код"
+                      @input="onRequestCodeInput"
+                    >
+                    <div
+                      v-else
+                      class="detail-textarea-value detail-anatomy-value"
+                      :class="{ 'empty-value': !requestDetails.requestCode }"
+                      v-text="requestDetails.requestCode || '(не указан)'"
                     />
                   </div>
                 </div>
@@ -687,6 +709,7 @@ import DateRange from '@/ui-cards/DateRange.vue';
 import Modal from '@/ui-cards/Modal.vue';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 
+import finSourceOptionsForBase from './finSourceOptions';
 import {
   requestFileAccept,
   requestFileHint,
@@ -744,6 +767,10 @@ const savedFilesBytes = computed(() => (requestDetails.value?.files || []).reduc
   0,
 ));
 const contrastOptions = ref([]);
+const detailFinSourceOptions = computed(() => finSourceOptionsForBase(
+  store.getters.bases,
+  requestDetails.value?.basePk,
+));
 
 type EditForm = {
   researchId: number | null;
@@ -755,6 +782,7 @@ type EditForm = {
   currentContrast: number;
   contrastAmount: string;
   requestCode: string;
+  finSource: number | null;
   anatomy: string;
   visitReason: string;
   anamnesis: string;
@@ -772,6 +800,7 @@ const defaultEditForm = (): EditForm => ({
   currentContrast: -1,
   contrastAmount: '',
   requestCode: '',
+  finSource: null,
   anatomy: '',
   visitReason: '',
   anamnesis: '',
@@ -1102,6 +1131,7 @@ const populateEditForm = (details: any) => {
     currentContrast: details.currentContrast ?? -1,
     contrastAmount: details.contrastAmount || '',
     requestCode: details.requestCode || '',
+    finSource: details.finSourceId ?? null,
     anatomy: details.anatomy || '',
     visitReason: details.visitReason || '',
     anamnesis: details.anamnesis || '',
@@ -1178,6 +1208,11 @@ const saveRequestDetails = async () => {
     return;
   }
 
+  if (!editForm.value.finSource) {
+    notify.error('Не выбран источник финансирования');
+    return;
+  }
+
   isSavingDetails.value = true;
   loader.inc();
   try {
@@ -1193,6 +1228,7 @@ const saveRequestDetails = async () => {
         currentContrast: editForm.value.currentContrast,
         contrastAmount: editForm.value.contrastAmount,
         requestCode: editForm.value.requestCode,
+        finSource: editForm.value.finSource,
         anatomy: editForm.value.anatomy,
         visitReason: editForm.value.visitReason,
         anamnesis: editForm.value.anamnesis,
@@ -2099,6 +2135,7 @@ defineExpose({
 
   &--contrast,
   &--volume,
+  &--fin,
   &--code {
     flex: 1 1 0;
     min-width: 0;

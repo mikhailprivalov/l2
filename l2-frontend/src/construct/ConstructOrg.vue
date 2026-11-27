@@ -5,20 +5,38 @@
         Настройка данных организации
       </h4>
 
-      <div
-        v-if="hasAccessToAllHospitals"
-        class="input-group treeselect-noborder-left org-selector"
-      >
-        <span class="input-group-addon">Организация</span>
-        <treeselect
-          v-model="hospitalId"
-          :multiple="false"
-          :disable-branch-nodes="true"
-          :options="hospitals"
-          placeholder="Организация не выбрана"
-          :clearable="false"
-          class="treeselect-wide"
-        />
+      <div class="org-top-row">
+        <div
+          v-if="hasAccessToAllHospitals"
+          class="input-group treeselect-noborder-left org-selector"
+        >
+          <span class="input-group-addon">Организация</span>
+          <treeselect
+            v-model="hospitalId"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :options="hospitals"
+            placeholder="Организация не выбрана"
+            :clearable="false"
+            class="treeselect-wide"
+          />
+        </div>
+        <div class="org-top-checks">
+          <label class="org-top-check">
+            <input
+              v-model="strictDataOwnership"
+              type="checkbox"
+            >
+            Доступ к себе
+          </label>
+          <label class="org-top-check">
+            <input
+              v-model="hide"
+              type="checkbox"
+            >
+            Скрыть
+          </label>
+        </div>
       </div>
 
       <FormulateForm
@@ -99,17 +117,66 @@
           </div>
         </div>
 
-        <template v-if="ftp && hasAccessToAllHospitals">
-          <div
-            class="full-width; show-layout"
-          >
+        <div class="row f-row">
+          <div class="col-xs-6">
             <FormulateInput
-              type="checkbox"
-              name="strictDataOwnership"
-              label="У организации доступ только к собственной картотеке"
+              type="text"
+              name="oid"
+              label="OID"
+              maxlength="128"
             />
+          </div>
+          <div class="col-xs-6">
             <FormulateInput
-              class="layout-padding-send-mail"
+              type="text"
+              name="timeZone"
+              label="Часовой пояс"
+              maxlength="100"
+            />
+          </div>
+        </div>
+
+        <div class="row f-row">
+          <div class="col-xs-6">
+            <div class="org-fin-source">
+              <label class="org-field-label">Источник финансирования по умолчанию</label>
+              <treeselect
+                v-model="defaultFinSource"
+                :multiple="false"
+                :options="finSourceOptions"
+                placeholder="Не выбран"
+                class="treeselect-wide"
+              />
+            </div>
+          </div>
+          <div class="col-xs-6">
+            <div class="schema-docx">
+              <label class="org-field-label">Шаблон DOCX результата по больнице заявки</label>
+              <div class="schema-docx-row">
+                <span>{{ schemaDocxName || 'Файл не загружен' }}</span>
+                <button
+                  type="button"
+                  class="btn btn-blue-nb"
+                  @click="pickSchemaDocx"
+                >
+                  {{ schemaDocxName ? 'Заменить' : 'Добавить' }}
+                </button>
+                <button
+                  v-if="schemaDocxName"
+                  type="button"
+                  class="btn btn-blue-nb"
+                  @click="clearSchemaDocx"
+                >
+                  Убрать
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template v-if="ftp && hasAccessToAllHospitals">
+          <div class="full-width show-layout">
+            <FormulateInput
               type="checkbox"
               name="needSendMail"
               label="Отправлять результаты на почту"
@@ -303,6 +370,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import * as actions from '@/store/action-types';
+import { selectFile } from '@/utils';
 
 @Component({
   components: { Treeselect },
@@ -311,6 +379,13 @@ import * as actions from '@/store/action-types';
       hospitalId: null,
       hospitals: [],
       org: {},
+      strictDataOwnership: true,
+      hide: false,
+      defaultFinSource: null,
+      finSourceOptions: [],
+      schemaDocxName: '',
+      schemaDocxResult: null,
+      clearSchemaDocxResult: false,
       loading: false,
       generators: [],
       generator: {},
@@ -338,6 +413,20 @@ export default class ConstructOrg extends Vue {
   hospitals: any[];
 
   org: any;
+
+  strictDataOwnership: boolean;
+
+  hide: boolean;
+
+  defaultFinSource: number | null;
+
+  finSourceOptions: Array<{ id: number; label: string }>;
+
+  schemaDocxName: string;
+
+  schemaDocxResult: { name: string; content: string } | null;
+
+  clearSchemaDocxResult: boolean;
 
   generators: any[];
 
@@ -388,11 +477,19 @@ export default class ConstructOrg extends Vue {
   async save() {
     this.loading = true;
     await this.$store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await this.$api('organization-data-update', this.org);
+    const { ok, message } = await this.$api('organization-data-update', {
+      ...this.org,
+      strictDataOwnership: this.strictDataOwnership,
+      hide: this.hide,
+      defaultFinSource: this.defaultFinSource,
+      schemaDocxResult: this.schemaDocxResult,
+      clearSchemaDocxResult: this.clearSchemaDocxResult,
+    });
     if (ok) {
       this.$ok('Изменения сохранены');
       await this.$store.dispatch(actions.GET_USER_DATA);
       await this.loadHospitals();
+      await this.loadOrgData();
     } else {
       this.$error(message);
     }
@@ -418,6 +515,15 @@ export default class ConstructOrg extends Vue {
 
     const { org } = await this.$api('organization-data', this, 'hospitalId');
     this.org = org;
+    const finSourceOptions = org.finSources || [];
+    const defaultFinSource = org.defaultFinSource ?? null;
+    this.strictDataOwnership = !!org.strictDataOwnership;
+    this.hide = !!org.hide;
+    this.finSourceOptions = finSourceOptions;
+    this.defaultFinSource = finSourceOptions.some((row) => row.id === defaultFinSource) ? defaultFinSource : null;
+    this.schemaDocxName = org.schemaDocxResultName || '';
+    this.schemaDocxResult = null;
+    this.clearSchemaDocxResult = false;
     await this.loadGenerators();
     await this.$store.dispatch(actions.DEC_LOADING);
   }
@@ -450,6 +556,38 @@ export default class ConstructOrg extends Vue {
     await this.loadGenerators();
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loading = false;
+  }
+
+  async pickSchemaDocx() {
+    const file = await selectFile('.docx');
+    if (!file) {
+      return;
+    }
+    if (!file.name.toLowerCase().endsWith('.docx')) {
+      this.$error('Нужен файл .docx');
+      return;
+    }
+    let content = '';
+    try {
+      content = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    } catch {
+      this.$error('Не удалось прочитать файл');
+      return;
+    }
+    this.schemaDocxName = file.name;
+    this.schemaDocxResult = { name: file.name, content };
+    this.clearSchemaDocxResult = false;
+  }
+
+  clearSchemaDocx() {
+    this.schemaDocxName = '';
+    this.schemaDocxResult = null;
+    this.clearSchemaDocxResult = true;
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -500,7 +638,50 @@ export default class ConstructOrg extends Vue {
   border-radius: 4px;
 }
 
-.org-selector {
+.org-top-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 15px;
+}
+
+.org-selector {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.org-top-checks {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.org-top-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: normal;
+}
+
+.org-fin-source,
+.schema-docx {
+  margin-bottom: 0;
+}
+
+.org-field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.schema-docx-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 </style>

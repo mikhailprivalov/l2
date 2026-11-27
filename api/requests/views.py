@@ -22,7 +22,7 @@ from utils.response import status_response
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, NapravleniyaFiles, ParaclinicResult
 from clients.models import Card
 from integration_framework.models import EquipmentReceive, EquipmentReceiveLink
-from hospitals.models import Hospitals, TitleResearchHospital
+from hospitals.models import DisableIstochnikiFinansirovaniya, Hospitals, TitleResearchHospital
 from users.models import DoctorProfile, DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
 from slog.models import Log
 
@@ -465,6 +465,22 @@ def _save_request_files(direction, decoded_files):
         NapravleniyaFiles(napravleniye=direction, uploaded_file=ContentFile(content, name=name)).save()
 
 
+def _request_fin_source(card, doctor, fin_source_id):
+    try:
+        pk = int(fin_source_id)
+    except (TypeError, ValueError):
+        return None, "Не выбран источник финансирования"
+    hospital_id = getattr(doctor, 'hospital_id', None)
+    if hospital_id and DisableIstochnikiFinansirovaniya.objects.filter(hospital_id=hospital_id, fin_source_id=pk).exists():
+        return None, "Источник финансирования недоступен"
+    if doctor.disabled_fin_source.filter(pk=pk).exists():
+        return None, "Источник финансирования недоступен"
+    source = IstochnikiFinansirovaniya.objects.filter(pk=pk, base_id=card.base_id, hide=False).first()
+    if not source:
+        return None, "Источник финансирования недоступен"
+    return source, None
+
+
 @login_required
 @group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def create_request(request):
@@ -496,11 +512,9 @@ def create_request(request):
 
     card = Card.objects.get(pk=patient_id)
 
-    fin_source = IstochnikiFinansirovaniya.objects.filter(base=card.base, title="ОМС", hide=False).first()
-    if not fin_source:
-        fin_source = IstochnikiFinansirovaniya.objects.filter(base=card.base, hide=False).order_by('-order_weight').first()
-    if not fin_source:
-        return status_response(False, "Не найден источник финансирования")
+    fin_source, fin_error = _request_fin_source(card, request.user.doctorprofile, request_fields.get('finSource'))
+    if fin_error:
+        return status_response(False, fin_error)
 
     file_error, decoded_files = _prepare_request_files(request_fields.get('files', []))
     if file_error:
@@ -700,6 +714,8 @@ def _build_request_edit_snapshot(direction, hospital_id=None):
         'contrast': direction.text_contrast or '',
         'contrastAmount': direction.contrast_amount or '',
         'requestCode': direction.request_code or '',
+        'finSource': direction.istochnik_f_id,
+        'finSourceTitle': direction.istochnik_f.title if direction.istochnik_f_id else '',
         'anatomy': direction.anatomical_area or '',
         'visitReason': direction.visit_reason or '',
         'anamnesis': direction.anamnesis or '',
@@ -729,7 +745,7 @@ def get_request_details(request):
 
     try:
         direction = (
-            Napravleniya.objects.select_related('client__individual', 'doc', 'doc_who_create')
+            Napravleniya.objects.select_related('client__individual', 'doc', 'doc_who_create', 'istochnik_f')
             .prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set')
             .get(pk=request_id, is_request=True)
         )
@@ -777,6 +793,9 @@ def get_request_details(request):
         "contrastAmount": direction.contrast_amount or '',
         "dose": direction.dose or '',
         "requestCode": direction.request_code or '',
+        "finSourceId": direction.istochnik_f_id,
+        "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f_id else '',
+        "basePk": direction.client.base_id,
         "anatomy": direction.anatomical_area or '',
         "visitReason": direction.visit_reason or '',
         "anamnesis": direction.anamnesis or '',
@@ -840,6 +859,10 @@ def update_request(request):
     if not Researches.objects.filter(pk=research_id).exists():
         return status_response(False, "Услуга не найдена")
 
+    fin_source, fin_error = _request_fin_source(direction.client, request.user.doctorprofile, request_fields.get('finSource'))
+    if fin_error:
+        return status_response(False, fin_error)
+
     file_error, decoded_files = _prepare_request_files(files, existing_bytes=_existing_request_files_size(direction))
     if file_error:
         return status_response(False, file_error)
@@ -854,6 +877,7 @@ def update_request(request):
 
         old_is_cito = direction.is_cito
         old_research_id = iss.research_id
+        old_fin_id = direction.istochnik_f_id
         is_cito = request_fields.get('cito', False)
 
         if iss.research_id != research_id:
@@ -863,6 +887,7 @@ def update_request(request):
 
         direction.is_cito = is_cito
         direction.is_dynamic = request_fields.get('isDynamic', False)
+        direction.istochnik_f = fin_source
         direction.contrast_amount = request_fields.get('contrastAmount', '')
         direction.dose = request_fields.get('dose', '')
         direction.request_code = request_code
@@ -884,6 +909,7 @@ def update_request(request):
             update_fields=[
                 'is_cito',
                 'is_dynamic',
+                'istochnik_f',
                 'contrast_amount',
                 'dose',
                 'request_code',
@@ -898,16 +924,16 @@ def update_request(request):
             ]
         )
 
-        if old_is_cito != is_cito or old_research_id != research_id:
+        if old_is_cito != is_cito or old_research_id != research_id or old_fin_id != fin_source.pk:
             from contracts.models import PriceCoast
 
-            price_modifier = IstochnikiFinansirovaniya.get_price_modifier(direction.istochnik_f, direction.client.work_place_db)
+            price_modifier = IstochnikiFinansirovaniya.get_price_modifier(fin_source, direction.client.work_place_db)
             iss.coast = PriceCoast.get_coast_from_price(iss.research_id, price_modifier, is_cito=is_cito)
             iss.save(update_fields=['coast'])
 
         _save_request_files(direction, decoded_files)
 
-        direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id)
+        direction = Napravleniya.objects.select_related('type_contrast', 'istochnik_f').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id)
         new_snapshot = _build_request_edit_snapshot(direction, hospital_id)
         log_body = _build_edit_log_body(old_snapshot, new_snapshot)
         if log_body:

@@ -7,6 +7,7 @@
             <PatientCompactPicker
               v-model="cardId"
               :title-for-base="'Пациент'"
+              @base="onPatientBase"
             />
           </template>
           <template #bottom>
@@ -31,6 +32,7 @@
                 <RequestFields
                   v-if="cardId && cardId !== -1 && research && research !== -1"
                   :value="requestFields"
+                  :base-pk="cardBasePk"
                   @input="onRequestFieldsInput"
                   @create:request="createRequest"
                 />
@@ -94,6 +96,7 @@ import RequestHistory from './RequestHistory.vue';
 import RequestImageBinding from './RequestImageBinding.vue';
 
 const cardId = ref(null);
+const cardBasePk = ref<number | null>(null);
 const research = ref(null);
 const requestHistoryRef = ref();
 const requestImageBindingRef = ref();
@@ -115,6 +118,7 @@ const defaultRequestFields = () => ({
   contrast: '',
   contrastAmount: '',
   requestCode: '',
+  finSource: null as number | null,
   dose: '',
   cito: false,
   anamnesis: '',
@@ -130,7 +134,15 @@ const onRequestFieldsInput = (value: RequestFieldsValue) => {
   requestFields.value = value;
 };
 
+const onPatientBase = (pk: number) => {
+  cardBasePk.value = pk;
+};
+
 async function createRequest() {
+  if (!requestFields.value.finSource) {
+    notify.error('Не выбран источник финансирования');
+    return;
+  }
   loader.inc();
   try {
     const files = requestFields.value.files || [];

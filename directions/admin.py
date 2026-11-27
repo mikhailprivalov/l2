@@ -43,7 +43,11 @@ from .models import (
     ParaclinicResultIndicator,
 )
 
-admin.site.register(IstochnikiFinansirovaniya)
+
+@admin.register(IstochnikiFinansirovaniya)
+class IstochnikiFinansirovaniyaAdmin(admin.ModelAdmin):
+    search_fields = ('title', 'base__title')
+    list_display = ('title', 'base', 'hide', 'order_weight')
 
 
 @admin.register(Napravleniya)

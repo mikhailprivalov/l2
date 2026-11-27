@@ -47,10 +47,11 @@ def form_01(request_data):
     Код по прайсу (internal_code Researches), Услуга (title_researches),
     колонка с названием прайса (priceCoasts.coast),
     опционально колонка "<название прайса> ЦИТО" (priceCoasts.coast_cito),
+    опционально колонки "<название прайса> ЭКСПРЕСС", "<название прайса> ДИНАМИКА", "<название прайса> НОЧНЫЕ",
     опционально колонка "Синоним" (TitleResearchHospital, только прайс Заказчик с больницей),
     опционально колонки "Категория", "Короткое название", "Обобщение", "Код НМУ".
     Новые названия категории и обобщения сначала создаются в справочнике, затем записываются на услугу.
-    Пустые ячейки категории, короткого названия, обобщения, кода НМУ и пустая цена ЦИТО не затирают значения в базе.
+    Пустые ячейки категории, короткого названия, обобщения, кода НМУ и пустые цены ЦИТО, Экспресс, Динамика и Ночные не затирают значения в базе.
     Пустая ячейка «Синоним» удаляет синоним этой больницы и услуги. Если колонки «Синоним» нет, синонимы не меняются.
     """
     price_id = request_data.get("entity_id")
@@ -60,9 +61,12 @@ def form_01(request_data):
         return {"ok": False, "result": [], "message": "Такого прайса нет"}
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    internal_code_idx, coast_idx, coast_cito_idx, category_idx, short_title_research_idx, synonym_idx, summary_idx, nmu_code_idx = (
+    internal_code_idx, coast_idx, coast_cito_idx, coast_express_idx, coast_dynamics_idx, coast_night_idx, category_idx, short_title_research_idx, synonym_idx, summary_idx, nmu_code_idx = (
         '',
         '',
+        None,
+        None,
+        None,
         None,
         None,
         None,
@@ -85,6 +89,9 @@ def form_01(request_data):
                 if coast_idx is None:
                     return {"ok": False, "result": [], "message": "Название прайса не совпадает"}
                 coast_cito_idx = _find_column_index(cells, f"{price.title} ЦИТО", f"{price.title}-{price.symbol_code} ЦИТО")
+                coast_express_idx = _find_column_index(cells, f"{price.title} ЭКСПРЕСС", f"{price.title}-{price.symbol_code} ЭКСПРЕСС")
+                coast_dynamics_idx = _find_column_index(cells, f"{price.title} ДИНАМИКА", f"{price.title}-{price.symbol_code} ДИНАМИКА")
+                coast_night_idx = _find_column_index(cells, f"{price.title} НОЧНЫЕ", f"{price.title}-{price.symbol_code} НОЧНЫЕ")
                 starts = True
         else:
             internal_code = _cell_text(cells, internal_code_idx)
@@ -93,6 +100,9 @@ def form_01(request_data):
             except Exception:
                 continue
             coast_cito = _parse_optional_coast(cells[coast_cito_idx]) if coast_cito_idx is not None else None
+            coast_express = _parse_optional_coast(cells[coast_express_idx]) if coast_express_idx is not None else None
+            coast_dynamics = _parse_optional_coast(cells[coast_dynamics_idx]) if coast_dynamics_idx is not None else None
+            coast_night = _parse_optional_coast(cells[coast_night_idx]) if coast_night_idx is not None else None
             if not internal_code or not coast:
                 continue
             service = Researches.objects.filter(internal_code=internal_code).first()
@@ -108,10 +118,27 @@ def form_01(request_data):
                 if coast_cito is not None and current_coast.coast_cito != coast_cito:
                     current_coast.coast_cito = coast_cito
                     changed = True
+                if coast_express is not None and current_coast.coast_express != coast_express:
+                    current_coast.coast_express = coast_express
+                    changed = True
+                if coast_dynamics is not None and current_coast.coast_dynamics != coast_dynamics:
+                    current_coast.coast_dynamics = coast_dynamics
+                    changed = True
+                if coast_night is not None and current_coast.coast_night != coast_night:
+                    current_coast.coast_night = coast_night
+                    changed = True
                 if changed:
                     current_coast.save()
             else:
-                new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast, coast_cito=coast_cito)
+                new_coast = PriceCoast(
+                    price_name_id=price.pk,
+                    research_id=service.pk,
+                    coast=coast,
+                    coast_cito=coast_cito,
+                    coast_express=coast_express,
+                    coast_dynamics=coast_dynamics,
+                    coast_night=coast_night,
+                )
                 new_coast.save()
             service_changed = False
             category_title = _cell_text(cells, category_idx)
