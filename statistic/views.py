@@ -2114,6 +2114,7 @@ def statistic_xls(request):
             tmp_result["doctor_family"] = i.doc_family
             tmp_result["doctor_name"] = i.doc_name
             tmp_result["doctor_patronymic"] = i.doc_patronymic
+            tmp_result["fin_source"] = i.fin_source_title or ""
             tmp_result["tarif_coast"] = tarif_coast
             tmp_result["tarif_contrast"] = 0
             tmp_result["tarif_dynamic"] = 0
@@ -2127,8 +2128,8 @@ def statistic_xls(request):
 
         file_title = iri_to_uri(f"Реестр_{title_hospital.replace(' ', '_')}")
         response['Content-Disposition'] = f'attachment; filename="{file_title}_{date_start_o}_{date_end_o}.xls"'
-        ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, 'Реестр по Клиникам')
-        ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report, by_department_title_sum)
+        ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, 'Реестр по Клиникам', with_fin_source=True)
+        ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report, by_department_title_sum, with_fin_source=True)
 
     elif tp == "reestr-doctor":
         wb = openpyxl.Workbook()

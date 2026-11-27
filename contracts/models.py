@@ -135,6 +135,9 @@ class PriceCoast(models.Model):
     research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING, db_index=True)
     coast = models.DecimalField(max_digits=10, decimal_places=2)
     coast_cito = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None, help_text="Цена ЦИТО")
+    coast_express = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None, help_text="Цена Экспресс")
+    coast_dynamics = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None, help_text="Цена Динамика")
+    coast_night = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None, help_text="Цена Ночные")
     number_services_by_contract = models.PositiveIntegerField(default=0, help_text="Кол-во услуг по контракту")
 
     def __str__(self):
@@ -215,6 +218,9 @@ class PriceCoast(models.Model):
                 "id": coast.id,
                 "coast": coast.coast,
                 "coastCito": coast.coast_cito,
+                "coastExpress": coast.coast_express,
+                "coastDynamics": coast.coast_dynamics,
+                "coastNight": coast.coast_night,
                 "numberService": coast.number_services_by_contract,
                 "research": {"id": coast.research_id, "title": coast.research_title},
                 "hospitalSynonym": synonyms.get(coast.research_id, ""),

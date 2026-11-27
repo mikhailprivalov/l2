@@ -11,6 +11,9 @@ class ResPriceCoast(admin.ModelAdmin):
         'internal_code',
         'coast',
         'coast_cito',
+        'coast_express',
+        'coast_dynamics',
+        'coast_night',
         'status',
     )
     list_display_links = (

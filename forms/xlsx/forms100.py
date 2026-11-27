@@ -24,8 +24,14 @@ def form_01(request_data) -> Workbook:
     for price in prices:
         price_template[price.id] = 0
         price_template[f"{price.id}_cito"] = ""
+        price_template[f"{price.id}_express"] = ""
+        price_template[f"{price.id}_dynamics"] = ""
+        price_template[f"{price.id}_night"] = ""
         price_titles.append(f"{price.title}-{price.symbol_code}")
         price_titles.append(f"{price.title}-{price.symbol_code} ЦИТО")
+        price_titles.append(f"{price.title}-{price.symbol_code} ЭКСПРЕСС")
+        price_titles.append(f"{price.title}-{price.symbol_code} ДИНАМИКА")
+        price_titles.append(f"{price.title}-{price.symbol_code} НОЧНЫЕ")
 
     price_ids = tuple(price.id for price in prices)
 
@@ -50,6 +56,9 @@ def form_01(request_data) -> Workbook:
         if research_dict.get(coast.research_id):
             research_dict[coast.research_id][coast.price_name_id] = str(coast.coast)
             research_dict[coast.research_id][f"{coast.price_name_id}_cito"] = str(coast.coast_cito) if coast.coast_cito is not None else ""
+            research_dict[coast.research_id][f"{coast.price_name_id}_express"] = str(coast.coast_express) if coast.coast_express is not None else ""
+            research_dict[coast.research_id][f"{coast.price_name_id}_dynamics"] = str(coast.coast_dynamics) if coast.coast_dynamics is not None else ""
+            research_dict[coast.research_id][f"{coast.price_name_id}_night"] = str(coast.coast_night) if coast.coast_night is not None else ""
 
     if price_id and price_id != 'null':
         price = PriceName.objects.filter(pk=price_id).first()

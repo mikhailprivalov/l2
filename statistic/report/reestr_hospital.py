@@ -2,7 +2,7 @@ from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
 
-def reestr_hospital_base(ws1, d1, d2, title):
+def reestr_hospital_base(ws1, d1, d2, title, with_fin_source=False):
     style_border = NamedStyle(name="style_border_ca5")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -27,6 +27,7 @@ def reestr_hospital_base(ws1, d1, d2, title):
         ('Второе название', 25),
         ('Модальность', 10),
         ('ФИО Врача', 30),
+        ('Источник финансирования', 25),
         ('Тариф услуги', 8),
         ('Тариф контраста', 8),
         ('Тариф Срочные', 8),
@@ -34,6 +35,8 @@ def reestr_hospital_base(ws1, d1, d2, title):
         ('Тариф Расширенные', 8),
         ('Итого сумма', 16),
     ]
+    if not with_fin_source:
+        columns = [column for column in columns if column[0] != 'Источник финансирования']
 
     row = 5
     for idx, column in enumerate(columns, 1):
@@ -44,7 +47,7 @@ def reestr_hospital_base(ws1, d1, d2, title):
     return ws1
 
 
-def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum):
+def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum, with_fin_source=False):
     style_border1 = NamedStyle(name="style_border1")
     bd = Side(style='thin', color="000000")
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -55,6 +58,8 @@ def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum):
     style_border2.font = Font(bold=True, size=11)
     style_border2.alignment = Alignment(wrap_text=True, horizontal='right', vertical='center')
 
+    tariff_col = 15 if with_fin_source else 14
+    total_col = tariff_col + 5
     r = 5
     for v in result_query:
         r += 1
@@ -71,20 +76,23 @@ def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum):
         ws1.cell(row=r, column=11).value = v.get("service_synonym") or ""
         ws1.cell(row=r, column=12).value = v.get("department", "-")
         ws1.cell(row=r, column=13).value = f'{v.get("doctor_family", "-")} {v.get("doctor_name", "-")} {v.get("doctor_patronymic", "-")}'
-        ws1.cell(row=r, column=14).value = v.get("tarif_coast", "-")
-        ws1.cell(row=r, column=15).value = v.get("tarif_contrast", "-")
-        ws1.cell(row=r, column=16).value = v.get("tarif_dynamic", "-")
-        ws1.cell(row=r, column=17).value = v.get("tarif_extension", "-")
-        ws1.cell(row=r, column=18).value = v.get("tarif_night", "-")
-        ws1.cell(row=r, column=19).value = f'=SUM({get_column_letter(14)}{r}:{get_column_letter(18)}{r})'
+        if with_fin_source:
+            ws1.cell(row=r, column=14).value = v.get("fin_source") or ""
+        ws1.cell(row=r, column=tariff_col).value = v.get("tarif_coast", "-")
+        ws1.cell(row=r, column=tariff_col + 1).value = v.get("tarif_contrast", "-")
+        ws1.cell(row=r, column=tariff_col + 2).value = v.get("tarif_dynamic", "-")
+        ws1.cell(row=r, column=tariff_col + 3).value = v.get("tarif_extension", "-")
+        ws1.cell(row=r, column=tariff_col + 4).value = v.get("tarif_night", "-")
+        ws1.cell(row=r, column=total_col).value = f'=SUM({get_column_letter(tariff_col)}{r}:{get_column_letter(tariff_col + 4)}{r})'
     r_sum = r
     r += 1
-    ws1.merge_cells(f"{get_column_letter(15)}{r}:{get_column_letter(16)}{r}")
-    megre_cell = ws1[f"{get_column_letter(15)}{r}"]
+    total_label_col = tariff_col + 1
+    ws1.merge_cells(f"{get_column_letter(total_label_col)}{r}:{get_column_letter(total_label_col + 1)}{r}")
+    megre_cell = ws1[f"{get_column_letter(total_label_col)}{r}"]
     megre_cell.value = 'ВСЕГО сумма, руб'
     megre_cell.style = style_border2
-    ws1.cell(row=r, column=19).value = f'=SUM({get_column_letter(19)}{6}:{get_column_letter(19)}{r_sum})'
-    ws1.cell(row=r, column=19).style = style_border2
+    ws1.cell(row=r, column=total_col).value = f'=SUM({get_column_letter(total_col)}{6}:{get_column_letter(total_col)}{r_sum})'
+    ws1.cell(row=r, column=total_col).style = style_border2
 
     r += 2
     ws1.cell(row=r, column=1).value = 'Свод'

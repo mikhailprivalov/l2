@@ -711,6 +711,20 @@ SHOW_DOCTOR_IN_RESULT = True
 LIPID_RESEARCHES = {}
 ECP_LAB_RESEARCHES_DAYS_AGO_FIND = 0
 
+# Минуты выполнения услуги для тарифа больницы и врача.
+# 0 — порог не задан, время на выбор цены не влияет.
+# Переопределение в laboratory/local_settings.py
+PRICE_CITO_MINUTES = 0
+PRICE_EXPRESS_MINUTES = 0
+
+# Ночные интервалы создания заявки, местное время HH:MM, оба конца включены.
+# Несколько пар: через полночь это отдельные интервалы. Пустой список — ночь не задана.
+# Переопределение в laboratory/local_settings.py
+PRICE_NIGHT_HOURS = [
+    ("22:00", "23:59"),
+    ("00:00", "06:00"),
+]
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

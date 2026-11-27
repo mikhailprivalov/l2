@@ -119,7 +119,9 @@ def get_researches_and_coasts_in_price(price_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-        SELECT contracts_pricecoast.id, contracts_pricecoast.coast, contracts_pricecoast.coast_cito, contracts_pricecoast.number_services_by_contract, 
+        SELECT contracts_pricecoast.id, contracts_pricecoast.coast, contracts_pricecoast.coast_cito,
+        contracts_pricecoast.coast_express, contracts_pricecoast.coast_dynamics, contracts_pricecoast.coast_night,
+        contracts_pricecoast.number_services_by_contract, 
         directory_researches.id as research_id, directory_researches.title as research_title
         FROM contracts_pricecoast
         INNER JOIN directory_researches ON contracts_pricecoast.research_id = directory_researches.id

@@ -105,6 +105,16 @@ class Hospitals(models.Model):
     web_plugin_link_study = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="plugin")
     qr_code_link = models.CharField(max_length=255, blank=True, default='', help_text="Ссылка QR-кода")
     work_schedule = models.JSONField(default=dict, blank=True, help_text="Режим работы по дням недели: mon..sun, from/to")
+    default_fin_source = models.ForeignKey(
+        "directions.IstochnikiFinansirovaniya",
+        blank=True,
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL,
+        related_name="hospitals_with_default",
+        verbose_name="Источник финансирования по умолчанию",
+        help_text="Для создания заявки, если этот источник доступен пациенту",
+    )
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

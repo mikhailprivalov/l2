@@ -24,7 +24,7 @@ class RefHospitals(admin.ModelAdmin):
         'only_services_with_hospital_synonym',
     )
     search_fields = ('title',)
-    autocomplete_fields = ('client',)
+    autocomplete_fields = ('client', 'default_fin_source')
 
 
 class ResHospitalsGroup(admin.ModelAdmin):
