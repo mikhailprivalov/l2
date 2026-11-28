@@ -2,7 +2,7 @@ from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
 
-def reestr_hospital_base(ws1, d1, d2, title, with_fin_source=False):
+def reestr_hospital_base(ws1, d1, d2, title, with_fin_source=False, with_summary=False):
     style_border = NamedStyle(name="style_border_ca5")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -26,6 +26,7 @@ def reestr_hospital_base(ws1, d1, d2, title, with_fin_source=False):
         ('Область исследования/ Услуга', 25),
         ('Второе название', 25),
         ('Модальность', 10),
+        ('Обобщение', 25),
         ('ФИО Врача', 30),
         ('Источник финансирования', 25),
         ('Тариф услуги', 8),
@@ -35,6 +36,8 @@ def reestr_hospital_base(ws1, d1, d2, title, with_fin_source=False):
         ('Тариф Расширенные', 8),
         ('Итого сумма', 16),
     ]
+    if not with_summary:
+        columns = [column for column in columns if column[0] != 'Обобщение']
     if not with_fin_source:
         columns = [column for column in columns if column[0] != 'Источник финансирования']
 
@@ -47,7 +50,7 @@ def reestr_hospital_base(ws1, d1, d2, title, with_fin_source=False):
     return ws1
 
 
-def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum, with_fin_source=False):
+def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum, with_fin_source=False, with_summary=False):
     style_border1 = NamedStyle(name="style_border1")
     bd = Side(style='thin', color="000000")
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -58,7 +61,9 @@ def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum, with_f
     style_border2.font = Font(bold=True, size=11)
     style_border2.alignment = Alignment(wrap_text=True, horizontal='right', vertical='center')
 
-    tariff_col = 15 if with_fin_source else 14
+    summary_shift = 1 if with_summary else 0
+    tariff_col = (15 if with_fin_source else 14) + summary_shift
+    doctor_col = 13 + summary_shift
     total_col = tariff_col + 5
     r = 5
     for v in result_query:
@@ -75,9 +80,11 @@ def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum, with_f
         ws1.cell(row=r, column=10).value = v.get("service", "-")
         ws1.cell(row=r, column=11).value = v.get("service_synonym") or ""
         ws1.cell(row=r, column=12).value = v.get("department", "-")
-        ws1.cell(row=r, column=13).value = f'{v.get("doctor_family", "-")} {v.get("doctor_name", "-")} {v.get("doctor_patronymic", "-")}'
+        if with_summary:
+            ws1.cell(row=r, column=13).value = v.get("summary") or ""
+        ws1.cell(row=r, column=doctor_col).value = f'{v.get("doctor_family", "-")} {v.get("doctor_name", "-")} {v.get("doctor_patronymic", "-")}'
         if with_fin_source:
-            ws1.cell(row=r, column=14).value = v.get("fin_source") or ""
+            ws1.cell(row=r, column=doctor_col + 1).value = v.get("fin_source") or ""
         ws1.cell(row=r, column=tariff_col).value = v.get("tarif_coast", "-")
         ws1.cell(row=r, column=tariff_col + 1).value = v.get("tarif_contrast", "-")
         ws1.cell(row=r, column=tariff_col + 2).value = v.get("tarif_dynamic", "-")
@@ -99,12 +106,23 @@ def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum, with_f
     r += 1
     ws1.cell(row=r, column=1).value = 'Вид'
     ws1.cell(row=r, column=2).value = 'Кол-во'
-    ws1.cell(row=r, column=3).value = 'Сумма'
+    sum_col = 3
+    if with_summary:
+        ws1.cell(row=r, column=3).value = 'Средняя цена'
+        sum_col = 4
+    ws1.cell(row=r, column=sum_col).value = 'Сумма'
     r += 1
-    for k, v in by_department_title_sum.items():
+    summary_rows = by_department_title_sum.items()
+    if with_summary:
+        summary_rows = sorted(summary_rows, key=lambda item: (item[0] in ("", None), (item[0] or "").casefold()))
+    for k, v in summary_rows:
         ws1.cell(row=r, column=1).value = k
         ws1.cell(row=r, column=2).value = v.get("count", "0")
-        ws1.cell(row=r, column=3).value = v.get("coast", "0")
+        if with_summary:
+            count_letter = get_column_letter(2)
+            sum_letter = get_column_letter(sum_col)
+            ws1.cell(row=r, column=3).value = f'=IF({count_letter}{r}=0,0,{sum_letter}{r}/{count_letter}{r})'
+        ws1.cell(row=r, column=sum_col).value = v.get("coast", "0")
         r += 1
 
     return ws1

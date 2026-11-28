@@ -2078,7 +2078,7 @@ def statistic_xls(request):
         row_report = []
         title_hospital = "Больницы"
         last_hospital = "Больницы"
-        by_department_title_sum = {}
+        by_summary_sum = {}
         synonyms = _registry_synonyms_by_hospital(data)
         for i in data:
             tarif_coast = None
@@ -2105,11 +2105,13 @@ def statistic_xls(request):
             tmp_result["service"] = i.research_title
             tmp_result["service_code"] = i.research_code
             tmp_result["service_synonym"] = _registry_service_synonym(synonyms, i.hospital_id, i.research_id)
-            if not by_department_title_sum.get(i.department_title):
-                by_department_title_sum[i.department_title] = {"count": 1, "coast": tarif_coast}
+            summary_title = i.summary_title or ""
+            tmp_result["summary"] = summary_title
+            if summary_title not in by_summary_sum:
+                by_summary_sum[summary_title] = {"count": 1, "coast": tarif_coast}
             else:
-                by_department_title_sum[i.department_title]["count"] += 1
-                by_department_title_sum[i.department_title]["coast"] += tarif_coast
+                by_summary_sum[summary_title]["count"] += 1
+                by_summary_sum[summary_title]["coast"] += tarif_coast
             tmp_result["department"] = i.department_title
             tmp_result["doctor_family"] = i.doc_family
             tmp_result["doctor_name"] = i.doc_name
@@ -2128,8 +2130,8 @@ def statistic_xls(request):
 
         file_title = iri_to_uri(f"Реестр_{title_hospital.replace(' ', '_')}")
         response['Content-Disposition'] = f'attachment; filename="{file_title}_{date_start_o}_{date_end_o}.xls"'
-        ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, 'Реестр по Клиникам', with_fin_source=True)
-        ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report, by_department_title_sum, with_fin_source=True)
+        ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, 'Реестр по Клиникам', with_fin_source=True, with_summary=True)
+        ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report, by_summary_sum, with_fin_source=True, with_summary=True)
 
     elif tp == "reestr-doctor":
         wb = openpyxl.Workbook()

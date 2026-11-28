@@ -174,6 +174,21 @@
           </div>
         </div>
 
+        <div class="row f-row">
+          <div class="col-xs-12">
+            <div class="org-fin-source">
+              <label class="org-field-label">Недоступные источники финансирования</label>
+              <treeselect
+                v-model="disabledFinSources"
+                :multiple="true"
+                :options="finSourceOptions"
+                placeholder="Нет запретов"
+                class="treeselect-wide"
+              />
+            </div>
+          </div>
+        </div>
+
         <template v-if="ftp && hasAccessToAllHospitals">
           <div class="full-width show-layout">
             <FormulateInput
@@ -382,6 +397,7 @@ import { selectFile } from '@/utils';
       strictDataOwnership: true,
       hide: false,
       defaultFinSource: null,
+      disabledFinSources: [],
       finSourceOptions: [],
       schemaDocxName: '',
       schemaDocxResult: null,
@@ -419,6 +435,8 @@ export default class ConstructOrg extends Vue {
   hide: boolean;
 
   defaultFinSource: number | null;
+
+  disabledFinSources: number[];
 
   finSourceOptions: Array<{ id: number; label: string }>;
 
@@ -482,6 +500,7 @@ export default class ConstructOrg extends Vue {
       strictDataOwnership: this.strictDataOwnership,
       hide: this.hide,
       defaultFinSource: this.defaultFinSource,
+      disabledFinSources: this.disabledFinSources || [],
       schemaDocxResult: this.schemaDocxResult,
       clearSchemaDocxResult: this.clearSchemaDocxResult,
     });
@@ -521,6 +540,8 @@ export default class ConstructOrg extends Vue {
     this.hide = !!org.hide;
     this.finSourceOptions = finSourceOptions;
     this.defaultFinSource = finSourceOptions.some((row) => row.id === defaultFinSource) ? defaultFinSource : null;
+    const disabledFinSources = Array.isArray(org.disabledFinSources) ? org.disabledFinSources : [];
+    this.disabledFinSources = disabledFinSources.filter((id) => finSourceOptions.some((row) => row.id === id));
     this.schemaDocxName = org.schemaDocxResultName || '';
     this.schemaDocxResult = null;
     this.clearSchemaDocxResult = false;
