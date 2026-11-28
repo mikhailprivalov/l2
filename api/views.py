@@ -2609,9 +2609,7 @@ def organization_data_update(request):
         "time_zone": hospital.time_zone,
         "strict_data_ownership": hospital.strict_data_ownership,
         "default_fin_source_id": hospital.default_fin_source_id,
-        "disabled_fin_source_ids": sorted(
-            set(DisableIstochnikiFinansirovaniya.objects.filter(hospital=hospital, fin_source__hide=False).values_list("fin_source_id", flat=True))
-        ),
+        "disabled_fin_source_ids": sorted(set(DisableIstochnikiFinansirovaniya.objects.filter(hospital=hospital, fin_source__hide=False).values_list("fin_source_id", flat=True))),
         "schema_docx_result": _org_schema_docx_name(hospital),
         **(
             {
