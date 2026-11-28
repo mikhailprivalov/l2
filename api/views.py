@@ -2360,6 +2360,9 @@ def organization_data(request):
             return status_response(False, "Доступ запрещен")
         hospital = Hospitals.objects.get(pk=hospital_pk)
 
+    fin_sources = list(directions.IstochnikiFinansirovaniya.objects.filter(hide=False).select_related("base").order_by("base__title", "title"))
+    disabled_fin_source_ids = set(DisableIstochnikiFinansirovaniya.objects.filter(hospital=hospital, fin_source__hide=False).values_list("fin_source_id", flat=True))
+
     org = {
         "pk": hospital.pk,
         "title": hospital.title,
@@ -2378,10 +2381,8 @@ def organization_data(request):
         "timeZone": hospital.time_zone or "",
         "strictDataOwnership": hospital.strict_data_ownership,
         "defaultFinSource": hospital.default_fin_source_id,
-        "finSources": [
-            {"id": source.pk, "label": f"{source.base.title} — {source.title}"}
-            for source in directions.IstochnikiFinansirovaniya.objects.filter(hide=False).select_related("base").order_by("base__title", "title")
-        ],
+        "finSources": [{"id": source.pk, "label": f"{source.base.title} — {source.title}"} for source in fin_sources],
+        "disabledFinSources": [source.pk for source in fin_sources if source.pk in disabled_fin_source_ids],
         "schemaDocxResultName": os.path.basename(hospital.schema_docx_result_created_direction_hospital.name) if hospital.schema_docx_result_created_direction_hospital else "",
     }
 
@@ -2430,6 +2431,34 @@ def _org_schema_docx_next_name(hospital, payload, clear):
     return _org_schema_docx_name(hospital)
 
 
+def _org_disabled_fin_source_ids(raw_ids):
+    if not isinstance(raw_ids, list):
+        return None
+    normalized = []
+    seen = set()
+    for raw in raw_ids:
+        try:
+            pk = int(raw)
+        except (TypeError, ValueError):
+            return None
+        if pk in seen:
+            continue
+        seen.add(pk)
+        normalized.append(pk)
+    if not normalized:
+        return []
+    visible = set(directions.IstochnikiFinansirovaniya.objects.filter(hide=False, pk__in=normalized).values_list("pk", flat=True))
+    if visible != seen:
+        return None
+    return normalized
+
+
+def _replace_hospital_disabled_fin_sources(hospital, source_ids):
+    DisableIstochnikiFinansirovaniya.objects.filter(hospital=hospital, fin_source__hide=False).delete()
+    if source_ids:
+        DisableIstochnikiFinansirovaniya.objects.bulk_create([DisableIstochnikiFinansirovaniya(hospital=hospital, fin_source_id=pk) for pk in source_ids])
+
+
 def _apply_org_schema_docx(hospital, payload, clear):
     if payload:
         name = os.path.basename(str(payload.get("name") or "schema.docx"))
@@ -2474,6 +2503,7 @@ def organization_data_update(request):
         "defaultFinSource": int,
         "clearSchemaDocxResult": bool,
         "schemaDocxResult": dict,
+        "disabledFinSources": list,
     }
 
     data = data_parse(
@@ -2499,6 +2529,7 @@ def organization_data_update(request):
             "defaultFinSource": None,
             "clearSchemaDocxResult": False,
             "schemaDocxResult": None,
+            "disabledFinSources": [],
         },
     )
 
@@ -2530,6 +2561,7 @@ def organization_data_update(request):
     default_fin_source_id = data[25]
     clear_schema_docx = bool(data[26])
     schema_docx_result = data[27]
+    disabled_fin_source_ids = _org_disabled_fin_source_ids(data[28])
 
     if not title:
         return status_response(False, "Название не может быть пустым")
@@ -2543,6 +2575,10 @@ def organization_data_update(request):
         fin_source = directions.IstochnikiFinansirovaniya.objects.filter(pk=default_fin_source_id, hide=False).first()
         if not fin_source:
             return status_response(False, "Источник финансирования недоступен")
+    if disabled_fin_source_ids is None:
+        return status_response(False, "Источник финансирования недоступен")
+    if fin_source and fin_source.pk in disabled_fin_source_ids:
+        return status_response(False, "Источник по умолчанию нельзя запретить")
 
     schema_error = _org_schema_docx_error(schema_docx_result)
     if schema_error:
@@ -2573,6 +2609,7 @@ def organization_data_update(request):
         "time_zone": hospital.time_zone,
         "strict_data_ownership": hospital.strict_data_ownership,
         "default_fin_source_id": hospital.default_fin_source_id,
+        "disabled_fin_source_ids": sorted(set(DisableIstochnikiFinansirovaniya.objects.filter(hospital=hospital, fin_source__hide=False).values_list("fin_source_id", flat=True))),
         "schema_docx_result": _org_schema_docx_name(hospital),
         **(
             {
@@ -2605,6 +2642,7 @@ def organization_data_update(request):
         "time_zone": time_zone,
         "strict_data_ownership": strict_data_ownership,
         "default_fin_source_id": fin_source.pk if fin_source else None,
+        "disabled_fin_source_ids": sorted(disabled_fin_source_ids),
         "schema_docx_result": _org_schema_docx_next_name(hospital, schema_docx_result, clear_schema_docx),
         **(
             {
@@ -2651,6 +2689,7 @@ def organization_data_update(request):
         hospital.strict_external_numbers = strict_external_numbers
         hospital.result_pull_by_numbers = result_pull_by_numbers
     hospital.save()
+    _replace_hospital_disabled_fin_sources(hospital, disabled_fin_source_ids)
 
     Log.log(
         hospital.pk,
